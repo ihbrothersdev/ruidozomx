@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { translateAuthError } from '@/lib/auth-errors'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -15,7 +16,11 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
+
+    const translatedError = translateAuthError(error.message)
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=Could+not+authenticate+user`)
+  const translatedError = translateAuthError('unknown error')
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
 }
