@@ -55,6 +55,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               name='password'
               type='password'
               required
+              minLength={6}
               placeholder='••••••••'
               className='focus:border-foreground w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none dark:border-gray-700 dark:bg-gray-900'
             />
