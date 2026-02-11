@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { signout } from '../(auth)/actions'
 
 export default async function DashboardPage() {
@@ -8,9 +7,8 @@ export default async function DashboardPage() {
     data: { user }
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/login')
-  }
+  // user is guaranteed by the proxy redirect — see lib/supabase/proxy.ts
+  if (!user) throw new Error('Unexpected: no authenticated user in /dashboard')
 
   return (
     <div className='flex min-h-screen flex-col'>
