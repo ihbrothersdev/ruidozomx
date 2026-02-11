@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabaseEnv } from './env'
 
-export async function updateSession(request: NextRequest) {
+export async function handleProxyRequest(request: NextRequest) {
   // Redirect auth codes to the callback route for session exchange
   const code = request.nextUrl.searchParams.get('code')
   if (code && request.nextUrl.pathname === '/') {
