@@ -31,10 +31,14 @@ export async function signup(formData: FormData) {
     password: formData.get('password') as string
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { data: signUpData, error } = await supabase.auth.signUp(data)
 
   if (error) {
     redirect('/signup?error=' + encodeURIComponent(translateAuthError(error.message)))
+  }
+
+  if (signUpData.user && signUpData.user.identities?.length === 0) {
+    redirect('/signup?error=' + encodeURIComponent('Ya existe una cuenta con este email.'))
   }
 
   revalidatePath('/', 'layout')
