@@ -1,10 +1,8 @@
 import Link from 'next/link'
 import { login } from '../actions'
+import { type AuthSearchParams } from '../types'
 
-// TODO: Add type.ts file per folder? global?
-type SearchParams = Promise<{ error?: string; message?: string }>
-
-export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function LoginPage({ searchParams }: { searchParams: AuthSearchParams }) {
   const { error, message } = await searchParams
 
   return (
