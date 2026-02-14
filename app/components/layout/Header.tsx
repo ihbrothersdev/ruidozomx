@@ -16,7 +16,7 @@ export function Header({ user }: HeaderProps) {
           alt='Ruidozo MX'
           width={380}
           height={183}
-          className='h-12 w-auto md:h-16'
+          className='h-12 w-auto md:h-25'
           unoptimized
           priority
         />
@@ -30,7 +30,7 @@ export function Header({ user }: HeaderProps) {
             alt='¿Quiénes somos?'
             width={1383}
             height={455}
-            className='h-8 w-auto md:h-10'
+            className='h-10 w-auto md:h-16'
             unoptimized
           />
         </Link>
@@ -42,7 +42,7 @@ export function Header({ user }: HeaderProps) {
               alt='Dashboard'
               width={1383}
               height={455}
-              className='h-8 w-auto md:h-10'
+              className='h-10 w-auto md:h-16'
               unoptimized
             />
           </Link>
@@ -53,12 +53,26 @@ export function Header({ user }: HeaderProps) {
               alt='Regístrate / Entra'
               width={1383}
               height={455}
-              className='h-8 w-auto md:h-10'
+              className='h-10 w-auto md:h-16'
               unoptimized
             />
           </Link>
         )}
       </div>
+
+      {/* TODO: To Be Defined if added */}
+      {/* <div className='hidden flex-1 justify-center px-4 md:flex'>
+        <button className='relative h-8 w-full max-w-xs md:h-10'>
+          <Image
+            src='/assets/header/buscador.png'
+            alt='Buscar'
+            width={528}
+            height={80}
+            className='h-full w-full object-contain'
+            unoptimized
+          />
+        </button>
+      </div> */}
     </header>
   )
 }
