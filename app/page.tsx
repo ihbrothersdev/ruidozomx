@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
+import { CassettePlayer } from './components/player/CassettePlayer'
+import { Header } from './components/layout/Header'
+import { MOCK_SONGS, MOCK_PLAYER_STATE } from '@/lib/mock-data'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -8,37 +10,44 @@ export default async function Home() {
   } = await supabase.auth.getUser()
 
   return (
-    <div className='flex h-screen flex-col items-center justify-center gap-6'>
-      <div className='text-center'>
-        <h1 className='text-4xl font-bold'>Ruidozo MX</h1>
-        <p className='m-2 text-gray-500 italic'>By IH</p>
-      </div>
+    <main className='relative min-h-screen'>
+      <div
+        className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
+        style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
+      />
 
-      <div className='flex gap-3'>
-        {user ? (
-          <Link
-            href='/dashboard'
-            className='bg-foreground text-background rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90'
-          >
-            Ir al Dashboard
-          </Link>
-        ) : (
-          <>
-            <Link
-              href='/login'
-              className='bg-foreground text-background rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90'
-            >
-              Iniciar Sesion
-            </Link>
-            <Link
-              href='/signup'
-              className='rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800'
-            >
-              Registrarse
-            </Link>
-          </>
-        )}
+      <div className='relative z-10'>
+        <Header user={user} />
+
+        <section className='flex flex-col items-center px-4 pt-4 pb-8'>
+          <CassettePlayer
+            songs={MOCK_SONGS}
+            playerState={MOCK_PLAYER_STATE}
+          />
+        </section>
+
+        {/* <section className='relative px-4 py-8'>
+          <div className='relative mx-auto max-w-5xl'>
+            <DecorativeElements />
+
+            <div className='flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center'>
+              <div className='hidden md:block'>
+                <ExplorarComunidad />
+              </div>
+              <div className='w-full max-w-[793px] flex-1'>
+                <SongList
+                  songs={MOCK_SONGS}
+                  currentSongId={MOCK_PLAYER_STATE.currentSongId}
+                />
+              </div>
+            </div>
+          </div>
+
+          <SomosTrinchera />
+        </section>
+
+        <Footer /> */}
       </div>
-    </div>
+    </main>
   )
 }
