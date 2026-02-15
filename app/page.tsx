@@ -30,6 +30,13 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Test paragraph for font verification */}
+        <section className='relative flex flex-col items-center px-4 pb-8'>
+          <p className='text-white text-2xl text-center'>
+            Este es un párrafo de prueba para verificar la fuente Corose. ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
+          </p>
+        </section>
       </div>
     </main>
   )
