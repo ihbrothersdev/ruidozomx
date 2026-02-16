@@ -66,7 +66,7 @@ export function Footer() {
 
         {/* Right column - Info */}
         <div className='flex-1'>
-          <h3 className='font-impact-label mb-3 text-sm tracking-wider text-gray-400 uppercase'>Información</h3>
+          <h3 className='font-impact-label mb-3 text-sm tracking-wider text-gray-400 uppercase'>Navegación</h3>
           <ul className='font-baby-doll space-y-1.5 text-sm text-gray-400'>
             <li>
               <Link
