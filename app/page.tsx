@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
+import { CassettePlayer } from './components/player/CassettePlayer'
+import { Header } from './components/layout/Header'
+import { MOCK_SONGS, MOCK_PLAYER_STATE } from '@/lib/mock-data'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -8,37 +10,34 @@ export default async function Home() {
   } = await supabase.auth.getUser()
 
   return (
-    <div className='flex h-screen flex-col items-center justify-center gap-6'>
-      <div className='text-center'>
-        <h1 className='text-4xl font-bold'>Ruidozo MX</h1>
-        <p className='m-2 text-gray-500 italic'>By IH</p>
-      </div>
+    <main className='relative min-h-screen'>
+      <div
+        className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
+        style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
+      />
 
-      <div className='flex gap-3'>
-        {user ? (
-          <Link
-            href='/dashboard'
-            className='bg-foreground text-background rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90'
-          >
-            Ir al Dashboard
-          </Link>
-        ) : (
-          <>
-            <Link
-              href='/login'
-              className='bg-foreground text-background rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90'
-            >
-              Iniciar Sesion
-            </Link>
-            <Link
-              href='/signup'
-              className='rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800'
-            >
-              Registrarse
-            </Link>
-          </>
-        )}
+      <div className='relative z-10'>
+        <Header user={user} />
+
+        {/* Body 1: Cassette player area */}
+        <section className='relative flex flex-col items-center px-4 pt-4 pb-8'>
+          <div className='relative mx-auto w-full max-w-5xl'>
+            <div className='flex justify-center'>
+              <CassettePlayer
+                songs={MOCK_SONGS}
+                playerState={MOCK_PLAYER_STATE}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Test paragraph for font verification */}
+        <section className='relative flex flex-col items-center px-4 pb-8'>
+          <p className='text-white text-2xl text-center'>
+            Este es un párrafo de prueba para verificar la fuente Corose. ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
+          </p>
+        </section>
       </div>
-    </div>
+    </main>
   )
 }
