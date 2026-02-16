@@ -35,29 +35,16 @@ export function Header({ user }: HeaderProps) {
           />
         </Link>
 
-        {user ? (
-          <Link href='/dashboard'>
-            <Image
-              src='/assets/header/registrate-entra.png'
-              alt='Dashboard'
-              width={1383}
-              height={455}
-              className='h-10 w-auto md:h-16'
-              unoptimized
-            />
-          </Link>
-        ) : (
-          <Link href='/login'>
-            <Image
-              src='/assets/header/registrate-entra.png'
-              alt='Regístrate / Entra'
-              width={1383}
-              height={455}
-              className='h-10 w-auto md:h-16'
-              unoptimized
-            />
-          </Link>
-        )}
+        <Link href={user ? '/dashboard' : '/login'}>
+          <Image
+            src='/assets/header/registrate-entra.png'
+            alt={user ? 'Dashboard' : 'Regístrate / Entra'}
+            width={1383}
+            height={455}
+            className='h-10 w-auto md:h-16'
+            unoptimized
+          />
+        </Link>
       </div>
 
       {/* TODO: To Be Defined if added */}
