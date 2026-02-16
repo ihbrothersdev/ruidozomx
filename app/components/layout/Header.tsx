@@ -16,7 +16,7 @@ export function Header({ user }: HeaderProps) {
           alt='Ruidozo MX'
           width={380}
           height={183}
-          className='h-12 w-auto md:h-25'
+          className='h-12 w-auto md:h-24'
           unoptimized
           priority
         />
