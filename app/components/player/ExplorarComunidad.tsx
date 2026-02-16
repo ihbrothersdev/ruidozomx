@@ -23,11 +23,13 @@ export function ExplorarComunidad() {
           muted
           playsInline
           className='absolute inset-[8%] z-0 h-[84%] w-[84%] object-cover'
+          aria-label='Video mostrando la exploración de la comunidad'
         >
           <source
             src='/assets/body2/vinoculares.mp4'
             type='video/mp4'
           />
+          Tu navegador no soporta la reproducción de video. Aquí se muestra un video que ilustra la exploración de la comunidad.
         </video>
       </div>
 
