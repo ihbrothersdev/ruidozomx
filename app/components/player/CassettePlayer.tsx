@@ -1,5 +1,7 @@
 import type { Song, PlayerState } from '@/lib/types'
 import { Cassette } from './Cassette'
+import { DialogBubble } from './DialogBubble'
+import { PlayingArrow } from './PlayingArrow'
 
 interface CassettePlayerProps {
   songs: Song[]
@@ -21,6 +23,8 @@ export function CassettePlayer({ songs, playerState }: CassettePlayerProps) {
           date={playerState.date}
           side={playerState.currentSide}
         />
+        <PlayingArrow />
+        <DialogBubble />
       </div>
     </div>
   )

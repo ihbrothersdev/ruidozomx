@@ -1,4 +1,6 @@
 import Image from 'next/image'
+import { CassetteReels } from './CassetteReels'
+import { CassetteLabels } from './CassetteLabels'
 
 interface CassetteProps {
   songTitle: string
@@ -27,17 +29,27 @@ export function Cassette({ songTitle, artist, date, side }: CassetteProps) {
         />
       </div>
 
-      {/* Tape body */}
+      {/* Consolidated cassette body (A/B, arrow, 90 baked in) */}
       <div className='absolute inset-0 z-[1]'>
         <Image
-          src='/assets/cassette/tape.png'
-          alt='Cassette tape'
+          src={side === 'A' ? '/assets/cassette/cassette-side-a.png' : '/assets/cassette/cassette-side-b.png'}
+          alt={`Cassette lado ${side}`}
           fill
           className='object-contain'
           priority
           unoptimized
         />
       </div>
+
+      {/* Reels (separate for future animation) */}
+      <CassetteReels />
+
+      {/* Dynamic text labels (song title, artist, date) */}
+      <CassetteLabels
+        songTitle={songTitle}
+        artist={artist}
+        date={date}
+      />
     </div>
   )
 }
