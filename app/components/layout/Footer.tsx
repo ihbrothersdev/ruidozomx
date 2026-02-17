@@ -134,7 +134,7 @@ export function Footer() {
 
       {/* Social media */}
       <div className='mx-auto mt-10 max-w-5xl text-center'>
-        <p className='font-impact-label mb-4 text-sm tracking-wider text-gray-400 uppercase'>Siguenos en</p>
+        <p className='font-impact-label mb-4 text-sm tracking-wider text-gray-400 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
             href='#'
