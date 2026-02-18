@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CassettePlayer } from './components/player/CassettePlayer'
 import { Header } from './components/layout/Header'
 import { MOCK_SONGS, MOCK_PLAYER_STATE } from '@/lib/mock-data'
+import { formatCassetteDate } from '@/lib/utils'
 import { Footer } from './components/layout/Footer'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { SongList } from './components/player/SongList'
@@ -29,7 +30,7 @@ export default async function Home() {
             <div className='flex justify-center'>
               <CassettePlayer
                 songs={MOCK_SONGS}
-                playerState={MOCK_PLAYER_STATE}
+                playerState={{ ...MOCK_PLAYER_STATE, date: formatCassetteDate() }}
               />
             </div>
           </div>
