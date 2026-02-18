@@ -6,9 +6,9 @@ export function Footer() {
     <footer className='relative z-10 mt-8 px-4 py-12 md:px-8'>
       <div className='mx-auto flex max-w-5xl flex-col gap-8 md:flex-row md:gap-12'>
         {/* Left column - Info */}
-        <div className='flex-1'>
-          <h3 className='font-impact-label mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Información</h3>
-          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
+        <div className='flex-1 font-pt-mono'>
+          <h3 className='mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Información</h3>
+          <ul className='space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='#'
@@ -35,8 +35,8 @@ export function Footer() {
             </li>
           </ul>
 
-          <h3 className='font-impact-label mt-6 mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Usuario</h3>
-          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
+          <h3 className='font-pt-mono mt-6 mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Usuario</h3>
+          <ul className='space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='/signup'
@@ -65,9 +65,9 @@ export function Footer() {
         </div>
 
         {/* Right column - Info */}
-        <div className='flex-1'>
-          <h3 className='font-impact-label mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Navegación</h3>
-          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
+        <div className='flex-1 font-pt-mono'>
+          <h3 className='mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Navegación</h3>
+          <ul className='space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='#'
@@ -126,7 +126,7 @@ export function Footer() {
             alt='Nuestra religión es la música'
             width={1024}
             height={1536}
-            className='w-full max-w-[250px]'
+            className='w-full max-w-[500px]'
             unoptimized
           />
         </div>
