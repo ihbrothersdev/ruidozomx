@@ -47,7 +47,8 @@ export function TransportControls({
       {/* Carcasa housing — centered */}
       <div className='relative mx-auto'>
         <Image
-          src='/assets/controles/carcasa.png'
+        // Remove cassette image and replace with blank placeholder to simplify layout while we build controls
+          src='/assets/controles/.png'
           alt=''
           width={794}
           height={172}
