@@ -1,25 +1,33 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'PTMono';
+  src: url('/assets/fonts/PTMono.ttc') format('collection');
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --font-pt-mono: 'PTMono', monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-corose);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-corose: var(--font-corose);
+  --font-corose-alt: var(--font-corose-alt01);
+  --font-corose-alt2: var(--font-corose-alt02);
+  --font-thanjhirs: var(--font-thanjhirs-brush);
+  --font-baby-doll: var(--font-baby-doll);
+  --font-impact-label: var(--font-impact-label);
+  --font-pt-mono: var(--font-pt-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-corose), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }

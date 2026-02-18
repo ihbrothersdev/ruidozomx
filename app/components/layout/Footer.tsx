@@ -7,8 +7,8 @@ export function Footer() {
       <div className='mx-auto flex max-w-5xl flex-col gap-8 md:flex-row md:gap-12'>
         {/* Left column - Info */}
         <div className='flex-1'>
-          <h3 className='font-impact-label mb-3 text-sm tracking-wider text-gray-400 uppercase'>Información</h3>
-          <ul className='font-baby-doll space-y-1.5 text-sm text-gray-400'>
+          <h3 className='font-impact-label mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Información</h3>
+          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='#'
@@ -35,8 +35,8 @@ export function Footer() {
             </li>
           </ul>
 
-          <h3 className='font-impact-label mt-6 mb-3 text-sm tracking-wider text-gray-400 uppercase'>Usuario</h3>
-          <ul className='font-baby-doll space-y-1.5 text-sm text-gray-400'>
+          <h3 className='font-impact-label mt-6 mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Usuario</h3>
+          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='/signup'
@@ -66,8 +66,8 @@ export function Footer() {
 
         {/* Right column - Info */}
         <div className='flex-1'>
-          <h3 className='font-impact-label mb-3 text-sm tracking-wider text-gray-400 uppercase'>Navegación</h3>
-          <ul className='font-baby-doll space-y-1.5 text-sm text-gray-400'>
+          <h3 className='font-impact-label mb-3 text-2xl tracking-wider text-yellow-100 uppercase'>Navegación</h3>
+          <ul className='font-baby-doll space-y-1.5 text-xl text-yellow-100'>
             <li>
               <Link
                 href='#'
@@ -134,7 +134,7 @@ export function Footer() {
 
       {/* Social media */}
       <div className='mx-auto mt-10 max-w-5xl text-center'>
-        <p className='font-impact-label mb-4 text-sm tracking-wider text-gray-400 uppercase'>Síguenos en</p>
+        <p className='font-impact-label mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
             href='#'
@@ -145,7 +145,7 @@ export function Footer() {
               alt='Facebook'
               width={120}
               height={219}
-              className='h-10 w-auto'
+              className='h-20 w-auto'
               unoptimized
             />
           </Link>
@@ -158,7 +158,7 @@ export function Footer() {
               alt='Instagram'
               width={210}
               height={212}
-              className='h-10 w-auto'
+              className='h-20 w-auto'
               unoptimized
             />
           </Link>
@@ -166,7 +166,7 @@ export function Footer() {
       </div>
 
       {/* Bottom strip */}
-      <div className='mx-auto mt-8 flex max-w-5xl items-center justify-center gap-8'>
+      <div className='mx-auto mt-20 flex max-w-5xl items-center justify-center gap-8'>
         <div className='flex items-center gap-2'>
           <Image
             src='/assets/body3/cuadro-datos.png'

@@ -3,24 +3,39 @@ import localFont from 'next/font/local'
 import './globals.css'
 
 const corose = localFont({
-  src: [
-    {
-      path: '../public/fonts/Corose.otf',
-      weight: '400',
-      style: 'normal'
-    },
-    {
-      path: '../public/fonts/Corose-Alt01.otf',
-      weight: '500',
-      style: 'normal'
-    },
-    {
-      path: '../public/fonts/Corose-Alt02.otf',
-      weight: '700',
-      style: 'normal'
-    }
-  ],
-  variable: '--font-corose'
+  src: './fonts/Corose.otf',
+  variable: '--font-corose',
+  display: 'swap'
+})
+
+const coroseAlt01 = localFont({
+  src: './fonts/Corose-Alt01.otf',
+  variable: '--font-corose-alt01',
+  display: 'swap'
+})
+
+const coroseAlt02 = localFont({
+  src: './fonts/Corose-Alt02.otf',
+  variable: '--font-corose-alt02',
+  display: 'swap'
+})
+
+const thanjhirsBrush = localFont({
+  src: './fonts/ThanjhirsBrush.otf',
+  variable: '--font-thanjhirs-brush',
+  display: 'swap'
+})
+
+const babyDoll = localFont({
+  src: './fonts/BabyDoll.otf',
+  variable: '--font-baby-doll',
+  display: 'swap'
+})
+
+const impactLabel = localFont({
+  src: './fonts/ImpactLabelReversed.ttf',
+  variable: '--font-impact-label',
+  display: 'swap'
 })
 
 export const metadata: Metadata = {
@@ -33,8 +48,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
-      <body className={`${corose.className} antialiased`}>{children}</body>
+    <html lang='es'>
+      <body
+        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   )
 }
