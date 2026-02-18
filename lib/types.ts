@@ -5,6 +5,7 @@ export interface Song {
   side: 'A' | 'B'
   position: number
   durationSeconds: number
+  audioSrc: string
 }
 
 export interface PlayerState {

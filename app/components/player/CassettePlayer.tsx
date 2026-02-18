@@ -1,31 +1,75 @@
-import type { Song, PlayerState } from '@/lib/types'
+'use client'
+
 import { Cassette } from './Cassette'
-import { DialogBubble } from './DialogBubble'
+import { TransportControls } from './TransportControls'
 import { PlayingArrow } from './PlayingArrow'
+import { DialogBubble } from './DialogBubble'
 
 interface CassettePlayerProps {
-  songs: Song[]
-  playerState: PlayerState
+  songTitle: string
+  artist: string
+  date: string
+  side: 'A' | 'B'
+  isPlaying: boolean
+  elapsedSeconds: number
+  progress: number
+  onPlay: () => void
+  onPause: () => void
+  onStop: () => void
+  onNext: () => void
+  onPrev: () => void
+  onSeek: (progress: number) => void
 }
 
-export function CassettePlayer({ songs, playerState }: CassettePlayerProps) {
-  const currentSong = songs.find(s => s.id === playerState.currentSongId)
-
+export function CassettePlayer({
+  songTitle,
+  artist,
+  date,
+  side,
+  isPlaying,
+  elapsedSeconds,
+  progress,
+  onPlay,
+  onPause,
+  onStop,
+  onNext,
+  onPrev,
+  onSeek
+}: CassettePlayerProps) {
   return (
     <div
       className='relative mx-auto w-full'
       style={{ maxWidth: 793 }}
     >
+      {/* Cassette + Playing arrow + Dialog bubble */}
       <div className='relative'>
         <Cassette
-          songTitle={currentSong?.title ?? ''}
-          artist={currentSong?.artist ?? ''}
-          date={playerState.date}
-          side={playerState.currentSide}
+          songTitle={songTitle}
+          artist={artist}
+          date={date}
+          side={side}
+          isPlaying={isPlaying}
         />
         <PlayingArrow />
         <DialogBubble />
       </div>
+
+      {/* Transport controls */}
+      <div className='mt-[-2px]'>
+        <TransportControls
+          elapsedSeconds={elapsedSeconds}
+          isPlaying={isPlaying}
+          progress={progress}
+          onPlay={onPlay}
+          onPause={onPause}
+          onStop={onStop}
+          onNext={onNext}
+          onPrev={onPrev}
+          onSeek={onSeek}
+        />
+      </div>
+
+      {/* <MientrasSuena listenerCount={3} /> */}
     </div>
   )
 }

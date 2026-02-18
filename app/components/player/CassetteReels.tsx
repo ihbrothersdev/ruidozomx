@@ -1,6 +1,11 @@
 import Image from 'next/image'
 
-export function CassetteReels() {
+interface CassetteReelsProps {
+  isPlaying?: boolean
+}
+
+export function CassetteReels({ isPlaying }: CassetteReelsProps) {
+  const spinClass = isPlaying ? 'animate-spin-slow' : ''
   return (
     <>
       {/* Left spool */}
@@ -25,7 +30,7 @@ export function CassetteReels() {
           src='/assets/cassette/rodillo-izquierdo.png'
           alt=''
           fill
-          className='object-contain'
+          className={`object-contain ${spinClass}`}
           unoptimized
         />
       </div>
@@ -52,7 +57,7 @@ export function CassetteReels() {
           src='/assets/cassette/rodillo-derecho.png'
           alt=''
           fill
-          className='object-contain'
+          className={`object-contain ${spinClass}`}
           unoptimized
         />
       </div>
