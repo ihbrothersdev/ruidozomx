@@ -80,13 +80,9 @@ export function useAudioPlayer(
         return a.position - b.position
       })
       const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-      if (currentIndex < sortedSongs.length - 1) {
-        setIsPlaying(true)
-        setCurrentSongId(sortedSongs[currentIndex + 1].id)
-      } else {
-        setCurrentSongId(sortedSongs[0].id)
-        setIsPlaying(false)
-      }
+      const nextIndex = (currentIndex + 1) % sortedSongs.length
+      setIsPlaying(true)
+      setCurrentSongId(sortedSongs[nextIndex].id)
     }
 
     const onPlay = () => setIsPlaying(true)
