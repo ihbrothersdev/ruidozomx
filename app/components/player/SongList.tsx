@@ -1,7 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import type { Song } from '@/lib/types'
+import Image from 'next/image'
+import { SongRow } from './SongRow'
 
 interface SongListProps {
   songs: Song[]
@@ -9,20 +10,18 @@ interface SongListProps {
   onSelectSong?: (id: number) => void
 }
 
-const FIRST_LINE_TOP = 11.5
-const LINE_SPACING = 7.8
-
 export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
-  // TODO: Sort songs by position once data model supports it (Hugo - PR #5)
-  const sideA = songs.filter(s => s.side === 'A')
-  const sideB = songs.filter(s => s.side === 'B')
+  const sides = {
+    A: songs.filter(s => s.side === 'A'),
+    B: songs.filter(s => s.side === 'B')
+  }
+  const rows = Math.max(sides.A.length, sides.B.length, 1)
 
   return (
     <div
       className='relative mx-auto w-full'
       style={{ maxWidth: 793, aspectRatio: '1344 / 975' }}
     >
-      {/* Shadow */}
       <div
         className='absolute z-0'
         style={{ top: '4%', left: '3%', width: '100%', height: '100%' }}
@@ -36,8 +35,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
         />
       </div>
 
-      {/* Notebook background */}
-      <div className='absolute inset-0 z-[1]'>
+      <div className='absolute inset-0 z-1'>
         <Image
           src='/assets/lista-canciones/lista-canciones.png'
           alt='Lista de canciones'
@@ -47,49 +45,18 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
         />
       </div>
 
-      {/* Side A songs */}
       <div
-        className='absolute z-[2]'
-        style={{ left: '6%', top: '8%', width: '42%' }}
+        className='absolute top-[16%] right-[1.5%] bottom-[17.5%] left-[1.5%] z-[2] grid grid-cols-2 gap-x-[3%]'
+        style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}
       >
-        {sideA.map((song, i) => (
-          <button
-            key={song.id}
-            type='button'
-            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
-              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
-            }`}
-            style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
-            onClick={() => onSelectSong?.(song.id)}
-          >
-            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
-            <span className='truncate'>
-              {song.title} - {song.artist}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Side B songs */}
-      <div
-        className='absolute z-[2]'
-        style={{ left: '54%', top: '8%', width: '42%' }}
-      >
-        {sideB.map((song, i) => (
-          <button
-            key={song.id}
-            type='button'
-            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
-              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
-            }`}
-            style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
-            onClick={() => onSelectSong?.(song.id)}
-          >
-            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
-            <span className='truncate'>
-              {song.title} - {song.artist}
-            </span>
-          </button>
+        {Array.from({ length: rows }, (_, i) => (
+          <SongRow
+            key={i}
+            index={i}
+            sides={sides}
+            currentSongId={currentSongId}
+            onSelectSong={onSelectSong}
+          />
         ))}
       </div>
     </div>

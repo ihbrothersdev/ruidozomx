@@ -75,23 +75,20 @@ export function useAudioPlayer(
     }
 
     const onEnded = () => {
-      // Auto-advance to next song
       const sortedSongs = [...songs].sort((a, b) => {
         if (a.side !== b.side) return a.side === 'A' ? -1 : 1
         return a.position - b.position
       })
       const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-      if (currentIndex < sortedSongs.length - 1) {
-        setCurrentSongId(sortedSongs[currentIndex + 1].id)
-      } else {
-        // Wrap to first song
-        setCurrentSongId(sortedSongs[0].id)
-        setIsPlaying(false)
-      }
+      const nextIndex = (currentIndex + 1) % sortedSongs.length
+      setIsPlaying(true)
+      setCurrentSongId(sortedSongs[nextIndex].id)
     }
 
     const onPlay = () => setIsPlaying(true)
-    const onPause = () => setIsPlaying(false)
+    const onPause = () => {
+      if (!audio.ended) setIsPlaying(false)
+    }
 
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
