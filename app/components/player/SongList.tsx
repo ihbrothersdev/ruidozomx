@@ -1,15 +1,19 @@
+'use client'
+
 import Image from 'next/image'
 import type { Song } from '@/lib/types'
 
 interface SongListProps {
   songs: Song[]
   currentSongId: number
+  onSelectSong?: (id: number) => void
 }
 
 const FIRST_LINE_TOP = 11.5
 const LINE_SPACING = 7.8
 
-export function SongList({ songs, currentSongId }: SongListProps) {
+export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
+  // TODO: Sort songs by position once data model supports it (Hugo - PR #5)
   const sideA = songs.filter(s => s.side === 'A')
   const sideB = songs.filter(s => s.side === 'B')
 
@@ -49,16 +53,20 @@ export function SongList({ songs, currentSongId }: SongListProps) {
         style={{ left: '6%', top: '8%', width: '42%' }}
       >
         {sideA.map((song, i) => (
-          <div
+          <button
             key={song.id}
-            className='font-corose flex items-center text-xs text-gray-800'
+            type='button'
+            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
+              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
+            }`}
             style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
+            onClick={() => onSelectSong?.(song.id)}
           >
-            {song.id === currentSongId && <span className='mr-1 text-orange-600'>&#9654;</span>}
+            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
             <span className='truncate'>
               {song.title} - {song.artist}
             </span>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -68,16 +76,20 @@ export function SongList({ songs, currentSongId }: SongListProps) {
         style={{ left: '54%', top: '8%', width: '42%' }}
       >
         {sideB.map((song, i) => (
-          <div
+          <button
             key={song.id}
-            className='font-corose flex items-center text-xs text-gray-800'
+            type='button'
+            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
+              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
+            }`}
             style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
+            onClick={() => onSelectSong?.(song.id)}
           >
-            {song.id === currentSongId && <span className='mr-1 text-orange-600'>&#9654;</span>}
+            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
             <span className='truncate'>
               {song.title} - {song.artist}
             </span>
-          </div>
+          </button>
         ))}
       </div>
     </div>

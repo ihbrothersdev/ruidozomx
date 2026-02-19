@@ -7,9 +7,10 @@ interface CassetteProps {
   artist: string
   date: string
   side: 'A' | 'B'
+  isPlaying?: boolean
 }
 
-export function Cassette({ songTitle, artist, date, side }: CassetteProps) {
+export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteProps) {
   return (
     <div
       className='relative mx-auto w-full'
@@ -35,14 +36,13 @@ export function Cassette({ songTitle, artist, date, side }: CassetteProps) {
           src={side === 'A' ? '/assets/cassette/cassette-side-a.png' : '/assets/cassette/cassette-side-b.png'}
           alt={`Cassette lado ${side}`}
           fill
-          className='object-contain'
           priority
           unoptimized
         />
       </div>
 
       {/* Reels (separate for future animation) */}
-      <CassetteReels />
+      <CassetteReels isPlaying={isPlaying} />
 
       {/* Dynamic text labels (song title, artist, date) */}
       <CassetteLabels
