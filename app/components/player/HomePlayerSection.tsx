@@ -5,7 +5,6 @@ import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { SongList } from './SongList'
 import { ExplorarComunidad } from './ExplorarComunidad'
-import { DecorativeElements } from './DecorativeElements'
 
 interface HomePlayerSectionProps {
   songs: Song[]
