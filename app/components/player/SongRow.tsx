@@ -19,10 +19,10 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
         {song && (
           <button
             type='button'
-            className={`font-corose flex w-full min-w-0 cursor-pointer items-end text-left leading-none ${
+            className={`font-corose flex w-full min-w-0 cursor-pointer items-end pb-[2px] text-left leading-none ${
               isActive ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
             }`}
-            style={{ fontSize: 'clamp(9px, 1.4vw, 14px)', paddingBottom: '4px' }}
+            style={{ fontSize: 'clamp(9px, 1.4vw, 14px)' }}
             onClick={() => onSelectSong?.(song.id)}
           >
             {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
