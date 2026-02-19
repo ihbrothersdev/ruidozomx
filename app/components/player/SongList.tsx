@@ -1,7 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import type { Song } from '@/lib/types'
+import Image from 'next/image'
+import { Fragment } from 'react/jsx-runtime'
 
 interface SongListProps {
   songs: Song[]
@@ -9,13 +10,32 @@ interface SongListProps {
   onSelectSong?: (id: number) => void
 }
 
-const FIRST_LINE_TOP = 11.5
-const LINE_SPACING = 7.8
+const ROWS = 13
 
 export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
-  // TODO: Sort songs by position once data model supports it (Hugo - PR #5)
   const sideA = songs.filter(s => s.side === 'A')
   const sideB = songs.filter(s => s.side === 'B')
+
+  const renderCell = (song: Song | undefined) => {
+    if (!song) return null
+    const isActive = song.id === currentSongId
+
+    return (
+      <button
+        type='button'
+        className={`font-corose flex w-full min-w-0 cursor-pointer items-end text-left leading-none ${
+          isActive ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
+        }`}
+        style={{ fontSize: 'clamp(9px, 1.4vw, 14px)', paddingBottom: '4px' }}
+        onClick={() => onSelectSong?.(song.id)}
+      >
+        {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
+        <span className='min-w-0 truncate'>
+          {song.title} - {song.artist}
+        </span>
+      </button>
+    )
+  }
 
   return (
     <div
@@ -37,7 +57,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
       </div>
 
       {/* Notebook background */}
-      <div className='absolute inset-0 z-[1]'>
+      <div className='absolute inset-0 z-1'>
         <Image
           src='/assets/lista-canciones/lista-canciones.png'
           alt='Lista de canciones'
@@ -47,49 +67,25 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
         />
       </div>
 
-      {/* Side A songs */}
+      {/* Song grid */}
       <div
-        className='absolute z-[2]'
-        style={{ left: '6%', top: '8%', width: '42%' }}
+        className='absolute z-2'
+        style={{
+          top: '16%',
+          bottom: '17.5%',
+          left: '1.5%',
+          right: '1.5%',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gridTemplateRows: `repeat(${ROWS}, 1fr)`,
+          columnGap: '3%'
+        }}
       >
-        {sideA.map((song, i) => (
-          <button
-            key={song.id}
-            type='button'
-            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
-              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
-            }`}
-            style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
-            onClick={() => onSelectSong?.(song.id)}
-          >
-            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
-            <span className='truncate'>
-              {song.title} - {song.artist}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Side B songs */}
-      <div
-        className='absolute z-[2]'
-        style={{ left: '54%', top: '8%', width: '42%' }}
-      >
-        {sideB.map((song, i) => (
-          <button
-            key={song.id}
-            type='button'
-            className={`font-corose flex w-full cursor-pointer items-center text-left text-xs ${
-              song.id === currentSongId ? 'text-orange-600' : 'text-gray-800 hover:text-orange-500'
-            }`}
-            style={{ marginTop: i === 0 ? `${FIRST_LINE_TOP}%` : 0, height: `${LINE_SPACING}%`, lineHeight: 1 }}
-            onClick={() => onSelectSong?.(song.id)}
-          >
-            {song.id === currentSongId && <span className='mr-1'>&#9654;</span>}
-            <span className='truncate'>
-              {song.title} - {song.artist}
-            </span>
-          </button>
+        {Array.from({ length: ROWS }, (_, i) => (
+          <Fragment key={i}>
+            <div className='flex min-w-0 items-end overflow-hidden'>{renderCell(sideA[i])}</div>
+            <div className='flex min-w-0 items-end overflow-hidden'>{renderCell(sideB[i])}</div>
+          </Fragment>
         ))}
       </div>
     </div>
