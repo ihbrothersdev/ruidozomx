@@ -46,17 +46,8 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
       </div>
 
       <div
-        className='absolute z-2'
-        style={{
-          top: '16%',
-          bottom: '17.5%',
-          left: '1.5%',
-          right: '1.5%',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: `repeat(${rows}, 1fr)`,
-          columnGap: '3%'
-        }}
+        className='absolute top-[16%] right-[1.5%] bottom-[17.5%] left-[1.5%] z-2 grid grid-cols-2 gap-x-[3%]'
+        style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}
       >
         {Array.from({ length: rows }, (_, i) => (
           <SongRow
