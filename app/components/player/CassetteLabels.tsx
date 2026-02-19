@@ -26,7 +26,7 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
 
       {/* Date label */}
       <div
-        className='absolute -z-306'
+        className='absolute z-6'
         style={{ left: '5%', top: '65%', width: '22%', height: '14.5%' }}
       >
         <div className='absolute inset-0 flex items-center justify-center'>
