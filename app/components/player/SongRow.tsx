@@ -26,7 +26,7 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
             onClick={() => onSelectSong?.(song.id)}
           >
             {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
-            <span className='min-w-0 truncate'>
+            <span className='min-w-0 truncate text-[16px]'>
               {song.title} - {song.artist}
             </span>
           </button>
