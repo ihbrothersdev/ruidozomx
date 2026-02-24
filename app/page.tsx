@@ -7,11 +7,16 @@ import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 
 export default async function Home() {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
+  let user = null
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // Supabase not configured — continue without auth
+  }
+  
   return (
     <main className='relative min-h-screen'>
       <div
