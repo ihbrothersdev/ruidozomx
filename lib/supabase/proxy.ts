@@ -15,6 +15,11 @@ export async function handleProxyRequest(request: NextRequest) {
     request
   })
 
+  // Skip Supabase auth if env vars are not configured
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    return supabaseResponse
+  }
+
   const { url: supabaseUrl, anonKey } = getSupabaseEnv()
 
   const supabase = createServerClient(supabaseUrl, anonKey, {
