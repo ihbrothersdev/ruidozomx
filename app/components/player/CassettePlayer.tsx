@@ -58,7 +58,7 @@ export function CassettePlayer({
       </div>
 
       {/* Transport controls */}
-      <div className='mt-[-2px]'>
+      <div className='mt-6'>
         <TransportControls
           elapsedSeconds={elapsedSeconds}
           isPlaying={isPlaying}

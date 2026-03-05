@@ -5,7 +5,6 @@ import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { SongList } from './SongList'
 import { ExplorarComunidad } from './ExplorarComunidad'
-import { DecorativeElements } from './DecorativeElements'
 
 interface HomePlayerSectionProps {
   songs: Song[]
@@ -37,7 +36,6 @@ export function HomePlayerSection({ songs, initialSongId, date }: HomePlayerSect
       {/* Body 1: Cassette player area */}
       <section className='relative flex flex-col items-center px-4 pt-4 pb-8'>
         <div className='relative mx-auto w-full max-w-5xl'>
-          <DecorativeElements />
           <div className='flex justify-center'>
             <CassettePlayer
               songTitle={currentSong?.title ?? ''}
