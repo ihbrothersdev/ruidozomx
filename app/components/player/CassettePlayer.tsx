@@ -4,6 +4,7 @@ import { Cassette } from './Cassette'
 import { TransportControls } from './TransportControls'
 import { PlayingArrow } from './PlayingArrow'
 import { DialogBubble } from './DialogBubble'
+import { MientrasSuena } from './MientrasSuena'
 
 interface CassettePlayerProps {
   songTitle: string
@@ -11,6 +12,7 @@ interface CassettePlayerProps {
   date: string
   side: 'A' | 'B'
   isPlaying: boolean
+  isStopped: boolean
   elapsedSeconds: number
   progress: number
   onPlay: () => void
@@ -27,6 +29,7 @@ export function CassettePlayer({
   date,
   side,
   isPlaying,
+  isStopped,
   elapsedSeconds,
   progress,
   onPlay,
@@ -59,6 +62,7 @@ export function CassettePlayer({
         <TransportControls
           elapsedSeconds={elapsedSeconds}
           isPlaying={isPlaying}
+          isStopped={isStopped}
           progress={progress}
           onPlay={onPlay}
           onPause={onPause}

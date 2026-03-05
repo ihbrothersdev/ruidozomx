@@ -8,6 +8,7 @@ import { ProgressBar } from './ProgressBar'
 interface TransportControlsProps {
   elapsedSeconds: number
   isPlaying: boolean
+  isStopped: boolean
   progress: number
   onPlay: () => void
   onPause: () => void
@@ -20,6 +21,7 @@ interface TransportControlsProps {
 export function TransportControls({
   elapsedSeconds,
   isPlaying,
+  isStopped,
   progress,
   onPlay,
   onPause,
@@ -44,11 +46,10 @@ export function TransportControls({
         unoptimized
       />
 
-      {/* Carcasa housing — centered */}
-      <div className='relative mx-auto'>
+      {/* Carcasa housing — centered, 3/4 width */}
+      <div className='relative mx-auto w-3/4'>
         <Image
-        // Remove cassette image and replace with blank placeholder to simplify layout while we build controls
-          src='/assets/controles/.png'
+          src='/assets/controles/carcasa.png'
           alt=''
           width={794}
           height={172}
@@ -77,7 +78,7 @@ export function TransportControls({
                 onSrc='/assets/controles/stop-on.png'
                 alt='Stop'
                 onClick={onStop}
-                active={!isPlaying && elapsedSeconds === 0}
+                active={isStopped}
               />
               <TransportButton
                 offSrc='/assets/controles/play-off.png'

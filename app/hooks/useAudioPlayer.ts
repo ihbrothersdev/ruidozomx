@@ -5,6 +5,7 @@ import type { Song } from '@/lib/types'
 
 interface AudioPlayerState {
   isPlaying: boolean
+  isStopped: boolean
   currentSongId: number
   currentSide: 'A' | 'B'
   elapsedSeconds: number
@@ -29,6 +30,7 @@ export function useAudioPlayer(
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
 
@@ -57,7 +59,7 @@ export function useAudioPlayer(
     audio.load()
 
     if (wasPlaying) {
-      audio.play().catch(() => { })
+      audio.play().catch(() => {})
     }
   }, [currentSongId]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -75,20 +77,23 @@ export function useAudioPlayer(
     }
 
     const onEnded = () => {
+      // Auto-advance to next song
       const sortedSongs = [...songs].sort((a, b) => {
         if (a.side !== b.side) return a.side === 'A' ? -1 : 1
         return a.position - b.position
       })
       const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-      const nextIndex = (currentIndex + 1) % sortedSongs.length
-      setIsPlaying(true)
-      setCurrentSongId(sortedSongs[nextIndex].id)
+      if (currentIndex < sortedSongs.length - 1) {
+        setCurrentSongId(sortedSongs[currentIndex + 1].id)
+      } else {
+        // Wrap to first song
+        setCurrentSongId(sortedSongs[0].id)
+        setIsPlaying(false)
+      }
     }
 
     const onPlay = () => setIsPlaying(true)
-    const onPause = () => {
-      if (!audio.ended) setIsPlaying(false)
-    }
+    const onPause = () => setIsPlaying(false)
 
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
@@ -106,7 +111,8 @@ export function useAudioPlayer(
   }, [songs, currentSongId])
 
   const play = useCallback(() => {
-    audioRef.current?.play().catch(() => { })
+    setIsStopped(false)
+    audioRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
@@ -119,6 +125,7 @@ export function useAudioPlayer(
     audio.pause()
     audio.currentTime = 0
     setElapsedSeconds(0)
+    setIsStopped(true)
   }, [])
 
   const next = useCallback(() => {
@@ -150,15 +157,17 @@ export function useAudioPlayer(
   }, [])
 
   const playSong = useCallback((id: number) => {
+    setIsStopped(false)
     setCurrentSongId(id)
     // Will auto-play via the useEffect that watches currentSongId
     setTimeout(() => {
-      audioRef.current?.play().catch(() => { })
+      audioRef.current?.play().catch(() => {})
     }, 100)
   }, [])
 
   return {
     isPlaying,
+    isStopped,
     currentSongId,
     currentSide,
     elapsedSeconds,
