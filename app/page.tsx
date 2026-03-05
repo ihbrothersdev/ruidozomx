@@ -5,6 +5,7 @@ import { formatCassetteDate } from '@/lib/utils'
 import { Footer } from './components/layout/Footer'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
+import { DecorativeElements } from './components/player/DecorativeElements'
 
 export default async function Home() {
   let user = null
@@ -24,7 +25,8 @@ export default async function Home() {
         style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
       />
 
-      <div className='relative z-10'>
+      <div className='relative z-10 overflow-x-hidden'>
+        <DecorativeElements />
         <Header user={user} />
 
         <HomePlayerSection

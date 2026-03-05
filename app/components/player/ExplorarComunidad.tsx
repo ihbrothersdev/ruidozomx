@@ -14,7 +14,7 @@ export function ExplorarComunidad() {
           src='/assets/body2/textura-back-video.png'
           alt=''
           fill
-          className='z-[1] object-cover'
+          className='z-0 object-cover'
           unoptimized
         />
         <video
@@ -22,7 +22,7 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
-          className='absolute inset-[8%] z-0 h-[84%] w-[84%] object-cover'
+          className='absolute inset-[8%] z-[1] object-cover'
           aria-label='Video mostrando la exploración de la comunidad'
         >
           <source
@@ -34,7 +34,7 @@ export function ExplorarComunidad() {
       </div>
 
       {/* Label */}
-      <p className='font-impact-label mt-2 text-sm tracking-wider text-gray-300 uppercase'>Explorar Comunidad</p>
+      <p className='font-impact-label mt-2 text-xl tracking-wider text-green-500 uppercase'>Explorar Comunidad</p>
     </div>
   )
 }
