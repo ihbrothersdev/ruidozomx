@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 
 export function ExplorarComunidad() {
@@ -22,19 +20,19 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
-          className='absolute inset-[8%] z-[1] object-cover'
-          aria-label='Video mostrando la exploración de la comunidad'
+          className='absolute inset-[8%] z-[1] h-[84%] w-[84%] object-cover'
+          aria-label='Video de la comunidad Ruidozo'
         >
           <source
             src='/assets/body2/vinoculares.mp4'
             type='video/mp4'
           />
-          Tu navegador no soporta la reproducción de video. Aquí se muestra un video que ilustra la exploración de la comunidad.
+          Tu navegador no soporta el elemento de video.
         </video>
       </div>
 
       {/* Label */}
-      <p className='font-impact-label mt-2 text-xl tracking-wider text-green-500 uppercase'>Explorar Comunidad</p>
+      <p className='font-impact-label mt-2 text-xl tracking-wider text-green-300 uppercase'>Explorar Comunidad</p>
     </div>
   )
 }

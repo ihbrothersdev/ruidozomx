@@ -47,7 +47,7 @@ export function TransportControls({
       />
 
       {/* Carcasa housing — centered, 3/4 width */}
-      <div className='relative mx-auto w-3/4'>
+      <div className='relative mx-auto w-full' style={{ maxWidth: 700 }}>
         <Image
           src='/assets/controles/carcasa.png'
           alt=''
@@ -60,13 +60,13 @@ export function TransportControls({
         {/* Content overlaid on carcasa */}
         <div className='absolute inset-0 flex flex-col justify-center px-[5%]'>
           {/* Progress bar row */}
-          <div className='mb-1'>
+          <div className='mb-2'>
             <ProgressBar progress={progress} onSeek={onSeek} />
           </div>
 
           {/* Buttons + time counter row */}
-          <div className='flex items-center gap-[1%]'>
-            <div className='flex flex-1 items-center gap-[1%]'>
+           <div className='flex items-center gap-[1%]'>
+            <div className='flex flex-1 items-center gap-[1%] pt-4'>
               <TransportButton
                 offSrc='/assets/controles/regresar-off.png'
                 onSrc='/assets/controles/regresar-on.png'

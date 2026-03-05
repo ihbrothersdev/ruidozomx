@@ -5,7 +5,7 @@ import { formatCassetteDate } from '@/lib/utils'
 import { Footer } from './components/layout/Footer'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
-import { DecorativeElements } from './components/player/DecorativeElements'
+import Image from 'next/image'
 
 export default async function Home() {
   let user = null
@@ -17,7 +17,7 @@ export default async function Home() {
   } catch {
     // Supabase not configured — continue without auth
   }
-  
+
   return (
     <main className='relative min-h-screen'>
       <div
@@ -26,7 +26,17 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <DecorativeElements />
+        {/* Virgin Mary collage - left side */}
+        <div className='absolute top-0 left-2 z-0 hidden lg:block'>
+          <Image
+            src='/assets/decorativos/pedazo-de-papel.png'
+            alt=''
+            width={521}
+            height={1179}
+            className='w-full'
+            unoptimized
+          />
+        </div>
         <Header user={user} />
 
         <HomePlayerSection
@@ -34,6 +44,17 @@ export default async function Home() {
           initialSongId={MOCK_PLAYER_STATE.currentSongId}
           date={formatCassetteDate()}
         />
+        {/* Rocket man - right side */}
+        <div className='absolute top-200 -right-20 z-0 hidden lg:block'>
+          <Image
+            src='/assets/decorativos/cohete.png'
+            alt=''
+            width={384}
+            height={839}
+            className='w-full'
+            unoptimized
+          />
+        </div>
 
         <SomosTrinchera />
 
