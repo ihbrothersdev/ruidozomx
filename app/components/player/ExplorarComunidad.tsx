@@ -24,7 +24,7 @@ export function ExplorarComunidad() {
           aria-label='Video de la comunidad Ruidozo'
         >
           <source
-            src='/assets/body2/vinoculares.mp4'
+            src='/assets/body2/binoculares.webm'
             type='video/mp4'
           />
           Tu navegador no soporta el elemento de video.
