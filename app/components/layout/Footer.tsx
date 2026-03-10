@@ -169,36 +169,36 @@ export function Footer() {
       <div className='mx-auto mt-20 flex max-w-5xl items-center justify-center gap-8'>
         <div className='flex items-center gap-2'>
           <Image
-            src='/assets/body3/cuadro-datos.png'
+            src='/assets/body3/telefono.png'
             alt=''
             width={379}
             height={63}
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500'>aún no hay</span>
+          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
-            src='/assets/body3/cuadro-datos.png'
+            src='/assets/body3/correo.png'
             alt=''
             width={379}
             height={63}
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500'>aún no hay</span>
+          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
-            src='/assets/body3/cuadro-datos.png'
+            src='/assets/body3/whatsapp.png'
             alt=''
             width={379}
             height={63}
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500'>aún no hay</span>
+          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
         </div>
       </div>
     </footer>

@@ -59,8 +59,8 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
         <Image
           src='/assets/controles/barra-naranja.png'
           alt=''
-          width={321}
-          height={12}
+          width={230}
+          height={9}
           className='h-full w-full object-cover object-left'
           unoptimized
           draggable={false}
@@ -76,8 +76,8 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
         <Image
           src='/assets/controles/bolita.png'
           alt='Scrubber'
-          width={34}
-          height={36}
+          width={26}
+          height={28}
           className='h-5 w-auto'
           unoptimized
           draggable={false}
@@ -91,8 +91,8 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
         <Image
           src='/assets/controles/barra-negra.png'
           alt=''
-          width={591}
-          height={12}
+          width={424}
+          height={9}
           className='h-full w-full object-cover object-right'
           unoptimized
           draggable={false}

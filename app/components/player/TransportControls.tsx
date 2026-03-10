@@ -51,22 +51,22 @@ export function TransportControls({
         <Image
           src='/assets/controles/carcasa.png'
           alt=''
-          width={794}
-          height={172}
+          width={570}
+          height={123}
           className='w-full'
           unoptimized
         />
 
         {/* Content overlaid on carcasa */}
-        <div className='absolute inset-0 flex flex-col justify-center px-[5%]'>
+        <div className='absolute inset-0 flex flex-col justify-center'>
           {/* Progress bar row */}
-          <div className='mb-2'>
+          <div className='mb-1'>
             <ProgressBar progress={progress} onSeek={onSeek} />
           </div>
 
           {/* Buttons + time counter row */}
-           <div className='flex items-center gap-[1%]'>
-            <div className='flex flex-1 items-center gap-[1%] pt-4'>
+           <div className='flex items-center'>
+            <div className='flex w-[70%] items-center'>
               <TransportButton
                 offSrc='/assets/controles/regresar-off.png'
                 onSrc='/assets/controles/regresar-on.png'

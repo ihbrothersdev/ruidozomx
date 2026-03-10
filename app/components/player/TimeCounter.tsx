@@ -9,28 +9,28 @@ function Digit({ topSrc, bottomSrc, value }: { topSrc: string; bottomSrc: string
     <div className='flex flex-col'>
       <div
         className='relative flex items-end justify-center'
-        style={{ width: 35, height: 43 }}
+        style={{ width: 25, height: 31 }}
       >
         <Image
           src={topSrc}
           alt=''
-          width={35}
-          height={43}
+          width={25}
+          height={31}
           unoptimized
         />
-        <span className='font-thanjhirs absolute inset-0 flex items-center justify-center text-xl text-amber-100'>
+        <span className='font-thanjhirs absolute inset-0 flex items-center justify-center text-sm text-amber-100'>
           {value}
         </span>
       </div>
       <div
         className='relative flex items-start justify-center'
-        style={{ width: 37, height: 41 }}
+        style={{ width: 27, height: 29 }}
       >
         <Image
           src={bottomSrc}
           alt=''
-          width={37}
-          height={41}
+          width={27}
+          height={29}
           unoptimized
         />
       </div>
@@ -45,7 +45,7 @@ export function TimeCounter({ seconds }: TimeCounterProps) {
   const secStr = String(secs).padStart(2, '0')
 
   return (
-    <div className='flex items-center gap-0.5'>
+    <div className='flex items-center gap-px'>
       <Digit
         topSrc='/assets/controles/min-left-top.png'
         bottomSrc='/assets/controles/min-left-bottom.png'
@@ -56,7 +56,7 @@ export function TimeCounter({ seconds }: TimeCounterProps) {
         bottomSrc='/assets/controles/min-right-bottom.png'
         value={minStr[1]}
       />
-      <span className='font-thanjhirs px-0.5 text-xl text-amber-100'>:</span>
+      <span className='font-thanjhirs px-px text-sm text-amber-100'>:</span>
       <Digit
         topSrc='/assets/controles/sec-left-top.png'
         bottomSrc='/assets/controles/sec-left-bottom.png'

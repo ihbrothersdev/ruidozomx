@@ -3,16 +3,16 @@ import Image from 'next/image'
 export function ExplorarComunidad() {
   return (
     <div className='flex flex-col items-center'>
-      {/* Torn paper frame with video */}
       <div
         className='relative overflow-hidden'
-        style={{ width: 280, aspectRatio: '1206 / 759' }}
+        style={{ width: 340, aspectRatio: '1206 / 759' }}
       >
         <Image
           src='/assets/body2/textura-back-video.png'
           alt=''
           fill
           className='z-0 object-cover'
+          style={{ width: '100%', height: '100%' }}
           unoptimized
         />
         <video
@@ -20,7 +20,8 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
-          className='absolute inset-[8%] z-[1] h-[84%] w-[84%] object-cover'
+          className='absolute inset-[8%] z-[1] object-cover -top-3'
+          style={{width: '110%', height: '110%'}}
           aria-label='Video de la comunidad Ruidozo'
         >
           <source
@@ -32,7 +33,7 @@ export function ExplorarComunidad() {
       </div>
 
       {/* Label */}
-      <p className='font-impact-label mt-2 text-xl tracking-wider text-green-300 uppercase'>Explorar Comunidad</p>
+      <p className='font-impact-label mt-2 text-2xl tracking-wider text-green-300 uppercase'>Explorar Comunidad</p>
     </div>
   )
 }

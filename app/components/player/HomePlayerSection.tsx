@@ -4,7 +4,6 @@ import type { Song } from '@/lib/types'
 import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { SongList } from './SongList'
-import { ExplorarComunidad } from './ExplorarComunidad'
 
 interface HomePlayerSectionProps {
   songs: Song[]
@@ -57,13 +56,10 @@ export function HomePlayerSection({ songs, initialSongId, date }: HomePlayerSect
         </div>
       </section>
 
-      {/* Body 2: Song list + community */}
+      {/* Body 2: Song list */}
       <section className='relative px-4 py-8'>
         <div className='relative mx-auto max-w-5xl'>
-          <div className='flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center'>
-            <div className='hidden md:block'>
-              <ExplorarComunidad />
-            </div>
+          <div className='flex flex-col items-center gap-2 md:flex-row md:items-start md:justify-center'>
             <div className='w-full max-w-[793px] flex-1'>
               <SongList
                 songs={songs}

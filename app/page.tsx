@@ -6,6 +6,7 @@ import { Footer } from './components/layout/Footer'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 import Image from 'next/image'
+import { ExplorarComunidad } from './components/player/ExplorarComunidad'
 
 export default async function Home() {
   let user = null
@@ -44,8 +45,14 @@ export default async function Home() {
           initialSongId={MOCK_PLAYER_STATE.currentSongId}
           date={formatCassetteDate()}
         />
+
+        {/* Explorar Comunidad - left side */}
+        <div className='hidden md:block absolute top-80 left-20 z-0 hidden lg:block top-300'>
+            <ExplorarComunidad />
+        </div>
+
         {/* Rocket man - right side */}
-        <div className='absolute top-200 -right-20 z-0 hidden lg:block'>
+        <div className='absolute top-210 right-15 z-0 hidden lg:block'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
@@ -54,7 +61,7 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
-        </div>
+        </div>        
 
         <SomosTrinchera />
 
