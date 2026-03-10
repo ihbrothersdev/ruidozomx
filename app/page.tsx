@@ -47,7 +47,7 @@ export default async function Home() {
         />
 
         {/* Explorar Comunidad - left side */}
-        <div className='hidden md:block absolute top-80 left-20 z-0 hidden lg:block top-300'>
+        <div className='hidden lg:block absolute top-80 left-20 z-0 top-300'>
             <ExplorarComunidad />
         </div>
 

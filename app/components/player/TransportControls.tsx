@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { TransportButton } from './TransportButton'
+import { PrevButton, StopButton, PlayButton, PauseButton, NextButton } from './TransportButton'
 import { TimeCounter } from './TimeCounter'
 import { ProgressBar } from './ProgressBar'
 
@@ -46,65 +46,35 @@ export function TransportControls({
         unoptimized
       />
 
-      {/* Carcasa housing — centered, 3/4 width */}
-      <div className='relative mx-auto w-full' style={{ maxWidth: 700 }}>
-        <Image
-          src='/assets/controles/carcasa.png'
-          alt=''
-          width={570}
-          height={123}
-          className='w-full'
-          unoptimized
-        />
+      <div className='mx-auto flex w-full justify-center' style={{ maxWidth: 700 }}>
+        <div className='relative'>
+          <Image
+            src='/assets/controles/carcasa.png'
+            alt=''
+            width={570}
+            height={123}
+            unoptimized
+          />
 
-        {/* Content overlaid on carcasa */}
-        <div className='absolute inset-0 flex flex-col justify-center'>
-          {/* Progress bar row */}
-          <div className='mb-1'>
-            <ProgressBar progress={progress} onSeek={onSeek} />
-          </div>
-
-          {/* Buttons + time counter row */}
-           <div className='flex items-center'>
-            <div className='flex w-[70%] items-center'>
-              <TransportButton
-                offSrc='/assets/controles/regresar-off.png'
-                onSrc='/assets/controles/regresar-on.png'
-                alt='Regresar'
-                onClick={onPrev}
-              />
-              <TransportButton
-                offSrc='/assets/controles/stop-off.png'
-                onSrc='/assets/controles/stop-on.png'
-                alt='Stop'
-                onClick={onStop}
-                active={isStopped}
-              />
-              <TransportButton
-                offSrc='/assets/controles/play-off.png'
-                onSrc='/assets/controles/play-on.png'
-                alt='Play'
-                onClick={onPlay}
-                active={isPlaying}
-              />
-              <TransportButton
-                offSrc='/assets/controles/pausa-off.png'
-                onSrc='/assets/controles/pausa-on.png'
-                alt='Pausa'
-                onClick={onPause}
-                active={!isPlaying && elapsedSeconds > 0}
-              />
-              <TransportButton
-                offSrc='/assets/controles/adelantar-off.png'
-                onSrc='/assets/controles/adelantar-on.png'
-                alt='Adelantar'
-                onClick={onNext}
-              />
+          {/* Content overlaid on carcasa */}
+          <div className='absolute inset-0 flex flex-col items-center justify-center'>
+            {/* Progress bar row */}
+            <div className='mb-1 px-[4%]'>
+              <ProgressBar progress={progress} onSeek={onSeek} />
             </div>
 
-            {/* Time counter */}
-            <div className='shrink-0'>
-              <TimeCounter seconds={elapsedSeconds} />
+            {/* Buttons + time counter row */}
+            <div className='flex items-center'>
+              <PrevButton onClick={onPrev} />
+              <StopButton onClick={onStop} active={isStopped} />
+              <PlayButton onClick={onPlay} active={isPlaying} />
+              <PauseButton onClick={onPause} active={!isPlaying && elapsedSeconds > 0} />
+              <NextButton onClick={onNext} />
+
+              {/* Time counter */}
+              <div className='shrink-0'>
+                <TimeCounter seconds={elapsedSeconds} />
+              </div>
             </div>
           </div>
         </div>
