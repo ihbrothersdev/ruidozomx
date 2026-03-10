@@ -9,13 +9,13 @@ function Digit({ topSrc, bottomSrc, value }: { topSrc: string; bottomSrc: string
     <div className='flex flex-col'>
       <div
         className='relative flex items-end justify-center'
-        style={{ width: 25, height: 31 }}
+        style={{ width: 24, height: 29 }}
       >
         <Image
           src={topSrc}
           alt=''
-          width={25}
-          height={31}
+          width={24}
+          height={29}
           unoptimized
         />
         <span className='font-thanjhirs absolute inset-0 flex items-center justify-center text-sm text-amber-100'>
@@ -24,12 +24,12 @@ function Digit({ topSrc, bottomSrc, value }: { topSrc: string; bottomSrc: string
       </div>
       <div
         className='relative flex items-start justify-center'
-        style={{ width: 27, height: 29 }}
+        style={{ width: 24, height: 29 }}
       >
         <Image
           src={bottomSrc}
           alt=''
-          width={27}
+          width={24}
           height={29}
           unoptimized
         />
