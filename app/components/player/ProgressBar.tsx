@@ -48,7 +48,7 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
   return (
     <div
       ref={barRef}
-      className='relative flex h-3 w-full cursor-pointer items-center'
+      className='relative flex h-3 w-[81%] cursor-pointer items-center'
       onClick={handleSeek}
     >
       {/* Orange elapsed bar */}

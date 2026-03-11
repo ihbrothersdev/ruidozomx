@@ -37,6 +37,16 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
+         <div className='absolute top-205 left-55 z-0 hidden lg:block'>
+            <Image
+              src='/assets/body1/mientras-suena.png'
+              alt='Mientras suena'
+              width={230}
+              height={159}
+              unoptimized
+            />
+          </div>
+
         </div>
         <Header user={user} />
 
@@ -47,8 +57,8 @@ export default async function Home() {
         />
 
         {/* Explorar Comunidad - left side */}
-        <div className='hidden lg:block absolute top-80 left-20 z-0 top-300'>
-            <ExplorarComunidad />
+        <div className='hidden lg:block absolute left-20 z-0 top-330'>
+          <ExplorarComunidad />
         </div>
 
         {/* Rocket man - right side */}
@@ -61,7 +71,7 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
-        </div>        
+        </div>
 
         <SomosTrinchera />
 

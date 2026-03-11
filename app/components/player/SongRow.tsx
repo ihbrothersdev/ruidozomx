@@ -26,8 +26,11 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
             onClick={() => onSelectSong?.(song.id)}
           >
             {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
-            <span className='min-w-0 truncate text-[16px]'>
-              {song.title} - {song.artist}
+            <span className='shrink-0 text-[16px] font-corose-alt font-bold'>
+              {index + 1}. {song.title}
+            </span>
+            <span className='min-w-0 truncate text-[13px] font-corose'>
+              {' '}- {song.artist}
             </span>
           </button>
         )}

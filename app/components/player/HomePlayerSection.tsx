@@ -3,6 +3,7 @@
 import type { Song } from '@/lib/types'
 import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
+import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
 
 interface HomePlayerSectionProps {
@@ -55,6 +56,10 @@ export function HomePlayerSection({ songs, initialSongId, date }: HomePlayerSect
           </div>
         </div>
       </section>
+
+    <div className="pb-30">
+      <MientrasSuena />
+    </div>
 
       {/* Body 2: Song list */}
       <section className='relative px-4 py-8'>

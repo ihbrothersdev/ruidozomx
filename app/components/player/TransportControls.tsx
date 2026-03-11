@@ -58,13 +58,12 @@ export function TransportControls({
 
           {/* Content overlaid on carcasa */}
           <div className='absolute inset-0 flex flex-col items-center justify-center'>
-            {/* Progress bar row */}
-            <div className='mb-1 px-[4%] py-[2.4%]'>
+            <div className='px-[4%] py-[2.4%]'>
               <ProgressBar progress={progress} onSeek={onSeek} />
             </div>
 
             {/* Buttons + time counter row */}
-            <div className='flex items-center'>
+            <div className='flex items-center px-[3%]'>
               <PrevButton onClick={onPrev} />
               <StopButton onClick={onStop} active={isStopped} />
               <PlayButton onClick={onPlay} active={isPlaying} />
@@ -72,7 +71,7 @@ export function TransportControls({
               <NextButton onClick={onNext} />
 
               {/* Time counter */}
-              <div className='shrink-0'>
+              <div className='ml-2'>
                 <TimeCounter seconds={elapsedSeconds} />
               </div>
             </div>

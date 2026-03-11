@@ -4,7 +4,6 @@ import { Cassette } from './Cassette'
 import { TransportControls } from './TransportControls'
 import { PlayingArrow } from './PlayingArrow'
 import { DialogBubble } from './DialogBubble'
-import { MientrasSuena } from './MientrasSuena'
 
 interface CassettePlayerProps {
   songTitle: string
@@ -72,8 +71,6 @@ export function CassettePlayer({
           onSeek={onSeek}
         />
       </div>
-
-      {/* <MientrasSuena listenerCount={3} /> */}
     </div>
   )
 }

@@ -1,21 +1,54 @@
-import Image from 'next/image'
+import { useState, useEffect, useCallback } from 'react'
 
-interface MientrasSuenaProps {
-  listenerCount: number
-}
+const FAKE_NAMES = [
+  'Carlos', 'María', 'Diego', 'Valentina', 'Andrés',
+  'Camila', 'Santiago', 'Sofía', 'Mateo', 'Isabella',
+  'Sebastián', 'Lucía', 'Emiliano', 'Regina', 'Nicolás',
+  'Fernanda', 'Daniel', 'Ximena', 'Alejandro', 'Paula'
+]
 
-export function MientrasSuena({ listenerCount }: MientrasSuenaProps) {
+type Message =
+  | { type: 'listeners'; count: number }
+  | { type: 'registered'; name: string }
+
+export function MientrasSuena() {
+  const [listenerCount, setListenerCount] = useState(3)
+  // const [message, setMessage] = useState<Message>({ type: 'listeners', count: 3 })
+
+  const pickRandomName = useCallback(() => {
+    return FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)]
+  }, [])
+
+  useEffect(() => {
+    const initial = Math.floor(Math.random() * 8) + 2
+    setListenerCount(initial)
+    // setMessage({ type: 'listeners', count: initial })
+
+    const interval = setInterval(() => {
+      const showRegistration = Math.random() < 0.3
+
+      if (showRegistration) {
+        // setMessage({ type: 'registered', name: pickRandomName() })
+      } else {
+        setListenerCount(prev => {
+          const delta = Math.random() < 0.5 ? 1 : -1
+          const next = Math.max(1, Math.min(15, prev + delta))
+          // setMessage({ type: 'listeners', count: next })
+          return next
+        })
+      }
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [pickRandomName])
+
   return (
-    <div className='mx-auto mt-3 flex max-w-[793px] items-center gap-3'>
-      {/* Mientras Suena tape label */}
-      <Image
-        src='/assets/body1/mientras-suena.png'
-        alt='Mientras suena'
-        width={477}
-        height={159}
-        className='h-8 w-auto md:h-10'
-        unoptimized
-      />
+    <div className='mx-auto flex max-w-[793px] justify-center px-4 mt-5'>
+      <p className='font-impact-label text-[25px] uppercase text-green-300'>
+          {`${listenerCount} personas estan escuchando el mixtape`}
+        {/* {message.type === 'listeners'
+          ? `${message.count} personas estan escuchando el mixtape`
+          : `Usuario ${message.name} se acaba de registrar`} */}
+      </p>
     </div>
   )
 }
