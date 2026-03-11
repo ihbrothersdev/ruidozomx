@@ -17,7 +17,10 @@ export interface FormFieldProps {
 export function FormField({ label, name, type = 'text', required, placeholder, textarea }: FormFieldProps) {
   return (
     <div className='space-y-1'>
-      <Label htmlFor={name} className={labelCls}>
+      <Label
+        htmlFor={name}
+        className={labelCls}
+      >
         {label}
         {required && '*'}
       </Label>
