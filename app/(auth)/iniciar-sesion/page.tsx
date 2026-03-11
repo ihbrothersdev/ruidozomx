@@ -1,16 +1,19 @@
 import Link from 'next/link'
 import { login } from '../actions'
 import { type AuthSearchParams } from '../types'
+import { Input } from '@/app/components/ui/input'
+import { Label } from '@/app/components/ui/label'
+import { Button } from '@/app/components/ui/button'
 
 export default async function LoginPage({ searchParams }: { searchParams: AuthSearchParams }) {
   const { error, message } = await searchParams
 
   return (
-    <div className='flex min-h-screen items-center justify-center px-4'>
+    <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a] bg-[url("/assets/textura/background-textura.jpg")] bg-cover bg-center px-4'>
       <div className='w-full max-w-sm space-y-6'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold'>Iniciar Sesion</h1>
-          <p className='mt-1 text-sm text-gray-500'>Ingresa tus credenciales para continuar</p>
+          <h1 className='font-baby-doll text-3xl text-white'>Iniciar Sesión</h1>
+          <p className='mt-1 font-pt-mono text-sm text-gray-400'>Ingresa tus credenciales para continuar</p>
         </div>
 
         {error && (
@@ -24,56 +27,50 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
         )}
 
         <form className='space-y-4'>
-          <div>
-            <label
-              htmlFor='email'
-              className='mb-1 block text-sm font-medium'
-            >
+          <div className='space-y-1'>
+            <Label htmlFor='email' className='text-sm font-medium text-white'>
               Email
-            </label>
-            <input
+            </Label>
+            <Input
               id='email'
               name='email'
               type='email'
               required
               placeholder='tu@email.com'
-              className='focus:border-foreground w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none dark:border-gray-700 dark:bg-gray-900'
+              className='border-gray-700 bg-gray-900 text-white placeholder:text-gray-500 focus-visible:border-white focus-visible:ring-0'
             />
           </div>
 
-          <div>
-            <label
-              htmlFor='password'
-              className='mb-1 block text-sm font-medium'
-            >
-              Contrasena
-            </label>
-            <input
+          <div className='space-y-1'>
+            <Label htmlFor='password' className='text-sm font-medium text-white'>
+              Contraseña
+            </Label>
+            <Input
               id='password'
               name='password'
               type='password'
               required
               minLength={6}
               placeholder='••••••••'
-              className='focus:border-foreground w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none dark:border-gray-700 dark:bg-gray-900'
+              className='border-gray-700 bg-gray-900 text-white placeholder:text-gray-500 focus-visible:border-white focus-visible:ring-0'
             />
           </div>
 
-          <button
+          <Button
             formAction={login}
-            className='bg-foreground text-background w-full cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90'
+            className='w-full cursor-pointer bg-white text-black hover:bg-white/90'
           >
             Entrar
-          </button>
+          </Button>
         </form>
 
         <p className='text-center text-sm text-gray-500'>
           No tienes cuenta?{' '}
           <Link
-            href='/signup'
-            className='text-foreground font-medium underline underline-offset-4'
+            href='/registro/elige-rol'
+            className='font-medium text-red-500 underline underline-offset-4'
           >
-            Registrate
+            Regístrate
           </Link>
         </p>
       </div>

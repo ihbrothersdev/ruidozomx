@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
 import { translateAuthError } from '@/lib/auth-errors'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -14,13 +14,23 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
     if (!error) {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single()
+
+        if (!profile) {
+          return NextResponse.redirect(`${origin}/registro/elige-rol`)
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
 
     const translatedError = translateAuthError(error.message)
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
+    return NextResponse.redirect(`${origin}/iniciar-sesion?error=${encodeURIComponent(translatedError)}`)
   }
 
   const translatedError = translateAuthError('unknown error')
-  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
+  return NextResponse.redirect(`${origin}/iniciar-sesion?error=${encodeURIComponent(translatedError)}`)
 }

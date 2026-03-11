@@ -14,6 +14,19 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile) {
+          return NextResponse.redirect(`${origin}/registro/elige-rol`)
+        }
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
 
@@ -27,10 +40,10 @@ export async function GET(request: Request) {
     }
 
     const translatedError = translateAuthError(error.message)
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
+    return NextResponse.redirect(`${origin}/iniciar-sesion?error=${encodeURIComponent(translatedError)}`)
   }
 
   // No code provided — invalid request
   const translatedError = translateAuthError('unknown error')
-  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(translatedError)}`)
+  return NextResponse.redirect(`${origin}/iniciar-sesion?error=${encodeURIComponent(translatedError)}`)
 }
