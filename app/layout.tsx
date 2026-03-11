@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Toaster } from 'sileo'
 import './globals.css'
 
 const corose = localFont({
@@ -56,6 +57,7 @@ export default function RootLayout({
         className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} min-h-screen antialiased`}
       >
         {children}
+        <Toaster position='top-center' />
       </body>
     </html>
   )

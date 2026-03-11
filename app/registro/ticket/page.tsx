@@ -4,7 +4,8 @@ import { ROLE_LABELS, type Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
+import { sileo } from 'sileo'
 import { ROLE_ACTIONS } from './constants'
 
 export default function TicketPage() {
@@ -19,6 +20,14 @@ function TicketContent() {
   const searchParams = useSearchParams()
   const role = (searchParams.get('role') ?? 'fan') as Role
   const actions = ROLE_ACTIONS[role] ?? ROLE_ACTIONS.fan
+
+  useEffect(() => {
+    sileo.info({
+      title: 'Confirma tu correo electrónico',
+      description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
+      position: 'top-center'
+    })
+  }, [])
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
