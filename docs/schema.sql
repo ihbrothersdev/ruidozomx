@@ -577,16 +577,18 @@ BEGIN
     WHERE p.id = NEW.user_id;
   END IF;
 
-  IF TG_TABLE_NAME = 'events' AND TG_OP = 'INSERT' AND NEW.status = 'published' THEN
-    INSERT INTO activity_feed (type, profile_id, profile_name, profile_role, metadata)
-    SELECT
-      'event_published',
-      NEW.profile_id,
-      p.display_name,
-      p.role,
-      jsonb_build_object('title', NEW.title, 'event_date', NEW.event_date, 'city', NEW.city)
-    FROM profiles p
-    WHERE p.id = NEW.profile_id;
+  IF TG_TABLE_NAME = 'events' AND TG_OP = 'INSERT' THEN
+    IF NEW.status = 'published' THEN
+      INSERT INTO activity_feed (type, profile_id, profile_name, profile_role, metadata)
+      SELECT
+        'event_published',
+        NEW.profile_id,
+        p.display_name,
+        p.role,
+        jsonb_build_object('title', NEW.title, 'event_date', NEW.event_date, 'city', NEW.city)
+      FROM profiles p
+      WHERE p.id = NEW.profile_id;
+    END IF;
   END IF;
 
   RETURN NEW;
