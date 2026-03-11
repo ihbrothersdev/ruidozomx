@@ -42,7 +42,7 @@ function ProponerRolaContent() {
       <div className='relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6'>
         {/* Top nav — right aligned */}
         <div className='mb-4 flex w-full items-start justify-end gap-2'>
-          <Link href='/dashboard'>
+          <Link href='/perfil'>
             <Image
               src='/assets/registro/proponer-rola/boton-mi-cuenta.png'
               alt='Mi Cuenta'
@@ -123,9 +123,7 @@ function ProponerRolaContent() {
 
               {/* Link privado section */}
               <div className='space-y-1 pt-2'>
-                <Label className={labelCls}>
-                  Link privado para descargar el material
-                </Label>
+                <Label className={labelCls}>Link privado para descargar el material</Label>
                 <p className='font-pt-mono text-[11px] font-bold tracking-wider text-black uppercase'>
                   Asegurate de que el enlace tenga permisos abiertos*
                 </p>

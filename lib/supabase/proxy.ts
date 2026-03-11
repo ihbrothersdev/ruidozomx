@@ -42,7 +42,7 @@ export async function handleProxyRequest(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Redirect unauthenticated users trying to access protected routes
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!user && request.nextUrl.pathname.startsWith('/perfil')) {
     const url = request.nextUrl.clone()
     url.pathname = '/iniciar-sesion'
     return NextResponse.redirect(url)
@@ -51,7 +51,7 @@ export async function handleProxyRequest(request: NextRequest) {
   // Redirect authenticated users away from auth pages
   if (user && (request.nextUrl.pathname === '/iniciar-sesion' || request.nextUrl.pathname === '/registrarte')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/perfil'
     return NextResponse.redirect(url)
   }
 

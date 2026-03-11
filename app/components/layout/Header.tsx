@@ -7,6 +7,8 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Mi cuenta'
+
   return (
     <header className='relative z-30 flex items-center justify-between px-4 py-3 md:px-8'>
       {/* Logo */}
@@ -36,18 +38,13 @@ export function Header({ user }: HeaderProps) {
         </Link>
 
         {user ? (
-          <Link href='/perfil' className='group flex items-center gap-2'>
-            <span className='font-baby-doll hidden rounded-sm bg-black/70 px-3 py-1 text-sm tracking-wide text-white sm:inline-block'>
-              {user.email?.split('@')[0] ?? 'Mi cuenta'}
+          <Link
+            href='/perfil'
+            className='group flex h-10 items-center md:h-16'
+          >
+            <span className='font-baby-doll flex h-full items-center rounded-sm bg-black/80 px-5 text-lg tracking-wide text-white transition-colors group-hover:bg-black md:text-2xl'>
+              {displayName}
             </span>
-            <Image
-              src='/assets/header/registrate-entra.png'
-              alt='Mi Perfil'
-              width={1383}
-              height={455}
-              className='h-10 w-auto opacity-80 transition-opacity group-hover:opacity-100 md:h-16'
-              unoptimized
-            />
           </Link>
         ) : (
           <Link href='/registro/elige-rol'>
