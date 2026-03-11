@@ -79,7 +79,7 @@ export function CassettePlayer({
           isPlaying={isPlaying}
         />
         <PlayingArrow />
-        <DialogBubble />
+        <DialogBubble isAuthenticated={isAuthenticated} />
 
         {/* Desktop: Propón una Rola button */}
         {isAuthenticated ? (

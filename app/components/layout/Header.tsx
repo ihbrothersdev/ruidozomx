@@ -35,31 +35,33 @@ export function Header({ user }: HeaderProps) {
           />
         </Link>
 
-        <Link href={user ? '/dashboard' : '/registro/elige-rol'}>
-          <Image
-            src='/assets/header/registrate-entra.png'
-            alt={user ? 'Dashboard' : 'Regístrate / Entra'}
-            width={1383}
-            height={455}
-            className='h-10 w-auto md:h-16'
-            unoptimized
-          />
-        </Link>
+        {user ? (
+          <Link href='/perfil' className='group flex items-center gap-2'>
+            <span className='font-baby-doll hidden rounded-sm bg-black/70 px-3 py-1 text-sm tracking-wide text-white sm:inline-block'>
+              {user.email?.split('@')[0] ?? 'Mi cuenta'}
+            </span>
+            <Image
+              src='/assets/header/registrate-entra.png'
+              alt='Mi Perfil'
+              width={1383}
+              height={455}
+              className='h-10 w-auto opacity-80 transition-opacity group-hover:opacity-100 md:h-16'
+              unoptimized
+            />
+          </Link>
+        ) : (
+          <Link href='/registro/elige-rol'>
+            <Image
+              src='/assets/header/registrate-entra.png'
+              alt='Regístrate / Entra'
+              width={1383}
+              height={455}
+              className='h-10 w-auto md:h-16'
+              unoptimized
+            />
+          </Link>
+        )}
       </div>
-
-      {/* TODO: To Be Defined if added */}
-      {/* <div className='hidden flex-1 justify-center px-4 md:flex'>
-        <button className='relative h-8 w-full max-w-xs md:h-10'>
-          <Image
-            src='/assets/header/buscador.png'
-            alt='Buscar'
-            width={528}
-            height={80}
-            className='h-full w-full object-contain'
-            unoptimized
-          />
-        </button>
-      </div> */}
     </header>
   )
 }

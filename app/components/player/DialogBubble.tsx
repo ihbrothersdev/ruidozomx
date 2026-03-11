@@ -1,7 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function DialogBubble() {
+interface DialogBubbleProps {
+  isAuthenticated?: boolean
+}
+
+export function DialogBubble({ isAuthenticated }: DialogBubbleProps) {
+  // Don't show "register" bubble if user is already logged in
+  if (isAuthenticated) return null
+
   return (
     <Link
       href='/registro/elige-rol'

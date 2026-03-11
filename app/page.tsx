@@ -74,7 +74,7 @@ export default async function Home() {
 
         <SomosTrinchera />
 
-        <Footer />
+        <Footer user={user} />
       </div>
     </main>
   )
