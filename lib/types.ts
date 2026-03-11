@@ -1,5 +1,7 @@
-export interface Song {
-  id: number
+// === Player (client-side state) ===
+
+export interface PlayerSong {
+  id: string
   title: string
   artist: string
   side: 'A' | 'B'
@@ -9,9 +11,298 @@ export interface Song {
 }
 
 export interface PlayerState {
-  currentSongId: number
+  currentSongId: string
   currentSide: 'A' | 'B'
   elapsedSeconds: number
   isPlaying: boolean
   date: string
+}
+
+// === Registration & Roles ===
+
+export const ROLES = ['banda', 'fan', 'manager', 'agente', 'promotor', 'proveedor', 'venue'] as const
+export type Role = (typeof ROLES)[number]
+
+export const ROLE_LABELS: Record<Role, string> = {
+  banda: 'Banda / Solista',
+  fan: 'Fan o Público',
+  manager: 'Manager',
+  agente: 'Agente',
+  promotor: 'Promotor',
+  proveedor: 'Proveedor',
+  venue: 'Venue / Foro'
+}
+
+export type RegistrationSource = 'propon_rola' | 'registro'
+
+/** Base profile stored in `profiles` table */
+export interface Profile {
+  id: string
+  role: Role
+  display_name: string
+  slug: string
+  photo_url: string | null
+  phone: string | null
+  contact_email: string | null
+  country: string | null
+  state: string | null
+  city: string | null
+  bio: string | null
+  social_links: Record<string, string>
+  registration_source: RegistrationSource
+  onboarding_complete: boolean
+  verified: boolean
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+/** Banda / Solista details — matches Figma form */
+export interface BandaProfile {
+  profile_id: string
+  band_name: string
+  project_type: string | null
+  genre: string | null
+  project_link: string | null
+  available_live: boolean
+  open_collabs: boolean
+  available_tours: boolean
+  willing_travel: boolean
+  review: string | null
+  publish_dates: boolean
+  accept_proposals: boolean
+  contact: string | null
+}
+
+/** Fan o Público details */
+export interface FanProfile {
+  profile_id: string
+  alias: string
+  favorite_genres: string[]
+  notify_new_bands: boolean
+  propose_fav_bands: boolean
+}
+
+/** Predefined genre options for Fan form */
+export const FAN_GENRE_OPTIONS = [
+  'Rock',
+  'Pop',
+  'Hip Hop/Rap',
+  'Reggae / Ska',
+  'Metal',
+  'Punk / Hardcore',
+  'Electrónica',
+  'Folk/Acústico',
+  'Indie',
+  'Alternativo',
+  'Regional/Fusión',
+  'Experimental',
+  'Instrumental',
+  'Latino Urbano',
+  'Jazz & Blue'
+] as const
+
+/** Manager details */
+export interface ManagerProfile {
+  profile_id: string
+  full_name: string
+  web_link: string | null
+  role_type: 'manager'
+  review: string | null
+  represents_artists: boolean
+  artists_represented: string | null
+  promote_bands_ruidozo: boolean
+  seeks_emerging_talent: boolean
+  accept_proposals: boolean
+  contact: string | null
+}
+
+/** Promotor details */
+export interface PromotorProfile {
+  profile_id: string
+  full_name: string
+  web_link: string | null
+  role_type: 'promotor'
+  review: string | null
+  organizes_events: boolean
+  territorial_reach: string[]
+  event_types: string[]
+  provide_events_ruidozo: boolean
+  seeks_talent: boolean
+  accept_proposals: boolean
+  contact: string | null
+}
+
+/** Agente details */
+export interface AgenteProfile {
+  profile_id: string
+  full_name: string
+  web_link: string | null
+  role_type: 'agente'
+  review: string | null
+  represents_artists_live: boolean
+  territorial_reach: string[]
+  provide_events_ruidozo: boolean
+  seeks_new_projects: boolean
+  accept_proposals: boolean
+  contact: string | null
+}
+
+/** Proveedor details */
+export interface ProveedorProfile {
+  profile_id: string
+  brand_name: string
+  web_link: string | null
+  description: string | null
+  territorial_reach: string[]
+  service_types: string[]
+  publish_services: boolean
+  accept_proposals: boolean
+  contact: string | null
+  works_emerging_projects: boolean
+}
+
+/** Venue / Foro details */
+export interface VenueProfile {
+  profile_id: string
+  venue_name: string
+  web_link: string | null
+  description: string | null
+  capacity: string | null
+  venue_type: string[]
+  has_audio: boolean
+  has_lighting: boolean
+  accepts_indie_proposals: boolean
+  publish_calls_ruidozo: boolean
+  contact: string | null
+}
+
+export const TERRITORIAL_REACH_OPTIONS = ['Local', 'Nacional', 'Internacional'] as const
+
+export const SERVICE_TYPE_OPTIONS = [
+  'Audio',
+  'Iluminación',
+  'Producción',
+  'Diseño',
+  'Merch',
+  'Prensa',
+  'Booking',
+  'Video',
+  'Fotografía',
+  'Otro'
+] as const
+
+export const EVENT_TYPE_OPTIONS = ['Shows locales', 'Circuitos', 'Festivales', 'Giras', 'Otro'] as const
+
+export const CAPACITY_OPTIONS = ['0-100', '100-300', '300-600', '600+'] as const
+
+export const VENUE_TYPE_OPTIONS = [
+  'Foro independiente',
+  'Bar con música en vivo',
+  'Espacio cultural',
+  'Foro alternativo'
+] as const
+
+// === Cassettes & Songs (DB) ===
+
+export interface Cassette {
+  id: string
+  name: string | null
+  start_date: string
+  end_date: string
+  duration_minutes: number
+  curator_id: string | null
+  curator_name: string | null
+  cover_image_url: string | null
+  active: boolean
+  archived: boolean
+  total_plays: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Song {
+  id: string
+  cassette_id: string
+  title: string
+  artist: string
+  genre: string | null
+  duration_seconds: number | null
+  side: 'A' | 'B'
+  position: number
+  audio_url: string | null
+  proposal_id: string | null
+  plays: number
+  created_at: string
+}
+
+// === Events ===
+
+export type EventStatus = 'draft' | 'published' | 'cancelled'
+
+export interface Event {
+  id: string
+  profile_id: string
+  title: string
+  description: string | null
+  event_date: string
+  event_end_date: string | null
+  venue_name: string | null
+  venue_profile_id: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  country: string | null
+  event_type: string | null
+  external_link: string | null
+  cover_image_url: string | null
+  status: EventStatus
+  created_at: string
+  updated_at: string
+}
+
+// === Song Proposals ===
+
+export type ProposalStatus = 'pending' | 'in_review' | 'selected' | 'rejected'
+
+export interface SongProposal {
+  id: string
+  user_id: string
+  title: string
+  artist: string
+  genre: string | null
+  external_link: string | null
+  audio_file_path: string | null
+  contact_email: string | null
+  comment: string | null
+  status: ProposalStatus
+  cassette_id: string | null
+  created_at: string
+  reviewed_at: string | null
+  reviewed_by: string | null
+}
+
+// === Interests ===
+
+export interface Interest {
+  id: string
+  from_profile_id: string
+  to_profile_id: string
+  message: string | null
+  created_at: string
+}
+
+// === Activity Feed ===
+
+export type ActivityType = 'registration' | 'interest' | 'proposal' | 'song_selected' | 'event_published'
+
+export interface ActivityFeedItem {
+  id: string
+  type: ActivityType
+  profile_id: string | null
+  profile_name: string | null
+  profile_role: Role | null
+  metadata: Record<string, unknown>
+  visible: boolean
+  created_at: string
 }
