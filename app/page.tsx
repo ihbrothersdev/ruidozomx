@@ -36,7 +36,7 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
-         <div className='absolute top-205 left-55 z-0 hidden lg:block'>
+          <div className='absolute top-205 left-55 z-0 hidden lg:block'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
@@ -45,7 +45,6 @@ export default async function Home() {
               unoptimized
             />
           </div>
-
         </div>
         <Header user={user} />
 
@@ -57,7 +56,7 @@ export default async function Home() {
         />
 
         {/* Explorar Comunidad - left side */}
-        <div className='hidden lg:block absolute left-20 z-0 top-330'>
+        <div className='absolute top-330 left-20 z-0 hidden lg:block'>
           <ExplorarComunidad />
         </div>
 

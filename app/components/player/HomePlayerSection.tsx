@@ -59,9 +59,9 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
         </div>
       </section>
 
-    <div className="pb-30">
-      <MientrasSuena />
-    </div>
+      <div className='pb-30'>
+        <MientrasSuena />
+      </div>
 
       {/* Body 2: Song list */}
       <section className='relative px-4 py-8'>

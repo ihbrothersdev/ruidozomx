@@ -30,14 +30,20 @@ export function VenueFields() {
               Capacidad<span className='text-red-600'>*</span>
             </Label>
             {CAPACITY_OPTIONS.map(opt => (
-              <div key={opt} className='flex items-center gap-1.5'>
+              <div
+                key={opt}
+                className='flex items-center gap-1.5'
+              >
                 <Checkbox
                   id={`cap-${opt}`}
                   name='capacity'
                   value={opt}
                   className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                 />
-                <Label htmlFor={`cap-${opt}`} className='font-pt-mono cursor-pointer text-sm text-black'>
+                <Label
+                  htmlFor={`cap-${opt}`}
+                  className='font-pt-mono cursor-pointer text-sm text-black'
+                >
                   {opt}
                 </Label>
               </div>
@@ -48,14 +54,20 @@ export function VenueFields() {
           <div className='space-y-1'>
             <Label className={labelCls}>Tipo</Label>
             {VENUE_TYPE_OPTIONS.map(opt => (
-              <div key={opt} className='flex items-center gap-1.5'>
+              <div
+                key={opt}
+                className='flex items-center gap-1.5'
+              >
                 <Checkbox
                   id={`vtype-${opt}`}
                   name='venue_type'
                   value={opt}
                   className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                 />
-                <Label htmlFor={`vtype-${opt}`} className='font-pt-mono cursor-pointer text-sm text-black'>
+                <Label
+                  htmlFor={`vtype-${opt}`}
+                  className='font-pt-mono cursor-pointer text-sm text-black'
+                >
                   {opt}
                 </Label>
               </div>
@@ -75,7 +87,10 @@ export function VenueFields() {
         <div className='flex-1 space-y-3'>
           {/* Descripción */}
           <div className='space-y-0.5'>
-            <Label htmlFor='description' className={labelCls}>
+            <Label
+              htmlFor='description'
+              className={labelCls}
+            >
               Descripción<span className='text-red-600'>*</span>
             </Label>
             <Textarea

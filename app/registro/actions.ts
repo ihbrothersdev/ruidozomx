@@ -18,7 +18,10 @@ function getBool(formData: FormData, key: string): boolean {
 }
 
 function getArray(formData: FormData, key: string): string[] {
-  return formData.getAll(key).map(v => String(v).trim()).filter(Boolean)
+  return formData
+    .getAll(key)
+    .map(v => String(v).trim())
+    .filter(Boolean)
 }
 
 function buildDisplayName(formData: FormData): string {
@@ -58,7 +61,12 @@ async function uploadPhoto(
   return data.publicUrl
 }
 
-async function upsertRoleProfile(supabase: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createServiceClient>, role: Role, userId: string, formData: FormData) {
+async function upsertRoleProfile(
+  supabase: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createServiceClient>,
+  role: Role,
+  userId: string,
+  formData: FormData
+) {
   switch (role) {
     case 'banda':
       return supabase.from('band_profiles').upsert({
@@ -273,7 +281,10 @@ export async function submitProfile(formData: FormData) {
   })
 
   if (profileError) {
-    redirect(`/registro/formulario?role=${role}&source=${source}&error=` + encodeURIComponent('Error al guardar perfil. Intenta de nuevo.'))
+    redirect(
+      `/registro/formulario?role=${role}&source=${source}&error=` +
+        encodeURIComponent('Error al guardar perfil. Intenta de nuevo.')
+    )
   }
 
   await upsertRoleProfile(supabase, role, user.id, formData)

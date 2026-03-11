@@ -25,11 +25,13 @@ export function AgenteFields() {
       <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
         <div className='flex-1 space-y-3'>
           <div className='space-y-0.5'>
-            <Label className={labelCls}>
-              Cuál es tu rol
-            </Label>
+            <Label className={labelCls}>Cuál es tu rol</Label>
             <p className='font-pt-mono text-sm font-bold text-black'>Agente</p>
-            <input type='hidden' name='role_type' value='agente' />
+            <input
+              type='hidden'
+              name='role_type'
+              value='agente'
+            />
           </div>
 
           <YesNoField
@@ -40,18 +42,22 @@ export function AgenteFields() {
 
           {/* Alcance territorial */}
           <div className='space-y-1'>
-            <Label className={labelCls}>
-              Alcance territorial
-            </Label>
+            <Label className={labelCls}>Alcance territorial</Label>
             {TERRITORIAL_REACH_OPTIONS.map(opt => (
-              <div key={opt} className='flex items-center gap-1.5'>
+              <div
+                key={opt}
+                className='flex items-center gap-1.5'
+              >
                 <Checkbox
                   id={`reach-${opt}`}
                   name='territorial_reach'
                   value={opt}
                   className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                 />
-                <Label htmlFor={`reach-${opt}`} className='font-pt-mono cursor-pointer text-sm text-black'>
+                <Label
+                  htmlFor={`reach-${opt}`}
+                  className='font-pt-mono cursor-pointer text-sm text-black'
+                >
                   {opt}
                 </Label>
               </div>
@@ -61,7 +67,10 @@ export function AgenteFields() {
 
         <div className='flex-1 space-y-3'>
           <div className='space-y-0.5'>
-            <Label htmlFor='review' className={labelCls}>
+            <Label
+              htmlFor='review'
+              className={labelCls}
+            >
               Reseña<span className='text-red-600'>*</span>
             </Label>
             <Textarea

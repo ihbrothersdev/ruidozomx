@@ -15,9 +15,7 @@ export function ProveedorFields() {
   const [otherService, setOtherService] = useState('')
 
   function toggleService(service: string) {
-    setServiceTypes(prev =>
-      prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]
-    )
+    setServiceTypes(prev => (prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]))
   }
 
   return (
@@ -42,14 +40,20 @@ export function ProveedorFields() {
               Alcance territorial<span className='text-red-600'>*</span>
             </Label>
             {TERRITORIAL_REACH_OPTIONS.map(opt => (
-              <div key={opt} className='flex items-center gap-1.5'>
+              <div
+                key={opt}
+                className='flex items-center gap-1.5'
+              >
                 <Checkbox
                   id={`reach-${opt}`}
                   name='territorial_reach'
                   value={opt}
                   className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                 />
-                <Label htmlFor={`reach-${opt}`} className='font-pt-mono cursor-pointer text-sm text-black'>
+                <Label
+                  htmlFor={`reach-${opt}`}
+                  className='font-pt-mono cursor-pointer text-sm text-black'
+                >
                   {opt}
                 </Label>
               </div>
@@ -76,7 +80,10 @@ export function ProveedorFields() {
                         onCheckedChange={() => toggleService(service)}
                         className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                       />
-                      <Label htmlFor={`service-${service}`} className='font-pt-mono cursor-pointer text-sm text-black'>
+                      <Label
+                        htmlFor={`service-${service}`}
+                        className='font-pt-mono cursor-pointer text-sm text-black'
+                      >
                         {service}
                       </Label>
                     </div>
@@ -94,7 +101,12 @@ export function ProveedorFields() {
               })}
             </div>
             {serviceTypes.length === 0 && (
-              <input type='hidden' name='_services_required' required value='' />
+              <input
+                type='hidden'
+                name='_services_required'
+                required
+                value=''
+              />
             )}
           </div>
 
@@ -108,7 +120,10 @@ export function ProveedorFields() {
         <div className='flex-1 space-y-3'>
           {/* Descripción */}
           <div className='space-y-0.5'>
-            <Label htmlFor='description' className={labelCls}>
+            <Label
+              htmlFor='description'
+              className={labelCls}
+            >
               Descripción<span className='text-red-600'>*</span>
             </Label>
             <Textarea

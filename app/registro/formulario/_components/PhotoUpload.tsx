@@ -46,7 +46,11 @@ export function PhotoUpload() {
 
   return (
     <div className='relative flex items-end gap-2 self-center lg:self-end'>
-      <input type='hidden' name='photo_data' value={photoData} />
+      <input
+        type='hidden'
+        name='photo_data'
+        value={photoData}
+      />
       <Image
         src='/assets/registro/formulario/shared/flecha-naranja.png'
         alt=''

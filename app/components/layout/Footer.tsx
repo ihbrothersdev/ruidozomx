@@ -3,10 +3,10 @@ import Link from 'next/link'
 
 export function Footer() {
   return (
-    <footer className='relative z-10 mt-8 px-4 py-12 md:px-8  text-yellow-100'>
+    <footer className='relative z-10 mt-8 px-4 py-12 text-yellow-100 md:px-8'>
       <div className='mx-auto flex max-w-5xl flex-col gap-8 md:flex-row md:gap-12'>
         {/* Left column - Info */}
-        <div className='flex-1 font-pt-mono'>
+        <div className='font-pt-mono flex-1'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Información</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>
@@ -65,7 +65,7 @@ export function Footer() {
         </div>
 
         {/* Right column - Info */}
-        <div className='flex-1 font-pt-mono'>
+        <div className='font-pt-mono flex-1'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Navegación</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>
@@ -176,7 +176,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
@@ -187,7 +187,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
@@ -198,7 +198,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
       </div>
     </footer>

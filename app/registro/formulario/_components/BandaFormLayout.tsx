@@ -28,7 +28,11 @@ export function BandaFormLayout() {
           >
             Tipo de proyecto<span className='text-red-600'>*</span>
           </Label>
-          <input type='hidden' name='project_type' value='Banda o Solista' />
+          <input
+            type='hidden'
+            name='project_type'
+            value='Banda o Solista'
+          />
           <Select
             defaultValue='Banda o Solista'
             disabled

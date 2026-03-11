@@ -7,13 +7,13 @@
 
 ## Enums
 
-| Enum              | Values                                                                |
-| ----------------- | --------------------------------------------------------------------- |
-| `profile_role`    | `fan`, `banda`, `manager`, `agente`, `promotor`, `proveedor`, `venue`        |
-| `proposal_status` | `pending`, `in_review`, `selected`, `rejected`                               |
-| `cassette_side`   | `A`, `B`                                                                     |
-| `activity_type`   | `registration`, `interest`, `proposal`, `song_selected`, `event_published`   |
-| `event_status`    | `draft`, `published`, `cancelled`                                            |
+| Enum              | Values                                                                     |
+| ----------------- | -------------------------------------------------------------------------- |
+| `profile_role`    | `fan`, `banda`, `manager`, `agente`, `promotor`, `proveedor`, `venue`      |
+| `proposal_status` | `pending`, `in_review`, `selected`, `rejected`                             |
+| `cassette_side`   | `A`, `B`                                                                   |
+| `activity_type`   | `registration`, `interest`, `proposal`, `song_selected`, `event_published` |
+| `event_status`    | `draft`, `published`, `cancelled`                                          |
 
 > Role enum values (`banda`, `agente`, `promotor`, `proveedor`) are kept as identifiers
 > used across routing and component mapping. All other schema elements are in English.
@@ -223,26 +223,26 @@ Tracks placed inside a cassette by an admin/curator.
 
 Events published by profiles (venues, promoters, bands, etc.). One of the four main actions.
 
-| Column           | Type          | Nullable | Default           | Notes                                       |
-| ---------------- | ------------- | -------- | ----------------- | ------------------------------------------- |
-| id               | uuid (PK)     | no       | gen_random_uuid() |                                             |
-| profile_id       | uuid (FK)     | no       |                   | References `profiles(id)` ON DELETE CASCADE |
-| title            | varchar(200)  | no       |                   |                                             |
-| description      | text          | yes      |                   |                                             |
-| event_date       | timestamptz   | no       |                   |                                             |
-| event_end_date   | timestamptz   | yes      |                   |                                             |
-| venue_name       | varchar(200)  | yes      |                   |                                             |
-| venue_profile_id | uuid (FK)     | yes      |                   | References `profiles(id)` — linked venue    |
-| address          | text          | yes      |                   |                                             |
-| city             | varchar(100)  | yes      |                   |                                             |
-| state            | varchar(100)  | yes      |                   |                                             |
-| country          | varchar(100)  | yes      | 'México'          |                                             |
-| event_type       | varchar(100)  | yes      |                   | e.g. Concierto, Festival, etc.              |
-| external_link    | text          | yes      |                   |                                             |
-| cover_image_url  | text          | yes      |                   | Supabase Storage URL                        |
-| status           | event_status  | no       | 'draft'           |                                             |
-| created_at       | timestamptz   | no       | now()             |                                             |
-| updated_at       | timestamptz   | no       | now()             |                                             |
+| Column           | Type         | Nullable | Default           | Notes                                       |
+| ---------------- | ------------ | -------- | ----------------- | ------------------------------------------- |
+| id               | uuid (PK)    | no       | gen_random_uuid() |                                             |
+| profile_id       | uuid (FK)    | no       |                   | References `profiles(id)` ON DELETE CASCADE |
+| title            | varchar(200) | no       |                   |                                             |
+| description      | text         | yes      |                   |                                             |
+| event_date       | timestamptz  | no       |                   |                                             |
+| event_end_date   | timestamptz  | yes      |                   |                                             |
+| venue_name       | varchar(200) | yes      |                   |                                             |
+| venue_profile_id | uuid (FK)    | yes      |                   | References `profiles(id)` — linked venue    |
+| address          | text         | yes      |                   |                                             |
+| city             | varchar(100) | yes      |                   |                                             |
+| state            | varchar(100) | yes      |                   |                                             |
+| country          | varchar(100) | yes      | 'México'          |                                             |
+| event_type       | varchar(100) | yes      |                   | e.g. Concierto, Festival, etc.              |
+| external_link    | text         | yes      |                   |                                             |
+| cover_image_url  | text         | yes      |                   | Supabase Storage URL                        |
+| status           | event_status | no       | 'draft'           |                                             |
+| created_at       | timestamptz  | no       | now()             |                                             |
+| updated_at       | timestamptz  | no       | now()             |                                             |
 
 **Indexes**: `profile_id`, `(event_date DESC) WHERE status = 'published'`, `(city) WHERE status = 'published'`
 
@@ -688,12 +688,12 @@ The service client uses `SUPABASE_SERVICE_ROLE_KEY` (server-only, never exposed 
 
 ## Four Main Actions (Christian)
 
-| Action              | DB Support                     | Status   |
-| ------------------- | ------------------------------ | -------- |
-| Proponer una rola   | `song_proposals` table         | Complete |
-| Correr la voz       | Social sharing (no table)      | N/A      |
-| Explorar comunidad  | `interests` + profile browsing | Complete |
-| Publicar un evento  | `events` table                 | Complete |
+| Action             | DB Support                     | Status   |
+| ------------------ | ------------------------------ | -------- |
+| Proponer una rola  | `song_proposals` table         | Complete |
+| Correr la voz      | Social sharing (no table)      | N/A      |
+| Explorar comunidad | `interests` + profile browsing | Complete |
+| Publicar un evento | `events` table                 | Complete |
 
 ---
 

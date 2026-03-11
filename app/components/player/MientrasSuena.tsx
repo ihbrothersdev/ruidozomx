@@ -1,15 +1,29 @@
 import { useState, useEffect, useCallback } from 'react'
 
 const FAKE_NAMES = [
-  'Carlos', 'María', 'Diego', 'Valentina', 'Andrés',
-  'Camila', 'Santiago', 'Sofía', 'Mateo', 'Isabella',
-  'Sebastián', 'Lucía', 'Emiliano', 'Regina', 'Nicolás',
-  'Fernanda', 'Daniel', 'Ximena', 'Alejandro', 'Paula'
+  'Carlos',
+  'María',
+  'Diego',
+  'Valentina',
+  'Andrés',
+  'Camila',
+  'Santiago',
+  'Sofía',
+  'Mateo',
+  'Isabella',
+  'Sebastián',
+  'Lucía',
+  'Emiliano',
+  'Regina',
+  'Nicolás',
+  'Fernanda',
+  'Daniel',
+  'Ximena',
+  'Alejandro',
+  'Paula'
 ]
 
-type Message =
-  | { type: 'listeners'; count: number }
-  | { type: 'registered'; name: string }
+type Message = { type: 'listeners'; count: number } | { type: 'registered'; name: string }
 
 export function MientrasSuena() {
   const [listenerCount, setListenerCount] = useState(3)
@@ -42,9 +56,9 @@ export function MientrasSuena() {
   }, [pickRandomName])
 
   return (
-    <div className='mx-auto flex max-w-[793px] justify-center px-4 mt-5'>
-      <p className='font-impact-label text-[25px] uppercase text-green-300'>
-          {`${listenerCount} personas estan escuchando el mixtape`}
+    <div className='mx-auto mt-5 flex max-w-[793px] justify-center px-4'>
+      <p className='font-impact-label text-[25px] text-green-300 uppercase'>
+        {`${listenerCount} personas estan escuchando el mixtape`}
         {/* {message.type === 'listeners'
           ? `${message.count} personas estan escuchando el mixtape`
           : `Usuario ${message.name} se acaba de registrar`} */}

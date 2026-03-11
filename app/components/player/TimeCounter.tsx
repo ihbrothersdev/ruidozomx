@@ -18,14 +18,23 @@ function Digit({
   const digitSrc = `/assets/controles/digit-${value}.png`
 
   return (
-    <div className='flex flex-col' style={{ width: 24, height: 58, perspective: flip ? 80 : undefined }}>
+    <div
+      className='flex flex-col'
+      style={{ width: 24, height: 58, perspective: flip ? 80 : undefined }}
+    >
       {/* Top half — clips bottom of the digit */}
       <div
         key={flip ? value : undefined}
         className={`relative overflow-hidden ${flip ? 'animate-flip-down' : ''}`}
         style={{ width: 24, height: 29, transformOrigin: 'bottom center' }}
       >
-        <Image src={topSrc} alt='' width={24} height={29} unoptimized />
+        <Image
+          src={topSrc}
+          alt=''
+          width={24}
+          height={29}
+          unoptimized
+        />
         <div
           className='absolute inset-x-0 flex justify-center'
           style={{ top: 0, height: 58 }}
@@ -41,8 +50,17 @@ function Digit({
         </div>
       </div>
       {/* Bottom half — clips top of the digit */}
-      <div className='relative overflow-hidden' style={{ width: 24, height: 29 }}>
-        <Image src={bottomSrc} alt='' width={24} height={29} unoptimized />
+      <div
+        className='relative overflow-hidden'
+        style={{ width: 24, height: 29 }}
+      >
+        <Image
+          src={bottomSrc}
+          alt=''
+          width={24}
+          height={29}
+          unoptimized
+        />
         <div
           className='absolute inset-x-0 flex justify-center'
           style={{ bottom: 0, height: 58 }}

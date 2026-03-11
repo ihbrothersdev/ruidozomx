@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
       <div className='w-full max-w-sm space-y-6'>
         <div className='text-center'>
           <h1 className='font-baby-doll text-3xl text-white'>Iniciar Sesión</h1>
-          <p className='mt-1 font-pt-mono text-sm text-gray-400'>Ingresa tus credenciales para continuar</p>
+          <p className='font-pt-mono mt-1 text-sm text-gray-400'>Ingresa tus credenciales para continuar</p>
         </div>
 
         {error && (
@@ -28,7 +28,10 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
 
         <form className='space-y-4'>
           <div className='space-y-1'>
-            <Label htmlFor='email' className='text-sm font-medium text-white'>
+            <Label
+              htmlFor='email'
+              className='text-sm font-medium text-white'
+            >
               Email
             </Label>
             <Input
@@ -42,7 +45,10 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
           </div>
 
           <div className='space-y-1'>
-            <Label htmlFor='password' className='text-sm font-medium text-white'>
+            <Label
+              htmlFor='password'
+              className='text-sm font-medium text-white'
+            >
               Contraseña
             </Label>
             <Input
