@@ -6,7 +6,7 @@ import type { RegistrationSource, Role } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/types'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { registroSignup } from '../actions'
 import { inputCls, labelCls } from './constants'
 
@@ -22,11 +22,15 @@ function CrearCuentaContent() {
   const searchParams = useSearchParams()
   const role = (searchParams.get('role') ?? 'fan') as Role
   const source = (searchParams.get('source') ?? 'registro') as RegistrationSource
-  const error = searchParams.get('error')
+  const serverError = searchParams.get('error')
   const message = searchParams.get('message')
 
-  // Read profile data from sessionStorage (saved by formulario step)
   const [profileData, setProfileData] = useState<Record<string, string | string[]>>({})
+  const [clientError, setClientError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const error = clientError || serverError
 
   useEffect(() => {
     try {
@@ -38,6 +42,27 @@ function CrearCuentaContent() {
       // sessionStorage not available
     }
   }, [])
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget
+    const password = (form.elements.namedItem('password') as HTMLInputElement)?.value
+    const confirm = (form.elements.namedItem('confirm_password') as HTMLInputElement)?.value
+
+    if (password !== confirm) {
+      e.preventDefault()
+      setClientError('Las contraseñas no coinciden.')
+      return
+    }
+
+    if (password.length < 6) {
+      e.preventDefault()
+      setClientError('La contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+
+    setClientError(null)
+    setIsSubmitting(true)
+  }
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
@@ -100,14 +125,16 @@ function CrearCuentaContent() {
               </p>
 
               {error && (
-                <div className='font-pt-mono mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700'>
-                  {error}
+                <div className='font-pt-mono animate-in fade-in mb-4 flex items-start gap-2 rounded-md border-2 border-red-500 bg-red-100 px-4 py-3 text-sm font-bold text-red-800 shadow-md'>
+                  <span className='shrink-0 text-lg'>⚠</span>
+                  <span>{error}</span>
                 </div>
               )}
 
               {message && (
-                <div className='font-pt-mono mb-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-700'>
-                  {message}
+                <div className='font-pt-mono mb-4 flex items-start gap-2 rounded-md border-2 border-green-500 bg-green-100 px-4 py-3 text-sm font-bold text-green-800 shadow-md'>
+                  <span className='shrink-0 text-lg'>✓</span>
+                  <span>{message}</span>
                 </div>
               )}
 
@@ -120,7 +147,12 @@ function CrearCuentaContent() {
                   className='object-cover'
                   unoptimized
                 />
-                <form className='relative z-10 space-y-3 p-4 sm:p-6'>
+                <form
+                  ref={formRef}
+                  action={registroSignup}
+                  onSubmit={handleSubmit}
+                  className='relative z-10 space-y-3 p-4 sm:p-6'
+                >
                   <input
                     type='hidden'
                     name='role'
@@ -228,18 +260,25 @@ function CrearCuentaContent() {
 
                   <div className='flex justify-end pt-2'>
                     <button
-                      formAction={registroSignup}
-                      className='cursor-pointer'
+                      type='submit'
+                      disabled={isSubmitting}
+                      className='cursor-pointer disabled:cursor-wait disabled:opacity-50'
                     >
-                      <Image
-                        src='/assets/registro/crear-cuenta/boton-listo.png'
-                        alt='Listo'
-                        width={140}
-                        height={45}
-                        className='w-24 transition-opacity hover:opacity-80 sm:w-28'
-                        style={{ height: 'auto' }}
-                        unoptimized
-                      />
+                      {isSubmitting ? (
+                        <span className='font-pt-mono inline-block rounded bg-amber-700 px-6 py-2 text-sm text-white'>
+                          Registrando...
+                        </span>
+                      ) : (
+                        <Image
+                          src='/assets/registro/crear-cuenta/boton-listo.png'
+                          alt='Listo'
+                          width={140}
+                          height={45}
+                          className='w-24 transition-opacity hover:opacity-80 sm:w-28'
+                          style={{ height: 'auto' }}
+                          unoptimized
+                        />
+                      )}
                     </button>
                   </div>
                 </form>

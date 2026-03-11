@@ -217,24 +217,48 @@ export async function registroSignup(formData: FormData) {
 
   const userId = signUpData.user?.id
   if (userId) {
-    const serviceClient = createServiceClient()
-    const photoUrl = await uploadPhoto(serviceClient, userId, getStr(formData, 'photo_data') ?? '')
+    try {
+      const serviceClient = createServiceClient()
+      const photoUrl = await uploadPhoto(serviceClient, userId, getStr(formData, 'photo_data') ?? '')
 
-    await serviceClient.from('profiles').upsert({
-      id: userId,
-      role,
-      display_name: displayName,
-      slug: generateSlug(displayName),
-      photo_url: photoUrl,
-      country: getStr(formData, 'country'),
-      state: getStr(formData, 'state'),
-      city: getStr(formData, 'city'),
-      registration_source: source,
-      onboarding_complete: false,
-      updated_at: new Date().toISOString()
-    })
+      const { error: profileError } = await serviceClient.from('profiles').upsert({
+        id: userId,
+        role,
+        display_name: displayName,
+        slug: generateSlug(displayName),
+        photo_url: photoUrl,
+        country: getStr(formData, 'country'),
+        state: getStr(formData, 'state'),
+        city: getStr(formData, 'city'),
+        registration_source: source,
+        onboarding_complete: false,
+        updated_at: new Date().toISOString()
+      })
 
-    await upsertRoleProfile(serviceClient, role, userId, formData)
+      if (profileError) {
+        console.error('[registroSignup] Profile upsert error:', profileError)
+        redirect(
+          `/registro/crear-cuenta?role=${role}&source=${source}&error=` +
+            encodeURIComponent('Error al crear tu perfil: ' + profileError.message)
+        )
+      }
+
+      const roleResult = await upsertRoleProfile(serviceClient, role, userId, formData)
+      if (roleResult?.error) {
+        console.error('[registroSignup] Role profile upsert error:', roleResult.error)
+        redirect(
+          `/registro/crear-cuenta?role=${role}&source=${source}&error=` +
+            encodeURIComponent('Error al guardar datos del rol: ' + roleResult.error.message)
+        )
+      }
+    } catch (err) {
+      if (err && typeof err === 'object' && 'digest' in err) throw err
+      console.error('[registroSignup] Unexpected error:', err)
+      redirect(
+        `/registro/crear-cuenta?role=${role}&source=${source}&error=` +
+          encodeURIComponent('Error inesperado al crear perfil. Intenta de nuevo.')
+      )
+    }
   }
 
   revalidatePath('/', 'layout')
