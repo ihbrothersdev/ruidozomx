@@ -1,8 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 const CARD_W = 24
 const CARD_H = 58
@@ -38,13 +37,16 @@ function HalfCard({ bgSrc, digitValue, position }: { bgSrc: string; digitValue: 
 }
 
 function FlipDigit({ topSrc, bottomSrc, value }: { topSrc: string; bottomSrc: string; value: string }) {
-  const [previous, setPrevious] = useState(value)
   const prevRef = useRef(value)
 
+  // Read previous value DURING render (before effect updates it)
+  // This ensures 'previous' is correct on the first render after value changes
+  const previous = prevRef.current
+
+  // Update ref AFTER render completes
   useEffect(() => {
-    setPrevious(prevRef.current)
     prevRef.current = value
-  }, [value])
+  })
 
   return (
     <div
@@ -75,59 +77,42 @@ function FlipDigit({ topSrc, bottomSrc, value }: { topSrc: string; bottomSrc: st
         />
       </div>
 
-      {/* Animated top flap: shows PREVIOUS digit, folds down to reveal current */}
-      <AnimatePresence
-        initial={false}
-        mode='popLayout'
+      {/* Top flap: shows PREVIOUS digit, folds down.
+          key change → React unmounts old, mounts new → CSS animation restarts */}
+      <div
+        key={`top-${value}`}
+        className='animate-flip-fold absolute top-0 left-0 z-10 overflow-hidden'
+        style={{
+          width: CARD_W,
+          height: HALF_H,
+          transformOrigin: 'bottom center',
+          backfaceVisibility: 'hidden'
+        }}
       >
-        <motion.div
-          key={value}
-          className='absolute top-0 left-0 z-10 overflow-hidden'
-          style={{
-            width: CARD_W,
-            height: HALF_H,
-            transformOrigin: 'bottom center',
-            backfaceVisibility: 'hidden'
-          }}
-          initial={{ rotateX: 0 }}
-          animate={{ rotateX: -90 }}
-          exit={{ rotateX: -90, opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeIn' }}
-        >
-          <HalfCard
-            bgSrc={topSrc}
-            digitValue={previous}
-            position='top'
-          />
-        </motion.div>
-      </AnimatePresence>
+        <HalfCard
+          bgSrc={topSrc}
+          digitValue={previous}
+          position='top'
+        />
+      </div>
 
-      {/* Animated bottom flap: shows CURRENT digit, unfolds from top */}
-      <AnimatePresence
-        initial={false}
-        mode='popLayout'
+      {/* Bottom flap: shows CURRENT digit, unfolds from top */}
+      <div
+        key={`bot-${value}`}
+        className='animate-flip-unfold absolute bottom-0 left-0 z-10 overflow-hidden'
+        style={{
+          width: CARD_W,
+          height: HALF_H,
+          transformOrigin: 'top center',
+          backfaceVisibility: 'hidden'
+        }}
       >
-        <motion.div
-          key={value}
-          className='absolute bottom-0 left-0 z-10 overflow-hidden'
-          style={{
-            width: CARD_W,
-            height: HALF_H,
-            transformOrigin: 'top center',
-            backfaceVisibility: 'hidden'
-          }}
-          initial={{ rotateX: 90 }}
-          animate={{ rotateX: 0 }}
-          exit={{ rotateX: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut', delay: 0.15 }}
-        >
-          <HalfCard
-            bgSrc={bottomSrc}
-            digitValue={value}
-            position='bottom'
-          />
-        </motion.div>
-      </AnimatePresence>
+        <HalfCard
+          bgSrc={bottomSrc}
+          digitValue={value}
+          position='bottom'
+        />
+      </div>
 
       {/* Center divider line */}
       <div

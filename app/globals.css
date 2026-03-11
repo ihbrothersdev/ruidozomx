@@ -113,6 +113,34 @@ body {
   animation: spin-slow 2s linear infinite;
 }
 
+/* Flip clock animations */
+@keyframes flip-fold-down {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+
+@keyframes flip-unfold-down {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+.animate-flip-fold {
+  animation: flip-fold-down 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-flip-unfold {
+  transform: rotateX(90deg);
+  animation: flip-unfold-down 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.18s forwards;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
