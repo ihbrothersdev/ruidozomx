@@ -39,7 +39,7 @@ export function Footer() {
           <ul className='space-y-1.5 text-xl'>
             <li>
               <Link
-                href='/signup'
+                href='/registro/elige-rol'
                 className='transition-colors hover:text-gray-200'
               >
                 Regístrate
@@ -47,7 +47,7 @@ export function Footer() {
             </li>
             <li>
               <Link
-                href='/login'
+                href='/iniciar-sesion'
                 className='transition-colors hover:text-gray-200'
               >
                 Inicia sesión

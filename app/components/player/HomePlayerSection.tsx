@@ -1,18 +1,19 @@
 'use client'
 
-import type { Song } from '@/lib/types'
+import type { PlayerSong } from '@/lib/types'
 import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
 
 interface HomePlayerSectionProps {
-  songs: Song[]
-  initialSongId: number
+  songs: PlayerSong[]
+  initialSongId: string
   date: string
+  isAuthenticated: boolean
 }
 
-export function HomePlayerSection({ songs, initialSongId, date }: HomePlayerSectionProps) {
+export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated }: HomePlayerSectionProps) {
   const {
     isPlaying,
     isStopped,
@@ -46,6 +47,7 @@ export function HomePlayerSection({ songs, initialSongId, date }: HomePlayerSect
               isStopped={isStopped}
               elapsedSeconds={elapsedSeconds}
               progress={progress}
+              isAuthenticated={isAuthenticated}
               onPlay={play}
               onPause={pause}
               onStop={stop}

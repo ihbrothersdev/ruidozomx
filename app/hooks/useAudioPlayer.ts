@@ -1,12 +1,11 @@
 'use client'
 
+import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Song } from '@/lib/types'
 
 interface AudioPlayerState {
   isPlaying: boolean
-  isStopped: boolean
-  currentSongId: number
+  currentSongId: string
   currentSide: 'A' | 'B'
   elapsedSeconds: number
   duration: number
@@ -20,13 +19,10 @@ interface AudioPlayerActions {
   next: () => void
   prev: () => void
   seek: (progress: number) => void
-  playSong: (id: number) => void
+  playSong: (id: string) => void
 }
 
-export function useAudioPlayer(
-  songs: Song[],
-  initialSongId: number
-): AudioPlayerState & AudioPlayerActions {
+export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -111,7 +107,6 @@ export function useAudioPlayer(
   }, [songs, currentSongId])
 
   const play = useCallback(() => {
-    setIsStopped(false)
     audioRef.current?.play().catch(() => {})
   }, [])
 
@@ -156,8 +151,7 @@ export function useAudioPlayer(
     audio.currentTime = pct * audio.duration
   }, [])
 
-  const playSong = useCallback((id: number) => {
-    setIsStopped(false)
+  const playSong = useCallback((id: string) => {
     setCurrentSongId(id)
     // Will auto-play via the useEffect that watches currentSongId
     setTimeout(() => {
@@ -167,7 +161,6 @@ export function useAudioPlayer(
 
   return {
     isPlaying,
-    isStopped,
     currentSongId,
     currentSide,
     elapsedSeconds,

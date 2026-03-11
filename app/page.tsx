@@ -1,8 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { Header } from './components/layout/Header'
-import { MOCK_SONGS, MOCK_PLAYER_STATE } from '@/lib/mock-data'
+import { MOCK_PLAYER_STATE, MOCK_SONGS } from '@/lib/mock-data'
 import { formatCassetteDate } from '@/lib/utils'
 import { Footer } from './components/layout/Footer'
+import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 import Image from 'next/image'
@@ -54,6 +53,7 @@ export default async function Home() {
           songs={MOCK_SONGS}
           initialSongId={MOCK_PLAYER_STATE.currentSongId}
           date={formatCassetteDate()}
+          isAuthenticated={!!user}
         />
 
         {/* Explorar Comunidad - left side */}

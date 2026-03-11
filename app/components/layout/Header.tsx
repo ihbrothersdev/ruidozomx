@@ -35,7 +35,7 @@ export function Header({ user }: HeaderProps) {
           />
         </Link>
 
-        <Link href={user ? '/dashboard' : '/login'}>
+        <Link href={user ? '/dashboard' : '/registro/elige-rol'}>
           <Image
             src='/assets/header/registrate-entra.png'
             alt={user ? 'Dashboard' : 'Regístrate / Entra'}

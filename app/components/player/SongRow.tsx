@@ -1,10 +1,10 @@
-import type { Song } from '@/lib/types'
+import type { PlayerSong } from '@/lib/types'
 
 interface SongRowProps {
   index: number
-  sides: Record<'A' | 'B', Song[]>
-  currentSongId: number
-  onSelectSong?: (id: number) => void
+  sides: Record<'A' | 'B', PlayerSong[]>
+  currentSongId: string
+  onSelectSong?: (id: string) => void
 }
 
 export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowProps) {
