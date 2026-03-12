@@ -1,13 +1,13 @@
 'use client'
 
 /* eslint-disable @next/next/no-img-element */
-import { type Role } from '@/lib/types'
+import { ROLES, type Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
-import { ROLE_TICKET } from './constants'
+import { getTicketSections } from './constants'
 
 export default function TicketPage() {
   return (
@@ -19,8 +19,9 @@ export default function TicketPage() {
 
 function TicketContent() {
   const searchParams = useSearchParams()
-  const role = (searchParams.get('role') ?? 'fan') as Role
-  const ticket = ROLE_TICKET[role] ?? ROLE_TICKET.fan
+  const roleParam = searchParams.get('role')
+  const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
+  const sections = getTicketSections(role)
 
   useEffect(() => {
     sileo.info({
@@ -100,21 +101,53 @@ function TicketContent() {
         className='absolute right-0 bottom-0 z-10 hidden h-screen w-full object-contain object-bottom-right sm:w-4/5 md:w-3/4 lg:block lg:w-2/3'
       />
 
-      <div className='pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center p-4'>
-        <div className='text-center'>
-          {ticket.topLine && <p>{ticket.topLine}</p>}
-          <p>{ticket.headlinePre}</p>
-          <p>{ticket.headline}</p>
-          {ticket.detail && <p>{ticket.detail}</p>}
-          <p>{ticket.detailSub}</p>
+      <div className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4'>
+        <div className='flex max-w-md flex-col gap-16 sm:gap-18 lg:gap-24'>
+          {sections.map(sec => (
+            <section
+              key={sec.name}
+              className='flex flex-col gap-0.5'
+            >
+              {sec.name === 'footer' && (
+                <div className='mb-1 flex items-start gap-2'>
+                  <div className='aspect-square w-12 shrink-0 rounded bg-black/10 sm:w-14' />
+                  <div className='flex flex-1 flex-col gap-0.5'>
+                    {sec.lines.map((line, j) => (
+                      <p
+                        key={j}
+                        className={`font-baby-doll text-xs font-bold uppercase sm:text-sm lg:text-base ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
+                      >
+                        {line.text}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {sec.name !== 'footer' &&
+                sec.lines.map((line, j) => {
+                  const sizeClass =
+                    sec.name === 'headline'
+                      ? 'text-4xl sm:text-5xl lg:text-6xl'
+                      : sec.name === 'main'
+                        ? j === 0
+                          ? 'text-xl font-black sm:text-2xl lg:text-3xl'
+                          : 'text-xs sm:text-sm lg:text-base'
+                        : sec.name === 'cta'
+                          ? 'text-base font-black sm:text-lg lg:text-xl'
+                          : 'text-xs sm:text-sm lg:text-base'
+                  return (
+                    <p
+                      key={j}
+                      className={`font-baby-doll font-bold uppercase ${sizeClass} ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
+                    >
+                      {line.text}
+                    </p>
+                  )
+                })}
+            </section>
+          ))}
         </div>
       </div>
-      <Link
-        href='/'
-        className='absolute bottom-4 left-1/2 z-20 -translate-x-1/2 underline'
-      >
-        Ir al inicio
-      </Link>
     </div>
   )
 }
