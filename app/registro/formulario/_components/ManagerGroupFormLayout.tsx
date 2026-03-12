@@ -26,9 +26,9 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
   }
 
   return (
-    <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
+    <div className='flex flex-col gap-3 md:flex-row md:gap-5'>
       {/* ── Left column ── */}
-      <div className='w-full min-w-0 space-y-3 lg:w-1/2'>
+      <div className='w-full min-w-0 space-y-2 md:w-1/2'>
         <LocationFields />
 
         <Field
@@ -64,7 +64,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
           </Select>
         </div>
 
-        {/* === Role-specific LEFT column fields === */}
+        {/* Role-specific left fields */}
         {subRole === 'promotor' && (
           <PromotorLeftFields
             eventTypes={eventTypes}
@@ -78,7 +78,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
       </div>
 
       {/* ── Right column ── */}
-      <div className='flex w-full flex-col gap-4 lg:w-1/2'>
+      <div className='flex w-full flex-col gap-3 md:w-1/2'>
         <PhotoUpload />
 
         <div className='space-y-0.5'>
@@ -94,11 +94,11 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
             required
             placeholder='600 caracteres máximo'
             maxLength={600}
-            className={inputCls + ' min-h-[160px] resize-none lg:min-h-[200px]'}
+            className={inputCls + ' min-h-[140px] resize-none md:min-h-[180px]'}
           />
         </div>
 
-        {/* === Role-specific RIGHT column fields === */}
+        {/* Role-specific right fields */}
         {subRole === 'promotor' && <PromotorRightFields />}
         {subRole === 'manager' && <ManagerRightFields />}
         {subRole === 'agente' && <AgenteRightFields />}
@@ -214,7 +214,7 @@ function PromotorRightFields() {
   return (
     <>
       <YesNoField
-        label='¿Proporcionarás eventos dentro de Ruidozo?'
+        label='¿Promocionarás eventos dentro de Ruidozo?'
         name='provide_events_ruidozo'
         required
       />
@@ -226,6 +226,11 @@ function PromotorRightFields() {
       <YesNoField
         label='¿Recibes propuesta directas?'
         name='accept_proposals'
+        required
+      />
+      <Field
+        label='Contacto'
+        name='contact'
         required
       />
     </>
@@ -247,6 +252,16 @@ function ManagerLeftFields() {
         name='artists_represented'
         required
       />
+      <YesNoField
+        label='¿Buscas talento emergente?'
+        name='seeks_emerging_talent'
+        required
+      />
+      <YesNoField
+        label='¿Recibes propuesta directas?'
+        name='accept_proposals'
+        required
+      />
     </>
   )
 }
@@ -257,16 +272,6 @@ function ManagerRightFields() {
       <YesNoField
         label='¿Promocionarás a tus bandas dentro de Ruidozo?'
         name='promote_bands_ruidozo'
-        required
-      />
-      <YesNoField
-        label='¿Buscas talento emergente?'
-        name='seeks_emerging_talent'
-        required
-      />
-      <YesNoField
-        label='¿Recibes propuesta directas?'
-        name='accept_proposals'
         required
       />
       <Field
@@ -310,6 +315,17 @@ function AgenteLeftFields() {
           </div>
         ))}
       </div>
+
+      <YesNoField
+        label='¿Buscas nuevos proyectos?'
+        name='seeks_new_projects'
+        required
+      />
+      <YesNoField
+        label='¿Recibes propuesta directas?'
+        name='accept_proposals'
+        required
+      />
     </>
   )
 }
@@ -320,16 +336,6 @@ function AgenteRightFields() {
       <YesNoField
         label='¿Proporcionarás eventos dentro de Ruidozo?'
         name='provide_events_ruidozo'
-        required
-      />
-      <YesNoField
-        label='¿Buscas nuevos proyectos?'
-        name='seeks_new_projects'
-        required
-      />
-      <YesNoField
-        label='¿Recibes propuesta directas?'
-        name='accept_proposals'
         required
       />
       <Field

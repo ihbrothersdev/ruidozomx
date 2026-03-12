@@ -1,5 +1,6 @@
 'use client'
 
+/* eslint-disable @next/next/no-img-element */
 import { type Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
