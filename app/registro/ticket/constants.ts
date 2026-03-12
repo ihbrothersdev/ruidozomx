@@ -1,46 +1,66 @@
 import type { Role } from '@/lib/types'
 
-export const ROLE_ACTIONS: Record<Role, string[]> = {
-  banda: [
-    'Completa tu perfil con links a tu música',
-    'Propón hasta 3 rolas por semana',
-    'Conecta con otros artistas y venues',
-    'Comparte tu perfil de Ruidozo'
-  ],
-  fan: [
-    'Explora la compilación completa',
-    'Propón hasta 3 rolas por semana',
-    'Descubre bandas nuevas',
-    'Sé parte de la comunidad'
-  ],
-  manager: [
-    'Agrega a tus artistas',
-    'Propón rolas para la compilación',
-    'Conecta con venues y promotores',
-    'Gestiona el perfil de tus artistas'
-  ],
-  agente: [
-    'Conecta talento con oportunidades',
-    'Propón rolas para la compilación',
-    'Accede a perfiles de bandas y venues',
-    'Amplía tu red de contactos'
-  ],
-  promotor: [
-    'Descubre bandas para tus eventos',
-    'Propón rolas para la compilación',
-    'Conecta con artistas y managers',
-    'Publica tus próximos eventos'
-  ],
-  proveedor: [
-    'Muestra tus servicios a la escena',
-    'Conecta con bandas y venues',
-    'Recibe solicitudes de cotización',
-    'Amplía tu portafolio'
-  ],
-  venue: [
-    'Publica tu espacio y capacidad',
-    'Descubre bandas para tu programación',
-    'Conecta con managers y promotores',
-    'Recibe propuestas de eventos'
-  ]
+export interface TicketContent {
+  /** Optional first line above the headline (empty string = hidden) */
+  topLine: string
+  /** Text before the big bold word (e.g. "PROPÓN UNA" or "PROPÓN UNA DE TUS") */
+  headlinePre: string
+  /** The big bold word (e.g. "ROLA" or "ROLAS") */
+  headline: string
+  /** Italic detail below headline — empty string = hidden */
+  detail: string
+  /** Sub-detail line (e.g. "para nuestro casete semanal") */
+  detailSub: string
+}
+
+export const ROLE_TICKET: Record<Role, TicketContent> = {
+  fan: {
+    topLine: '',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'de tu banda o artista favorito',
+    detailSub: 'para nuestro casete semanal'
+  },
+  banda: {
+    topLine: '',
+    headlinePre: 'PROPÓN UNA DE TUS',
+    headline: 'ROLAS',
+    detail: '',
+    detailSub: 'para nuestro casete semanal'
+  },
+  manager: {
+    topLine: '',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'de tus artistas',
+    detailSub: 'para nuestro casete semanal'
+  },
+  promotor: {
+    topLine: 'PUBLICA UNA FECHA O UNA CONVOCATORIA',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'del talento que mueves',
+    detailSub: 'para nuestro casete semanal'
+  },
+  agente: {
+    topLine: 'PUBLICA UNA FECHA O UNA CONVOCATORIA',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'del talento que mueves',
+    detailSub: 'para nuestro casete semanal'
+  },
+  proveedor: {
+    topLine: 'PUBLICA UNA PROMO',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'de tu banda o artista favorito',
+    detailSub: 'para nuestro casete semanal'
+  },
+  venue: {
+    topLine: 'PUBLICA UNA TOCADA O ABRE FECHAS DISPONIBLES',
+    headlinePre: 'PROPÓN UNA',
+    headline: 'ROLA',
+    detail: 'de tu banda o artista favorito',
+    detailSub: 'para nuestro casete semanal'
+  }
 }
