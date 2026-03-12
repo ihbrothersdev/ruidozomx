@@ -56,10 +56,10 @@ function ProponerRolaContent() {
           <Link href='/'>
             <Image
               src='/assets/registro/proponer-rola/boton-home.png'
-              alt='Home'
-              width={100}
+              alt='Casete actual'
+              width={140}
               height={40}
-              className='w-16 transition-opacity hover:opacity-80 sm:w-20'
+              className='w-24 transition-opacity hover:opacity-80 sm:w-28'
               style={{ height: 'auto' }}
               unoptimized
             />
