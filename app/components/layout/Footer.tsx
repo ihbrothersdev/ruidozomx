@@ -1,12 +1,18 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { User } from '@supabase/supabase-js'
+import { signout } from '@/app/(auth)/actions'
 
-export function Footer() {
+interface FooterProps {
+  user?: User | null
+}
+
+export function Footer({ user }: FooterProps) {
   return (
-    <footer className='relative z-10 mt-8 px-4 py-12 md:px-8  text-yellow-100'>
+    <footer className='relative z-10 mt-8 px-4 py-12 text-yellow-100 md:px-8'>
       <div className='mx-auto flex max-w-5xl flex-col gap-8 md:flex-row md:gap-12'>
         {/* Left column - Info */}
-        <div className='flex-1 font-pt-mono'>
+        <div className='font-pt-mono flex-1'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Información</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>
@@ -37,35 +43,68 @@ export function Footer() {
 
           <h3 className='font-pt-mono mt-6 mb-3 text-2xl tracking-wider uppercase'>Usuario</h3>
           <ul className='space-y-1.5 text-xl'>
-            <li>
-              <Link
-                href='/signup'
-                className='transition-colors hover:text-gray-200'
-              >
-                Regístrate
-              </Link>
-            </li>
-            <li>
-              <Link
-                href='/login'
-                className='transition-colors hover:text-gray-200'
-              >
-                Inicia sesión
-              </Link>
-            </li>
-            <li>
-              <Link
-                href='#'
-                className='transition-colors hover:text-gray-200'
-              >
-                ¿Olvidaste la contraseña?
-              </Link>
-            </li>
+            {user ? (
+              <>
+                <li>
+                  <Link
+                    href='/perfil'
+                    className='transition-colors hover:text-gray-200'
+                  >
+                    Mi Perfil
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href='/proponer-rola'
+                    className='transition-colors hover:text-gray-200'
+                  >
+                    Proponer rola
+                  </Link>
+                </li>
+                <li>
+                  <form>
+                    <button
+                      formAction={signout}
+                      className='cursor-pointer text-xl transition-colors hover:text-gray-200'
+                    >
+                      Cerrar sesión
+                    </button>
+                  </form>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    href='/registro/elige-rol'
+                    className='transition-colors hover:text-gray-200'
+                  >
+                    Regístrate
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href='/iniciar-sesion'
+                    className='transition-colors hover:text-gray-200'
+                  >
+                    Inicia sesión
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href='#'
+                    className='transition-colors hover:text-gray-200'
+                  >
+                    ¿Olvidaste la contraseña?
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
         {/* Right column - Info */}
-        <div className='flex-1 font-pt-mono'>
+        <div className='font-pt-mono flex-1'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Navegación</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>
@@ -176,7 +215,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
@@ -187,7 +226,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
@@ -198,7 +237,7 @@ export function Footer() {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll text-xs text-gray-500 bg-yellow-100'>aún no hay</span>
+          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
         </div>
       </div>
     </footer>

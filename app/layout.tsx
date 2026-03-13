@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Toaster } from 'sileo'
 import './globals.css'
 
 const corose = localFont({
@@ -48,11 +49,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='es'>
+    <html
+      lang='es'
+      className='h-full'
+    >
       <body
-        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} antialiased`}
+        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} min-h-screen antialiased`}
       >
         {children}
+        <Toaster position='top-center' />
       </body>
     </html>
   )

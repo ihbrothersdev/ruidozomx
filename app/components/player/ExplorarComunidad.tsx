@@ -20,8 +20,8 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
-          className='absolute inset-[8%] z-[1] object-cover -top-3'
-          style={{width: '110%', height: '110%'}}
+          className='absolute inset-[8%] -top-3 z-[1] object-cover'
+          style={{ width: '110%', height: '110%' }}
           aria-label='Video de la comunidad Ruidozo'
         >
           <source
