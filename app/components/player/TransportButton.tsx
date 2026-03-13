@@ -9,7 +9,10 @@ interface ButtonProps {
 
 export function PrevButton({ onClick }: ButtonProps) {
   return (
-    <button className='group relative cursor-pointer' onClick={onClick}>
+    <button
+      className='group relative cursor-pointer'
+      onClick={onClick}
+    >
       <Image
         src='/assets/controles/regresar-off.png'
         alt='Regresar'
@@ -32,7 +35,10 @@ export function PrevButton({ onClick }: ButtonProps) {
 
 export function StopButton({ active, onClick }: ButtonProps) {
   return (
-    <button className='group relative cursor-pointer' onClick={onClick}>
+    <button
+      className='group relative cursor-pointer'
+      onClick={onClick}
+    >
       <Image
         src='/assets/controles/stop-off.png'
         alt='Stop'
@@ -55,7 +61,10 @@ export function StopButton({ active, onClick }: ButtonProps) {
 
 export function PlayButton({ active, onClick }: ButtonProps) {
   return (
-    <button className='group relative cursor-pointer' onClick={onClick}>
+    <button
+      className='group relative cursor-pointer'
+      onClick={onClick}
+    >
       <Image
         src='/assets/controles/play-off.png'
         alt='Play'
@@ -78,7 +87,10 @@ export function PlayButton({ active, onClick }: ButtonProps) {
 
 export function PauseButton({ active, onClick }: ButtonProps) {
   return (
-    <button className='group relative cursor-pointer' onClick={onClick}>
+    <button
+      className='group relative cursor-pointer'
+      onClick={onClick}
+    >
       <Image
         src='/assets/controles/pausa-off.png'
         alt='Pausa'
@@ -101,7 +113,10 @@ export function PauseButton({ active, onClick }: ButtonProps) {
 
 export function NextButton({ onClick }: ButtonProps) {
   return (
-    <button className='group relative cursor-pointer' onClick={onClick}>
+    <button
+      className='group relative cursor-pointer'
+      onClick={onClick}
+    >
       <Image
         src='/assets/controles/adelantar-off.png'
         alt='Adelantar'
