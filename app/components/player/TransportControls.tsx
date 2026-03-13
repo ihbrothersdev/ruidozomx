@@ -46,7 +46,10 @@ export function TransportControls({
         unoptimized
       />
 
-      <div className='mx-auto flex w-full justify-center' style={{ maxWidth: 700 }}>
+      <div
+        className='mx-auto flex w-full justify-center'
+        style={{ maxWidth: 700 }}
+      >
         <div className='relative'>
           <Image
             src='/assets/controles/carcasa.png'
@@ -59,15 +62,27 @@ export function TransportControls({
           {/* Content overlaid on carcasa */}
           <div className='absolute inset-0 flex flex-col items-center justify-center'>
             <div className='px-[4%] py-[2.4%]'>
-              <ProgressBar progress={progress} onSeek={onSeek} />
+              <ProgressBar
+                progress={progress}
+                onSeek={onSeek}
+              />
             </div>
 
             {/* Buttons + time counter row */}
             <div className='flex items-center px-[3%]'>
               <PrevButton onClick={onPrev} />
-              <StopButton onClick={onStop} active={isStopped} />
-              <PlayButton onClick={onPlay} active={isPlaying} />
-              <PauseButton onClick={onPause} active={!isPlaying && elapsedSeconds > 0} />
+              <StopButton
+                onClick={onStop}
+                active={isStopped}
+              />
+              <PlayButton
+                onClick={onPlay}
+                active={isPlaying}
+              />
+              <PauseButton
+                onClick={onPause}
+                active={!isPlaying && elapsedSeconds > 0}
+              />
               <NextButton onClick={onNext} />
 
               {/* Time counter */}

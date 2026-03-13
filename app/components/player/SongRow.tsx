@@ -1,10 +1,10 @@
-import type { Song } from '@/lib/types'
+import type { PlayerSong } from '@/lib/types'
 
 interface SongRowProps {
   index: number
-  sides: Record<'A' | 'B', Song[]>
-  currentSongId: number
-  onSelectSong?: (id: number) => void
+  sides: Record<'A' | 'B', PlayerSong[]>
+  currentSongId: string
+  onSelectSong?: (id: string) => void
 }
 
 export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowProps) {
@@ -26,12 +26,10 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
             onClick={() => onSelectSong?.(song.id)}
           >
             {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
-            <span className='shrink-0 text-[16px] font-corose-alt font-bold'>
+            <span className='font-corose-alt shrink-0 text-[16px] font-bold'>
               {index + 1}. {song.title}
             </span>
-            <span className='min-w-0 truncate text-[13px] font-corose'>
-              {' '}- {song.artist}
-            </span>
+            <span className='font-corose min-w-0 truncate text-[13px]'> - {song.artist}</span>
           </button>
         )}
       </div>

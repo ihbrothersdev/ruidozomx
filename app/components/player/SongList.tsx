@@ -1,13 +1,13 @@
 'use client'
 
-import type { Song } from '@/lib/types'
+import type { PlayerSong } from '@/lib/types'
 import Image from 'next/image'
 import { SongRow } from './SongRow'
 
 interface SongListProps {
-  songs: Song[]
-  currentSongId: number
-  onSelectSong?: (id: number) => void
+  songs: PlayerSong[]
+  currentSongId: string
+  onSelectSong?: (id: string) => void
 }
 
 export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
