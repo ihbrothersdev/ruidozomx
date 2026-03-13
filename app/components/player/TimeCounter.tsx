@@ -23,7 +23,7 @@ function HalfCard({ bgSrc, digitValue, position }: { bgSrc: string; digitValue: 
         style={isTop ? { top: 0, height: CARD_H } : { bottom: 0, height: CARD_H }}
       >
         <Image
-          src={`/assets/contador/${digitValue}.png`}
+          src={`/assets/controles/${digitValue}.png`}
           alt={digitValue}
           width={15}
           height={37}
@@ -142,7 +142,7 @@ export function TimeCounter({ seconds }: { seconds: number }) {
         value={minStr[1]}
       />
       <Image
-        src='/assets/contador/_.png'
+        src='/assets/controles/colon.png'
         alt=':'
         width={5}
         height={17}
