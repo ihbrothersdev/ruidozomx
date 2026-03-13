@@ -19,18 +19,10 @@ function HalfCard({ bgSrc, digitValue, position }: { bgSrc: string; digitValue: 
         unoptimized
       />
       <div
-        className='absolute inset-x-0 flex justify-center'
+        className='absolute inset-x-0 flex items-center justify-center font-thanjhirs text-[48px] leading-none font-bold text-gray-200'
         style={isTop ? { top: 0, height: CARD_H } : { bottom: 0, height: CARD_H }}
       >
-        <Image
-          src={`/assets/controles/${digitValue}.png`}
-          alt={digitValue}
-          width={15}
-          height={37}
-          className='m-auto'
-          style={{ objectFit: 'contain' }}
-          unoptimized
-        />
+        {digitValue}
       </div>
     </>
   )

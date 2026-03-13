@@ -54,7 +54,7 @@ export function CassettePlayer({
 
   const proponButton = (
     <Image
-      src='/assets/registro/modal/boton-proponer-rola.png'
+      src='/assets/registro/modal/propon-rola.png'
       alt='Propón una rola'
       width={200}
       height={100}
@@ -85,7 +85,7 @@ export function CassettePlayer({
         {isAuthenticated ? (
           <Link
             href='/proponer-rola'
-            className='absolute -right-2 bottom-0 z-10 hidden transition-transform hover:scale-105 md:block'
+            className='absolute -right-50 bottom-0 z-10 hidden transition-transform hover:scale-105 md:block'
             style={{ width: 200 }}
           >
             {proponButton}
@@ -94,7 +94,7 @@ export function CassettePlayer({
           <button
             type='button'
             onClick={handleProponClick}
-            className='absolute -right-2 bottom-0 z-10 hidden cursor-pointer transition-transform hover:scale-105 md:block'
+            className='absolute -right-30 -bottom-2 z-10 hidden cursor-pointer transition-transform hover:scale-105 md:block'
             style={{ width: 200 }}
           >
             {proponButton}

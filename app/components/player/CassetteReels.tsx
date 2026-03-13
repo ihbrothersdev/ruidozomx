@@ -10,14 +10,14 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
     <>
       {/* Left spool */}
       <div
-        className='absolute z-[2]'
-        style={{ left: '22%', top: '25%', width: '14%', height: '42%' }}
+        className='absolute'
+        style={{ left: '23%', top: '25%', width: '22%', height: '42%' }}
       >
         <Image
           src='/assets/cassette/carrete-izquierdo.png'
           alt=''
           fill
-          className='object-contain'
+          className={`object-contain ${spinClass}`}
           unoptimized
         />
       </div>
@@ -37,14 +37,14 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
 
       {/* Right spool */}
       <div
-        className='absolute z-[2]'
-        style={{ right: '20%', top: '25%', width: '14%', height: '42%' }}
+        className='absolute'
+        style={{ right: '22%', top: '25%', width: '24%', height: '42%' }}
       >
         <Image
           src='/assets/cassette/carrete-derecho.png'
           alt=''
           fill
-          className='object-contain'
+          className={`object-contain ${spinClass}`}
           unoptimized
         />
       </div>

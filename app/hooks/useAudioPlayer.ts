@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 interface AudioPlayerState {
   isPlaying: boolean
   currentSongId: string
+  isStopped: boolean
   currentSide: 'A' | 'B'
   elapsedSeconds: number
   duration: number
@@ -107,6 +108,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [songs, currentSongId])
 
   const play = useCallback(() => {
+    setIsStopped(false)
     audioRef.current?.play().catch(() => {})
   }, [])
 
@@ -161,6 +163,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
   return {
     isPlaying,
+    isStopped,
     currentSongId,
     currentSide,
     elapsedSeconds,
