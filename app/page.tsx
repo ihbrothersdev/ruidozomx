@@ -1,8 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { Header } from './components/layout/Header'
-import { MOCK_SONGS, MOCK_PLAYER_STATE } from '@/lib/mock-data'
+import { MOCK_PLAYER_STATE, MOCK_SONGS } from '@/lib/mock-data'
 import { formatCassetteDate } from '@/lib/utils'
 import { Footer } from './components/layout/Footer'
+import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 import Image from 'next/image'
@@ -37,7 +36,7 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
-         <div className='absolute top-205 left-55 z-0 hidden lg:block'>
+          <div className='absolute top-205 left-55 z-0 hidden lg:block'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
@@ -46,7 +45,6 @@ export default async function Home() {
               unoptimized
             />
           </div>
-
         </div>
         <Header user={user} />
 
@@ -54,10 +52,11 @@ export default async function Home() {
           songs={MOCK_SONGS}
           initialSongId={MOCK_PLAYER_STATE.currentSongId}
           date={formatCassetteDate()}
+          isAuthenticated={!!user}
         />
 
         {/* Explorar Comunidad - left side */}
-        <div className='hidden lg:block absolute left-20 z-0 top-330'>
+        <div className='absolute top-330 left-20 z-0 hidden lg:block'>
           <ExplorarComunidad />
         </div>
 

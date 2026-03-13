@@ -1,9 +1,13 @@
 'use client'
 
+import Image from 'next/image'
+import Link from 'next/link'
+import { useState } from 'react'
 import { Cassette } from './Cassette'
-import { TransportControls } from './TransportControls'
-import { PlayingArrow } from './PlayingArrow'
 import { DialogBubble } from './DialogBubble'
+import { PlayingArrow } from './PlayingArrow'
+import { ProponRolaModal } from './ProponRolaModal'
+import { TransportControls } from './TransportControls'
 
 interface CassettePlayerProps {
   songTitle: string
@@ -14,6 +18,7 @@ interface CassettePlayerProps {
   isStopped: boolean
   elapsedSeconds: number
   progress: number
+  isAuthenticated: boolean
   onPlay: () => void
   onPause: () => void
   onStop: () => void
@@ -31,6 +36,7 @@ export function CassettePlayer({
   isStopped,
   elapsedSeconds,
   progress,
+  isAuthenticated,
   onPlay,
   onPause,
   onStop,
@@ -38,6 +44,26 @@ export function CassettePlayer({
   onPrev,
   onSeek
 }: CassettePlayerProps) {
+  const [showModal, setShowModal] = useState(false)
+
+  function handleProponClick() {
+    if (!isAuthenticated) {
+      setShowModal(true)
+    }
+  }
+
+  const proponButton = (
+    <Image
+      src='/assets/registro/modal/propon-rola.png'
+      alt='Propón una rola'
+      width={200}
+      height={100}
+      className='w-full'
+      style={{ height: 'auto' }}
+      unoptimized
+    />
+  )
+
   return (
     <div
       className='relative mx-auto w-full'
@@ -53,7 +79,27 @@ export function CassettePlayer({
           isPlaying={isPlaying}
         />
         <PlayingArrow />
-        <DialogBubble />
+        <DialogBubble isAuthenticated={isAuthenticated} />
+
+        {/* Desktop: Propón una Rola button */}
+        {isAuthenticated ? (
+          <Link
+            href='/proponer-rola'
+            className='absolute -right-50 bottom-0 z-10 hidden transition-transform hover:scale-105 md:block'
+            style={{ width: 200 }}
+          >
+            {proponButton}
+          </Link>
+        ) : (
+          <button
+            type='button'
+            onClick={handleProponClick}
+            className='absolute -right-30 -bottom-2 z-10 hidden cursor-pointer transition-transform hover:scale-105 md:block'
+            style={{ width: 200 }}
+          >
+            {proponButton}
+          </button>
+        )}
       </div>
 
       {/* Transport controls */}
@@ -71,6 +117,32 @@ export function CassettePlayer({
           onSeek={onSeek}
         />
       </div>
+
+      {/* Mobile: Propón una Rola button */}
+      <div className='mt-3 flex justify-center md:hidden'>
+        {isAuthenticated ? (
+          <Link
+            href='/proponer-rola'
+            className='transition-transform hover:scale-105'
+          >
+            <div className='w-40'>{proponButton}</div>
+          </Link>
+        ) : (
+          <button
+            type='button'
+            onClick={handleProponClick}
+            className='w-40 cursor-pointer transition-transform hover:scale-105'
+          >
+            {proponButton}
+          </button>
+        )}
+      </div>
+
+      {/* Modal for non-authenticated users */}
+      <ProponRolaModal
+        open={showModal}
+        onOpenChange={setShowModal}
+      />
     </div>
   )
 }
