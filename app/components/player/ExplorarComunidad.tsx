@@ -1,8 +1,9 @@
 import Image from 'next/image'
+import Link from 'next/link'
 
 export function ExplorarComunidad() {
   return (
-    <div className='flex flex-col items-center'>
+    <Link href='/comunidad' className='flex flex-col items-center transition-transform hover:scale-105'>
       <div
         className='relative overflow-hidden'
         style={{ width: 340, aspectRatio: '1206 / 759' }}
@@ -34,6 +35,6 @@ export function ExplorarComunidad() {
 
       {/* Label */}
       <p className='font-impact-label mt-2 text-2xl tracking-wider text-green-300 uppercase'>Explorar Comunidad</p>
-    </div>
+    </Link>
   )
 }
