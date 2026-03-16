@@ -16,11 +16,11 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/login?error=' + encodeURIComponent(translateAuthError(error.message)))
+    redirect('/iniciar-sesion?error=' + encodeURIComponent(translateAuthError(error.message)))
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect('/perfil')
 }
 
 export async function signup(formData: FormData) {
@@ -34,16 +34,16 @@ export async function signup(formData: FormData) {
   const { data: signUpData, error } = await supabase.auth.signUp(data)
 
   if (error) {
-    redirect('/signup?error=' + encodeURIComponent(translateAuthError(error.message)))
+    redirect('/registrarte?error=' + encodeURIComponent(translateAuthError(error.message)))
   }
 
   if (signUpData.user && signUpData.user.identities?.length === 0) {
-    redirect('/signup?error=' + encodeURIComponent('Ya existe una cuenta con este email.'))
+    redirect('/registrarte?error=' + encodeURIComponent('Ya existe una cuenta con este email.'))
   }
 
   revalidatePath('/', 'layout')
   redirect(
-    '/signup?message=' +
+    '/registrarte?message=' +
       encodeURIComponent('Revisa tu email para confirmar tu cuenta. Si no lo encuentras, revisa tu carpeta de spam.')
   )
 }
@@ -52,5 +52,5 @@ export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/login')
+  redirect('/iniciar-sesion')
 }

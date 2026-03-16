@@ -4,20 +4,17 @@ interface CassetteLabelsProps {
   date: string
 }
 
-function TruncatedLabel({
-  text,
-  className
-}: {
-  text: string
-  className: string
-}) {
+function TruncatedLabel({ text, className }: { text: string; className: string }) {
   const showTooltip = text.split(' ').length > 3
 
   return (
     <span className={`group/tip ${className} cursor-pointer`}>
       {text}
       {showTooltip && (
-        <span className='pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-yellow-100 px-2 py-1 text-md text-black normal-case opacity-0 shadow-lg transition-opacity duration-200 group-hover/tip:opacity-100' style={{ top: '100%', marginTop: 4 }}>
+        <span
+          className='text-md pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 rounded bg-yellow-100 px-2 py-1 whitespace-nowrap text-black normal-case opacity-0 shadow-lg transition-opacity duration-200 group-hover/tip:opacity-100'
+          style={{ top: '100%', marginTop: 4 }}
+        >
           {text}
         </span>
       )}
@@ -36,13 +33,13 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
           <div className='relative w-full'>
             <TruncatedLabel
               text={songTitle}
-              className='block w-full truncate text-center font-corose-alt font-bold text-3xl leading-tight text-black uppercase'
+              className='font-corose-alt block w-full truncate text-center text-3xl leading-tight font-bold text-black uppercase'
             />
           </div>
           <div className='relative w-3/4'>
             <TruncatedLabel
               text={artist}
-              className='block w-full truncate text-center font-corose text-2xl leading-tight text-black uppercase'
+              className='font-corose block w-full truncate text-center text-2xl leading-tight text-black uppercase'
             />
           </div>
         </div>

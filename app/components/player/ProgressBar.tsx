@@ -85,9 +85,7 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
       </div>
 
       {/* Black remaining bar */}
-      <div
-        className='h-3 flex-1 overflow-hidden'
-      >
+      <div className='h-3 flex-1 overflow-hidden'>
         <Image
           src='/assets/controles/barra-negra.png'
           alt=''
