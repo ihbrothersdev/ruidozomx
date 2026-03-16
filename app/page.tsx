@@ -62,11 +62,13 @@ export default async function Home() {
           isAuthenticated={!!user}
         />
 
-        <div className='absolute top-330 left-20 z-0 hidden lg:block'>
+        {/* Explorar Comunidad - left side */}
+        <div className='absolute top-330 left-5 z-0 hidden lg:block'>
           <ExplorarComunidad />
         </div>
 
-        <div className='absolute top-210 right-15 z-0 hidden lg:block'>
+        {/* Rocket man - right side */}
+        <div className='absolute top-250 -right-15 z-0 hidden lg:block'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
