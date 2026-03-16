@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
-import { getTicketSections } from './constants'
+import { getTicketSections, TICKET_TABLE_ROTATION_DEG } from './constants'
+import TicketText from './_components/TicketText'
 
 export default function TicketPage() {
   return (
@@ -56,13 +57,7 @@ function TicketContent() {
           />
         </div>
 
-        <div className='relative order-2 flex items-end justify-center lg:order-0 lg:min-h-0 lg:items-end lg:justify-center'>
-          <img
-            src='/assets/registro/tickets/shared/mano-boleto.png'
-            alt='Boleto'
-            className='h-[45vh] w-auto max-w-full object-contain object-bottom sm:h-[55vh] lg:hidden'
-          />
-        </div>
+        <div className='order-2 lg:order-0' />
 
         <div className='order-1 flex flex-col items-center justify-center gap-8 px-4 py-6 sm:justify-center sm:gap-12 md:gap-16 lg:order-0 lg:min-h-0 lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
           <div className='w-full max-w-xs lg:max-w-none'>
@@ -88,64 +83,48 @@ function TicketContent() {
               alt=''
               className='absolute top-0 left-1/2 w-24 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 sm:w-24 md:w-28 lg:w-36 xl:w-40'
             />
-            <span className='font-baby-doll text-sm font-bold tracking-[0.2em] text-white sm:text-base md:text-lg lg:text-xl'>
+            <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black sm:text-base md:text-xl lg:text-xl'>
               ENTRA
             </span>
           </Link>
         </div>
       </div>
 
+      {/* Ticket image — absolute, anchored bottom-right */}
       <img
         src='/assets/registro/tickets/shared/mano-boleto.png'
         alt='Boleto'
-        className='absolute right-0 bottom-0 z-10 hidden h-screen w-full object-contain object-bottom-right sm:w-4/5 md:w-3/4 lg:block lg:w-2/3'
+        className='absolute right-0 bottom-0 z-10 hidden h-screen w-full object-contain object-right-bottom sm:w-4/5 md:w-3/4 lg:block lg:w-2/3'
       />
 
-      <div className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4'>
-        <div className='flex max-w-md flex-col gap-16 sm:gap-18 lg:gap-24'>
-          {sections.map(sec => (
-            <section
-              key={sec.name}
-              className='flex flex-col gap-0.5'
-            >
-              {sec.name === 'footer' && (
-                <div className='mb-1 flex items-start gap-2'>
-                  <div className='aspect-square w-12 shrink-0 rounded bg-black/10 sm:w-14' />
-                  <div className='flex flex-1 flex-col gap-0.5'>
-                    {sec.lines.map((line, j) => (
-                      <p
-                        key={j}
-                        className={`font-baby-doll text-xs font-bold uppercase sm:text-sm lg:text-base ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
-                      >
-                        {line.text}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {sec.name !== 'footer' &&
-                sec.lines.map((line, j) => {
-                  const sizeClass =
-                    sec.name === 'headline'
-                      ? 'text-4xl sm:text-5xl lg:text-6xl'
-                      : sec.name === 'main'
-                        ? j === 0
-                          ? 'text-xl font-black sm:text-2xl lg:text-3xl'
-                          : 'text-xs sm:text-sm lg:text-base'
-                        : sec.name === 'cta'
-                          ? 'text-base font-black sm:text-lg lg:text-xl'
-                          : 'text-xs sm:text-sm lg:text-base'
-                  return (
-                    <p
-                      key={j}
-                      className={`font-baby-doll font-bold uppercase ${sizeClass} ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
-                    >
-                      {line.text}
-                    </p>
-                  )
-                })}
-            </section>
-          ))}
+      {/* Ticket text — absolute, positioned on top of the ticket face */}
+      <div
+        className='pointer-events-none absolute right-[20%] bottom-[24%] z-10 hidden h-[70%] w-[36%] lg:block'
+        style={{ transform: `rotate(${TICKET_TABLE_ROTATION_DEG}deg)` }}
+      >
+        <TicketText
+          sections={sections}
+          className='h-full'
+        />
+      </div>
+
+      {/* Mobile ticket — inline in flow */}
+      <div className='relative z-10 flex items-end justify-center lg:hidden'>
+        <div className='relative'>
+          <img
+            src='/assets/registro/tickets/shared/mano-boleto.png'
+            alt='Boleto'
+            className='h-[45vh] w-auto max-w-full object-contain object-bottom sm:h-[55vh]'
+          />
+          <div
+            className='absolute top-[12%] left-[14%] h-[58%] w-[48%]'
+            style={{ transform: `rotate(${TICKET_TABLE_ROTATION_DEG}deg)` }}
+          >
+            <TicketText
+              sections={sections}
+              className='h-full'
+            />
+          </div>
         </div>
       </div>
     </div>

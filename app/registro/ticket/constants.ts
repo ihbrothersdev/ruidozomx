@@ -25,7 +25,7 @@ export interface TicketTableRow {
   strikethrough?: boolean
 }
 
-export const TICKET_TABLE_ROTATION_DEG = 2.5
+export const TICKET_TABLE_ROTATION_DEG = -6
 
 export type TicketLineColor = 'red' | 'black'
 
