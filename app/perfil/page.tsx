@@ -3,7 +3,6 @@ import { ROLE_LABELS, type Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { signout } from '../(auth)/actions'
 
 const ROLE_TABLE: Record<Role, string> = {
   banda: 'band_profiles',
@@ -240,18 +239,6 @@ export default async function PerfilPage() {
                   Proponer rola
                 </Link>
               </div>
-            </div>
-
-            {/* Logout */}
-            <div className='border-t border-black/10 pt-4'>
-              <form>
-                <button
-                  formAction={signout}
-                  className='font-pt-mono cursor-pointer text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:text-red-800'
-                >
-                  Cerrar sesión
-                </button>
-              </form>
             </div>
           </div>
         </div>

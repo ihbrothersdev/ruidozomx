@@ -1,19 +1,24 @@
 import { MOCK_PLAYER_STATE, MOCK_SONGS } from '@/lib/mock-data'
 import { formatCassetteDate } from '@/lib/utils'
+import Image from 'next/image'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
-import { HomePlayerSection } from './components/player/HomePlayerSection'
-import Image from 'next/image'
 import { ExplorarComunidad } from './components/player/ExplorarComunidad'
+import { HomePlayerSection } from './components/player/HomePlayerSection'
 
 export default async function Home() {
   let user = null
+  let photoUrl: string | null = null
   try {
     const { createClient } = await import('@/lib/supabase/server')
     const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     user = data.user
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('photo_url').eq('id', user.id).single()
+      photoUrl = (profile?.photo_url as string) || null
+    }
   } catch {
     // Supabase not configured — continue without auth
   }
@@ -26,7 +31,6 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        {/* Virgin Mary collage - left side */}
         <div className='absolute top-0 left-2 z-0 hidden lg:block'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
@@ -46,7 +50,10 @@ export default async function Home() {
             />
           </div>
         </div>
-        <Header user={user} />
+        <Header
+          user={user}
+          photoUrl={photoUrl}
+        />
 
         <HomePlayerSection
           songs={MOCK_SONGS}
@@ -55,12 +62,10 @@ export default async function Home() {
           isAuthenticated={!!user}
         />
 
-        {/* Explorar Comunidad - left side */}
         <div className='absolute top-330 left-20 z-0 hidden lg:block'>
           <ExplorarComunidad />
         </div>
 
-        {/* Rocket man - right side */}
         <div className='absolute top-210 right-15 z-0 hidden lg:block'>
           <Image
             src='/assets/decorativos/cohete.png'

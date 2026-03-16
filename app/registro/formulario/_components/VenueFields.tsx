@@ -15,6 +15,7 @@ export function VenueFields() {
         label='Nombre del espacio'
         name='venue_name'
         required
+        placeholder='Ej: Foro Indie, Casa del Ruido...'
       />
       <Field
         label='Link a web o redes'
@@ -116,6 +117,7 @@ export function VenueFields() {
           <Field
             label='Contacto'
             name='contact'
+            placeholder='Email, teléfono o red social'
           />
         </div>
       </div>

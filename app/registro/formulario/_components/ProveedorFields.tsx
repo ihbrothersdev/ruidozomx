@@ -149,6 +149,7 @@ export function ProveedorFields() {
           <Field
             label='Contacto'
             name='contact'
+            placeholder='Email, teléfono o red social'
           />
         </div>
       </div>

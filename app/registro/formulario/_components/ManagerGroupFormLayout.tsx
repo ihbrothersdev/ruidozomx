@@ -35,6 +35,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
           label='Nombre completo'
           name='full_name'
           required
+          placeholder='Tu nombre completo'
         />
         <Field
           label='Link a web o redes'
@@ -232,6 +233,7 @@ function PromotorRightFields() {
         label='Contacto'
         name='contact'
         required
+        placeholder='Email, teléfono o red social'
       />
     </>
   )
@@ -251,6 +253,7 @@ function ManagerLeftFields() {
         label='Nombre(s) de artistas/proyectos que representas'
         name='artists_represented'
         required
+        placeholder='Ej: Banda X, Solista Y...'
       />
       <YesNoField
         label='¿Buscas talento emergente?'
@@ -277,6 +280,7 @@ function ManagerRightFields() {
       <Field
         label='Contacto'
         name='contact'
+        placeholder='Email, teléfono o red social'
       />
     </>
   )
@@ -341,6 +345,7 @@ function AgenteRightFields() {
       <Field
         label='Contacto'
         name='contact'
+        placeholder='Email, teléfono o red social'
       />
     </>
   )

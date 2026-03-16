@@ -15,6 +15,7 @@ export function AgenteFields() {
         label='Nombre completo'
         name='full_name'
         required
+        placeholder='Tu nombre completo'
       />
       <Field
         label='Link a web o redes'
@@ -103,6 +104,7 @@ export function AgenteFields() {
       <Field
         label='Contacto'
         name='contact'
+        placeholder='Email, teléfono o red social'
       />
     </>
   )

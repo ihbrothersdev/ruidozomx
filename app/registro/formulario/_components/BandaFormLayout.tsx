@@ -20,6 +20,7 @@ export function BandaFormLayout() {
           label='Nombre del proyecto'
           name='band_name'
           required
+          placeholder='Ej: Los Ruidosos'
         />
         <div className='space-y-0.5'>
           <Label
@@ -49,11 +50,13 @@ export function BandaFormLayout() {
           label='Género principal'
           name='genre'
           required
+          placeholder='Ej: Rock, Punk, Electrónica...'
         />
         <Field
           label='Link a tu proyecto'
           name='project_link'
           required
+          placeholder='https://...'
         />
         <YesNoField
           label='Disponible para tocar en vivo'
@@ -108,6 +111,7 @@ export function BandaFormLayout() {
         <Field
           label='Contacto'
           name='contact'
+          placeholder='Email, teléfono o red social'
         />
         <div className='flex flex-1 items-end justify-end'>
           <button

@@ -1,80 +1,116 @@
+/* eslint-disable @next/next/no-img-element */
+import Image from 'next/image'
 import Link from 'next/link'
 import { login } from '../actions'
 import { type AuthSearchParams } from '../types'
-import { Input } from '@/app/components/ui/input'
-import { Label } from '@/app/components/ui/label'
-import { Button } from '@/app/components/ui/button'
 
 export default async function LoginPage({ searchParams }: { searchParams: AuthSearchParams }) {
   const { error, message } = await searchParams
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a] bg-[url("/assets/textura/background-textura.jpg")] bg-cover bg-center px-4'>
-      <div className='w-full max-w-sm space-y-6'>
-        <div className='text-center'>
-          <h1 className='font-baby-doll text-3xl text-white'>Iniciar Sesión</h1>
-          <p className='font-pt-mono mt-1 text-sm text-gray-400'>Ingresa tus credenciales para continuar</p>
+    <div className='relative flex min-h-screen w-screen items-center justify-center overflow-hidden'>
+      {/* Fondo papel */}
+      <div className='absolute inset-0 z-0'>
+        <Image
+          src='/assets/registro/explicacion-rol/shared/fondo.png'
+          alt=''
+          fill
+          className='object-cover'
+          priority
+          unoptimized
+        />
+      </div>
+
+      {/* Card central */}
+      <div className='relative z-10 flex w-full max-w-md flex-col items-center gap-6 px-6 py-10'>
+        {/* Rayo + Título */}
+        <div className='flex flex-col items-center gap-3'>
+          <img
+            src='/assets/registro/explicacion-rol/shared/rayo.png'
+            alt=''
+            className='h-16 w-auto'
+          />
+          <h1 className='font-baby-doll text-center text-[clamp(2.5rem,6vw,4rem)] leading-[0.9] font-black text-black uppercase'>
+            Iniciar
+            <br />
+            Sesión
+          </h1>
+          <p className='font-pt-mono text-center text-sm font-bold text-black/60 uppercase'>
+            Ingresa tus credenciales para continuar
+          </p>
         </div>
 
+        {/* Mensajes */}
         {error && (
-          <div className='rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700'>{error}</div>
+          <div className='font-pt-mono w-full rounded border border-red-300 bg-red-50/80 px-4 py-3 text-sm text-red-700'>
+            {error}
+          </div>
         )}
-
         {message && (
-          <div className='rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700'>
+          <div className='font-pt-mono w-full rounded border border-green-300 bg-green-50/80 px-4 py-3 text-sm text-green-700'>
             {message}
           </div>
         )}
 
-        <form className='space-y-4'>
-          <div className='space-y-1'>
-            <Label
+        {/* Formulario */}
+        <form className='flex w-full flex-col gap-4'>
+          <div className='flex flex-col gap-1'>
+            <label
               htmlFor='email'
-              className='text-sm font-medium text-white'
+              className='font-pt-mono text-xs font-bold tracking-wider text-black/70 uppercase'
             >
               Email
-            </Label>
-            <Input
+            </label>
+            <input
               id='email'
               name='email'
               type='email'
               required
               placeholder='tu@email.com'
-              className='border-gray-700 bg-gray-900 text-white placeholder:text-gray-500 focus-visible:border-white focus-visible:ring-0'
+              className='font-pt-mono rounded border-2 border-black/20 bg-white/60 px-4 py-3 text-sm text-black placeholder:text-black/30 focus:border-black/60 focus:outline-none'
             />
           </div>
 
-          <div className='space-y-1'>
-            <Label
+          <div className='flex flex-col gap-1'>
+            <label
               htmlFor='password'
-              className='text-sm font-medium text-white'
+              className='font-pt-mono text-xs font-bold tracking-wider text-black/70 uppercase'
             >
               Contraseña
-            </Label>
-            <Input
+            </label>
+            <input
               id='password'
               name='password'
               type='password'
               required
               minLength={6}
               placeholder='••••••••'
-              className='border-gray-700 bg-gray-900 text-white placeholder:text-gray-500 focus-visible:border-white focus-visible:ring-0'
+              className='font-pt-mono rounded border-2 border-black/20 bg-white/60 px-4 py-3 text-sm text-black placeholder:text-black/30 focus:border-black/60 focus:outline-none'
             />
           </div>
 
-          <Button
+          {/* Botón Entrar — usa el estilo del botón rojo */}
+          <button
             formAction={login}
-            className='w-full cursor-pointer bg-white text-black hover:bg-white/90'
+            className='relative mt-2 h-14 w-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02] active:scale-95'
           >
-            Entrar
-          </Button>
+            <img
+              src='/assets/registro/explicacion-rol/shared/boton-crear-perfil.png'
+              alt=''
+              className='absolute inset-0 h-full w-full object-cover'
+            />
+            <span className='font-baby-doll relative z-10 flex h-full items-center justify-center text-lg font-bold tracking-[0.15em] text-white uppercase'>
+              Entrar
+            </span>
+          </button>
         </form>
 
-        <p className='text-center text-sm text-gray-500'>
-          No tienes cuenta?{' '}
+        {/* Link a registro */}
+        <p className='font-pt-mono text-center text-sm text-black/60'>
+          ¿No tienes cuenta?{' '}
           <Link
             href='/registro/elige-rol'
-            className='font-medium text-red-500 underline underline-offset-4'
+            className='font-bold text-red-600 underline underline-offset-4'
           >
             Regístrate
           </Link>

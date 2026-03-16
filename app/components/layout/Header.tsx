@@ -1,12 +1,14 @@
+import type { User } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { User } from '@supabase/supabase-js'
+import { ProfileDropdown } from './ProfileDropdown'
 
 interface HeaderProps {
   user: User | null
+  photoUrl?: string | null
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, photoUrl }: HeaderProps) {
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Mi cuenta'
 
   return (
@@ -38,14 +40,10 @@ export function Header({ user }: HeaderProps) {
         </Link>
 
         {user ? (
-          <Link
-            href='/perfil'
-            className='group flex h-10 items-center md:h-16'
-          >
-            <span className='font-baby-doll flex h-full items-center rounded-sm bg-black/80 px-5 text-lg tracking-wide text-white transition-colors group-hover:bg-black md:text-2xl'>
-              {displayName}
-            </span>
-          </Link>
+          <ProfileDropdown
+            photoUrl={photoUrl ?? null}
+            displayName={displayName}
+          />
         ) : (
           <Link href='/registro/elige-rol'>
             <Image

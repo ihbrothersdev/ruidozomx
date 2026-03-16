@@ -39,10 +39,7 @@ function EligeRolContent() {
   const source = (searchParams.get('source') ?? 'registro') as RegistrationSource
 
   function buildHref(role: Role | 'manager_group') {
-    if (role === 'manager_group') {
-      return `/registro/formulario?role=manager&source=${source}`
-    }
-    return `/registro/formulario?role=${role}&source=${source}`
+    return `/registro/explicacion-rol?role=${role}&source=${source}`
   }
 
   return (

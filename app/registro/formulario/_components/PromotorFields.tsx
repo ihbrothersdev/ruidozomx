@@ -24,6 +24,7 @@ export function PromotorFields() {
         label='Nombre completo'
         name='full_name'
         required
+        placeholder='Tu nombre completo'
       />
       <Field
         label='Link a web o redes'
