@@ -33,7 +33,7 @@ function TicketContent() {
   }, [])
 
   return (
-    <div className='relative min-h-screen'>
+    <div className='relative min-h-screen overflow-hidden'>
       <div className='absolute inset-0'>
         <Image
           src='/assets/registro/tickets/shared/red-background.png'
@@ -87,13 +87,13 @@ function TicketContent() {
       </div>
 
       {/* Ticket — fixed at the bottom center */}
-      <div className='fixed bottom-0 left-1/2 z-10 -translate-x-1/2'>
+      <div className='fixed right-0 bottom-0 left-0 z-30 flex justify-center pointer-events-none'>
         <div className='relative'>
           {/* Small screens */}
           <img
             src='/assets/registro/tickets/shared/mano-boleto-sm.png'
             alt='Boleto'
-            className='block h-[50vh] w-auto object-contain object-bottom sm:h-[60vh] lg:hidden'
+            className='block h-[55vh] w-auto object-contain object-bottom sm:h-[60vh] lg:hidden'
           />
           {/* Large screens */}
           <img
@@ -103,8 +103,7 @@ function TicketContent() {
           />
           {/* Ticket text overlay */}
           <div
-            className='pointer-events-none absolute top-[12%] left-[14%] h-[58%] w-[48%]'
-            style={{ transform: `rotate(${TICKET_TABLE_ROTATION_DEG}deg)` }}
+            className='pointer-events-none absolute top-[5%] left-[8%] h-[62%] w-[55%]'
           >
             <TicketText
               sections={sections}

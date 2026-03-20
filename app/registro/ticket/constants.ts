@@ -58,14 +58,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        { text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA', color: 'black' },
-        { text: 'COMPÁRTENOS EN TUS REDES:', color: 'black' }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   banda: [
     {
@@ -79,15 +71,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       name: 'main',
       lines: [{ text: 'PARA NUESTRO CASETE SEMANAL', color: 'black' }]
     },
-    {
-      name: 'share',
-      lines: [
-        { text: 'CORRE LA VOZ,', color: 'black' },
-        { text: 'HAZ RUIDO ALLÁ AFUERA', color: 'black' },
-        { text: 'COMPÁRTENOS EN TUS REDES:', color: 'black' }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   manager: [
     {
@@ -106,14 +89,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        { text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA', color: 'black' },
-        { text: 'COMPÁRTENOS EN TUS REDES:', color: 'black' }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   promotor: [
     {
@@ -136,16 +111,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        {
-          text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA COMPÁRTENOS EN TUS REDES:',
-          color: 'black'
-        }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   agente: [
     {
@@ -168,16 +133,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        {
-          text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA COMPÁRTENOS EN TUS REDES:',
-          color: 'black'
-        }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   proveedor: [
     {
@@ -200,16 +155,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        {
-          text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA COMPÁRTENOS EN TUS REDES:',
-          color: 'black'
-        }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ],
   venue: [
     {
@@ -237,16 +182,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
         }
       ]
     },
-    {
-      name: 'share',
-      lines: [
-        {
-          text: 'CORRE LA VOZ, HAZ RUIDO ALLÁ AFUERA COMPÁRTENOS EN TUS REDES:',
-          color: 'black'
-        }
-      ]
-    },
-    { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
   ]
 }
 
