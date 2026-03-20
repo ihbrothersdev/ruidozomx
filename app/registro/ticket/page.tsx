@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
-import { getTicketSections, TICKET_TABLE_ROTATION_DEG } from './constants'
 import TicketText from './_components/TicketText'
 
 export default function TicketPage() {
@@ -22,7 +21,6 @@ function TicketContent() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
-  const sections = getTicketSections(role)
 
   useEffect(() => {
     false && sileo.info({
@@ -106,7 +104,7 @@ function TicketContent() {
             className='pointer-events-none absolute top-[5%] left-[8%] h-[62%] w-[55%]'
           >
             <TicketText
-              sections={sections}
+              role={role}
               className='h-full'
             />
           </div>
