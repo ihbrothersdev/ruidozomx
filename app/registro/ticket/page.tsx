@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
-import { getTicketSections, TICKET_TABLE_ROTATION_DEG } from './constants'
 import TicketText from './_components/TicketText'
 
 export default function TicketPage() {
@@ -22,10 +21,9 @@ function TicketContent() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
-  const sections = getTicketSections(role)
 
   useEffect(() => {
-    sileo.info({
+    false && sileo.info({
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
       position: 'top-center'
@@ -33,22 +31,18 @@ function TicketContent() {
   }, [])
 
   return (
-    <div className='relative min-h-screen'>
+    <div className='relative min-h-screen overflow-hidden'>
       <div className='absolute inset-0'>
         <Image
-          src='/assets/registro/tickets/shared/textura.png'
+          src='/assets/registro/tickets/shared/red-background.png'
           alt=''
           fill
           className='object-cover'
           unoptimized
         />
-        <div
-          className='absolute inset-0 bg-[#E04A42] opacity-[0.70]'
-          aria-hidden
-        />
       </div>
 
-      <div className='relative z-20 grid min-h-screen grid-cols-1 grid-rows-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
+      <div className='relative z-20 grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
         <div className='hidden items-center justify-center px-2 py-4 lg:flex lg:px-4 xl:px-6'>
           <img
             src='/assets/registro/tickets/shared/dit.png'
@@ -57,9 +51,9 @@ function TicketContent() {
           />
         </div>
 
-        <div className='order-2 lg:order-0' />
+        <div className='hidden lg:block' />
 
-        <div className='order-1 flex flex-col items-center justify-center gap-8 px-4 py-6 sm:justify-center sm:gap-12 md:gap-16 lg:order-0 lg:min-h-0 lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
+        <div className='flex flex-col items-center justify-center gap-8 px-4 py-6 sm:justify-center sm:gap-12 md:gap-16 lg:min-h-0 lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
           <div className='w-full max-w-xs lg:max-w-none'>
             <img
               src='/assets/registro/tickets/shared/logo.png'
@@ -90,38 +84,27 @@ function TicketContent() {
         </div>
       </div>
 
-      {/* Ticket image — absolute, anchored bottom-right */}
-      <img
-        src='/assets/registro/tickets/shared/mano-boleto.png'
-        alt='Boleto'
-        className='absolute right-0 bottom-0 z-10 hidden h-screen w-full object-contain object-right-bottom sm:w-4/5 md:w-3/4 lg:block lg:w-2/3'
-      />
-
-      {/* Ticket text — absolute, positioned on top of the ticket face */}
-      <div
-        className='pointer-events-none absolute right-[20%] bottom-[24%] z-10 hidden h-[70%] w-[36%] lg:block'
-        style={{ transform: `rotate(${TICKET_TABLE_ROTATION_DEG}deg)` }}
-      >
-        <TicketText
-          sections={sections}
-          className='h-full'
-        />
-      </div>
-
-      {/* Mobile ticket — inline in flow */}
-      <div className='relative z-10 flex items-end justify-center lg:hidden'>
+      {/* Ticket — fixed at the bottom center */}
+      <div className='fixed right-0 bottom-0 left-0 z-30 flex justify-center pointer-events-none'>
         <div className='relative'>
+          {/* Small screens */}
           <img
-            src='/assets/registro/tickets/shared/mano-boleto.png'
+            src='/assets/registro/tickets/shared/mano-boleto-sm.png'
             alt='Boleto'
-            className='h-[45vh] w-auto max-w-full object-contain object-bottom sm:h-[55vh]'
+            className='block h-[55vh] w-auto object-contain object-bottom sm:h-[60vh] lg:hidden'
           />
+          {/* Large screens */}
+          <img
+            src='/assets/registro/tickets/shared/mano-boleto-lg.png'
+            alt='Boleto'
+            className='hidden h-[85vh] w-auto object-contain object-bottom lg:block xl:h-[90vh]'
+          />
+          {/* Ticket text overlay */}
           <div
-            className='absolute top-[12%] left-[14%] h-[58%] w-[48%]'
-            style={{ transform: `rotate(${TICKET_TABLE_ROTATION_DEG}deg)` }}
+            className='pointer-events-none absolute top-[5%] left-[8%] h-[62%] w-[55%]'
           >
             <TicketText
-              sections={sections}
+              role={role}
               className='h-full'
             />
           </div>

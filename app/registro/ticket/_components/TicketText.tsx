@@ -1,74 +1,150 @@
-import type { TicketSection } from '../constants'
+import Link from 'next/link'
+import type { Role } from '@/lib/types'
 
 interface TicketTextProps {
-  sections: TicketSection[]
-  /** Additional classes for the outer wrapper */
+  role: Role
   className?: string
 }
 
-function getSizeClass(sectionName: string, lineIndex: number, totalLines: number): string {
-  switch (sectionName) {
-    case 'headline':
-      return lineIndex < totalLines - 1
-        ? 'text-xl lg:text-2xl xl:text-5xl leading-tight'
-        : 'text-6xl lg:text-8xl xl:text-7xl leading-none'
-    case 'main':
-      return 'text-sm lg:text-lg xl:text-xl'
-    case 'share':
-      return 'text-base lg:text-xl xl:text-2xl'
-    case 'cta':
-      return 'text-xl font-black lg:text-2xl xl:text-3xl'
-    case 'footer':
-      return 'text-xs lg:text-base xl:text-lg'
-    default:
-      return 'text-base lg:text-xl xl:text-2xl'
-  }
-}
-
-export default function TicketText({ sections, className = '' }: TicketTextProps) {
+export default function TicketText({ role, className = '' }: TicketTextProps) {
   return (
-    <div className={`font-akzidenz flex flex-col items-center justify-between pt-[8%] text-center ${className}`}>
-      <div className='flex flex-col items-center gap-6 lg:gap-8 xl:gap-10'>
-        {sections.map(sec => {
-          if (sec.name === 'footer') return null
-          return (
-            <section
-              key={sec.name}
-              className='flex flex-col items-center'
-            >
-              {sec.lines.map((line, j) => (
-                <p
-                  key={j}
-                  className={`uppercase ${getSizeClass(sec.name, j, sec.lines.length)} ${line.color === 'red' ? 'text-red-500' : 'text-black'}`}
-                >
-                  {line.text}
-                </p>
-              ))}
-            </section>
-          )
-        })}
+    <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
+      {/* ── Row 1: headline pre-text (role-specific) ── */}
+      <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
+        {(role === 'promotor' || role === 'agente' || role === 'manager') && (
+          <>
+            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+              PUBLICA UNA FECHA O UNA
+            </p>
+             <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+              CONVOCATORIA
+            </p>
+          </>
+        )}
+        {role === 'venue' && (
+          <>
+            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+              PUBLICA UNA TOCADA O
+            </p>
+             <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
+               ABRE FECHAS DISPONIBLES
+            </p>
+          </>
+        )}
+        {role === 'fan' && (
+          <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-6xl xl:text-6xl'>
+            PROPÓN UNA
+          </p>
+        )}
+        {role === 'banda' && (
+          <p className='text-[0.55rem] leading-tight font-bold text-black uppercase sm:text-xs lg:text-xl xl:text-2xl'>
+            Publica una fecha o una convicatoria
+          </p>
+        )}
+
+        {role === 'proveedor' && (
+          <>
+            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
+              PUBLICA UN servicio u oferta
+            </p>
+          </>
+        )}
       </div>
 
-      {sections
-        .filter(sec => sec.name === 'footer')
-        .map(sec => (
-          <div
-            key={sec.name}
-            className='flex items-end gap-2'
-          >
-            <div className='aspect-square w-10 shrink-0 rounded bg-black/10 lg:w-12' />
-            <div className='flex flex-col'>
-              {sec.lines.map((line, j) => (
-                <p
-                  key={j}
-                  className={`font-bold uppercase ${getSizeClass(sec.name, j, sec.lines.length)} ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
-                >
-                  {line.text}
-                </p>
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* ── Row 2: big headline + detail (role-specific) ── */}
+      <div className='row-span-2 flex flex-col items-center justify-center px-1 lg:px-2'>
+        {(role === 'promotor' || role === 'agente' || role === 'manager') && (
+          <>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+              ROLA
+            </p>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+              DE TU TALENTO QUE MUEVES PARA NUESTRO CASETE SEMANAL
+            </p>
+          </>
+        )}
+        {role === 'venue' && (
+          <>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+              ROLA
+            </p>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+              Del talento que mueves
+            </p>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+              para nuestro cassete semanal
+            </p>
+          </>
+        )}
+        {role === 'fan' && (
+          <>
+          <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-9xl xl:text-9xl'>
+              ROLA
+            </p>
+            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:text-xl xl:text-3xl'>
+              PARA NUESTRO CASETE SEMANAL
+            </p>
+          </>
+        )}
+        {role === 'banda' && (
+          <>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-2xl'>
+              PROPÓN UNA DE TUS
+            </p>
+            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+              ROLAS
+            </p>
+            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+              PARA NUESTRO CASETE SEMANAL
+            </p>
+          </>
+        )}
+        {role === 'proveedor' && (
+          <>
+            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-2xl'>
+              PROPÓN UNA
+            </p>
+            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+              ROLA
+            </p>
+            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+              Del talento que mueves
+            </p>
+            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+              para nuestro casete semanal
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* ── Row 3: Static share text — clickable ── */}
+      <div className='pointer-events-auto flex flex-col items-center justify-center px-1 lg:px-2'>
+        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
+          CORRE LA VOZ,
+        </p>
+        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
+          HAZ RUIDO ALLÁ AFUERA
+        </p>
+        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
+          COMPÁRTENOS EN TUS REDES
+        </p>
+      </div>
+
+      {/* ── Row 4: Static CTA — clickable ── */}
+      <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
+        <Link
+          href='/comunidad'
+          className='text-[0.55rem] leading-tight font-black text-black uppercase hover:underline sm:text-xs lg:text-4xl xl:text-5xl'
+        >
+          EXPLORAR LA ESCENA
+        </Link>
+      </div>
     </div>
   )
 }
