@@ -66,13 +66,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   banda: [
     {
@@ -95,13 +88,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   manager: [
     {
@@ -128,13 +114,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   promotor: [
     {
@@ -167,13 +146,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   agente: [
     {
@@ -206,13 +178,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   proveedor: [
     {
@@ -245,13 +210,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ],
   venue: [
     {
@@ -289,13 +247,6 @@ export const ROLE_TICKET_SECTIONS: Record<Role, TicketSection[]> = {
       ]
     },
     { name: 'cta', lines: [{ text: 'EXPLORAR LA ESCENA', color: 'black' }] },
-    {
-      name: 'footer',
-      lines: [
-        { text: 'GRACIAS POR SER', color: 'red' },
-        { text: 'PARTE DEL MOVIMIENTO', color: 'red' }
-      ]
-    }
   ]
 }
 
