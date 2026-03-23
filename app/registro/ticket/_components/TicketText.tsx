@@ -32,7 +32,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
           </>
         )}
         {role === 'fan' && (
-          <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-6xl xl:text-6xl'>
+          <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs md:text-5xl lg:text-5xl xl:text-5xl'>
             PROPÓN UNA
           </p>
         )}
@@ -84,10 +84,10 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
         )}
         {role === 'fan' && (
           <>
-          <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-9xl xl:text-9xl'>
+          <p className='text-[0.55rem] font-bold text-red-500 uppercase sm:text-2xl md:text-5xl lg:text-8xl xl:text-8xl leading-none'>
               ROLA
             </p>
-            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:text-xl xl:text-3xl'>
+            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-xl lg:text-xl xl:text-xl leading-none'>
               PARA NUESTRO CASETE SEMANAL
             </p>
           </>
@@ -131,7 +131,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
         <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
           HAZ RUIDO ALLÁ AFUERA
         </p>
-        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
+        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
           COMPÁRTENOS EN TUS REDES
         </p>
       </div>
@@ -140,7 +140,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
       <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
         <Link
           href='/comunidad'
-          className='text-[0.55rem] leading-tight font-black text-black uppercase hover:underline sm:text-xs lg:text-4xl xl:text-5xl'
+          className='text-[0.55rem] leading-tight font-black text-black uppercase hover:underline sm:text-xs md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-4xl'
         >
           EXPLORAR LA ESCENA
         </Link>
