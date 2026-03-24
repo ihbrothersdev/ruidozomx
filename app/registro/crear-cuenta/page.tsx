@@ -5,10 +5,22 @@ import { Label } from '@/app/components/ui/label'
 import type { RegistrationSource, Role } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/types'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
-import { Suspense, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { sileo } from 'sileo'
 import { registroSignup } from '../actions'
 import { inputCls, labelCls } from './constants'
+
+// The field that must be present for each role — if missing, the user skipped the form
+const REQUIRED_FIELD_BY_ROLE: Record<Role, string> = {
+  fan: 'alias',
+  banda: 'band_name',
+  manager: 'full_name',
+  promotor: 'full_name',
+  agente: 'full_name',
+  proveedor: 'brand_name',
+  venue: 'venue_name'
+}
 
 const FORM_FIELDS: {
   name: string
@@ -56,7 +68,7 @@ function HiddenProfileInputs({ data }: { data: Record<string, string | string[]>
   return (
     <>
       {Object.entries(data).map(([key, value]) => {
-        if (key === 'role' || key === 'source' || key === '_genres_required') return null
+        if (key === 'role' || key === 'source' || key.startsWith('_')) return null
         if (Array.isArray(value)) {
           return value.map((v, i) => (
             <input
@@ -82,6 +94,7 @@ function HiddenProfileInputs({ data }: { data: Record<string, string | string[]>
 
 function CrearCuentaContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const role = (searchParams.get('role') ?? 'fan') as Role
   const source = (searchParams.get('source') ?? 'registro') as RegistrationSource
   const serverError = searchParams.get('error')
@@ -95,11 +108,28 @@ function CrearCuentaContent() {
       return {}
     }
   })
+
+  // Guard: if the role-specific required field is missing, the user skipped the form
+  useEffect(() => {
+    const requiredField = REQUIRED_FIELD_BY_ROLE[role]
+    const value = profileData[requiredField]
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      router.replace(`/registro/elige-rol?source=${source}&toast=noform`)
+    }
+  }, [role, source, profileData, router])
+
+  // Show server-side error (from redirect ?error=) as toast
+  useEffect(() => {
+    if (serverError) {
+      sileo.error({ title: 'Error', description: serverError, position: 'top-center' })
+    }
+  }, [serverError])
+
   const [clientError, setClientError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const error = clientError || serverError
+  const error = clientError
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const form = e.currentTarget

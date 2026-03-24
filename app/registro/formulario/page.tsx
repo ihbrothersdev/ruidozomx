@@ -11,7 +11,15 @@ import { ProveedorFormLayout } from './_components/ProveedorFormLayout'
 import { VenueFormLayout } from './_components/VenueFormLayout'
 import { ROLE_ETIQUETA } from './constants'
 
-const MANAGER_GROUP_ROLES = new Set<Role>(['manager', 'agente', 'promotor'])
+const ROLE_FORM_MAP: Record<Role, (role: Role) => React.ReactNode> = {
+  banda: () => <BandaFormLayout />,
+  manager: r => <ManagerGroupFormLayout initialRole={r as 'manager' | 'promotor' | 'agente'} />,
+  promotor: r => <ManagerGroupFormLayout initialRole={r as 'manager' | 'promotor' | 'agente'} />,
+  agente: r => <ManagerGroupFormLayout initialRole={r as 'manager' | 'promotor' | 'agente'} />,
+  fan: () => <FanFormLayout />,
+  proveedor: () => <ProveedorFormLayout />,
+  venue: () => <VenueFormLayout />
+}
 
 export default function FormularioPage() {
   return (
@@ -30,14 +38,7 @@ function FormularioContent() {
 
   const etiquetaSrc = ROLE_ETIQUETA[role]
 
-  const ARRAY_FIELDS = new Set([
-    'favorite_genres',
-    'capacity',
-    'venue_type',
-    'territorial_reach',
-    'service_types',
-    'event_types'
-  ])
+  const ARRAY_FIELDS = new Set(['favorite_genres', 'venue_type', 'territorial_reach', 'service_types', 'event_types'])
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -123,19 +124,7 @@ function FormularioContent() {
                 value={source}
               />
 
-              {role === 'banda' ? (
-                <BandaFormLayout />
-              ) : MANAGER_GROUP_ROLES.has(role) ? (
-                <ManagerGroupFormLayout initialRole={role as 'manager' | 'promotor' | 'agente'} />
-              ) : role === 'fan' ? (
-                <FanFormLayout />
-              ) : role === 'proveedor' ? (
-                <ProveedorFormLayout />
-              ) : role === 'venue' ? (
-                <VenueFormLayout />
-              ) : (
-                <FanFormLayout />
-              )}
+              {(ROLE_FORM_MAP[role] ?? ROLE_FORM_MAP.fan)(role)}
             </form>
           </div>
         </div>

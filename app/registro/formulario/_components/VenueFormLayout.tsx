@@ -2,6 +2,7 @@
 
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group'
 import { Textarea } from '@/app/components/ui/textarea'
 import { CAPACITY_OPTIONS, VENUE_TYPE_OPTIONS } from '@/lib/types'
 import Image from 'next/image'
@@ -28,30 +29,35 @@ export function VenueFormLayout() {
           placeholder='https://...'
         />
 
-        {/* Capacidad */}
+        {/* Capacidad — radio single value → VARCHAR(20) in DB */}
         <div className='space-y-1'>
           <Label className={labelCls}>
             Capacidad<span className='text-red-600'>*</span>
           </Label>
-          {CAPACITY_OPTIONS.map(opt => (
-            <div
-              key={opt}
-              className='flex items-center gap-1.5'
-            >
-              <Checkbox
-                id={`cap-${opt}`}
-                name='capacity'
-                value={opt}
-                className='border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
-              />
-              <Label
-                htmlFor={`cap-${opt}`}
-                className='font-pt-mono cursor-pointer text-sm text-black'
+          <RadioGroup
+            name='capacity'
+            required
+            className='gap-1.5'
+          >
+            {CAPACITY_OPTIONS.map(opt => (
+              <div
+                key={opt}
+                className='flex items-center gap-1.5'
               >
-                {opt}
-              </Label>
-            </div>
-          ))}
+                <RadioGroupItem
+                  id={`cap-${opt}`}
+                  value={opt}
+                  className='border-red-600 text-red-600'
+                />
+                <Label
+                  htmlFor={`cap-${opt}`}
+                  className='font-pt-mono cursor-pointer text-sm text-black'
+                >
+                  {opt}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
         </div>
 
         {/* Tipo de venue */}

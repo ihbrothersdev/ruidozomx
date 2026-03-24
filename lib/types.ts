@@ -42,8 +42,7 @@ export interface Profile {
   display_name: string
   slug: string
   photo_url: string | null
-  phone: string | null
-  contact_email: string | null
+  contact: string | null
   country: string | null
   state: string | null
   city: string | null
@@ -57,21 +56,17 @@ export interface Profile {
   updated_at: string
 }
 
-/** Banda / Solista details — matches Figma form */
+/** Banda / Solista details — band_profiles table (v2) */
 export interface BandaProfile {
   profile_id: string
-  band_name: string
   project_type: string | null
   genre: string | null
-  project_link: string | null
   available_live: boolean
   open_collabs: boolean
   available_tours: boolean
   willing_travel: boolean
-  review: string | null
   publish_dates: boolean
   accept_proposals: boolean
-  contact: string | null
 }
 
 /** Fan o Público details */
@@ -102,79 +97,64 @@ export const FAN_GENRE_OPTIONS = [
   'Jazz & Blue'
 ] as const
 
-/** Manager details */
-export interface ManagerProfile {
+/** Industry profile — shared by manager, promotor, agente (industry_profiles table v2) */
+export interface IndustryProfile {
   profile_id: string
-  full_name: string
-  web_link: string | null
-  role_type: 'manager'
-  review: string | null
+  // Manager
   represents_artists: boolean
   artists_represented: string | null
-  promote_bands_ruidozo: boolean
   seeks_emerging_talent: boolean
-  accept_proposals: boolean
-  contact: string | null
-}
-
-/** Promotor details */
-export interface PromotorProfile {
-  profile_id: string
-  full_name: string
-  web_link: string | null
-  role_type: 'promotor'
-  review: string | null
+  promote_bands_ruidozo: boolean
+  // Promotor
   organizes_events: boolean
-  territorial_reach: string[]
   event_types: string[]
   provide_events_ruidozo: boolean
   seeks_talent: boolean
-  accept_proposals: boolean
-  contact: string | null
-}
-
-/** Agente details */
-export interface AgenteProfile {
-  profile_id: string
-  full_name: string
-  web_link: string | null
-  role_type: 'agente'
-  review: string | null
+  // Agente
   represents_artists_live: boolean
-  territorial_reach: string[]
-  provide_events_ruidozo: boolean
   seeks_new_projects: boolean
+  // Promotor + Agente
+  territorial_reach: string[]
+  // All three
   accept_proposals: boolean
-  contact: string | null
 }
 
-/** Proveedor details */
+/** Proveedor details — provider_profiles table (v2) */
 export interface ProveedorProfile {
   profile_id: string
-  brand_name: string
-  web_link: string | null
-  description: string | null
-  territorial_reach: string[]
   service_types: string[]
+  territorial_reach: string[]
+  works_emerging_projects: boolean
   publish_services: boolean
   accept_proposals: boolean
-  contact: string | null
-  works_emerging_projects: boolean
 }
 
-/** Venue / Foro details */
+/** Venue / Foro details — venue_profiles table (v2) */
 export interface VenueProfile {
   profile_id: string
-  venue_name: string
-  web_link: string | null
-  description: string | null
   capacity: string | null
   venue_type: string[]
   has_audio: boolean
   has_lighting: boolean
   accepts_indie_proposals: boolean
   publish_calls_ruidozo: boolean
-  contact: string | null
+}
+
+/** User-to-user proposal — user_proposals table (v2) */
+export type UserProposalType = 'booking' | 'representation' | 'service' | 'collab' | 'event_invite' | 'general'
+export type UserProposalStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+
+export interface UserProposal {
+  id: string
+  from_profile_id: string
+  to_profile_id: string
+  type: UserProposalType
+  subject: string | null
+  message: string | null
+  status: UserProposalStatus
+  seen_at: string | null
+  responded_at: string | null
+  created_at: string
 }
 
 export const TERRITORIAL_REACH_OPTIONS = ['Local', 'Nacional', 'Internacional'] as const
@@ -273,7 +253,6 @@ export interface SongProposal {
   genre: string | null
   external_link: string | null
   audio_file_path: string | null
-  contact_email: string | null
   comment: string | null
   status: ProposalStatus
   cassette_id: string | null
@@ -294,7 +273,13 @@ export interface Interest {
 
 // === Activity Feed ===
 
-export type ActivityType = 'registration' | 'interest' | 'proposal' | 'song_selected' | 'event_published'
+export type ActivityType =
+  | 'registration'
+  | 'interest'
+  | 'proposal'
+  | 'user_proposal'
+  | 'song_selected'
+  | 'event_published'
 
 export interface ActivityFeedItem {
   id: string
