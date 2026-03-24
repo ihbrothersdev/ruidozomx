@@ -52,14 +52,14 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             Rol: {ROLE_LABELS[profile.role] ?? profile.role}
           </p>
 
-          <div className='mt-1'>
+          {/* <div className='mt-1'>
             <p className='font-pt-mono text-[0.6rem] font-bold text-black/50 uppercase md:text-[0.65rem]'>
               Actividad destacada:
             </p>
             <p className='font-pt-mono text-[0.6rem] leading-tight whitespace-pre-line text-red-600 md:text-[0.65rem]'>
               {profile.activity_highlight}
             </p>
-          </div>
+          </div> */}
 
           <div className='mt-auto mb-1 w-full pt-2'>
             <span className='font-baby-doll inline-block w-full border-2 border-red-600 bg-red-600 px-3 py-1 text-[0.65rem] font-bold tracking-wider text-white uppercase transition-colors group-hover:bg-red-700 md:text-xs'>
