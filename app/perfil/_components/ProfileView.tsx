@@ -1,9 +1,9 @@
+import Image from 'next/image'
 import type { Role } from '@/lib/types'
 import ActionButtons from './ActionButtons'
 import DynamicModules from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
-import ProfileChips from './ProfileChips'
 import ProfileLayout from './ProfileLayout'
 import ProfilePhoto from './ProfilePhoto'
 import ReviewSection from './ReviewSection'
@@ -61,6 +61,26 @@ export default function ProfileView({
       }
       rightColumn={
         <>
+          {/* Logo + hand decoration */}
+          <div className='flex items-center gap-2'>
+            <Image
+              src='/assets/registro/explicacion-rol/shared/mano.png'
+              alt=''
+              width={80}
+              height={80}
+              className='h-17 w-auto'
+              unoptimized
+            />
+            <Image
+              src='/assets/logo.png'
+              alt='Ruidozo'
+              width={380}
+              height={183}
+              className='h-40 w-auto'
+              unoptimized
+            />
+          </div>
+
           {/* Dynamic modules */}
           {role && <DynamicModules role={role} />}
 
