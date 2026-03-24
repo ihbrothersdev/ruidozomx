@@ -42,7 +42,7 @@ export async function handleProxyRequest(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Redirect unauthenticated users trying to access protected routes
-  if (!user && request.nextUrl.pathname.startsWith('/perfil')) {
+  if (!user && request.nextUrl.pathname === '/perfil') {
     const url = request.nextUrl.clone()
     url.pathname = '/iniciar-sesion'
     return NextResponse.redirect(url)
