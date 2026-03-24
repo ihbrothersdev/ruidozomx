@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
-import { getTicketSections } from './constants'
+import TicketText from './_components/TicketText'
 
 export default function TicketPage() {
   return (
@@ -21,10 +21,9 @@ function TicketContent() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
-  const sections = getTicketSections(role)
 
   useEffect(() => {
-    sileo.info({
+    false && sileo.info({
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
       position: 'top-center'
@@ -32,40 +31,32 @@ function TicketContent() {
   }, [])
 
   return (
-    <div className='relative min-h-screen'>
+    <div className='relative min-h-screen overflow-hidden'>
       <div className='absolute inset-0'>
         <Image
-          src='/assets/registro/tickets/shared/textura.png'
+          src='/assets/registro/tickets/shared/red-background.png'
           alt=''
           fill
           className='object-cover'
           unoptimized
         />
-        <div
-          className='absolute inset-0 bg-[#E04A42] opacity-[0.70]'
-          aria-hidden
-        />
       </div>
 
-      <div className='relative z-20 grid min-h-screen grid-cols-1 grid-rows-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
-        <div className='hidden items-center justify-center px-2 py-4 lg:flex lg:px-4 xl:px-6'>
+      <div className='relative z-20 flex min-h-screen flex-col lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
+        {/* DIT — desktop: left column, mobile: middle section */}
+        <div className='order-2 flex items-center justify-center px-2 py-4 lg:order-none lg:px-4 xl:px-6'>
           <img
             src='/assets/registro/tickets/shared/dit.png'
             alt='DIT Do it together'
-            className='h-[50vh] w-auto max-w-full object-contain xl:h-[55vh]'
+            className='h-[15vh] w-auto max-w-full object-contain lg:h-[50vh] xl:h-[55vh]'
           />
         </div>
 
-        <div className='relative order-2 flex items-end justify-center lg:order-0 lg:min-h-0 lg:items-end lg:justify-center'>
-          <img
-            src='/assets/registro/tickets/shared/mano-boleto.png'
-            alt='Boleto'
-            className='h-[45vh] w-auto max-w-full object-contain object-bottom sm:h-[55vh] lg:hidden'
-          />
-        </div>
+        <div className='hidden lg:block' />
 
-        <div className='order-1 flex flex-col items-center justify-center gap-8 px-4 py-6 sm:justify-center sm:gap-12 md:gap-16 lg:order-0 lg:min-h-0 lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
-          <div className='w-full max-w-xs lg:max-w-none'>
+        {/* Logo + ENTRA — on mobile: logo at top (order-1), ENTRA at bottom (order-3). On desktop: together in right column */}
+        <div className='contents lg:flex lg:flex-col lg:items-center lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
+          <div className='order-1 w-full px-4 pt-6 pb-2 lg:order-none lg:max-w-none'>
             <img
               src='/assets/registro/tickets/shared/logo.png'
               alt='Ruidozo'
@@ -76,7 +67,7 @@ function TicketContent() {
           </div>
           <Link
             href='/'
-            className='group relative flex flex-col items-center gap-2 sm:gap-3 lg:gap-2'
+            className='group order-3 relative flex flex-col items-center gap-2 pb-6 sm:gap-3 lg:order-none lg:gap-2 lg:pb-0'
           >
             <img
               src='/assets/registro/tickets/shared/boton-entrar.png'
@@ -88,64 +79,37 @@ function TicketContent() {
               alt=''
               className='absolute top-0 left-1/2 w-24 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 sm:w-24 md:w-28 lg:w-36 xl:w-40'
             />
-            <span className='font-baby-doll text-sm font-bold tracking-[0.2em] text-white sm:text-base md:text-lg lg:text-xl'>
+            <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black sm:text-base md:text-xl lg:text-xl'>
               ENTRA
             </span>
           </Link>
         </div>
       </div>
 
-      <img
-        src='/assets/registro/tickets/shared/mano-boleto.png'
-        alt='Boleto'
-        className='absolute right-0 bottom-0 z-10 hidden h-screen w-full object-contain object-bottom-right sm:w-4/5 md:w-3/4 lg:block lg:w-2/3'
-      />
-
-      <div className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4'>
-        <div className='flex max-w-md flex-col gap-16 sm:gap-18 lg:gap-24'>
-          {sections.map(sec => (
-            <section
-              key={sec.name}
-              className='flex flex-col gap-0.5'
-            >
-              {sec.name === 'footer' && (
-                <div className='mb-1 flex items-start gap-2'>
-                  <div className='aspect-square w-12 shrink-0 rounded bg-black/10 sm:w-14' />
-                  <div className='flex flex-1 flex-col gap-0.5'>
-                    {sec.lines.map((line, j) => (
-                      <p
-                        key={j}
-                        className={`font-baby-doll text-xs font-bold uppercase sm:text-sm lg:text-base ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
-                      >
-                        {line.text}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {sec.name !== 'footer' &&
-                sec.lines.map((line, j) => {
-                  const sizeClass =
-                    sec.name === 'headline'
-                      ? 'text-4xl sm:text-5xl lg:text-6xl'
-                      : sec.name === 'main'
-                        ? j === 0
-                          ? 'text-xl font-black sm:text-2xl lg:text-3xl'
-                          : 'text-xs sm:text-sm lg:text-base'
-                        : sec.name === 'cta'
-                          ? 'text-base font-black sm:text-lg lg:text-xl'
-                          : 'text-xs sm:text-sm lg:text-base'
-                  return (
-                    <p
-                      key={j}
-                      className={`font-baby-doll font-bold uppercase ${sizeClass} ${line.color === 'red' ? 'text-red-700' : 'text-black'}`}
-                    >
-                      {line.text}
-                    </p>
-                  )
-                })}
-            </section>
-          ))}
+      {/* Ticket — fixed at the bottom center */}
+      <div className='fixed right-0 bottom-0 left-0 z-30 flex justify-center pointer-events-none'>
+        <div className='relative'>
+          {/* Small screens */}
+          <img
+            src='/assets/registro/tickets/shared/mano-boleto-sm.png'
+            alt='Boleto'
+            className='block h-[55vh] w-auto object-contain object-bottom sm:h-[60vh] md:hidden'
+          />
+          {/* Large screens */}
+          <img
+            src='/assets/registro/tickets/shared/mano-boleto-lg.png'
+            alt='Boleto'
+            className='hidden h-[60vh] w-auto object-contain object-bottom md:block lg:h-[85vh] xl:h-[90vh]'
+          />
+          {/* Ticket text overlay */}
+          <div
+            className='pointer-events-none absolute top-[3%] left-[8%] h-[52%] w-[55%] md:top-[5%] md:h-[62%]'
+          >
+            <TicketText
+              role={role}
+              className='h-full'
+            />
+          </div>
         </div>
       </div>
     </div>

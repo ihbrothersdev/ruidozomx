@@ -22,7 +22,7 @@ export function ExplorarComunidad() {
           muted
           playsInline
           className='absolute inset-[8%] -top-3 z-[1] object-cover'
-          style={{ width: '110%', height: '110%' }}
+          style={{ width: '100%', height: '100%' }}
           aria-label='Video de la comunidad Ruidozo'
         >
           <source

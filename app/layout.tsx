@@ -39,6 +39,12 @@ const impactLabel = localFont({
   display: 'swap'
 })
 
+const akzidenzGrotesk = localFont({
+  src: './fonts/Akzidenz-Grotesk.ttf',
+  variable: '--font-akzidenz',
+  display: 'swap'
+})
+
 export const metadata: Metadata = {
   title: 'Ruidozo MX'
 }
@@ -54,7 +60,7 @@ export default function RootLayout({
       className='h-full'
     >
       <body
-        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} min-h-screen antialiased`}
+        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen antialiased`}
       >
         {children}
         <Toaster position='top-center' />

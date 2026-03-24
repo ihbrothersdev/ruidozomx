@@ -173,7 +173,7 @@ export function Footer({ user }: FooterProps) {
 
       {/* Social media */}
       <div className='mx-auto mt-10 max-w-5xl text-center'>
-        <p className='font-impact-label mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
+        <p className='font-baby-doll mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
             href='#'
