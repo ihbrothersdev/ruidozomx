@@ -1,12 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { login } from '../actions'
-import { type AuthSearchParams } from '../types'
+import { ErrorToast } from './ErrorToast'
 
-export default async function LoginPage({ searchParams }: { searchParams: AuthSearchParams }) {
-  const { error, message } = await searchParams
-
+export default async function LoginPage() {
   return (
     <div className='relative flex min-h-screen w-screen items-center justify-center overflow-hidden'>
       {/* Fondo papel */}
@@ -40,17 +39,9 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
           </p>
         </div>
 
-        {/* Mensajes */}
-        {error && (
-          <div className='font-pt-mono w-full rounded border border-red-300 bg-red-50/80 px-4 py-3 text-sm text-red-700'>
-            {error}
-          </div>
-        )}
-        {message && (
-          <div className='font-pt-mono w-full rounded border border-green-300 bg-green-50/80 px-4 py-3 text-sm text-green-700'>
-            {message}
-          </div>
-        )}
+        <Suspense>
+          <ErrorToast />
+        </Suspense>
 
         {/* Formulario */}
         <form className='flex w-full flex-col gap-4'>

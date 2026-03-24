@@ -70,43 +70,45 @@ export function PhotoUpload() {
           style={{ height: 'auto' }}
           unoptimized
         />
-        <div className='relative'>
-          <Image
-            src='/assets/registro/formulario/shared/marco-foto.png'
-            alt='Foto de perfil'
-            width={200}
-            height={250}
-            className='w-40 lg:w-44'
-            style={{ height: 'auto' }}
-            unoptimized
-          />
-          <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden bg-[#e8b4a8]'>
-            {preview ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={preview}
-                alt='Preview'
-                className='h-full w-full object-cover'
-              />
-            ) : (
-              <Image
-                src='/assets/registro/formulario/shared/zona-foto.png'
-                alt='Subir foto'
-                fill
-                className='object-fill opacity-60'
-                unoptimized
-              />
-            )}
-          </div>
-        </div>
-        <Label className='font-pt-mono mt-1 cursor-pointer text-[10px] font-bold tracking-wider text-black uppercase hover:text-black/70'>
-          Foto de perfil
+        <Label className='relative flex cursor-pointer flex-col items-center'>
           <input
             type='file'
             accept='image/*'
             className='hidden'
             onChange={handleFileChange}
           />
+          <div className='relative transition-opacity hover:opacity-80'>
+            <Image
+              src='/assets/registro/formulario/shared/marco-foto.png'
+              alt='Foto de perfil'
+              width={200}
+              height={250}
+              className='w-40 lg:w-44'
+              style={{ height: 'auto' }}
+              unoptimized
+            />
+            <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden bg-[#e8b4a8]'>
+              {preview ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={preview}
+                  alt='Preview'
+                  className='h-full w-full object-cover'
+                />
+              ) : (
+                <Image
+                  src='/assets/registro/formulario/shared/zona-foto.png'
+                  alt='Subir foto'
+                  fill
+                  className='object-fill opacity-60'
+                  unoptimized
+                />
+              )}
+            </div>
+          </div>
+          <p className='font-pt-mono mt-1 text-center text-[10px] font-bold tracking-wider text-black uppercase'>
+            {preview ? 'Cambiar foto' : 'Subir foto'}
+          </p>
         </Label>
       </div>
     </div>

@@ -23,10 +23,11 @@ function TicketContent() {
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
 
   useEffect(() => {
-    false && sileo.info({
+    sileo.info({
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
-      position: 'top-center'
+      position: 'top-center',
+      duration: null
     })
   }, [])
 
@@ -67,7 +68,7 @@ function TicketContent() {
           </div>
           <Link
             href='/'
-            className='group order-3 relative flex flex-col items-center gap-2 pb-6 sm:gap-3 lg:order-none lg:gap-2 lg:pb-0'
+            className='group relative order-3 flex flex-col items-center gap-2 pb-6 sm:gap-3 lg:order-none lg:gap-2 lg:pb-0'
           >
             <img
               src='/assets/registro/tickets/shared/boton-entrar.png'
@@ -87,7 +88,7 @@ function TicketContent() {
       </div>
 
       {/* Ticket — fixed at the bottom center */}
-      <div className='fixed right-0 bottom-0 left-0 z-30 flex justify-center pointer-events-none'>
+      <div className='pointer-events-none fixed right-0 bottom-0 left-0 z-30 flex justify-center'>
         <div className='relative'>
           {/* Small screens */}
           <img
@@ -102,9 +103,7 @@ function TicketContent() {
             className='hidden h-[60vh] w-auto object-contain object-bottom md:block lg:h-[85vh] xl:h-[90vh]'
           />
           {/* Ticket text overlay */}
-          <div
-            className='pointer-events-none absolute top-[3%] left-[8%] h-[52%] w-[55%] md:top-[5%] md:h-[62%]'
-          >
+          <div className='pointer-events-none absolute top-[3%] left-[8%] h-[52%] w-[55%] md:top-[5%] md:h-[62%]'>
             <TicketText
               role={role}
               className='h-full'

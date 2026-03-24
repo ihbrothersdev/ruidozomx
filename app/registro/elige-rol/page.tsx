@@ -4,7 +4,8 @@ import type { RegistrationSource, Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
+import { sileo } from 'sileo'
 import { PROVEEDOR_CARD, TOP_ROW_CARDS, type RoleCard } from './constants'
 
 export default function EligeRolPage() {
@@ -37,6 +38,18 @@ function CardLink({ card, href }: { card: RoleCard; href: string }) {
 function EligeRolContent() {
   const searchParams = useSearchParams()
   const source = (searchParams.get('source') ?? 'registro') as RegistrationSource
+  const toast = searchParams.get('toast')
+
+  useEffect(() => {
+    if (toast === 'noform') {
+      sileo.warning({
+        title: 'Primero elige tu rol',
+        description: 'Completa el formulario de perfil antes de crear tu cuenta.',
+        position: 'top-center',
+        duration: 4000
+      })
+    }
+  }, [toast])
 
   function buildHref(role: Role | 'manager_group') {
     return `/registro/explicacion-rol?role=${role}&source=${source}`
