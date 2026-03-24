@@ -42,19 +42,21 @@ function TicketContent() {
         />
       </div>
 
-      <div className='relative z-20 grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
-        <div className='hidden items-center justify-center px-2 py-4 lg:flex lg:px-4 xl:px-6'>
+      <div className='relative z-20 flex min-h-screen flex-col lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
+        {/* DIT — desktop: left column, mobile: middle section */}
+        <div className='order-2 flex items-center justify-center px-2 py-4 lg:order-none lg:px-4 xl:px-6'>
           <img
             src='/assets/registro/tickets/shared/dit.png'
             alt='DIT Do it together'
-            className='h-[50vh] w-auto max-w-full object-contain xl:h-[55vh]'
+            className='h-[15vh] w-auto max-w-full object-contain lg:h-[50vh] xl:h-[55vh]'
           />
         </div>
 
         <div className='hidden lg:block' />
 
-        <div className='flex flex-col items-center justify-center gap-8 px-4 py-6 sm:justify-center sm:gap-12 md:gap-16 lg:min-h-0 lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
-          <div className='w-full max-w-xs lg:max-w-none'>
+        {/* Logo + ENTRA — on mobile: logo at top (order-1), ENTRA at bottom (order-3). On desktop: together in right column */}
+        <div className='contents lg:flex lg:flex-col lg:items-center lg:justify-start lg:gap-32 lg:px-2 lg:py-4 xl:gap-64 xl:py-5'>
+          <div className='order-1 w-full px-4 pt-6 pb-2 lg:order-none lg:max-w-none'>
             <img
               src='/assets/registro/tickets/shared/logo.png'
               alt='Ruidozo'
@@ -65,7 +67,7 @@ function TicketContent() {
           </div>
           <Link
             href='/'
-            className='group relative flex flex-col items-center gap-2 sm:gap-3 lg:gap-2'
+            className='group order-3 relative flex flex-col items-center gap-2 pb-6 sm:gap-3 lg:order-none lg:gap-2 lg:pb-0'
           >
             <img
               src='/assets/registro/tickets/shared/boton-entrar.png'
@@ -91,17 +93,17 @@ function TicketContent() {
           <img
             src='/assets/registro/tickets/shared/mano-boleto-sm.png'
             alt='Boleto'
-            className='block h-[55vh] w-auto object-contain object-bottom sm:h-[60vh] lg:hidden'
+            className='block h-[55vh] w-auto object-contain object-bottom sm:h-[60vh] md:hidden'
           />
           {/* Large screens */}
           <img
             src='/assets/registro/tickets/shared/mano-boleto-lg.png'
             alt='Boleto'
-            className='hidden h-[85vh] w-auto object-contain object-bottom lg:block xl:h-[90vh]'
+            className='hidden h-[60vh] w-auto object-contain object-bottom md:block lg:h-[85vh] xl:h-[90vh]'
           />
           {/* Ticket text overlay */}
           <div
-            className='pointer-events-none absolute top-[5%] left-[8%] h-[62%] w-[55%]'
+            className='pointer-events-none absolute top-[3%] left-[8%] h-[52%] w-[55%] md:top-[5%] md:h-[62%]'
           >
             <TicketText
               role={role}

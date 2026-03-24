@@ -124,17 +124,17 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
       </div>
 
       {/* ── Row 3: Static share text — clickable ── */}
-      <div className='pointer-events-auto flex flex-col items-center justify-center px-1 lg:px-2'>
-        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
+      <Link href='#' className='pointer-events-auto group flex flex-col items-center justify-center px-1 lg:px-2'>
+        <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
           CORRE LA VOZ,
         </p>
-        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
+        <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
           HAZ RUIDO ALLÁ AFUERA
         </p>
-        <p className='text-[0.4rem] leading-tight text-black uppercase sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
+        <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
           COMPÁRTENOS EN TUS REDES
         </p>
-      </div>
+      </Link>
 
       {/* ── Row 4: Static CTA — clickable ── */}
       <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
