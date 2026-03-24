@@ -4,43 +4,43 @@ import { Toaster } from 'sileo'
 import './globals.css'
 
 const corose = localFont({
-  src: './fonts/Corose.otf',
+  src: '../public/assets/fonts/Corose.otf',
   variable: '--font-corose',
   display: 'swap'
 })
 
 const coroseAlt01 = localFont({
-  src: './fonts/Corose-Alt01.otf',
+  src: '../public/assets/fonts/Corose-Alt01.otf',
   variable: '--font-corose-alt01',
   display: 'swap'
 })
 
 const coroseAlt02 = localFont({
-  src: './fonts/Corose-Alt02.otf',
+  src: '../public/assets/fonts/Corose-Alt02.otf',
   variable: '--font-corose-alt02',
   display: 'swap'
 })
 
 const thanjhirsBrush = localFont({
-  src: './fonts/ThanjhirsBrush.otf',
+  src: '../public/assets/fonts/ThanjhirsBrush.otf',
   variable: '--font-thanjhirs-brush',
   display: 'swap'
 })
 
 const babyDoll = localFont({
-  src: './fonts/BabyDoll.otf',
+  src: '../public/assets/fonts/BabyDoll.otf',
   variable: '--font-baby-doll',
   display: 'swap'
 })
 
 const impactLabel = localFont({
-  src: './fonts/ImpactLabelReversed.ttf',
+  src: '../public/assets/fonts/ImpactLabelReversed.ttf',
   variable: '--font-impact-label',
   display: 'swap'
 })
 
 const akzidenzGrotesk = localFont({
-  src: './fonts/Akzidenz-Grotesk.ttf',
+  src: '../public/assets/fonts/Akzidenz-Grotesk.ttf',
   variable: '--font-akzidenz',
   display: 'swap'
 })
