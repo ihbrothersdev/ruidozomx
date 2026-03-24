@@ -23,7 +23,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
   return (
     <Link
-      href={`/comunidad/${profile.id}`}
+      href={`/perfil/${profile.slug}`}
       className='group relative flex h-full flex-col items-center transition-transform hover:scale-[1.02]'
     >
       <div className='relative flex h-full w-full flex-col overflow-hidden border-2 border-black/10 bg-[#e8e2d6] shadow-md'>
