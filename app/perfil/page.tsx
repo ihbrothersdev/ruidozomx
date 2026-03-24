@@ -51,6 +51,7 @@ export default async function PerfilPage() {
       socialLinks={socialLinks}
       roleProfile={roleProfile}
       isOwnProfile={true}
+      isLoggedIn={true}
       acceptProposals={acceptProposals}
     />
   )

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import ProfileView from '../_components/ProfileView'
 import { ROLE_TABLE } from '../_components/profile-constants'
 
@@ -39,7 +39,7 @@ export default async function PublicPerfilPage({ params }: Props) {
 
   const role = profile.role as Role
   const displayName = profile.display_name || 'Usuario'
-  const location = [profile.city, profile.state, profile.country].filter(Boolean).join(', ')
+  const location = [profile.city, profile.country].filter(Boolean).join(', ')
   const photoUrl = profile.photo_url as string | null
   const socialLinks = (profile.social_links as Record<string, string>) || null
 
@@ -47,7 +47,12 @@ export default async function PublicPerfilPage({ params }: Props) {
   const {
     data: { user }
   } = await supabase.auth.getUser()
-  const isOwnProfile = user?.id === profile.id
+  const isOwnProfile = !!user && user.id === profile.id
+
+  // If viewing own profile via slug, redirect to /perfil
+  if (isOwnProfile) {
+    redirect('/perfil')
+  }
 
   // Fetch role-specific profile
   let roleProfile: Record<string, unknown> | null = null
@@ -71,6 +76,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       socialLinks={socialLinks}
       roleProfile={roleProfile}
       isOwnProfile={isOwnProfile}
+      isLoggedIn={!!user}
       acceptProposals={acceptProposals}
     />
   )

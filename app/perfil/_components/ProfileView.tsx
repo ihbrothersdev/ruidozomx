@@ -17,6 +17,7 @@ export interface ProfileViewProps {
   socialLinks: Record<string, string> | null
   roleProfile: Record<string, any> | null
   isOwnProfile: boolean
+  isLoggedIn: boolean
   acceptProposals: boolean
 }
 
@@ -28,6 +29,7 @@ export default function ProfileView({
   socialLinks,
   roleProfile,
   isOwnProfile,
+  isLoggedIn,
   acceptProposals
 }: ProfileViewProps) {
   return (
@@ -47,14 +49,6 @@ export default function ProfileView({
               roleProfile={roleProfile}
             />
           </div>
-
-          {/* Chips */}
-          {role && roleProfile && (
-            <ProfileChips
-              role={role}
-              roleProfile={roleProfile}
-            />
-          )}
 
           {/* Review / Description */}
           {roleProfile && (
@@ -82,6 +76,7 @@ export default function ProfileView({
           {/* Action buttons */}
           <ActionButtons
             isOwnProfile={isOwnProfile}
+            isLoggedIn={isLoggedIn}
             role={role}
             acceptProposals={acceptProposals}
           />

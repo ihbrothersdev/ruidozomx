@@ -1,5 +1,6 @@
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import { ROLE_NAME_FIELD } from './profile-constants'
+import ProfileChips from './ProfileChips'
 
 interface IdentityBlockProps {
   role: Role | null
@@ -17,11 +18,9 @@ export default function IdentityBlock({ role, displayName, location, roleProfile
 
   return (
     <div className='space-y-1'>
-      <h1 className='font-pt-mono text-xl tracking-wider text-black uppercase'>{primaryName}</h1>
+      <h1 className='font-pt-mono text-lg tracking-wider text-black uppercase'>{primaryName}</h1>
 
-      {location && (
-        <p className='font-pt-mono text-sm font-bold tracking-wider text-black/60 uppercase'>{location}</p>
-      )}
+      {location && <p className='font-pt-mono text-sm font-bold tracking-wider text-black/60 uppercase'>{location}</p>}
 
       {role && (
         <p className='font-pt-mono text-xs font-bold tracking-wider text-black/50 uppercase'>
@@ -37,6 +36,14 @@ export default function IdentityBlock({ role, displayName, location, roleProfile
 
       {role === 'banda' && (
         <p className='font-pt-mono mt-2 text-xs font-bold tracking-wider text-black/50 uppercase'>Disponible para:</p>
+      )}
+
+      {/* Chips */}
+      {role && roleProfile && (
+        <ProfileChips
+          role={role}
+          roleProfile={roleProfile}
+        />
       )}
     </div>
   )
