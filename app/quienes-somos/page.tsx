@@ -23,8 +23,9 @@ export default function QuienesSomosPage() {
     const video = getActiveVideo()
     if (!video) return
 
-    // Try playing with sound (works if user clicked a link to get here)
+    // Try playing with sound at 50% volume (works if user clicked a link to get here)
     video.muted = false
+    video.volume = 0.5
     video.play().catch(() => {
       // Browser blocked — fallback to muted autoplay
       video.muted = true
@@ -60,14 +61,14 @@ export default function QuienesSomosPage() {
       </div>
 
       {/* Skip button */}
-      {phase === 'playing' && (
+      {/* {phase === 'playing' && (
         <button
           onClick={() => router.push('/')}
           className='font-pt-mono absolute right-4 bottom-6 z-20 rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
         >
           Saltar
         </button>
-      )}
+      )} */}
 
       {/* Video container */}
       <div
