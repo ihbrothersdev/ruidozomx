@@ -37,7 +37,7 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
             />
 
             {/* Content */}
-            <div className='relative z-10 flex flex-col items-center pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
+            <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
               {/* Title image */}
               <Image
                 src='/assets/conectar-title.png'
@@ -88,7 +88,7 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
               </div>
 
               {/* Action buttons */}
-              <div className='mt-6 flex items-center gap-3'>
+              <div className='mt-6 flex justify-end gap-3'>
                 <button
                   disabled={!selectedMotivo}
                   className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'

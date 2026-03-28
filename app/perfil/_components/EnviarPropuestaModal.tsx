@@ -52,7 +52,7 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
             />
 
             {/* Content */}
-            <div className='relative z-10 flex flex-col items-center pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
+            <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
               {/* Title image */}
               <Image
                 src='/assets/enviar-propuesta-title.png'
@@ -69,7 +69,7 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
               </p>
 
               {/* Description */}
-              <p className='font-pt-mono mt-2 text-center text-xs leading-relaxed tracking-wider text-red-600'>
+              <p className='font-pt-mono mt-2text-xs leading-relaxed tracking-wider text-red-600'>
                 Esto se envía dentro de RU!DOZO.
                 <br />
                 Nadie ve tu contacto hasta que acepten.
@@ -103,7 +103,7 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
               </div>
 
               {/* Action buttons */}
-              <div className='mt-5 flex items-center gap-3'>
+              <div className='mt-5 flex justify-end gap-3'>
                 <button className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'>
                   Enviar
                 </button>
