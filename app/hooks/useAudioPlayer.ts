@@ -24,79 +24,84 @@ interface AudioPlayerActions {
 }
 
 export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
+  const activeRef = useRef<HTMLAudioElement | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
 
+  const sortedSongsRef = useRef<PlayerSong[]>([])
+  sortedSongsRef.current = [...songs].sort((a, b) => {
+    if (a.side !== b.side) return a.side === 'A' ? -1 : 1
+    return a.position - b.position
+  })
+
   const currentSong = songs.find(s => s.id === currentSongId)
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
-  // Initialize audio element
-  useEffect(() => {
-    const audio = new Audio()
-    audioRef.current = audio
-
-    return () => {
-      audio.pause()
-      audio.src = ''
+  /** Get or create an Audio element for a song */
+  const getAudio = useCallback((song: PlayerSong): HTMLAudioElement => {
+    const pool = poolRef.current
+    let audio = pool.get(song.id)
+    if (!audio) {
+      audio = new Audio()
+      audio.preload = 'auto'
+      audio.src = song.audioSrc
+      pool.set(song.id, audio)
     }
+    return audio
   }, [])
 
-  // Load song when currentSongId changes
+  // Build pool for all songs on mount (staggered, non-blocking)
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentSong) return
+    const sorted = sortedSongsRef.current
+    if (sorted.length === 0) return
 
-    const wasPlaying = isPlaying
-    audio.src = currentSong.audioSrc
-    audio.load()
-
-    if (wasPlaying) {
-      audio.play().catch(() => {})
-    }
-  }, [currentSongId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Attach event listeners
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const onTimeUpdate = () => {
-      setElapsedSeconds(Math.floor(audio.currentTime))
-    }
-
-    const onDurationChange = () => {
-      setDuration(Math.floor(audio.duration) || 0)
-    }
-
-    const onEnded = () => {
-      // Auto-advance to next song
-      const sortedSongs = [...songs].sort((a, b) => {
-        if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-        return a.position - b.position
-      })
-      const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-      if (currentIndex < sortedSongs.length - 1) {
-        setCurrentSongId(sortedSongs[currentIndex + 1].id)
-      } else {
-        // Wrap to first song
-        setCurrentSongId(sortedSongs[0].id)
-        setIsPlaying(false)
+    let i = 0
+    // Create one Audio element every 200ms to avoid hammering the network
+    const interval = setInterval(() => {
+      if (i >= sorted.length) {
+        clearInterval(interval)
+        return
       }
+      getAudio(sorted[i])
+      i++
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [songs, getAudio])
+
+  // Wire up the active audio element when currentSongId changes
+  useEffect(() => {
+    if (!currentSong) return
+
+    // Detach old listeners
+    const prev = activeRef.current
+    if (prev) {
+      prev.pause()
+      prev.removeEventListener('timeupdate', onTimeUpdate)
+      prev.removeEventListener('durationchange', onDurationChange)
+      prev.removeEventListener('ended', onEnded)
+      prev.removeEventListener('play', onPlay)
+      prev.removeEventListener('pause', onPause)
     }
 
-    const onPlay = () => setIsPlaying(true)
-    const onPause = () => setIsPlaying(false)
+    const audio = getAudio(currentSong)
+    activeRef.current = audio
 
+    // Attach listeners
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+
+    // Sync state
+    setElapsedSeconds(Math.floor(audio.currentTime))
+    setDuration(Math.floor(audio.duration) || 0)
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
@@ -105,19 +110,53 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
     }
-  }, [songs, currentSongId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSongId])
+
+  function onTimeUpdate() {
+    const a = activeRef.current
+    if (a) setElapsedSeconds(Math.floor(a.currentTime))
+  }
+  function onDurationChange() {
+    const a = activeRef.current
+    if (a) setDuration(Math.floor(a.duration) || 0)
+  }
+  function onEnded() {
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx < sorted.length - 1) {
+      setCurrentSongId(sorted[idx + 1].id)
+      setTimeout(() => activeRef.current?.play().catch(() => {}), 0)
+    } else {
+      setCurrentSongId(sorted[0].id)
+      setIsPlaying(false)
+    }
+  }
+  function onPlay() { setIsPlaying(true) }
+  function onPause() { setIsPlaying(false) }
+
+  // Cleanup pool on unmount
+  useEffect(() => {
+    return () => {
+      poolRef.current.forEach(audio => {
+        audio.pause()
+        audio.src = ''
+      })
+      poolRef.current.clear()
+    }
+  }, [])
 
   const play = useCallback(() => {
     setIsStopped(false)
-    audioRef.current?.play().catch(() => {})
+    activeRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
-    audioRef.current?.pause()
+    activeRef.current?.pause()
   }, [])
 
   const stop = useCallback(() => {
-    const audio = audioRef.current
+    const audio = activeRef.current
     if (!audio) return
     audio.pause()
     audio.currentTime = 0
@@ -126,40 +165,45 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [])
 
   const next = useCallback(() => {
-    const sortedSongs = [...songs].sort((a, b) => {
-      if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-      return a.position - b.position
-    })
-    const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-    if (currentIndex < sortedSongs.length - 1) {
-      setCurrentSongId(sortedSongs[currentIndex + 1].id)
-    }
-  }, [songs, currentSongId])
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx < sorted.length - 1) setCurrentSongId(sorted[idx + 1].id)
+  }, [currentSongId])
 
   const prev = useCallback(() => {
-    const sortedSongs = [...songs].sort((a, b) => {
-      if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-      return a.position - b.position
-    })
-    const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-    if (currentIndex > 0) {
-      setCurrentSongId(sortedSongs[currentIndex - 1].id)
-    }
-  }, [songs, currentSongId])
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx > 0) setCurrentSongId(sorted[idx - 1].id)
+  }, [currentSongId])
 
   const seek = useCallback((pct: number) => {
-    const audio = audioRef.current
+    const audio = activeRef.current
     if (!audio || !audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
 
-  const playSong = useCallback((id: string) => {
-    setCurrentSongId(id)
-    // Will auto-play via the useEffect that watches currentSongId
-    setTimeout(() => {
-      audioRef.current?.play().catch(() => {})
-    }, 100)
-  }, [])
+  const playSong = useCallback(
+    (id: string) => {
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+
+      setIsStopped(false)
+      setCurrentSongId(id)
+
+      // Play from pool immediately — the Audio element may already be buffered
+      const song = songs.find(s => s.id === id)
+      if (song) {
+        const audio = getAudio(song)
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      }
+    },
+    [songs, getAudio]
+  )
 
   return {
     isPlaying,
