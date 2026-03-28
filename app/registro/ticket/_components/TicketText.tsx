@@ -1,5 +1,9 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import type { Role } from '@/lib/types'
+import CompartirModal from '@/app/perfil/_components/CompartirModal'
 
 interface TicketTextProps {
   role: Role
@@ -7,6 +11,8 @@ interface TicketTextProps {
 }
 
 export default function TicketText({ role, className = '' }: TicketTextProps) {
+  const [compartirOpen, setCompartirOpen] = useState(false)
+
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
       {/* ── Row 1: headline pre-text (role-specific) ── */}
@@ -124,7 +130,10 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
       </div>
 
       {/* ── Row 3: Static share text — clickable ── */}
-      <Link href='#' className='pointer-events-auto group flex flex-col items-center justify-center px-1 lg:px-2'>
+      <button
+        onClick={() => setCompartirOpen(true)}
+        className='pointer-events-auto group flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+      >
         <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
           CORRE LA VOZ,
         </p>
@@ -134,7 +143,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
         <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
           COMPÁRTENOS EN TUS REDES
         </p>
-      </Link>
+      </button>
 
       {/* ── Row 4: Static CTA — clickable ── */}
       <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
@@ -145,6 +154,9 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
           EXPLORAR LA ESCENA
         </Link>
       </div>
+
+      <CompartirModal open={compartirOpen} onOpenChange={setCompartirOpen} />
+
     </div>
   )
 }
