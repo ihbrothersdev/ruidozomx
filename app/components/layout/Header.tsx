@@ -6,9 +6,10 @@ import { ProfileDropdown } from './ProfileDropdown'
 interface HeaderProps {
   user: User | null
   photoUrl?: string | null
+  role?: string | null
 }
 
-export function Header({ user, photoUrl }: HeaderProps) {
+export function Header({ user, photoUrl, role }: HeaderProps) {
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Mi cuenta'
 
   return (
@@ -43,6 +44,7 @@ export function Header({ user, photoUrl }: HeaderProps) {
           <ProfileDropdown
             photoUrl={photoUrl ?? null}
             displayName={displayName}
+            role={role}
           />
         ) : (
           <Link href='/registro/elige-rol'>
