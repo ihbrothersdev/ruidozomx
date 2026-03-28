@@ -38,10 +38,15 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
 
             {/* Content */}
             <div className='relative z-10 flex flex-col items-center pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-              {/* Title */}
-              <h2 className='font-baby-doll text-2xl tracking-wider text-black uppercase sm:text-3xl'>
-                Conectar
-              </h2>
+              {/* Title image */}
+              <Image
+                src='/assets/conectar-title.png'
+                alt='Conectar'
+                width={315}
+                height={57}
+                className='h-auto w-full max-w-43 sm:max-w-40'
+                unoptimized
+              />
 
               {/* Motivo section */}
               <div className='mt-6 w-full space-y-3'>

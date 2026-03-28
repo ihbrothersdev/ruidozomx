@@ -53,10 +53,15 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
 
             {/* Content */}
             <div className='relative z-10 flex flex-col items-center pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-              {/* Title */}
-              <h2 className='font-baby-doll text-2xl tracking-wider text-black uppercase sm:text-3xl'>
-                Enviar Propuesta
-              </h2>
+              {/* Title image */}
+              <Image
+                src='/assets/enviar-propuesta-title.png'
+                alt='Enviar Propuesta'
+                width={315}
+                height={57}
+                className='h-auto w-full max-w-64 sm:max-w-72'
+                unoptimized
+              />
 
               {/* Sub */}
               <p className='font-pt-mono mt-2 text-sm tracking-wider text-black'>
