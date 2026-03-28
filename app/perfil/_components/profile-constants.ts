@@ -51,8 +51,11 @@ export const ROLE_CHIP_CONFIG: Record<Role, { key: string; label: string; type: 
   ]
 }
 
-/** Dynamic module sections for the right column, per role */
-export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string }[]> = {
+/** Dynamic module sections for the right column, per role.
+ *  - `dataField`: if set, the module reads this field from roleProfile and displays it.
+ *  - If the field is absent or empty, falls back to "Próximamente".
+ */
+export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
   banda: [
     { title: 'Próximas fechas', key: 'dates' },
     { title: 'Convocatorias', key: 'calls' },
@@ -60,7 +63,7 @@ export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string }[]
   ],
   fan: [{ title: 'Rolas propuestas al cassete', key: 'proposals' }],
   manager: [
-    { title: 'Artistas representados', key: 'artists' },
+    { title: 'Artistas representados', key: 'artists', dataField: 'artists_represented' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   agente: [

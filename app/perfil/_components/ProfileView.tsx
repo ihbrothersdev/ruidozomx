@@ -108,7 +108,12 @@ export default function ProfileView({
           </div>
 
           {/* Dynamic modules */}
-          {role && <DynamicModules role={role} />}
+          {role && (
+            <DynamicModules
+              role={role}
+              roleProfile={roleProfile}
+            />
+          )}
 
           {/* Links */}
           <LinksSection
