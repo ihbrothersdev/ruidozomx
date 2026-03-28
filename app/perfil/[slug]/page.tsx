@@ -73,6 +73,8 @@ export default async function PublicPerfilPage({ params }: Props) {
       role={role}
       location={location}
       photoUrl={photoUrl}
+      bio={(profile.bio as string) || undefined}
+      contact={(profile.contact as string) || null}
       socialLinks={socialLinks}
       roleProfile={roleProfile}
       isOwnProfile={isOwnProfile}

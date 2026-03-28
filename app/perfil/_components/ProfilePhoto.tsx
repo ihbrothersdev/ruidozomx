@@ -7,13 +7,15 @@ interface ProfilePhotoProps {
 
 export default function ProfilePhoto({ photoUrl, displayName }: ProfilePhotoProps) {
   return (
-    <div className='relative'>
+    <div
+      className='relative shrink-0'
+      style={{ width: 150, height: 190 }}
+    >
       <Image
         src='/assets/registro/formulario/shared/marco-foto.png'
         alt='Marco de foto'
-        width={200}
-        height={250}
-        className='h-28 w-auto sm:h-32'
+        fill
+        className='object-contain'
         unoptimized
       />
       <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>

@@ -1,5 +1,4 @@
 import { ROLE_LABELS, type Role } from '@/lib/types'
-import { ROLE_NAME_FIELD } from './profile-constants'
 import ProfileChips from './ProfileChips'
 
 interface IdentityBlockProps {
@@ -10,15 +9,9 @@ interface IdentityBlockProps {
 }
 
 export default function IdentityBlock({ role, displayName, location, roleProfile }: IdentityBlockProps) {
-  // Use role-specific name field if available
-  const primaryName =
-    role && roleProfile && ROLE_NAME_FIELD[role]
-      ? (roleProfile[ROLE_NAME_FIELD[role]] as string) || displayName
-      : displayName
-
   return (
     <div className='flex h-full flex-col justify-center space-y-1'>
-      <h1 className='font-pt-mono text-lg tracking-wider font-bold text-black uppercase'>{primaryName}</h1>
+      <h1 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>{displayName}</h1>
 
       {location && <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>{location}</p>}
 

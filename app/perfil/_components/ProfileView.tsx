@@ -15,6 +15,7 @@ export interface ProfileViewProps {
   role: Role | null
   location: string
   photoUrl: string | null
+  contact: string | null
   socialLinks: Record<string, string> | null
   roleProfile: Record<string, any> | null
   isOwnProfile: boolean
@@ -28,6 +29,7 @@ export default function ProfileView({
   role,
   location,
   photoUrl,
+  contact,
   socialLinks,
   roleProfile,
   isOwnProfile,
@@ -106,16 +108,18 @@ export default function ProfileView({
           </div>
 
           {/* Dynamic modules */}
-          {role && <DynamicModules role={role} />}
-
-          {/* Links */}
-          {role && roleProfile && (
-            <LinksSection
+          {role && (
+            <DynamicModules
               role={role}
               roleProfile={roleProfile}
-              socialLinks={socialLinks}
             />
           )}
+
+          {/* Links */}
+          <LinksSection
+            socialLinks={socialLinks}
+            contact={contact}
+          />
 
           {/* Action buttons */}
           <ActionButtons

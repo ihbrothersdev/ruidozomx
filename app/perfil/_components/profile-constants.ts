@@ -3,9 +3,9 @@ import type { Role } from '@/lib/types'
 export const ROLE_TABLE: Record<Role, string> = {
   banda: 'band_profiles',
   fan: 'fan_profiles',
-  manager: 'manager_profiles',
-  agente: 'agent_profiles',
-  promotor: 'promoter_profiles',
+  manager: 'industry_profiles',
+  agente: 'industry_profiles',
+  promotor: 'industry_profiles',
   proveedor: 'provider_profiles',
   venue: 'venue_profiles'
 }
@@ -15,19 +15,14 @@ export const ROLE_TABLE: Record<Role, string> = {
  *  - array fields: each array item becomes its own chip
  *  - text fields: shown as a single chip with the value
  */
-export const ROLE_CHIP_CONFIG: Record<
-  Role,
-  { key: string; label: string; type: 'boolean' | 'array' | 'text' }[]
-> = {
+export const ROLE_CHIP_CONFIG: Record<Role, { key: string; label: string; type: 'boolean' | 'array' | 'text' }[]> = {
   banda: [
     { key: 'available_live', label: 'Tocar en vivo', type: 'boolean' },
     { key: 'available_tours', label: 'Giras', type: 'boolean' },
     { key: 'open_collabs', label: 'Colaboraciones', type: 'boolean' },
     { key: 'willing_travel', label: 'Salir de su estado/país', type: 'boolean' }
   ],
-  fan: [
-    { key: 'favorite_genres', label: 'Géneros favoritos', type: 'array' }
-  ],
+  fan: [{ key: 'favorite_genres', label: 'Géneros favoritos', type: 'array' }],
   manager: [
     { key: 'represents_artists', label: 'Representa artistas', type: 'boolean' },
     { key: 'seeks_emerging_talent', label: 'Busca talento emergente', type: 'boolean' },
@@ -56,18 +51,19 @@ export const ROLE_CHIP_CONFIG: Record<
   ]
 }
 
-/** Dynamic module sections for the right column, per role */
-export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string }[]> = {
+/** Dynamic module sections for the right column, per role.
+ *  - `dataField`: if set, the module reads this field from roleProfile and displays it.
+ *  - If the field is absent or empty, falls back to "Próximamente".
+ */
+export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
   banda: [
     { title: 'Próximas fechas', key: 'dates' },
     { title: 'Convocatorias', key: 'calls' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  fan: [
-    { title: 'Rolas propuestas al cassete', key: 'proposals' }
-  ],
+  fan: [{ title: 'Rolas propuestas al cassete', key: 'proposals' }],
   manager: [
-    { title: 'Artistas representados', key: 'artists' },
+    { title: 'Artistas representados', key: 'artists', dataField: 'artists_represented' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   agente: [
@@ -89,26 +85,4 @@ export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string }[]
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ]
-}
-
-/** Primary name field per role (for display in identity block) */
-export const ROLE_NAME_FIELD: Record<Role, string> = {
-  banda: 'band_name',
-  fan: 'alias',
-  manager: 'full_name',
-  agente: 'full_name',
-  promotor: 'full_name',
-  proveedor: 'brand_name',
-  venue: 'venue_name'
-}
-
-/** Link field names per role */
-export const ROLE_LINK_FIELD: Record<Role, string> = {
-  banda: 'project_link',
-  fan: '',
-  manager: 'web_link',
-  agente: 'web_link',
-  promotor: 'web_link',
-  proveedor: 'web_link',
-  venue: 'web_link'
 }
