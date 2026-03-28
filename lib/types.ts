@@ -20,7 +20,7 @@ export interface PlayerState {
 
 // === Registration & Roles ===
 
-export const ROLES = ['banda', 'fan', 'manager', 'agente', 'promotor', 'proveedor', 'venue'] as const
+export const ROLES = ['banda', 'fan', 'manager', 'agente', 'promotor', 'proveedor', 'venue', 'admin'] as const
 export type Role = (typeof ROLES)[number]
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -30,7 +30,8 @@ export const ROLE_LABELS: Record<Role, string> = {
   agente: 'Agente',
   promotor: 'Promotor',
   proveedor: 'Proveedor',
-  venue: 'Venue/Foro'
+  venue: 'Venue/Foro',
+  admin: 'Admin'
 }
 
 export type RegistrationSource = 'propon_rola' | 'registro'
