@@ -4,14 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import CompartirModal from '@/app/perfil/_components/CompartirModal'
+import ProponerRolaBandaModal from '@/app/perfil/_components/ProponerRolaBandaModal'
 
 interface TicketTextProps {
   role: Role
   className?: string
+  displayName?: string
 }
 
-export default function TicketText({ role, className = '' }: TicketTextProps) {
+export default function TicketText({ role, className = '', displayName = '' }: TicketTextProps) {
   const [compartirOpen, setCompartirOpen] = useState(false)
+  const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
 
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
@@ -57,8 +60,11 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
         )}
       </div>
 
-      {/* ── Row 2: big headline + detail (role-specific) ── */}
-      <div className='row-span-2 flex flex-col items-center justify-center px-1 lg:px-2'>
+      {/* ── Row 2: big headline + detail (role-specific) — clickable to open proponer rola modal ── */}
+      <button
+        onClick={() => setProponerRolaOpen(true)}
+        className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+      >
         {(role === 'promotor' || role === 'agente' || role === 'manager') && (
           <>
             <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-5xl'>
@@ -127,7 +133,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
             </p>
           </>
         )}
-      </div>
+      </button>
 
       {/* ── Row 3: Static share text — clickable ── */}
       <button
@@ -156,6 +162,7 @@ export default function TicketText({ role, className = '' }: TicketTextProps) {
       </div>
 
       <CompartirModal open={compartirOpen} onOpenChange={setCompartirOpen} />
+      <ProponerRolaBandaModal open={proponerRolaOpen} onOpenChange={setProponerRolaOpen} bandName={displayName} />
 
     </div>
   )

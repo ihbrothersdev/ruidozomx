@@ -296,7 +296,7 @@ export async function registroSignup(formData: FormData) {
   if (source === 'propon_rola') {
     redirect('/proponer-rola')
   } else {
-    redirect(`/registro/ticket?role=${actualRole}`)
+    redirect(`/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`)
   }
 }
 
@@ -360,6 +360,6 @@ export async function submitProfile(formData: FormData) {
   if (source === 'propon_rola') {
     redirect('/proponer-rola')
   } else {
-    redirect(`/registro/ticket?role=${actualRole}`)
+    redirect(`/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`)
   }
 }

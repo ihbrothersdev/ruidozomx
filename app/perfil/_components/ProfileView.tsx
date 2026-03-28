@@ -123,6 +123,7 @@ export default function ProfileView({
             isLoggedIn={isLoggedIn}
             role={role}
             acceptProposals={acceptProposals}
+            displayName={displayName}
           />
         </>
       }

@@ -21,6 +21,7 @@ function TicketContent() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
+  const displayName = searchParams.get('name') ?? ''
 
   useEffect(() => {
     sileo.info({
@@ -106,6 +107,7 @@ function TicketContent() {
           <div className='pointer-events-none absolute top-[3%] left-[8%] h-[52%] w-[55%] md:top-[5%] md:h-[62%]'>
             <TicketText
               role={role}
+              displayName={displayName}
               className='h-full'
             />
           </div>
