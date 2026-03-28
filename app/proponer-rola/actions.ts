@@ -32,7 +32,6 @@ export async function submitProposal(formData: FormData) {
     genre: (formData.get('genre') as string) || null,
     external_link: (formData.get('external_link') as string) || null,
     audio_file_path: (formData.get('audio_file_path') as string) || null,
-    contact_email: (formData.get('contact_email') as string) || null,
     comment: (formData.get('comment') as string) || null,
     status: 'pending'
   })
