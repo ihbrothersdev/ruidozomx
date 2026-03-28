@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import ActionButtons from './ActionButtons'
 import DynamicModules from './DynamicModules'
@@ -19,6 +20,7 @@ export interface ProfileViewProps {
   isOwnProfile: boolean
   isLoggedIn: boolean
   acceptProposals: boolean
+  bio?: string
 }
 
 export default function ProfileView({
@@ -30,14 +32,39 @@ export default function ProfileView({
   roleProfile,
   isOwnProfile,
   isLoggedIn,
-  acceptProposals
+  acceptProposals,
+  bio
 }: ProfileViewProps) {
+  const logoDecoration = (
+    <div className='flex items-center gap-2'>
+      <Image
+        src='/assets/registro/explicacion-rol/shared/mano.png'
+        alt=''
+        width={80}
+        height={80}
+        className='h-17 w-auto'
+        unoptimized
+      />
+      <Link href='/'>
+        <Image
+          src='/assets/logo.png'
+          alt='Ruidozo'
+          width={380}
+          height={183}
+          className='h-40 w-auto'
+          unoptimized
+        />
+      </Link>
+    </div>
+  )
+
   return (
     <ProfileLayout
+      topDecoration={logoDecoration}
       leftColumn={
         <>
           {/* Photo + Identity */}
-          <div className='flex items-start gap-5'>
+          <div className='flex items-center gap-5'>
             <ProfilePhoto
               photoUrl={photoUrl}
               displayName={displayName}
@@ -51,18 +78,13 @@ export default function ProfileView({
           </div>
 
           {/* Review / Description */}
-          {roleProfile && (
-            <ReviewSection
-              review={(roleProfile.review as string) || null}
-              description={(roleProfile.description as string) || null}
-            />
-          )}
+          <ReviewSection bio={bio} />
         </>
       }
       rightColumn={
         <>
-          {/* Logo + hand decoration */}
-          <div className='flex items-center gap-2'>
+          {/* Logo + hand decoration — hidden on mobile (shown via topDecoration) */}
+          <div className='hidden items-center gap-2 lg:flex'>
             <Image
               src='/assets/registro/explicacion-rol/shared/mano.png'
               alt=''
@@ -71,14 +93,16 @@ export default function ProfileView({
               className='h-17 w-auto'
               unoptimized
             />
-            <Image
-              src='/assets/logo.png'
-              alt='Ruidozo'
-              width={380}
-              height={183}
-              className='h-40 w-auto'
-              unoptimized
-            />
+            <Link href='/'>
+              <Image
+                src='/assets/logo.png'
+                alt='Ruidozo'
+                width={380}
+                height={183}
+                className='h-40 w-auto'
+                unoptimized
+              />
+            </Link>
           </div>
 
           {/* Dynamic modules */}

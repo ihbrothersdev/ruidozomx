@@ -17,13 +17,13 @@ export default function IdentityBlock({ role, displayName, location, roleProfile
       : displayName
 
   return (
-    <div className='space-y-1'>
+    <div className='flex h-full flex-col justify-center space-y-1'>
       <h1 className='font-pt-mono text-lg tracking-wider text-black uppercase'>{primaryName}</h1>
 
-      {location && <p className='font-pt-mono text-sm font-bold tracking-wider text-black/60 uppercase'>{location}</p>}
+      {location && <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>{location}</p>}
 
       {role && (
-        <p className='font-pt-mono text-xs font-bold tracking-wider text-black/50 uppercase'>
+        <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
           Rol: {ROLE_LABELS[role] ?? role}
         </p>
       )}

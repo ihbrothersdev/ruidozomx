@@ -25,9 +25,10 @@ export default async function PerfilPage() {
   const displayName =
     (profile?.display_name as string) || user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario'
   const role = (profile?.role as Role) || (user.user_metadata?.role as Role) || null
-  const location = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(', ')
+  const location = [profile?.city, profile?.country].filter(Boolean).join(', ')
   const photoUrl = profile?.photo_url as string | null
   const socialLinks = (profile?.social_links as Record<string, string>) || null
+  const bio = profile?.bio as string | null
 
   // Fetch role-specific profile
   let roleProfile: Record<string, unknown> | null = null
@@ -41,6 +42,7 @@ export default async function PerfilPage() {
   }
 
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
+  console.log('PerfilPage data:', { displayName, role, location, photoUrl, socialLinks, roleProfile, acceptProposals }) // Debug log to check all fetched data
 
   return (
     <ProfileView
@@ -50,6 +52,7 @@ export default async function PerfilPage() {
       photoUrl={photoUrl}
       socialLinks={socialLinks}
       roleProfile={roleProfile}
+      bio={bio || undefined}
       isOwnProfile={true}
       isLoggedIn={true}
       acceptProposals={acceptProposals}

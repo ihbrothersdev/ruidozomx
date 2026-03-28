@@ -24,13 +24,13 @@ export const ROLES = ['banda', 'fan', 'manager', 'agente', 'promotor', 'proveedo
 export type Role = (typeof ROLES)[number]
 
 export const ROLE_LABELS: Record<Role, string> = {
-  banda: 'Banda / Solista',
-  fan: 'Fan o Público',
+  fan: 'Fan/Público',
+  banda: 'Banda/Solista',
   manager: 'Manager',
   agente: 'Agente',
   promotor: 'Promotor',
   proveedor: 'Proveedor',
-  venue: 'Venue / Foro'
+  venue: 'Venue/Foro'
 }
 
 export type RegistrationSource = 'propon_rola' | 'registro'
