@@ -9,30 +9,52 @@ export default function QuienesSomosPage() {
   const desktopRef = useRef<HTMLVideoElement>(null)
   const mobileRef = useRef<HTMLVideoElement>(null)
   const startedRef = useRef(false)
-  const [phase, setPhase] = useState<'intro' | 'playing' | 'outro'>('intro')
+  const [phase, setPhase] = useState<'waiting' | 'playing' | 'outro'>('waiting')
+  const [needsTap, setNeedsTap] = useState(false)
 
   const getActiveVideo = useCallback(() => {
     return desktopRef.current?.offsetParent !== null ? desktopRef.current : mobileRef.current
   }, [])
 
-  // Called once when video is ready — try unmuted, fallback to muted
-  const handleCanPlay = useCallback(() => {
+  const startVideo = useCallback(() => {
     if (startedRef.current) return
     startedRef.current = true
 
     const video = getActiveVideo()
     if (!video) return
 
-    // Try playing with sound at 50% volume (works if user clicked a link to get here)
     video.muted = false
     video.volume = 0.5
-    video.play().catch(() => {
-      // Browser blocked — fallback to muted autoplay
-      video.muted = true
-      video.play()
-    })
+    video
+      .play()
+      .then(() => {
+        setNeedsTap(false)
+        setTimeout(() => setPhase('playing'), 300)
+      })
+      .catch(() => {
+        // Unmuted play failed — this is mobile. Show tap-to-play.
+        startedRef.current = false
+        setNeedsTap(true)
+      })
+  }, [getActiveVideo])
 
-    setTimeout(() => setPhase('playing'), 300)
+  // Desktop: auto-start when video is buffered
+  const handleCanPlay = useCallback(() => {
+    if (!needsTap) startVideo()
+  }, [needsTap, startVideo])
+
+  // Mobile: user taps the screen to start
+  const handleTap = useCallback(() => {
+    const video = getActiveVideo()
+    if (!video) return
+
+    startedRef.current = true
+    video.muted = false
+    video.volume = 0.5
+    video.play().then(() => {
+      setNeedsTap(false)
+      setTimeout(() => setPhase('playing'), 300)
+    })
   }, [getActiveVideo])
 
   const handleEnded = useCallback(() => {
@@ -61,19 +83,60 @@ export default function QuienesSomosPage() {
       </div>
 
       {/* Skip button */}
-      {/* {phase === 'playing' && (
+      {phase === 'playing' && (
         <button
           onClick={() => router.push('/')}
-          className='font-pt-mono absolute right-4 bottom-6 z-20 rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
+          className='font-pt-mono absolute right-4 bottom-6 z-20 cursor-pointer rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
         >
           Saltar
         </button>
-      )} */}
+      )}
+
+      {/* Tap-to-play overlay for mobile */}
+      {needsTap && (
+        <button
+          onClick={handleTap}
+          className='absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-center gap-6'
+          style={{
+            backgroundImage: "url('/assets/textura/background-textura.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+          {/* Dark overlay on texture */}
+          <div className='pointer-events-none absolute inset-0 bg-black/70' />
+
+          {/* Logo */}
+          <Image
+            src='/assets/header/logo.png'
+            alt='Ruidozo MX'
+            width={380}
+            height={183}
+            className='relative z-10 h-12 w-auto invert'
+            unoptimized
+          />
+
+          {/* Play button — matches cassette control style */}
+          <div className='relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-600 bg-red-600/20 transition-transform hover:scale-110'>
+            <svg
+              viewBox='0 0 24 24'
+              fill='#dc2626'
+              className='h-7 w-7 translate-x-0.5'
+            >
+              <path d='M8 5v14l11-7z' />
+            </svg>
+          </div>
+
+          <span className='font-pt-mono relative z-10 text-xs tracking-[0.25em] text-white/50 uppercase'>
+            Toca para ver
+          </span>
+        </button>
+      )}
 
       {/* Video container */}
       <div
         className={`relative z-10 flex w-full items-center justify-center transition-opacity duration-1000 ${
-          phase === 'intro' ? 'opacity-0' : phase === 'outro' ? 'opacity-0' : 'opacity-100'
+          phase === 'waiting' ? 'opacity-0' : phase === 'outro' ? 'opacity-0' : 'opacity-100'
         }`}
       >
         {/* Desktop video */}
