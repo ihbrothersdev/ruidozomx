@@ -1,4 +1,4 @@
-import { MOCK_PLAYER_STATE, MOCK_SONGS } from '@/lib/mock-data'
+import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
 import { Footer } from './components/layout/Footer'
@@ -10,18 +10,23 @@ import { HomePlayerSection } from './components/player/HomePlayerSection'
 export default async function Home() {
   let user = null
   let photoUrl: string | null = null
+  let userRole: string | null = null
   try {
     const { createClient } = await import('@/lib/supabase/server')
     const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     user = data.user
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('photo_url').eq('id', user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('photo_url, role').eq('id', user.id).single()
       photoUrl = (profile?.photo_url as string) || null
+      userRole = (profile?.role as string) || null
     }
   } catch {
     // Supabase not configured — continue without auth
   }
+
+  // Fetch songs from the active cassette in Supabase
+  const { songs } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
@@ -53,14 +58,17 @@ export default async function Home() {
         <Header
           user={user}
           photoUrl={photoUrl}
+          role={userRole}
         />
 
-        <HomePlayerSection
-          songs={MOCK_SONGS}
-          initialSongId={MOCK_PLAYER_STATE.currentSongId}
-          date={formatCassetteDate()}
-          isAuthenticated={!!user}
-        />
+        {songs.length > 0 && (
+          <HomePlayerSection
+            songs={songs}
+            initialSongId={songs[0].id}
+            date={formatCassetteDate()}
+            isAuthenticated={!!user}
+          />
+        )}
 
         {/* Explorar Comunidad - left side */}
         <div className='absolute top-330 left-5 z-0 hidden lg:block'>
