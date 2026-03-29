@@ -34,7 +34,7 @@ export function Header({ user, photoUrl }: HeaderProps) {
             alt='¿Quiénes somos?'
             width={1383}
             height={455}
-            className='h-10 w-auto md:h-16'
+            className='h-12 w-auto md:h-18'
             unoptimized
           />
         </Link>
@@ -51,7 +51,7 @@ export function Header({ user, photoUrl }: HeaderProps) {
               alt='Regístrate / Entra'
               width={1383}
               height={455}
-              className='h-10 w-auto md:h-16'
+              className='h-12 w-auto md:h-18'
               unoptimized
             />
           </Link>
