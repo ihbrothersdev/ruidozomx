@@ -12,7 +12,7 @@ export function Footer({ user }: FooterProps) {
     <footer className='relative z-10 mt-8 px-4 py-12 text-yellow-100 md:px-8'>
       <div className='mx-auto flex max-w-5xl flex-col gap-8 md:flex-row md:gap-12'>
         {/* Left column - Info */}
-        <div className='font-pt-mono flex-1'>
+        <div className='font-pt-mono flex-1 text-center md:text-left'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Información</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>
@@ -104,7 +104,7 @@ export function Footer({ user }: FooterProps) {
         </div>
 
         {/* Right column - Info */}
-        <div className='font-pt-mono flex-1'>
+        <div className='font-pt-mono flex-1 text-center md:text-left'>
           <h3 className='mb-3 text-2xl tracking-wider uppercase'>Navegación</h3>
           <ul className='space-y-1.5 text-xl'>
             <li>

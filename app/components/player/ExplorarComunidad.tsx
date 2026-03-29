@@ -8,8 +8,8 @@ export function ExplorarComunidad() {
       className='flex flex-col items-center transition-transform hover:scale-105'
     >
       <div
-        className='relative overflow-hidden'
-        style={{ width: 340, aspectRatio: '1206 / 759' }}
+        className='relative w-52 overflow-hidden lg:w-[340px]'
+        style={{ aspectRatio: '1206 / 759' }}
       >
         <Image
           src='/assets/body2/textura-back-video.png'

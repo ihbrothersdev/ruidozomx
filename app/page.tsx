@@ -62,8 +62,8 @@ export default async function Home() {
           isAuthenticated={!!user}
         />
 
-        {/* Explorar Comunidad - left side */}
-        <div className='absolute top-330 left-5 z-0 hidden lg:block'>
+        {/* Explorar Comunidad - centered on mobile, left side on desktop */}
+        <div className='flex justify-center lg:absolute lg:top-330 lg:left-5 lg:z-0 lg:block'>
           <ExplorarComunidad />
         </div>
 
