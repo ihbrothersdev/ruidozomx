@@ -51,7 +51,7 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
         style={{ left: '5%', top: '65%', width: '22%', height: '14.5%' }}
       >
         <div className='absolute inset-0 flex items-center justify-center'>
-          <span className='font-corose-alt text-md text-black sm:text-2xl md:text-3xl'>{date}</span>
+          <span className='font-corose-alt text-xs text-black sm:text-2xl md:text-3xl'>{date}</span>
         </div>
       </div>
     </>
