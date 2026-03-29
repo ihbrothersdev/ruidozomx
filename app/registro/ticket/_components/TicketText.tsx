@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import CompartirModal from '@/app/perfil/_components/CompartirModal'
 import ProponerRolaBandaModal from '@/app/perfil/_components/ProponerRolaBandaModal'
+import ComparteTuEventoModal from '@/app/perfil/_components/ComparteTuEventoModal'
 
 interface TicketTextProps {
   role: Role
@@ -15,6 +16,7 @@ interface TicketTextProps {
 export default function TicketText({ role, className = '', displayName = '' }: TicketTextProps) {
   const [compartirOpen, setCompartirOpen] = useState(false)
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
+  const [compartirEventoOpen, setCompartirEventoOpen] = useState(false)
 
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
@@ -25,21 +27,26 @@ export default function TicketText({ role, className = '', displayName = '' }: T
             <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
               PUBLICA UNA FECHA O UNA
             </p>
-             <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
               CONVOCATORIA
             </p>
           </>
         )}
-        {role === 'venue' && (
-          <>
-            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
-              PUBLICA UNA TOCADA O
-            </p>
-             <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
-               ABRE FECHAS DISPONIBLES
-            </p>
-          </>
-        )}
+        <button
+          onClick={() => setCompartirEventoOpen(true)}
+          className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+        >
+          {role === 'venue' && (
+            <>
+              <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+                PUBLICA UNA TOCADA O
+              </p>
+              <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
+                ABRE FECHAS DISPONIBLES
+              </p>
+            </>
+          )}
+        </button>
         {role === 'fan' && (
           <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs md:text-5xl lg:text-5xl xl:text-5xl'>
             PROPÓN UNA
@@ -96,10 +103,10 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         )}
         {role === 'fan' && (
           <>
-          <p className='text-[0.55rem] font-bold text-red-500 uppercase sm:text-2xl md:text-5xl lg:text-8xl xl:text-8xl leading-none'>
+            <p className='text-[0.55rem] leading-none font-bold text-red-500 uppercase sm:text-2xl md:text-5xl lg:text-8xl xl:text-8xl'>
               ROLA
             </p>
-            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-xl lg:text-xl xl:text-xl leading-none'>
+            <p className='mt-0.5 text-[0.35rem] leading-none leading-tight text-red-500 uppercase sm:text-xl lg:text-xl xl:text-xl'>
               PARA NUESTRO CASETE SEMANAL
             </p>
           </>
@@ -138,7 +145,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
       {/* ── Row 3: Static share text — clickable ── */}
       <button
         onClick={() => setCompartirOpen(true)}
-        className='pointer-events-auto group flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+        className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
         <p className='text-[0.4rem] leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
           CORRE LA VOZ,
@@ -161,9 +168,19 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         </Link>
       </div>
 
-      <CompartirModal open={compartirOpen} onOpenChange={setCompartirOpen} />
-      <ProponerRolaBandaModal open={proponerRolaOpen} onOpenChange={setProponerRolaOpen} bandName={displayName} />
-
+      <CompartirModal
+        open={compartirOpen}
+        onOpenChange={setCompartirOpen}
+      />
+      <ProponerRolaBandaModal
+        open={proponerRolaOpen}
+        onOpenChange={setProponerRolaOpen}
+        bandName={displayName}
+      />
+      <ComparteTuEventoModal
+        open={compartirEventoOpen}
+        onOpenChange={setCompartirEventoOpen}
+      />
     </div>
   )
 }
