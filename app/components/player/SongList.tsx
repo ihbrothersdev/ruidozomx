@@ -80,8 +80,8 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
 
         {/* Side A — top half */}
         <div
-          className='absolute top-[7%] right-[4%] bottom-[53%] left-[4%] z-[2] grid grid-cols-1'
-          style={{ gridTemplateRows: `repeat(${sides.A.length}, 1fr)` }}
+          className='absolute top-[9%] right-[4%] bottom-[53%] left-[4%] z-[2] grid grid-cols-1'
+          style={{ gridTemplateRows: `repeat(15, 1fr)` }}
         >
           {sides.A.map((song, i) => {
             const isActive = song.id === currentSongId
@@ -108,8 +108,8 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
 
         {/* Side B — bottom half */}
         <div
-          className='absolute top-[57%] right-[4%] bottom-[5%] left-[4%] z-[2] grid grid-cols-1'
-          style={{ gridTemplateRows: `repeat(${sides.B.length}, 1fr)` }}
+          className='absolute top-[58%] right-[4%] bottom-[4%] left-[4%] z-[2] grid grid-cols-1'
+          style={{ gridTemplateRows: `repeat(15, 1fr)` }}
         >
           {sides.B.map((song, i) => {
             const isActive = song.id === currentSongId
