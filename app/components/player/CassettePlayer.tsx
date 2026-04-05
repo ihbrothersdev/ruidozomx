@@ -85,7 +85,7 @@ export function CassettePlayer({
         {isAuthenticated ? (
           <Link
             href='/proponer-rola'
-            className='absolute -right-50 bottom-0 z-10 hidden transition-transform hover:scale-105 md:block'
+            className='absolute -right-30 bottom-0 z-10 hidden transition-transform hover:scale-105 md:block'
             style={{ width: 200 }}
           >
             {proponButton}

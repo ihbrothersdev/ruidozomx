@@ -61,14 +61,14 @@ export default function QuienesSomosPage() {
       </div>
 
       {/* Skip button */}
-      {/* {phase === 'playing' && (
+      {phase === 'playing' && (
         <button
           onClick={() => router.push('/')}
           className='font-pt-mono absolute right-4 bottom-6 z-20 rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
         >
           Saltar
         </button>
-      )} */}
+      )}
 
       {/* Video container */}
       <div
