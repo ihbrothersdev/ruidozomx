@@ -23,6 +23,7 @@ export interface ProfileViewProps {
   isLoggedIn: boolean
   acceptProposals: boolean
   bio?: string
+  alreadySent?: { proposal: boolean; sendInterest: boolean }
 }
 
 export default function ProfileView({
@@ -37,7 +38,8 @@ export default function ProfileView({
   isOwnProfile,
   isLoggedIn,
   acceptProposals,
-  bio
+  bio,
+  alreadySent
 }: ProfileViewProps) {
   const logoDecoration = (
     <div className='flex items-center gap-2'>
@@ -131,6 +133,7 @@ export default function ProfileView({
             role={role}
             acceptProposals={acceptProposals}
             displayName={displayName}
+            alreadySent={alreadySent}
           />
         </>
       }

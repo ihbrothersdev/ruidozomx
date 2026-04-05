@@ -13,11 +13,12 @@ interface ConectarModalProps {
   onOpenChange: (open: boolean) => void
   profileId?: string
   profileName: string
+  onSuccess?: () => void
 }
 
 const MOTIVOS = ['Me interesa colaborar', 'Quiero invitar/agendar', 'Me interesa tu trabajo']
 
-export default function ConectarModal({ open, onOpenChange, profileId, profileName }: ConectarModalProps) {
+export default function ConectarModal({ open, onOpenChange, profileId, profileName, onSuccess }: ConectarModalProps) {
   const [selectedMotivos, setSelectedMotivos] = useState<string[]>([])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -36,6 +37,7 @@ export default function ConectarModal({ open, onOpenChange, profileId, profileNa
     } else {
       setSent(true)
       setSelectedMotivos([])
+      onSuccess?.()
       setTimeout(() => {
         setSent(false)
         onOpenChange(false)

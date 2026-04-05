@@ -15,6 +15,7 @@ interface EnviarPropuestaModalProps {
   profileId?: string
   profileName: string
   profileRole: Role | null
+  onSuccess?: () => void
 }
 
 const ROLE_PLACEHOLDERS: Record<string, string> = {
@@ -29,7 +30,7 @@ const ROLE_PLACEHOLDERS: Record<string, string> = {
 const textareaCls =
   'max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none resize-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
 
-export default function EnviarPropuestaModal({ open, onOpenChange, profileId, profileName, profileRole }: EnviarPropuestaModalProps) {
+export default function EnviarPropuestaModal({ open, onOpenChange, profileId, profileName, profileRole, onSuccess }: EnviarPropuestaModalProps) {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -49,6 +50,7 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileId, pr
     } else {
       setSent(true)
       setMessage('')
+      onSuccess?.()
       setTimeout(() => {
         setSent(false)
         onOpenChange(false)

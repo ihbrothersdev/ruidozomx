@@ -4,7 +4,6 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import ProfileView from '../_components/ProfileView'
 import { ROLE_TABLE } from '../_components/profile-constants'
-
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -67,6 +66,20 @@ export default async function PublicPerfilPage({ params }: Props) {
 
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
 
+  // Check if current user already sent a proposal or interest to this profile
+  let alreadySent = {
+    proposal: false,
+    sendInterest: false
+  }
+  if (user) {
+    const [proposalCheck, interestCheck] = await Promise.all([
+      supabase.from('user_proposals').select('id').eq('from_profile_id', user.id).eq('to_profile_id', profile.id).limit(1).maybeSingle(),
+      supabase.from('interests').select('id').eq('from_profile_id', user.id).eq('to_profile_id', profile.id).limit(1).maybeSingle()
+    ])
+    alreadySent.proposal = !!proposalCheck.data
+    alreadySent.sendInterest = !!interestCheck.data
+  }
+
   return (
     <ProfileView
       profileId={profile.id}
@@ -81,6 +94,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       isOwnProfile={isOwnProfile}
       isLoggedIn={!!user}
       acceptProposals={acceptProposals}
+      alreadySent={alreadySent}
     />
   )
 }
