@@ -176,6 +176,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         open={proponerRolaOpen}
         onOpenChange={setProponerRolaOpen}
         bandName={displayName}
+        showVibes={false}
       />
       <ComparteTuEventoModal
         open={compartirEventoOpen}
