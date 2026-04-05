@@ -8,6 +8,7 @@ import EnviarPropuestaModal from './EnviarPropuestaModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 
 interface ActionButtonsProps {
+  profileId?: string
   isOwnProfile: boolean
   isLoggedIn: boolean
   role: Role | null
@@ -15,7 +16,7 @@ interface ActionButtonsProps {
   displayName?: string
 }
 
-export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptProposals, displayName = '' }: ActionButtonsProps) {
+export default function ActionButtons({ profileId, isOwnProfile, isLoggedIn, role, acceptProposals, displayName = '' }: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
   const [conectarOpen, setConectarOpen] = useState(false)
@@ -36,7 +37,7 @@ export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptPr
 
   return (
     <div className='space-y-3'>
-      {role !== 'fan' && (
+      {role !== 'fan' && !isOwnProfile && (
         <>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
@@ -53,6 +54,7 @@ export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptPr
           <EnviarPropuestaModal
             open={enviarPropuestaOpen}
             onOpenChange={setEnviarPropuestaOpen}
+            profileId={profileId}
             profileName={displayName}
             profileRole={role}
           />

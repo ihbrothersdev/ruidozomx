@@ -69,6 +69,7 @@ export default async function PublicPerfilPage({ params }: Props) {
 
   return (
     <ProfileView
+      profileId={profile.id}
       displayName={displayName}
       role={role}
       location={location}

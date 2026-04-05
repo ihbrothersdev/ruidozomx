@@ -6,10 +6,13 @@ import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
 import type { Role } from '@/lib/types'
+import { sileo } from 'sileo'
+import { sendProposal } from '../actions'
 
 interface EnviarPropuestaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  profileId?: string
   profileName: string
   profileRole: Role | null
 }
@@ -26,9 +29,32 @@ const ROLE_PLACEHOLDERS: Record<string, string> = {
 const textareaCls =
   'max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none resize-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
 
-export default function EnviarPropuestaModal({ open, onOpenChange, profileName, profileRole }: EnviarPropuestaModalProps) {
+export default function EnviarPropuestaModal({ open, onOpenChange, profileId, profileName, profileRole }: EnviarPropuestaModalProps) {
   const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
   const maxChars = 900
+
+  async function handleSubmit() {
+    if (!message.trim()) return
+    if (!profileId) {
+      sileo.error({ title: 'Error', description: 'No se pudo identificar el perfil destino.', position: 'top-center', duration: 4000 })
+      return
+    }
+    setSending(true)
+    const result = await sendProposal({ toProfileId: profileId, message })
+    setSending(false)
+    if (result.error) {
+      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+    } else {
+      setSent(true)
+      setMessage('')
+      setTimeout(() => {
+        setSent(false)
+        onOpenChange(false)
+      }, 2500)
+    }
+  }
 
   const placeholder = profileRole ? ROLE_PLACEHOLDERS[profileRole] ?? 'Escribe tu propuesta...' : 'Escribe tu propuesta...'
 
@@ -41,6 +67,18 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
         <DialogTitle className='sr-only'>Enviar propuesta</DialogTitle>
 
         <div className='relative'>
+          {sent ? (
+            <div className='flex items-center justify-center p-6'>
+              <Image
+                src='/assets/success-propuesta.png'
+                alt='Propuesta enviada'
+                width={500}
+                height={400}
+                className='h-auto w-full max-w-md'
+                unoptimized
+              />
+            </div>
+          ) : (
           <div className='relative min-h-full'>
             <Image
               src='/assets/membrete-background.png'
@@ -104,8 +142,12 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
 
               {/* Action buttons */}
               <div className='mt-5 flex justify-end gap-3'>
-                <button className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'>
-                  Enviar
+                <button
+                  onClick={handleSubmit}
+                  disabled={sending || !message.trim()}
+                  className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+                >
+                  {sending ? 'Enviando...' : 'Enviar'}
                 </button>
                 <button
                   onClick={() => onOpenChange(false)}
@@ -116,6 +158,7 @@ export default function EnviarPropuestaModal({ open, onOpenChange, profileName, 
               </div>
             </div>
           </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

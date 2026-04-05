@@ -11,6 +11,7 @@ import ReviewSection from './ReviewSection'
 import UltimaActividad from './UltimaActividad'
 
 export interface ProfileViewProps {
+  profileId?: string
   displayName: string
   role: Role | null
   location: string
@@ -25,6 +26,7 @@ export interface ProfileViewProps {
 }
 
 export default function ProfileView({
+  profileId,
   displayName,
   role,
   location,
@@ -123,6 +125,7 @@ export default function ProfileView({
 
           {/* Action buttons */}
           <ActionButtons
+            profileId={profileId}
             isOwnProfile={isOwnProfile}
             isLoggedIn={isLoggedIn}
             role={role}
