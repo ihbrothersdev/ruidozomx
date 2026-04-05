@@ -56,10 +56,6 @@ export default async function ComunidadPage() {
         <Header user={user} photoUrl={photoUrl} />
 
         <div className='mx-auto max-w-7xl px-4 pt-4 pb-12 md:px-8'>
-          <h1 className='font-baby-doll mb-6 text-center text-3xl font-bold tracking-wider text-white uppercase md:text-4xl'>
-            Explorar Comunidad
-          </h1>
-
           <CommunityGrid profiles={profiles} />
         </div>
       </div>

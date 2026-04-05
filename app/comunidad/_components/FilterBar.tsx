@@ -1,18 +1,21 @@
 'use client'
 
+import Image from 'next/image'
 import { ROLE_FILTER_LABELS, type RoleFilter } from '../types'
 
 interface FilterBarProps {
   activeFilter: RoleFilter
   onFilterChange: (filter: RoleFilter) => void
+  searchQuery: string
+  onSearchChange: (query: string) => void
 }
 
 const FILTERS: RoleFilter[] = ['todos', 'banda', 'venue', 'promotor', 'manager', 'agente', 'proveedor', 'fan']
 
-export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
+export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchChange }: FilterBarProps) {
   return (
     <div className='flex flex-col gap-4'>
-      <div className='flex flex-wrap justify-center gap-2'>
+      {/* <div className='flex flex-wrap justify-center gap-2'>
         {FILTERS.map(filter => (
           <button
             key={filter}
@@ -26,19 +29,27 @@ export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
             {ROLE_FILTER_LABELS[filter]}
           </button>
         ))}
-      </div>
+      </div> */}
 
-      {/* TODO: Search bar — descomentar cuando se implemente búsqueda */}
-      {/* <div className='mx-auto flex w-full max-w-lg items-center gap-2'>
+      <div className='mx-auto flex w-full max-w-lg items-center'>
         <div className='relative flex-1'>
-          <span className='absolute top-1/2 left-3 -translate-y-1/2 text-lg text-black/60'>🔍</span>
+          <Image
+            src='/assets/header/buscador.png'
+            alt=''
+            width={600}
+            height={100}
+            className='h-auto w-full'
+            unoptimized
+          />
           <input
             type='text'
-            placeholder='Buscar por nombre, ciudad, género, rol...'
-            className='font-pt-mono w-full border-2 border-black/20 bg-[#f5f0e0] py-2 pr-4 pl-10 text-sm text-black placeholder:text-black/40 focus:border-black/40 focus:outline-none'
+            value={searchQuery}
+            onChange={e => onSearchChange(e.target.value)}
+            placeholder='Nombre, ciudad, género, rol...'
+            className='font-pt-mono absolute inset-0 w-full bg-transparent pr-6 pl-18 text-lg text-black placeholder:text-black/40 focus:outline-none'
           />
         </div>
-      </div> */}
+      </div>
     </div>
   )
 }

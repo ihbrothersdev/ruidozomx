@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
+import { BuscadorButton } from './BuscadorButton'
 import { ProfileDropdown } from './ProfileDropdown'
 
 interface HeaderProps {
@@ -12,8 +13,8 @@ export function Header({ user, photoUrl }: HeaderProps) {
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Mi cuenta'
 
   return (
-    <header className='relative z-30 flex items-center justify-between px-4 py-3 md:px-8'>
-      {/* Logo */}
+    <header className='relative z-30 flex flex-col items-center gap-2 px-4 py-3 md:flex-row md:justify-between md:px-8'>
+      {/* Logo — centered on mobile, left on desktop */}
       <Link href='/'>
         <Image
           src='/assets/header/logo.png'
@@ -34,7 +35,7 @@ export function Header({ user, photoUrl }: HeaderProps) {
             alt='¿Quiénes somos?'
             width={1383}
             height={455}
-            className='h-12 w-auto md:h-18'
+            className='h-10 w-auto md:h-18'
             unoptimized
           />
         </Link>
@@ -51,11 +52,13 @@ export function Header({ user, photoUrl }: HeaderProps) {
               alt='Regístrate / Entra'
               width={1383}
               height={455}
-              className='h-12 w-auto md:h-18'
+              className='h-10 w-auto md:h-18'
               unoptimized
             />
           </Link>
         )}
+
+        <BuscadorButton />
       </div>
     </header>
   )
