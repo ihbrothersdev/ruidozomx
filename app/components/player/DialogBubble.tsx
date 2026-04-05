@@ -12,8 +12,7 @@ export function DialogBubble({ isAuthenticated }: DialogBubbleProps) {
   return (
     <Link
       href='/registro/elige-rol'
-      className='absolute top-60 -right-50 z-10 hidden transition-transform hover:scale-105 md:block'
-      style={{ width: 240 }}
+      className='absolute top-44 -right-3 z-10 w-[120px] transition-transform hover:scale-105 md:top-60 md:-right-50 md:w-[240px]'
     >
       <Image
         src='/assets/body1/no-va-a-sonar.png'
