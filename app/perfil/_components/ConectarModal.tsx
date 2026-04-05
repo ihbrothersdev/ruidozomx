@@ -5,17 +5,43 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Label } from '@/app/components/ui/label'
 import { Checkbox } from '@/app/components/ui/checkbox'
+import { sileo } from 'sileo'
+import { sendInterest } from '../actions'
 
 interface ConectarModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  profileId?: string
   profileName: string
 }
 
 const MOTIVOS = ['Me interesa colaborar', 'Quiero invitar/agendar', 'Me interesa tu trabajo']
 
-export default function ConectarModal({ open, onOpenChange, profileName }: ConectarModalProps) {
-  const [selectedMotivo, setSelectedMotivo] = useState<string | null>(null)
+export default function ConectarModal({ open, onOpenChange, profileId, profileName }: ConectarModalProps) {
+  const [selectedMotivos, setSelectedMotivos] = useState<string[]>([])
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  async function handleSubmit() {
+    if (selectedMotivos.length === 0) return
+    if (!profileId) {
+      sileo.error({ title: 'Error', description: 'No se pudo identificar el perfil destino.', position: 'top-center', duration: 4000 })
+      return
+    }
+    setSending(true)
+    const result = await sendInterest({ toProfileId: profileId, motivo: selectedMotivos.join(' / ') })
+    setSending(false)
+    if (result.error) {
+      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+    } else {
+      setSent(true)
+      setSelectedMotivos([])
+      setTimeout(() => {
+        setSent(false)
+        onOpenChange(false)
+      }, 2500)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -26,6 +52,18 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
         <DialogTitle className='sr-only'>Conectar</DialogTitle>
 
         <div className='relative'>
+          {sent ? (
+            <div className='flex items-center justify-center p-6'>
+              <Image
+                src='/assets/success-conectar.png'
+                alt='Conexión enviada'
+                width={500}
+                height={400}
+                className='h-auto w-full max-w-md'
+                unoptimized
+              />
+            </div>
+          ) : (
           <div className='relative min-h-full'>
             <Image
               src='/assets/membrete-background.png'
@@ -72,8 +110,12 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
                     <div key={motivo} className='flex items-center gap-2'>
                       <Checkbox
                         id={`motivo-${motivo}`}
-                        checked={selectedMotivo === motivo}
-                        onCheckedChange={() => setSelectedMotivo(prev => (prev === motivo ? null : motivo))}
+                        checked={selectedMotivos.includes(motivo)}
+                        onCheckedChange={(checked) => {
+                          setSelectedMotivos(prev =>
+                            checked ? [...prev, motivo] : prev.filter(m => m !== motivo)
+                          )
+                        }}
                         className='h-4 w-4 rounded-none border-1 border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
                       />
                       <Label
@@ -90,10 +132,11 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
               {/* Action buttons */}
               <div className='mt-6 flex justify-end gap-3'>
                 <button
-                  disabled={!selectedMotivo}
+                  onClick={handleSubmit}
+                  disabled={selectedMotivos.length === 0 || sending}
                   className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                 >
-                  Enviar
+                  {sending ? 'Enviando...' : 'Enviar'}
                 </button>
                 <button
                   onClick={() => onOpenChange(false)}
@@ -104,6 +147,7 @@ export default function ConectarModal({ open, onOpenChange, profileName }: Conec
               </div>
             </div>
           </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -42,3 +42,44 @@ export async function sendProposal(input: SendProposalInput) {
 
   return { success: true }
 }
+
+interface SendInterestInput {
+  toProfileId: string
+  motivo: string
+}
+
+export async function sendInterest(input: SendInterestInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  if (user.id === input.toProfileId) {
+    return { error: 'No puedes conectar contigo mismo.' }
+  }
+
+  if (!input.motivo.trim()) {
+    return { error: 'Selecciona un motivo.' }
+  }
+
+  const { error } = await supabase.from('interests').insert({
+    from_profile_id: user.id,
+    to_profile_id: input.toProfileId,
+    message: input.motivo.trim()
+  })
+
+  if (error) {
+    if (error.code === '23505') {
+      return { error: 'Ya enviaste una solicitud de conexión a este perfil.' }
+    }
+    console.error('Error saving interest:', error)
+    return { error: 'No se pudo enviar la conexión. Intenta de nuevo.' }
+  }
+
+  return { success: true }
+}

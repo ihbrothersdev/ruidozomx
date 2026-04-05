@@ -61,6 +61,7 @@ export default function ActionButtons({ profileId, isOwnProfile, isLoggedIn, rol
           <ConectarModal
             open={conectarOpen}
             onOpenChange={setConectarOpen}
+            profileId={profileId}
             profileName={displayName}
           />
         </>
