@@ -107,7 +107,7 @@ export function PhotoUpload() {
             </div>
           </div>
           <p className='font-pt-mono mt-1 text-center text-[10px] font-bold tracking-wider text-black uppercase'>
-            {preview ? 'Cambiar foto' : 'Subir foto'}
+            {preview ? 'Cambiar foto' : 'Foto de perfil'}
           </p>
         </Label>
       </div>

@@ -119,19 +119,19 @@ export function CassettePlayer({
       </div>
 
       {/* Mobile: Propón una Rola button */}
-      <div className='mt-3 flex justify-center md:hidden'>
+      <div className='flex justify-center pt-8 pb-4 md:hidden'>
         {isAuthenticated ? (
           <Link
             href='/proponer-rola'
             className='transition-transform hover:scale-105'
           >
-            <div className='w-40'>{proponButton}</div>
+            <div className='w-56'>{proponButton}</div>
           </Link>
         ) : (
           <button
             type='button'
             onClick={handleProponClick}
-            className='w-40 cursor-pointer transition-transform hover:scale-105'
+            className='w-56 cursor-pointer transition-transform hover:scale-105'
           >
             {proponButton}
           </button>

@@ -1,6 +1,7 @@
 import type { Role } from '@/lib/types'
 
 export const ROLE_ETIQUETA: Partial<Record<Role, string>> = {
+  banda: '/assets/registro/formulario/etiqueta-banda.png',
   fan: '/assets/registro/formulario/etiqueta-fan.png',
   manager: '/assets/registro/formulario/etiqueta-manager.png',
   agente: '/assets/registro/formulario/etiqueta-manager.png',
