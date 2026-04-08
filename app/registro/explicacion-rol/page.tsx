@@ -37,7 +37,7 @@ function ExplicacionRolContent() {
 
   return (
     <div className='relative min-h-screen w-screen overflow-x-hidden lg:h-screen lg:overflow-hidden'>
-      <div className='absolute inset-0 z-0'>
+      <div className='fixed inset-0 z-0 lg:absolute'>
         <Image
           src={`${S}/fondo.png`}
           alt=''
@@ -48,44 +48,59 @@ function ExplicacionRolContent() {
         />
       </div>
 
-      <div className='relative z-10 flex h-[100dvh] flex-col justify-between px-5 pt-2 pb-4 lg:hidden'>
-        <div className='flex flex-col items-center gap-2'>
+      <div className='relative z-10 flex h-[100dvh] flex-col px-[50px] pt-6 pb-4 lg:hidden'>
+        {/* Rayo top-right */}
+        <div className='flex justify-end'>
           <img
-            src={data.illustration}
-            alt={data.title}
-            className='h-[38vh] w-auto object-contain'
+            src={`${S}/rayo.png`}
+            alt=''
+            className='h-10 w-auto'
           />
-          <div className='flex items-center gap-2'>
-            <img
-              src={`${S}/rayo.png`}
-              alt=''
-              className='h-10 w-auto shrink-0'
-            />
-            <h1 className='font-baby-doll text-[2.2rem] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
-              {data.title}
-            </h1>
-          </div>
         </div>
 
-        <div className='flex flex-col gap-3'>
-          <p className='font-pt-mono text-[0.85rem] leading-snug font-bold text-black/80 uppercase'>{data.subtitle}</p>
+        {/* Title centered */}
+        <h1 className='font-baby-doll text-center text-[clamp(2.2rem,10vw,80px)] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
+          {data.title}
+        </h1>
+
+        {/* Subtitle */}
+        <p className='font-pt-mono mt-1 text-center text-[clamp(0.7rem,3vw,25px)] leading-snug font-bold whitespace-pre-line text-black/80 uppercase'>
+          {data.subtitle}
+        </p>
+
+        {/* Section header + bullets */}
+        <div className='mt-2'>
           {data.sectionHeader && (
-            <h2 className='font-pt-mono text-lg font-bold text-black uppercase'>{data.sectionHeader}</h2>
+            <h2 className='font-pt-mono text-[clamp(1rem,4.5vw,36px)] font-bold text-black uppercase'>
+              {data.sectionHeader}
+            </h2>
           )}
-          <ul className='flex flex-col gap-4'>
+          <ul className='mt-1 flex flex-col gap-0.5'>
             {data.bullets.map((bullet, i) => (
               <li
                 key={i}
                 className='flex items-start gap-2'
               >
-                <span className='mt-[0.2em] shrink-0 text-base leading-none text-black'>•</span>
-                <span className='font-pt-mono text-[0.95rem] leading-relaxed text-black/80'>{bullet}</span>
+                <span className='mt-[0.2em] shrink-0 text-[clamp(0.7rem,3vw,25px)] leading-none text-black'>•</span>
+                <span className='font-pt-mono text-[clamp(0.7rem,3vw,25px)] leading-snug text-black/80'>
+                  {bullet}
+                </span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className='flex w-full items-center justify-center gap-3'>
+        {/* Illustration */}
+        <div className='flex min-h-0 flex-1 items-center justify-center'>
+          <img
+            src={data.illustration}
+            alt={data.title}
+            className='h-full w-auto object-cover'
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className='flex w-full items-center justify-center gap-8'>
           <Link
             href={backHref}
             className='relative shrink-0 transition-transform hover:scale-105 active:scale-95'
@@ -93,16 +108,16 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-regresar.png`}
               alt=''
-              className='h-12 w-[145px]'
+              className='h-[68px] w-[135px]'
             />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-[0.8rem] font-bold tracking-[0.15em] text-white uppercase'>
+            <span className='font-pt-mono absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[0.1em] text-white uppercase'>
               Regresar
             </span>
           </Link>
           <img
             src={`${S}/mano.png`}
             alt=''
-            className='h-auto w-11 shrink-0'
+            className='h-[72px] w-[150px] shrink-0 object-contain'
           />
           <Link
             href={formHref}
@@ -111,10 +126,10 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-crear-perfil.png`}
               alt=''
-              className='h-12 w-[145px]'
+              className='h-[68px] w-[135px]'
             />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-[0.8rem] font-bold tracking-[0.15em] text-white uppercase'>
-              Crear mi perfil
+            <span className='font-pt-mono absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[0.1em] text-white uppercase'>
+              Crear perfil
             </span>
           </Link>
         </div>
