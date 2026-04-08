@@ -48,7 +48,7 @@ export default function ProfileView({
         alt=''
         width={80}
         height={80}
-        className='h-17 w-auto'
+        className='h-10 w-auto sm:h-17'
         unoptimized
       />
       <Link href='/'>
@@ -57,7 +57,7 @@ export default function ProfileView({
           alt='Ruidozo'
           width={380}
           height={183}
-          className='h-40 w-auto'
+          className='h-24 w-auto sm:h-40'
           unoptimized
         />
       </Link>

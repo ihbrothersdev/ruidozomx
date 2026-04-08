@@ -28,14 +28,14 @@ export function Header({ user, photoUrl }: HeaderProps) {
       </Link>
 
       {/* Navigation buttons */}
-      <div className='flex items-center gap-3'>
+      <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
         <Link href='/quienes-somos'>
           <Image
             src='/assets/header/quienes-somos.png'
             alt='¿Quiénes somos?'
             width={1383}
             height={455}
-            className='h-10 w-auto md:h-18'
+            className='h-9 w-auto sm:h-10 md:h-18'
             unoptimized
           />
         </Link>
@@ -52,7 +52,7 @@ export function Header({ user, photoUrl }: HeaderProps) {
               alt='Regístrate / Entra'
               width={1383}
               height={455}
-              className='h-10 w-auto md:h-18'
+              className='h-9 w-auto sm:h-10 md:h-18'
               unoptimized
             />
           </Link>
