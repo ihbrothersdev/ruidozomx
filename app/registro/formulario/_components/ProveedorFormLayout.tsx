@@ -22,6 +22,7 @@ export function ProveedorFormLayout() {
   }
 
   return (
+    <>
     <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
       {/* ── Left column ── */}
       <div className='w-full min-w-0 space-y-3 lg:w-1/2'>
@@ -122,7 +123,7 @@ export function ProveedorFormLayout() {
       </div>
 
       {/* ── Right column ── */}
-      <div className='flex w-full flex-col gap-4 lg:w-1/2'>
+      <div className='order-first flex w-full flex-col gap-4 lg:order-none lg:w-1/2'>
         <PhotoUpload />
         <div className='space-y-0.5'>
           <Label
@@ -154,23 +155,24 @@ export function ProveedorFormLayout() {
           label='Contacto'
           name='contact'
         />
-        <div className='flex flex-1 items-end justify-end'>
-          <button
-            type='submit'
-            className='cursor-pointer'
-          >
-            <Image
-              src='/assets/registro/formulario/shared/boton-siguiente.png'
-              alt='Siguiente'
-              width={220}
-              height={65}
-              className='w-36 transition-opacity hover:opacity-80 sm:w-44'
-              style={{ height: 'auto' }}
-              unoptimized
-            />
-          </button>
-        </div>
       </div>
     </div>
+    <div className='flex justify-end pt-4'>
+      <button
+        type='submit'
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-siguiente.png'
+          alt='Siguiente'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </button>
+    </div>
+    </>
   )
 }
