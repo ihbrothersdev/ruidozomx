@@ -24,13 +24,14 @@ function TicketContent() {
   const displayName = searchParams.get('name') ?? ''
 
   useEffect(() => {
+    if (!displayName) return
     sileo.info({
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
       position: 'top-center',
       duration: 8000
     })
-  }, [])
+  }, [displayName])
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
