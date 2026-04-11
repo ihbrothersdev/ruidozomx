@@ -80,7 +80,7 @@ function FormularioContent() {
             src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
             alt=''
             fill
-            className='object-cover sm:hidden'
+            className='object-cover lg:hidden'
             unoptimized
           />
           {/* Desktop: folder with tab cut */}
@@ -88,20 +88,19 @@ function FormularioContent() {
             src='/assets/registro/formulario/shared/folder-grey-back.png'
             alt=''
             fill
-            className='hidden object-fill sm:block'
+            className='hidden object-fill lg:block'
             unoptimized
           />
-          <div className='relative z-10 px-5 pt-6 pb-5 sm:p-5 lg:p-8'>
+          <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-4 lg:pb-12'>
             {/* Role etiqueta */}
-            <div className='relative mb-4 flex justify-center sm:justify-start'>
+            <div className='relative mb-4 flex justify-center lg:justify-start'>
               {/* Rayo - mobile only, right side */}
               <Image
                 src='/assets/registro/formulario/shared/rayo.png'
                 alt=''
                 width={60}
                 height={80}
-                className='absolute right-0 top-0 sm:hidden'
-                style={{ width: 102, height: 53 }}
+                className='absolute right-0 top-0 h-8 w-auto lg:hidden'
                 unoptimized
               />
               {etiquetaSrc && (
