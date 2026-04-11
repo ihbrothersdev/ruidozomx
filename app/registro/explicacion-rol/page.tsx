@@ -59,7 +59,7 @@ function ExplicacionRolContent() {
         </div>
 
         {/* Title centered */}
-        <h1 className='font-baby-doll text-center text-[clamp(2.2rem,10vw,80px)] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
+        <h1 className='font-pt-mono text-center text-[clamp(2.2rem,10vw,80px)] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
           {data.title}
         </h1>
 
@@ -144,7 +144,7 @@ function ExplicacionRolContent() {
                 alt=''
                 className='h-[clamp(3.5rem,7vw,6.5rem)] w-auto shrink-0'
               />
-              <h1 className='font-baby-doll text-[clamp(2.5rem,5.5vw,5rem)] leading-[0.9] font-black whitespace-pre-line text-black uppercase'>
+              <h1 className='font-pt-mono text-[clamp(2.5rem,5.5vw,5rem)] leading-[0.9] font-black whitespace-pre-line text-black uppercase'>
                 {data.title}
               </h1>
             </div>
