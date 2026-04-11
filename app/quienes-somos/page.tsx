@@ -15,6 +15,14 @@ export default function QuienesSomosPage() {
   const [phase, setPhase] = useState<Phase>('waiting')
   const [needsTap, setNeedsTap] = useState(false)
 
+  // If no user interaction triggered the video within 2s, skip to manifesto
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (phase === 'waiting') setPhase('manifesto')
+    }, 2000)
+    return () => clearTimeout(timeout)
+  }, [phase])
+
   const getActiveVideo = useCallback(() => {
     return desktopRef.current?.offsetParent !== null ? desktopRef.current : mobileRef.current
   }, [])
@@ -35,8 +43,9 @@ export default function QuienesSomosPage() {
         setTimeout(() => setPhase('video'), 300)
       })
       .catch(() => {
+        // Autoplay blocked (direct navigation / F5) → skip to manifesto
         startedRef.current = false
-        setNeedsTap(true)
+        setPhase('manifesto')
       })
   }, [getActiveVideo])
 
