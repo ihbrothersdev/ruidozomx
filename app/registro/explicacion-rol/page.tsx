@@ -108,7 +108,7 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-regresar.png`}
               alt='Regresar'
-              className='h-[44px] w-auto object-contain'
+              className='h-[72px] w-auto object-contain'
             />
           </Link>
           <img
@@ -123,7 +123,7 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-crear-perfil.png`}
               alt='Crear perfil'
-              className='h-[44px] w-auto object-contain'
+              className='h-[72px] w-auto object-contain'
             />
           </Link>
         </div>
@@ -184,7 +184,7 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-regresar.png`}
               alt='Regresar'
-              className='h-[clamp(2.8rem,4.5vw,4rem)] w-auto object-contain'
+              className='h-[clamp(3.5rem,5.5vw,5rem)] w-auto object-contain'
             />
           </Link>
 
@@ -201,7 +201,7 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-crear-perfil.png`}
               alt='Crear perfil'
-              className='h-[clamp(2.8rem,4.5vw,4rem)] w-auto object-contain'
+              className='h-[clamp(3.5rem,5.5vw,5rem)] w-auto object-contain'
             />
           </Link>
         </div>
