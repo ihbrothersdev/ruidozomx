@@ -43,7 +43,10 @@ export function CascadingSelect({
         <SelectTrigger className={selectTriggerCls}>
           <SelectValue placeholder={placeholder ?? 'Selecciona...'} />
         </SelectTrigger>
-        <SelectContent className='max-h-56 overflow-y-auto'>
+        <SelectContent
+          className='overflow-y-auto'
+          style={{ maxHeight: '192px' }}
+        >
           {options.map(opt => (
             <SelectItem
               key={opt}
