@@ -15,13 +15,7 @@ export default function QuienesSomosPage() {
   const [phase, setPhase] = useState<Phase>('waiting')
   const [needsTap, setNeedsTap] = useState(false)
 
-  // If no user interaction triggered the video within 2s, skip to manifesto
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (phase === 'waiting') setPhase('manifesto')
-    }, 2000)
-    return () => clearTimeout(timeout)
-  }, [phase])
+  const handleVideoError = useCallback(() => setPhase('manifesto'), [])
 
   const getActiveVideo = useCallback(() => {
     return desktopRef.current?.offsetParent !== null ? desktopRef.current : mobileRef.current
@@ -155,6 +149,7 @@ export default function QuienesSomosPage() {
               preload='auto'
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
+              onError={handleVideoError}
             >
               <source src='/assets/quienes-somos/identity-desktop.mp4' type='video/mp4' />
             </video>
@@ -165,6 +160,7 @@ export default function QuienesSomosPage() {
               preload='auto'
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
+              onError={handleVideoError}
             >
               <source src='/assets/quienes-somos/identity-mobile.mp4' type='video/mp4' />
             </video>
