@@ -424,6 +424,34 @@ const LOCATION_DATA: Partial<Record<string, Record<string, string[]>>> = {
   Venezuela: VENEZUELA,
 }
 
+// ---------------------------------------------------------------------------
+// Flag emojis
+// ---------------------------------------------------------------------------
+export const COUNTRY_FLAGS: Record<string, string> = {
+  México: '🇲🇽',
+  Argentina: '🇦🇷',
+  Bolivia: '🇧🇴',
+  Chile: '🇨🇱',
+  Colombia: '🇨🇴',
+  'Costa Rica': '🇨🇷',
+  Cuba: '🇨🇺',
+  Ecuador: '🇪🇨',
+  'El Salvador': '🇸🇻',
+  España: '🇪🇸',
+  'Estados Unidos': '🇺🇸',
+  Guatemala: '🇬🇹',
+  Honduras: '🇭🇳',
+  Nicaragua: '🇳🇮',
+  Panamá: '🇵🇦',
+  Paraguay: '🇵🇾',
+  Perú: '🇵🇪',
+  'Puerto Rico': '🇵🇷',
+  'República Dominicana': '🇩🇴',
+  Uruguay: '🇺🇾',
+  Venezuela: '🇻🇪',
+  Otro: '🌍',
+}
+
 /** Keep backward compat */
 export const MEXICO_STATES = MEXICO
 

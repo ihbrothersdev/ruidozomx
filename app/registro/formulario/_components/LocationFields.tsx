@@ -1,7 +1,7 @@
 'use client'
 
 import { Label } from '@/app/components/ui/label'
-import { COUNTRIES, getCities, getStates } from '@/lib/mexico-locations'
+import { COUNTRIES, COUNTRY_FLAGS, getCities, getStates } from '@/lib/mexico-locations'
 import { useState } from 'react'
 import { CascadingSelect } from './CascadingSelect'
 import { inputCls, labelCls } from './form-styles'
@@ -29,6 +29,7 @@ export function LocationFields() {
           setCity('')
         }}
         placeholder='Selecciona un país'
+        getLabel={v => `${COUNTRY_FLAGS[v] ?? ''} ${v}`}
       />
 
       {isOther ? (

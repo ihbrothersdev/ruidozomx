@@ -12,6 +12,7 @@ export interface CascadingSelectProps {
   value: string
   onChange: (v: string) => void
   placeholder?: string
+  getLabel?: (value: string) => string
 }
 
 export function CascadingSelect({
@@ -21,7 +22,8 @@ export function CascadingSelect({
   options,
   value,
   onChange,
-  placeholder
+  placeholder,
+  getLabel,
 }: CascadingSelectProps) {
   return (
     <div className='min-w-0 space-y-0.5'>
@@ -41,13 +43,13 @@ export function CascadingSelect({
         <SelectTrigger className={selectTriggerCls}>
           <SelectValue placeholder={placeholder ?? 'Selecciona...'} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className='max-h-56 overflow-y-auto'>
           {options.map(opt => (
             <SelectItem
               key={opt}
               value={opt}
             >
-              {opt}
+              {getLabel ? getLabel(opt) : opt}
             </SelectItem>
           ))}
         </SelectContent>
