@@ -30,7 +30,7 @@ function GlitchBar() {
 const hl = (size: string) =>
   `font-baby-doll font-black uppercase leading-[0.9] tracking-tight ${size}`
 
-const body = 'font-pt-mono text-sm sm:text-base leading-relaxed'
+const body = 'font-pt-mono text-lg sm:text-xl leading-relaxed'
 
 const GT = () => <span style={{ color: C.green }}>&gt; </span>
 
@@ -204,14 +204,14 @@ export function Manifesto({ onExit }: ManifestoProps) {
         <div className='h-14 sm:h-20' />
 
         <p
-          className='font-pt-mono text-base font-bold sm:text-xl'
+          className='font-pt-mono text-lg font-bold sm:text-xl'
           style={{ color: C.white }}
         >
           <GT />
           Por eso existe el cassette semanal.
         </p>
         <p
-          className='font-pt-mono text-base font-bold sm:text-xl'
+          className='font-pt-mono text-lg font-bold sm:text-xl'
           style={{ color: C.red }}
         >
           <GT />
@@ -248,7 +248,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </h2>
 
         <p
-          className='font-pt-mono text-base font-bold sm:text-lg'
+          className='font-pt-mono text-lg font-bold sm:text-xl'
           style={{ color: C.white }}
         >
           <GT />
@@ -283,7 +283,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
 
         <div className='mt-4'>
           <p
-            className='font-pt-mono text-base sm:text-lg'
+            className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
             <GT />
@@ -294,7 +294,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
 
         <div className='pl-4'>
           <p
-            className='font-pt-mono text-base sm:text-lg'
+            className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
             <GT />Que circule.
@@ -302,7 +302,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </div>
         <div className='pl-8'>
           <p
-            className='font-pt-mono text-base sm:text-lg'
+            className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
             <GT />Que encuentre.
@@ -310,7 +310,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </div>
         <div className='pl-12'>
           <p
-            className='font-pt-mono text-base sm:text-lg'
+            className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
             <GT />Que suene.
