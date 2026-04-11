@@ -29,7 +29,12 @@ export function LocationFields() {
           setCity('')
         }}
         placeholder='Selecciona un país'
-        getLabel={v => `${COUNTRY_FLAGS[v] ?? ''} ${v}`}
+        getLabel={v => (
+          <span className='flex items-center gap-2'>
+            <span>{COUNTRY_FLAGS[v] ?? ''}</span>
+            <span>{v}</span>
+          </span>
+        )}
       />
 
       {isOther ? (

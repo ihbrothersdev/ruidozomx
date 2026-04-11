@@ -12,7 +12,7 @@ export interface CascadingSelectProps {
   value: string
   onChange: (v: string) => void
   placeholder?: string
-  getLabel?: (value: string) => string
+  getLabel?: (value: string) => React.ReactNode
 }
 
 export function CascadingSelect({
