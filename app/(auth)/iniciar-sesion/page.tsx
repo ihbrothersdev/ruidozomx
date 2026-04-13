@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { login } from '../actions'
 import { ErrorToast } from './ErrorToast'
+import { ForgotPasswordModal } from './ForgotPasswordModal'
 
 const inputCls =
   'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold focus:border-red-700 focus:outline-none'
@@ -158,16 +159,21 @@ export default async function LoginPage() {
             </form>
           </div>
 
-          <p className='font-pt-mono mt-8 text-center text-[20px] font-bold tracking-wider uppercase'>
-            <span className='text-black'>¿No tienes cuenta? </span>
-            <Link
-              href='/registro/elige-rol'
-              className='underline underline-offset-4 hover:opacity-80'
-              style={{ color: '#C7352E' }}
-            >
-              Regístrate
-            </Link>
-          </p>
+          <div className='font-pt-mono mt-8 text-center text-[20px] font-bold tracking-wider uppercase'>
+            <p>
+              <span className='text-black'>¿No tienes cuenta? </span>
+              <Link
+                href='/registro/elige-rol'
+                className='underline underline-offset-4 hover:opacity-80'
+                style={{ color: '#C7352E' }}
+              >
+                Regístrate
+              </Link>
+            </p>
+            <p className='mt-2'>
+              <ForgotPasswordModal />
+            </p>
+          </div>
 
           <Link
             href='/'
