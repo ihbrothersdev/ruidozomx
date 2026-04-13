@@ -31,7 +31,7 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 hidden lg:block'>
+        <div className='absolute top-0 left-2 z-0 hidden xl:block'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
@@ -40,7 +40,7 @@ export default async function Home() {
             className='w-full'
             unoptimized
           />
-          <div className='absolute top-205 left-55 z-0 hidden lg:block'>
+          <div className='absolute top-205 left-55 z-0 hidden xl:block'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
@@ -62,13 +62,13 @@ export default async function Home() {
           isAuthenticated={!!user}
         />
 
-        {/* Explorar Comunidad - centered on mobile, left side on desktop */}
-        <div className='flex justify-center lg:absolute lg:top-330 lg:left-5 lg:z-0 lg:block'>
+        {/* Explorar Comunidad - centered on mobile/tablet, left side on wide desktop */}
+        <div className='flex justify-center xl:absolute xl:top-330 xl:left-5 xl:z-0 xl:block'>
           <ExplorarComunidad />
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-250 -right-15 z-0 hidden lg:block'>
+        <div className='absolute top-250 -right-15 z-0 hidden xl:block'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''

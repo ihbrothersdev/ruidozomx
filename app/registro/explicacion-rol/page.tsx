@@ -59,7 +59,7 @@ function ExplicacionRolContent() {
         </div>
 
         {/* Title centered */}
-        <h1 className='font-baby-doll text-center text-[clamp(2.2rem,10vw,80px)] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
+        <h1 className='font-pt-mono text-center text-[clamp(2.2rem,10vw,80px)] leading-[0.85] font-black whitespace-pre-line text-black uppercase'>
           {data.title}
         </h1>
 
@@ -100,37 +100,31 @@ function ExplicacionRolContent() {
         </div>
 
         {/* Buttons */}
-        <div className='flex w-full items-center justify-center gap-8'>
+        <div className='flex w-full shrink-0 items-center justify-center gap-3 py-2'>
           <Link
             href={backHref}
-            className='relative shrink-0 transition-transform hover:scale-105 active:scale-95'
+            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
           >
             <img
               src={`${S}/boton-regresar.png`}
-              alt=''
-              className='h-[68px] w-[135px]'
+              alt='Regresar'
+              className='h-[72px] w-auto object-contain'
             />
-            <span className='font-pt-mono absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[0.1em] text-white uppercase'>
-              Regresar
-            </span>
           </Link>
           <img
             src={`${S}/mano.png`}
             alt=''
-            className='h-[72px] w-[150px] shrink-0 object-contain'
+            className='h-[44px] w-auto shrink-0 object-contain'
           />
           <Link
             href={formHref}
-            className='relative shrink-0 transition-transform hover:scale-105 active:scale-95'
+            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
           >
             <img
               src={`${S}/boton-crear-perfil.png`}
-              alt=''
-              className='h-[68px] w-[135px]'
+              alt='Crear perfil'
+              className='h-[72px] w-auto object-contain'
             />
-            <span className='font-pt-mono absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[0.1em] text-white uppercase'>
-              Crear perfil
-            </span>
           </Link>
         </div>
       </div>
@@ -150,7 +144,7 @@ function ExplicacionRolContent() {
                 alt=''
                 className='h-[clamp(3.5rem,7vw,6.5rem)] w-auto shrink-0'
               />
-              <h1 className='font-baby-doll text-[clamp(2.5rem,5.5vw,5rem)] leading-[0.9] font-black whitespace-pre-line text-black uppercase'>
+              <h1 className='font-pt-mono text-[clamp(2.5rem,5.5vw,5rem)] leading-[0.9] font-black whitespace-pre-line text-black uppercase'>
                 {data.title}
               </h1>
             </div>
@@ -182,39 +176,33 @@ function ExplicacionRolContent() {
           </ul>
         </div>
 
-        <div className='flex w-full items-center justify-end gap-8 pr-[5%] pb-8'>
+        <div className='flex w-full items-center justify-center gap-8 pb-8 pl-[44%]'>
           <Link
             href={backHref}
-            className='relative shrink-0 transition-transform hover:scale-105 active:scale-95'
+            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
           >
             <img
               src={`${S}/boton-regresar.png`}
-              alt=''
-              className='h-[clamp(2.8rem,4.5vw,4rem)] w-[clamp(200px,22vw,340px)]'
+              alt='Regresar'
+              className='h-[clamp(3.5rem,5.5vw,5rem)] w-auto object-contain'
             />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-[clamp(0.9rem,1.5vw,1.35rem)] font-bold tracking-[0.15em] text-white uppercase'>
-              Regresar
-            </span>
           </Link>
 
           <img
             src={`${S}/mano.png`}
             alt=''
-            className='h-auto w-[clamp(60px,7vw,110px)] shrink-0'
+            className='h-[clamp(2.8rem,4.5vw,4rem)] w-auto shrink-0 object-contain'
           />
 
           <Link
             href={formHref}
-            className='relative shrink-0 transition-transform hover:scale-105 active:scale-95'
+            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
           >
             <img
               src={`${S}/boton-crear-perfil.png`}
-              alt=''
-              className='h-[clamp(2.8rem,4.5vw,4rem)] w-[clamp(200px,22vw,340px)]'
+              alt='Crear perfil'
+              className='h-[clamp(3.5rem,5.5vw,5rem)] w-auto object-contain'
             />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-[clamp(0.9rem,1.5vw,1.35rem)] font-bold tracking-[0.15em] text-white uppercase'>
-              Crear mi perfil
-            </span>
           </Link>
         </div>
       </div>
