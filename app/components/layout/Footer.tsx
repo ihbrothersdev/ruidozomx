@@ -17,7 +17,8 @@ export function Footer({ user }: FooterProps) {
           <ul className='space-y-1.5 text-xl'>
             <li>
               <Link
-                href='#'
+                href='/archivos/politica_privacidad.pdf'
+                target='_blank'
                 className='transition-colors hover:text-gray-200'
               >
                 Política de Privacidad
@@ -25,7 +26,8 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/archivos/aviso_legal.pdf'
+                target='_blank'
                 className='transition-colors hover:text-gray-200'
               >
                 Aviso Legal
@@ -33,7 +35,8 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/archivos/cookies.pdf'
+                target='_blank'
                 className='transition-colors hover:text-gray-200'
               >
                 Política de Cookies
@@ -92,7 +95,7 @@ export function Footer({ user }: FooterProps) {
                 </li>
                 <li>
                   <Link
-                    href='#'
+                    href='/iniciar-sesion'
                     className='transition-colors hover:text-gray-200'
                   >
                     ¿Olvidaste la contraseña?
@@ -109,15 +112,7 @@ export function Footer({ user }: FooterProps) {
           <ul className='space-y-1.5 text-xl'>
             <li>
               <Link
-                href='#'
-                className='transition-colors hover:text-gray-200'
-              >
-                Cassetes anteriores
-              </Link>
-            </li>
-            <li>
-              <Link
-                href='#'
+                href='/comunidad'
                 className='transition-colors hover:text-gray-200'
               >
                 Bandas
@@ -125,7 +120,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/comunidad'
                 className='transition-colors hover:text-gray-200'
               >
                 Fans
@@ -133,7 +128,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/comunidad'
                 className='transition-colors hover:text-gray-200'
               >
                 Managers
@@ -141,7 +136,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/comunidad'
                 className='transition-colors hover:text-gray-200'
               >
                 Venues
@@ -149,7 +144,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='#'
+                href='/comunidad'
                 className='transition-colors hover:text-gray-200'
               >
                 Proveedores
