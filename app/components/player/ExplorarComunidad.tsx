@@ -24,15 +24,22 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
+          poster='/assets/binoculares.png'
           className='absolute inset-[8%] -top-3 z-[3] object-cover'
           style={{ width: '100%', height: '100%' }}
           aria-label='Video de la comunidad Ruidozo'
         >
           <source
             src='/assets/body2/binoculares.webm'
-            type='video/mp4'
+            type='video/webm'
           />
-          Tu navegador no soporta el elemento de video.
+          <Image
+            src='/assets/binoculares.png'
+            alt='Explorar comunidad'
+            fill
+            className='object-cover'
+            unoptimized
+          />
         </video>
       </div>
 
