@@ -171,7 +171,8 @@ export function Footer({ user }: FooterProps) {
         <p className='font-baby-doll mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
-            href='#'
+            href='https://www.instagram.com/ruidozoxx?igsh=MTJ6dGg4cjEwOWxwdQ=='
+            target='_blank'
             className='transition-opacity hover:opacity-80'
           >
             <Image
@@ -184,7 +185,8 @@ export function Footer({ user }: FooterProps) {
             />
           </Link>
           <Link
-            href='#'
+            href='https://www.instagram.com/ruidozoxx?igsh=MTJ6dGg4cjEwOWxwdQ=='
+            target='_blank'
             className='transition-opacity hover:opacity-80'
           >
             <Image
@@ -210,7 +212,10 @@ export function Footer({ user }: FooterProps) {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
+          <span className='relative inline-block'>
+            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>aún no hay</span>
+          </span>
         </div>
         <div className='flex items-center gap-2'>
           <Image
@@ -221,9 +226,16 @@ export function Footer({ user }: FooterProps) {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
+          <span className='relative inline-block'>
+            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>aún no hay</span>
+          </span>
         </div>
-        <div className='flex items-center gap-2'>
+        <Link
+          href='https://wa.me/5215611912788'
+          target='_blank'
+          className='flex items-center gap-2'
+        >
           <Image
             src='/assets/body3/whatsapp.png'
             alt=''
@@ -232,8 +244,11 @@ export function Footer({ user }: FooterProps) {
             className='h-5 w-auto'
             unoptimized
           />
-          <span className='font-baby-doll bg-yellow-100 text-xs text-gray-500'>aún no hay</span>
-        </div>
+          <span className='relative inline-block'>
+            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>+52 56 1191 2788</span>
+          </span>
+        </Link>
       </div>
     </footer>
   )
