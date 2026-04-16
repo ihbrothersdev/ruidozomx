@@ -39,7 +39,7 @@ function ProponerRolaContent() {
         unoptimized
       />
 
-      <div className='relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6'>
+      <div className='relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-4 pt-6 pb-20 sm:px-6'>
         {/* Top nav — right aligned */}
         <div className='mb-4 flex w-full items-start justify-end gap-2'>
           <Link href='/perfil'>

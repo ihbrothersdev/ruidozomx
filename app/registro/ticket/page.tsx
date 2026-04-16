@@ -86,7 +86,7 @@ function TicketContent() {
         {/* ENTRA button */}
         <Link
           href='/'
-          className='group relative flex flex-col items-center gap-2 pb-8'
+          className='group relative flex flex-col items-center gap-2 pb-20'
         >
           <img
             src='/assets/registro/tickets/shared/boton-entrar.png'
@@ -98,9 +98,7 @@ function TicketContent() {
             alt=''
             className='absolute top-0 left-1/2 w-20 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100'
           />
-          <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black'>
-            ENTRA
-          </span>
+          <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black'>ENTRA</span>
         </Link>
       </div>
 
@@ -142,9 +140,7 @@ function TicketContent() {
               alt=''
               className='absolute top-0 left-1/2 w-28 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 lg:w-36 xl:w-40'
             />
-            <span className='font-baby-doll text-xl font-bold tracking-[0.2em] text-black'>
-              ENTRA
-            </span>
+            <span className='font-baby-doll text-xl font-bold tracking-[0.2em] text-black'>ENTRA</span>
           </Link>
         </div>
       </div>
