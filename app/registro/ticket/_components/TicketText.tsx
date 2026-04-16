@@ -48,7 +48,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
           )}
         </button>
         {role === 'fan' && (
-          <p className='text-4xl leading-tight font-bold text-red-500 uppercase sm:text-xs md:text-5xl lg:text-5xl xl:text-5xl'>
+          <p className='text-xl leading-tight font-bold text-red-500 uppercase md:text-2xl lg:text-5xl xl:text-5xl'>
             PROPÓN UNA
           </p>
         )}
@@ -103,10 +103,10 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         )}
         {role === 'fan' && (
           <>
-            <p className='text-7xl leading-none font-bold text-red-500 uppercase sm:text-2xl md:text-5xl lg:text-8xl xl:text-8xl'>
+            <p className='text-5xl leading-none font-bold text-red-500 uppercase md:text-5xl lg:text-8xl xl:text-8xl'>
               ROLA
             </p>
-            <p className='mt-0.5 text-xs leading-none leading-tight text-red-500 uppercase sm:text-xl lg:text-xl xl:text-xl'>
+            <p className='mt-0.5 text-sm leading-tight text-red-500 uppercase lg:text-xl xl:text-xl'>
               PARA NUESTRO CASETE SEMANAL
             </p>
           </>
@@ -147,13 +147,13 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         onClick={() => setCompartirOpen(true)}
         className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
-        <p className='text-1rem leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-2xl xl:text-3xl'>
+        <p className='text-sm leading-tight text-black uppercase group-hover:underline lg:text-2xl xl:text-3xl'>
           CORRE LA VOZ,
         </p>
-        <p className='text-1rem leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
+        <p className='text-sm leading-tight text-black uppercase group-hover:underline lg:text-xl xl:text-2xl'>
           HAZ RUIDO ALLÁ AFUERA
         </p>
-        <p className='text-1rem leading-tight text-black uppercase group-hover:underline sm:text-[0.55rem] lg:text-xl xl:text-2xl'>
+        <p className='text-sm leading-tight text-black uppercase group-hover:underline lg:text-xl xl:text-2xl'>
           COMPÁRTENOS EN TUS REDES
         </p>
       </button>
@@ -162,7 +162,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
       <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
         <Link
           href='/comunidad'
-          className='text-1rem leading-tight text-black uppercase hover:underline sm:text-xs md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-4xl'
+          className='text-lg leading-tight text-black uppercase hover:underline md:text-3xl lg:text-3xl xl:text-3xl 2xl:text-4xl'
         >
           EXPLORAR LA ESCENA
         </Link>
