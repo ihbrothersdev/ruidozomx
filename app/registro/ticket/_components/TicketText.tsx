@@ -24,10 +24,10 @@ export default function TicketText({ role, className = '', displayName = '' }: T
       <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
         {(role === 'promotor' || role === 'agente' || role === 'manager') && (
           <>
-            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
               PUBLICA UNA FECHA O UNA
             </p>
-            <p className='text-[0.35rem] leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
               CONVOCATORIA
             </p>
           </>
@@ -38,10 +38,10 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         >
           {role === 'venue' && (
             <>
-              <p className='text-2xl leading-tight text-black uppercase sm:text-[0.5rem] lg:text-3xl xl:text-4xl'>
+              <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
                 PUBLICA UNA TOCADA O
               </p>
-              <p className='text-2xl leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
+              <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
                 ABRE FECHAS DISPONIBLES
               </p>
             </>
@@ -53,15 +53,15 @@ export default function TicketText({ role, className = '', displayName = '' }: T
           </p>
         )}
         {role === 'banda' && (
-          <p className='text-[0.55rem] leading-tight font-bold text-black uppercase sm:text-xs lg:text-xl xl:text-2xl'>
-            Publica una fecha o una convicatoria
+          <p className='text-base leading-tight font-bold text-black uppercase md:text-lg lg:text-xl xl:text-2xl'>
+            Publica una fecha o una convocatoria
           </p>
         )}
 
         {role === 'proveedor' && (
           <>
-            <p className='text-2rem leading-tight text-black uppercase sm:text-[0.5rem] lg:text-2xl xl:text-4xl'>
-              PUBLICA UN servicio u oferta
+            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
+              PUBLICA UN SERVICIO U OFERTA
             </p>
           </>
         )}
@@ -74,29 +74,29 @@ export default function TicketText({ role, className = '', displayName = '' }: T
       >
         {(role === 'promotor' || role === 'agente' || role === 'manager') && (
           <>
-            <p className='text-1rem leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-5xl'>
+            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-xl lg:text-xl xl:text-5xl'>
               PROPÓN UNA
             </p>
-            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLA
             </p>
-            <p className='text-1rem leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-base xl:text-xl'>
               DE TU TALENTO QUE MUEVES PARA NUESTRO CASETE SEMANAL
             </p>
           </>
         )}
         {role === 'venue' && (
           <>
-            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-5xl'>
+            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-xl lg:text-xl xl:text-5xl'>
               PROPÓN UNA
             </p>
-            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLA
             </p>
-            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-xl xl:text-3xl'>
               Del talento que mueves
             </p>
-            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-3xl'>
+            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-xl xl:text-3xl'>
               para nuestro cassete semanal
             </p>
           </>
@@ -113,29 +113,29 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         )}
         {role === 'banda' && (
           <>
-            <p className='text-[0.55rem] leading-tight font-bold text-red-500 uppercase sm:text-xs lg:text-xl xl:text-2xl'>
+            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-lg lg:text-xl xl:text-2xl'>
               PROPÓN UNA DE TUS
             </p>
-            <p className='text-2xl leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLAS
             </p>
-            <p className='mt-0.5 text-[0.35rem] leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
               PARA NUESTRO CASETE SEMANAL
             </p>
           </>
         )}
         {role === 'proveedor' && (
           <>
-            <p className='text-0.7rem leading-tight text-red-500 uppercase sm:text-xs lg:text-xl xl:text-2xl'>
+            <p className='text-base leading-tight text-red-500 uppercase md:text-lg lg:text-xl xl:text-2xl'>
               PROPÓN UNA
             </p>
-            <p className='text-2rem leading-none font-black text-red-500 uppercase sm:text-3xl lg:text-6xl xl:text-7xl'>
+            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLA
             </p>
-            <p className='mt-0.5 text-1rem leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
               Del talento que mueves
             </p>
-            <p className='mt-0.5 text-0.7rem leading-tight text-red-500 uppercase sm:text-[0.45rem] lg:mt-1 lg:text-xs xl:text-sm'>
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
               para nuestro casete semanal
             </p>
           </>
