@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { Toaster } from 'sileo'
+import { AudioProvider } from './components/AudioProvider'
+import { PersistentPlayerBar } from './components/player-bar/PersistentPlayerBar'
 import './globals.css'
 
 const corose = localFont({
@@ -60,9 +62,12 @@ export default function RootLayout({
       className='h-full'
     >
       <body
-        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen antialiased`}
+        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen pb-40 antialiased md:pb-16`}
       >
-        {children}
+        <AudioProvider>
+          {children}
+          <PersistentPlayerBar />
+        </AudioProvider>
         <Toaster position='top-center' />
       </body>
     </html>

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @deprecated Use usePlayerStore hooks instead (usePlayerState, usePlayerActions, etc.)
+ * Audio state is now managed globally via Zustand in lib/store/audio-store.ts
+ */
+
 import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 

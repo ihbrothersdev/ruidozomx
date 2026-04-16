@@ -1,4 +1,3 @@
-import { MOCK_PLAYER_STATE, MOCK_SONGS } from '@/lib/mock-data'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
 import { Footer } from './components/layout/Footer'
@@ -56,8 +55,6 @@ export default async function Home() {
         />
 
         <HomePlayerSection
-          songs={MOCK_SONGS}
-          initialSongId={MOCK_PLAYER_STATE.currentSongId}
           date={formatCassetteDate()}
           isAuthenticated={!!user}
         />

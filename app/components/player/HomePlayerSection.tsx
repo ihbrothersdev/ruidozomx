@@ -1,36 +1,20 @@
 'use client'
 
-import type { PlayerSong } from '@/lib/types'
-import { useAudioPlayer } from '../../hooks/useAudioPlayer'
+import { usePlayerState, usePlayerActions, usePlayerSongs, useCurrentSong } from '@/app/hooks/usePlayerStore'
 import { CassettePlayer } from './CassettePlayer'
 import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
 
 interface HomePlayerSectionProps {
-  songs: PlayerSong[]
-  initialSongId: string
   date: string
   isAuthenticated: boolean
 }
 
-export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated }: HomePlayerSectionProps) {
-  const {
-    isPlaying,
-    isStopped,
-    currentSongId,
-    currentSide,
-    elapsedSeconds,
-    progress,
-    play,
-    pause,
-    stop,
-    next,
-    prev,
-    seek,
-    playSong
-  } = useAudioPlayer(songs, initialSongId)
-
-  const currentSong = songs.find(s => s.id === currentSongId)
+export function HomePlayerSection({ date, isAuthenticated }: HomePlayerSectionProps) {
+  const { isPlaying, isStopped, currentSongId, currentSide, elapsedSeconds, progress } = usePlayerState()
+  const { play, pause, stop, next, prev, seek, playSong } = usePlayerActions()
+  const songs = usePlayerSongs()
+  const currentSong = useCurrentSong()
 
   return (
     <>
@@ -70,7 +54,7 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
             <div className='w-full max-w-[793px] flex-1'>
               <SongList
                 songs={songs}
-                currentSongId={currentSongId}
+                currentSongId={currentSongId ?? ''}
                 onSelectSong={playSong}
               />
             </div>
