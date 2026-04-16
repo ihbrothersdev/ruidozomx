@@ -97,11 +97,12 @@ export function PersistentPlayerBar() {
 
   return (
     <div
-      className='fixed right-0 bottom-0 left-0 z-50 px-3 md:px-5'
+      className='fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5'
       style={{
         backgroundImage: "url('/assets/player-bar/background.png')",
         backgroundRepeat: 'repeat-x',
-        backgroundSize: 'auto 100%'
+        backgroundSize: 'auto 100%',
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.6)'
       }}
     >
       {/* ── MOBILE: Apple Music-style stacked layout ────────────── */}
