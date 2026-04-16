@@ -111,7 +111,7 @@ function TicketContent() {
           <img
             src='/assets/registro/tickets/shared/dit.png'
             alt='DIT Do it together'
-            className='h-[50vh] w-auto max-w-full object-contain xl:h-[55vh]'
+            className='h-[75vh] w-auto max-w-full object-contain xl:h-[80vh]'
           />
         </div>
 
