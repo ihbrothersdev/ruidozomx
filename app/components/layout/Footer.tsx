@@ -171,7 +171,7 @@ export function Footer({ user }: FooterProps) {
         <p className='font-baby-doll mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
-            href='https://www.instagram.com/ruidozoxx?igsh=MTJ6dGg4cjEwOWxwdQ=='
+            href='https://www.facebook.com/Ruidozoxx'
             target='_blank'
             className='transition-opacity hover:opacity-80'
           >
@@ -202,35 +202,21 @@ export function Footer({ user }: FooterProps) {
       </div>
 
       {/* Bottom strip */}
-      <div className='mx-auto mt-20 flex max-w-5xl items-center justify-center gap-8'>
-        <div className='flex items-center gap-2'>
-          <Image
-            src='/assets/body3/telefono.png'
-            alt=''
-            width={379}
-            height={63}
-            className='h-5 w-auto'
-            unoptimized
-          />
-          <span className='relative inline-block'>
-            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>aún no hay</span>
-          </span>
-        </div>
-        <div className='flex items-center gap-2'>
+      <div className='mx-auto mt-20 flex max-w-5xl items-center justify-center gap-4 sm:gap-8 flex-col sm:flex-row'>
+        <Link href='mailto:donadiexx@yahoo.com.mx' className='flex items-center gap-2'>
           <Image
             src='/assets/body3/correo.png'
             alt=''
             width={379}
             height={63}
-            className='h-5 w-auto'
+            className='h-6 sm:h-8 w-auto'
             unoptimized
           />
           <span className='relative inline-block'>
-            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>aún no hay</span>
+            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-9 sm:h-12 w-auto' unoptimized />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-sm sm:text-lg text-black'>donadiexx@yahoo.com.mx</span>
           </span>
-        </div>
+        </Link>
         <Link
           href='https://wa.me/5215611912788'
           target='_blank'
@@ -241,12 +227,12 @@ export function Footer({ user }: FooterProps) {
             alt=''
             width={379}
             height={63}
-            className='h-5 w-auto'
+            className='h-6 sm:h-8 w-auto'
             unoptimized
           />
           <span className='relative inline-block'>
-            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-5 w-auto' unoptimized />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-lg text-black'>+52 56 1191 2788</span>
+            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-9 sm:h-12 w-auto' unoptimized />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-base sm:text-xl text-black'>+52 56 1191 2788</span>
           </span>
         </Link>
       </div>
