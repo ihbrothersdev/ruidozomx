@@ -171,7 +171,7 @@ export function Footer({ user }: FooterProps) {
         <p className='font-baby-doll mb-4 text-4xl tracking-wider text-yellow-100 uppercase'>Síguenos en</p>
         <div className='flex items-center justify-center gap-6'>
           <Link
-            href='https://www.instagram.com/ruidozoxx?igsh=MTJ6dGg4cjEwOWxwdQ=='
+            href='https://www.facebook.com/Ruidozoxx?rdid=UvcR3icZQTSVJ0Ff'
             target='_blank'
             className='transition-opacity hover:opacity-80'
           >
