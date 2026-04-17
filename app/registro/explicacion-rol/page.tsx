@@ -100,22 +100,7 @@ function ExplicacionRolContent() {
         </div>
 
         {/* Buttons */}
-        <div className='flex w-full shrink-0 items-center justify-center gap-3 py-2'>
-          <Link
-            href={backHref}
-            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
-          >
-            <img
-              src={`${S}/boton-regresar.png`}
-              alt='Regresar'
-              className='h-[72px] w-auto object-contain'
-            />
-          </Link>
-          <img
-            src={`${S}/mano.png`}
-            alt=''
-            className='h-[44px] w-auto shrink-0 object-contain'
-          />
+        <div className='flex w-full shrink-0 flex-col items-center gap-2 py-2'>
           <Link
             href={formHref}
             className='shrink-0 transition-transform hover:scale-105 active:scale-95'
@@ -123,7 +108,17 @@ function ExplicacionRolContent() {
             <img
               src={`${S}/boton-crear-perfil.png`}
               alt='Crear perfil'
-              className='h-[72px] w-auto object-contain'
+              className='h-[60px] w-auto object-contain'
+            />
+          </Link>
+          <Link
+            href={backHref}
+            className='shrink-0 transition-transform hover:scale-105 active:scale-95'
+          >
+            <img
+              src={`${S}/boton-regresar.png`}
+              alt='Regresar'
+              className='h-[60px] w-auto object-contain'
             />
           </Link>
         </div>

@@ -6,6 +6,8 @@ import { Label } from '@/app/components/ui/label'
 import { Textarea } from '@/app/components/ui/textarea'
 import { SERVICE_TYPE_OPTIONS, TERRITORIAL_REACH_OPTIONS } from '@/lib/types'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
@@ -14,6 +16,10 @@ import { YesNoField } from './YesNoField'
 import { inputCls, labelCls } from './form-styles'
 
 export function ProveedorFormLayout() {
+  const searchParams = useSearchParams()
+  const source = searchParams.get('source') ?? 'registro'
+  const backHref = `/registro/explicacion-rol?role=proveedor&source=${source}`
+
   const [serviceTypes, setServiceTypes] = useState<string[]>([])
   const [otherService, setOtherService] = useState('')
 
@@ -158,6 +164,20 @@ export function ProveedorFormLayout() {
       </div>
     </div>
     <div className='flex justify-end pt-4'>
+      <Link
+        href={backHref}
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-volver.png'
+          alt='Volver'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </Link>
       <button
         type='submit'
         className='cursor-pointer'
