@@ -26,7 +26,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className='overflow-hidden border-none bg-transparent p-0 shadow-none sm:max-w-4xl'
+        className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-4xl'
         showCloseButton={false}
       >
         <DialogTitle className='sr-only'>Compartir</DialogTitle>
@@ -38,12 +38,12 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
             alt=''
             width={600}
             height={500}
-            className='h-auto w-full'
+            className='absolute inset-0 h-full w-full object-fill'
             unoptimized
           />
 
-          {/* Content overlay */}
-          <div className='absolute inset-0 flex flex-col items-center px-8 pt-4 pb-6'>
+          {/* Content */}
+          <div className='relative z-10 flex flex-col items-center px-8 pt-4 pb-6'>
             {/* Title image */}
             <Image
               src='/assets/compartir/title.png'
@@ -66,7 +66,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
             </div>
 
             {/* Images section */}
-            <div className='mt-4 flex flex-1 items-center justify-center gap-4 sm:gap-6'>
+            <div className='mt-4 flex items-end justify-center gap-4 sm:gap-6'>
               {/* Post */}
               <div className='flex flex-col items-center gap-2'>
                 <Image
@@ -74,7 +74,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                   alt='Post para compartir'
                   width={213}
                   height={273}
-                  className='h-auto'
+                  className='h-auto w-28 sm:w-40 lg:w-52'
                   unoptimized
                 />
                 <span className='font-pt-mono text-[10px] font-bold tracking-wider text-black uppercase'>
@@ -89,7 +89,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                   alt='Reel para compartir'
                   width={252}
                   height={447}
-                  className='h-auto'
+                  className='h-auto w-28 sm:w-40 lg:w-52'
                   unoptimized
                 />
                 <span className='font-pt-mono text-[10px] font-bold tracking-wider text-black uppercase'>
