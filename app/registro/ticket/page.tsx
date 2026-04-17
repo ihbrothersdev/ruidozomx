@@ -111,14 +111,14 @@ function TicketContent() {
           <img
             src='/assets/registro/tickets/shared/dit.png'
             alt='DIT Do it together'
-            className='h-[50vh] w-auto max-w-full object-contain xl:h-[55vh]'
+            className='h-[75vh] w-auto max-w-full object-contain xl:h-[80vh]'
           />
         </div>
 
         <div />
 
         {/* Logo + ENTRA — right column */}
-        <div className='flex flex-col items-center justify-start gap-32 px-2 py-4 xl:gap-64 xl:py-5'>
+        <div className='relative flex flex-col items-center justify-start gap-32 px-2 py-4 xl:gap-64 xl:py-5'>
           <div className='w-full'>
             <img
               src='/assets/registro/tickets/shared/logo.png'
@@ -130,7 +130,7 @@ function TicketContent() {
           </div>
           <Link
             href='/'
-            className='group relative flex flex-col items-center gap-2'
+            className='group relative flex flex-col items-center gap-2 md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2'
           >
             <img
               src='/assets/registro/tickets/shared/boton-entrar.png'
