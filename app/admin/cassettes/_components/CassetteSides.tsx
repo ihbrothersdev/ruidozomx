@@ -4,8 +4,10 @@ import { updateSongDuration } from '@/app/admin/actions'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
+import { isPlayableAudio } from '@/lib/audio'
 import { useEffect, useRef, useState } from 'react'
 import { RemoveSongButton } from './CassetteActions'
+import { UploadAudioButton } from './UploadAudioButton'
 
 type Side = 'A' | 'B'
 
@@ -126,6 +128,7 @@ function SideCard({
                 </li>
               )
             }
+            const playable = isPlayableAudio(song.audioUrl)
             return (
               <li
                 key={pos}
@@ -133,7 +136,13 @@ function SideCard({
               >
                 <span className='font-pt-mono w-5 text-right text-[11px] text-white/40'>#{pos}</span>
                 <div className='min-w-0 flex-1'>
-                  <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
+                  <div className='flex items-center gap-1.5'>
+                    <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
+                    <AudioStatusDot
+                      playable={playable}
+                      hasAny={!!song.audioUrl}
+                    />
+                  </div>
                   <p className='font-pt-mono truncate text-[10px] text-white/40'>{song.title}</p>
                 </div>
                 <DurationCell
@@ -141,6 +150,13 @@ function SideCard({
                   cassetteId={cassetteId}
                 />
                 <span className='font-pt-mono w-10 text-right text-[10px] text-white/30'>{song.plays}▸</span>
+                {canRemove && (
+                  <UploadAudioButton
+                    songId={song.id}
+                    cassetteId={cassetteId}
+                    playable={playable}
+                  />
+                )}
                 {canRemove && (
                   <RemoveSongButton
                     songId={song.id}
@@ -153,6 +169,25 @@ function SideCard({
         </ol>
       </CardContent>
     </Card>
+  )
+}
+
+function AudioStatusDot({ playable, hasAny }: { playable: boolean; hasAny: boolean }) {
+  const tone = playable ? 'bg-emerald-400' : hasAny ? 'bg-amber-400' : 'bg-white/20'
+  const label = playable
+    ? 'MP3 reproducible'
+    : hasAny
+      ? 'Solo link externo (no se puede reproducir, sube el MP3)'
+      : 'Sin audio'
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${tone}`} />
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 

@@ -3,9 +3,10 @@ import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Progress } from '@/app/components/ui/progress'
+import { isPlayableAudio } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { formatShortDateMX } from '@/lib/utils'
-import { AlertCircle, ArrowLeft, Music2, Sparkles } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Music2, Sparkles, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CassetteSides, type CassetteSong } from '../_components/CassetteSides'
@@ -43,6 +44,8 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
     audioUrl: s.audio_url ?? null,
     durationSeconds: s.duration_seconds ?? null
   }))
+  const missingAudio = cassetteSongs.filter(s => !isPlayableAudio(s.audioUrl))
+  const missingAudioCount = missingAudio.length
 
   const durationLimitMinutes = cassette.duration_minutes ?? 90
   const sumKnown = (songs ?? []).reduce((acc, s) => acc + (s.duration_seconds ?? 0), 0)
@@ -105,6 +108,7 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
             <PublishButton
               cassetteId={cassette.id}
               songCount={total}
+              missingAudio={missingAudioCount}
             />
           )}
           {state !== 'active' && (
@@ -115,6 +119,22 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
           )}
         </div>
       </header>
+
+      {missingAudioCount > 0 && state !== 'archived' && (
+        <Alert className='border-amber-400/30 bg-amber-500/10 text-amber-200'>
+          <UploadCloud />
+          <AlertTitle className='font-pt-mono text-amber-200'>
+            {missingAudioCount} canción{missingAudioCount === 1 ? '' : 'es'} sin MP3
+          </AlertTitle>
+          <AlertDescription className='font-pt-mono text-amber-300/80'>
+            <p>
+              Algunos slots solo tienen un link externo (Spotify/YouTube) y no se pueden reproducir. Sube el MP3 desde
+              el ícono <UploadCloud className='inline h-3 w-3 align-middle' /> en cada fila. Sin esto el cassette no se
+              puede publicar.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {state === 'next' && total < 26 && (
         <Alert className='border-amber-400/20 bg-amber-500/5 text-amber-300'>

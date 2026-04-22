@@ -1,9 +1,14 @@
 'use server'
 
+import { isPlayableAudio, songStorageKey } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+const SONGS_BUCKET = 'songs'
+const MAX_AUDIO_BYTES = 30 * 1024 * 1024 // 30 MB
+const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/mp4'])
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guard
@@ -223,9 +228,18 @@ export async function publishCassette(formData: FormData) {
   const cassetteId = formData.get('cassette_id') as string
   if (!cassetteId) backWithError('/admin/cassettes', 'faltan_datos')
 
-  const { count } = await svc.from('songs').select('*', { count: 'exact', head: true }).eq('cassette_id', cassetteId)
-  if (!count || count === 0) {
+  const { data: tracks } = await svc.from('songs').select('id, audio_url').eq('cassette_id', cassetteId)
+  if (!tracks || tracks.length === 0) {
     backWithError(`/admin/cassettes/${cassetteId}`, 'cassette_vacio')
+  }
+
+  const missing = tracks!.filter(t => !isPlayableAudio(t.audio_url))
+  if (missing.length > 0) {
+    backWithError(
+      `/admin/cassettes/${cassetteId}`,
+      'audio_no_reproducible',
+      `${missing.length} canci\u00f3n(es) sin MP3 reproducible. Sube el audio antes de publicar.`
+    )
   }
 
   const { error } = await svc.rpc('publish_cassette', { p_cassette_id: cassetteId })
@@ -328,4 +342,58 @@ export async function removeSongFromCassette(formData: FormData) {
   revalidatePath(`/admin/cassettes/${cassetteId}`)
   revalidatePath('/admin/propuestas')
   backWithSuccess(`/admin/cassettes/${cassetteId}`, 'cancion_removida')
+}
+
+/**
+ * Upload an MP3 (or other supported audio file) to the public `songs` bucket
+ * and point the song's `audio_url` to the new public URL. This is how admins
+ * "complete" an accepted proposal that only had a Spotify/YouTube reference.
+ */
+export async function uploadSongAudio(
+  formData: FormData
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const songId = formData.get('song_id') as string
+  const cassetteId = formData.get('cassette_id') as string
+  const file = formData.get('file') as File | null
+
+  if (!songId || !cassetteId || !file) {
+    return { ok: false, error: 'faltan_datos' }
+  }
+  if (file.size === 0) {
+    return { ok: false, error: 'archivo_vacio' }
+  }
+  if (file.size > MAX_AUDIO_BYTES) {
+    return { ok: false, error: 'archivo_muy_grande' }
+  }
+  if (file.type && !ALLOWED_AUDIO_MIME.has(file.type)) {
+    return { ok: false, error: 'tipo_no_soportado' }
+  }
+
+  const { data: song } = await svc.from('songs').select('artist, title, cassette_id').eq('id', songId).single()
+  if (!song) return { ok: false, error: 'cancion_no_encontrada' }
+  if (song.cassette_id !== cassetteId) return { ok: false, error: 'cassette_mismatch' }
+
+  const ext = (file.name.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = songStorageKey({ cassetteId, artist: song.artist, title: song.title, ext })
+
+  const { error: uploadError } = await svc.storage.from(SONGS_BUCKET).upload(key, file, {
+    contentType: file.type || 'audio/mpeg',
+    upsert: true,
+    cacheControl: '3600'
+  })
+  if (uploadError) return { ok: false, error: uploadError.message }
+
+  const {
+    data: { publicUrl }
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+
+  const { error: updateError } = await svc.from('songs').update({ audio_url: publicUrl }).eq('id', songId)
+  if (updateError) return { ok: false, error: updateError.message }
+
+  revalidatePath(`/admin/cassettes/${cassetteId}`)
+  revalidatePath('/')
+  return { ok: true, url: publicUrl }
 }

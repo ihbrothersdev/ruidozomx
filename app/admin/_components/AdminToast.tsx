@@ -21,6 +21,10 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
     title: 'Cassette vacío',
     description: 'No puedes publicar un cassette sin canciones.'
   },
+  audio_no_reproducible: {
+    title: 'Faltan MP3s',
+    description: 'Algunas canciones solo tienen link externo (Spotify/YouTube). Sube el MP3 antes de publicar.'
+  },
   sin_borradores: {
     title: 'Sin cassettes en borrador',
     description: 'Crea un cassette nuevo antes de marcarlo como siguiente.'

@@ -37,9 +37,41 @@ export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
   )
 }
 
-export function PublishButton({ cassetteId, songCount }: { cassetteId: string; songCount: number }) {
+export function PublishButton({
+  cassetteId,
+  songCount,
+  missingAudio = 0
+}: {
+  cassetteId: string
+  songCount: number
+  missingAudio?: number
+}) {
   const formRef = useRef<HTMLFormElement>(null)
   const lowCount = songCount < 10
+  const blocked = missingAudio > 0
+
+  if (blocked) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button
+                disabled
+                className='font-pt-mono cursor-not-allowed bg-red-600/30 text-xs tracking-wide text-white/60 uppercase'
+              >
+                <Disc3 className='h-3.5 w-3.5' />
+                Publicar
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            Sube el MP3 de {missingAudio} canción{missingAudio === 1 ? '' : 'es'} antes de publicar
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <AlertDialog>
