@@ -121,14 +121,16 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
           <Sparkles />
           <AlertTitle className='font-pt-mono text-amber-200'>Recibiendo propuestas</AlertTitle>
           <AlertDescription className='font-pt-mono text-amber-300/80'>
-            Las propuestas que aceptes en{' '}
-            <Link
-              href='/admin/propuestas'
-              className='underline hover:text-amber-200'
-            >
-              Propuestas
-            </Link>{' '}
-            caerán aquí.
+            <p>
+              Las propuestas que aceptes en{' '}
+              <Link
+                href='/admin/propuestas'
+                className='underline hover:text-amber-200'
+              >
+                Propuestas
+              </Link>{' '}
+              caerán aquí.
+            </p>
           </AlertDescription>
         </Alert>
       )}
@@ -136,8 +138,10 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
       {state === 'draft' && (
         <Alert className='border-white/10 bg-white/3 text-white/70'>
           <AlertDescription className='font-pt-mono text-white/60'>
-            Este cassette es un <strong className='text-white'>borrador</strong>. Márcalo como siguiente para empezar a
-            recibir propuestas aceptadas, o publícalo directo si ya tiene canciones.
+            <p>
+              Este cassette es un <strong className='text-white'>borrador</strong>. Márcalo como siguiente para empezar
+              a recibir propuestas aceptadas, o publícalo directo si ya tiene canciones.
+            </p>
           </AlertDescription>
         </Alert>
       )}
@@ -197,8 +201,10 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
           <AlertCircle />
           <AlertTitle className='font-pt-mono text-red-200'>Editando cassette activo</AlertTitle>
           <AlertDescription className='font-pt-mono text-red-200/80'>
-            Cualquier cambio de duración o canción que quites impactará lo que la gente está escuchando ahora mismo en
-            la home.
+            <p>
+              Cualquier cambio de duración o canción que quites impactará lo que la gente está escuchando ahora mismo en
+              la home.
+            </p>
           </AlertDescription>
         </Alert>
       )}

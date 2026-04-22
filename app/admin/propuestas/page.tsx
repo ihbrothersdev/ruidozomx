@@ -129,14 +129,16 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                   Cassette activo
                 </AlertTitle>
                 <AlertDescription className='font-pt-mono text-[11px] text-amber-300/80'>
-                  Estás metiendo rolas al que está sonando. Crea uno nuevo en{' '}
-                  <Link
-                    href='/admin/cassettes'
-                    className='underline hover:text-amber-200'
-                  >
-                    Cassettes
-                  </Link>{' '}
-                  y márcalo como siguiente.
+                  <p>
+                    Estás metiendo rolas al que está sonando. Crea uno nuevo en{' '}
+                    <Link
+                      href='/admin/cassettes'
+                      className='underline hover:text-amber-200'
+                    >
+                      Cassettes
+                    </Link>{' '}
+                    y márcalo como siguiente.
+                  </p>
                 </AlertDescription>
               </Alert>
             )}
