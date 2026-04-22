@@ -123,6 +123,7 @@ export default function ProfileView({
           <LinksSection
             socialLinks={socialLinks}
             contact={contact}
+            role={role}
           />
 
           {/* Action buttons */}
