@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { isPlayableAudio } from '@/lib/audio'
+import { Play } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { RemoveSongButton } from './CassetteActions'
 import { UploadAudioButton } from './UploadAudioButton'
@@ -149,7 +150,19 @@ function SideCard({
                   song={song}
                   cassetteId={cassetteId}
                 />
-                <span className='font-pt-mono w-10 text-right text-[10px] text-white/30'>{song.plays}▸</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className='font-pt-mono inline-flex w-12 items-center justify-end gap-1 text-[10px] text-white/40'>
+                        <Play className='h-2.5 w-2.5 fill-current' />
+                        {song.plays.toLocaleString('es-MX')}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {song.plays === 1 ? '1 reproducción' : `${song.plays.toLocaleString('es-MX')} reproducciones`}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {canRemove && (
                   <UploadAudioButton
                     songId={song.id}

@@ -30,10 +30,24 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
 
   const { data: songs } = await supabase
     .from('songs')
-    .select('id, title, artist, side, position, audio_url, plays, proposal_id, duration_seconds')
+    .select('id, title, artist, side, position, audio_url, proposal_id, duration_seconds')
     .eq('cassette_id', id)
     .order('side', { ascending: true })
     .order('position', { ascending: true })
+
+  // `songs.plays` is a stale column that nobody updates anymore; the source of
+  // truth for plays lives in `song_events` (same table the analytics page reads).
+  // We aggregate `play_start` events per song so the cassette detail matches
+  // what /admin/analytics shows.
+  const songIds = (songs ?? []).map(s => s.id)
+  const { data: playEvents } = songIds.length
+    ? await supabase.from('song_events').select('song_id').eq('type', 'play_start').in('song_id', songIds)
+    : { data: [] as { song_id: string | null }[] }
+  const playsBySongId = new Map<string, number>()
+  for (const ev of playEvents ?? []) {
+    if (!ev.song_id) continue
+    playsBySongId.set(ev.song_id, (playsBySongId.get(ev.song_id) ?? 0) + 1)
+  }
 
   const total = (songs ?? []).length
   const cassetteSongs: CassetteSong[] = (songs ?? []).map(s => ({
@@ -42,7 +56,7 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
     artist: s.artist,
     side: s.side as 'A' | 'B',
     position: s.position,
-    plays: s.plays,
+    plays: playsBySongId.get(s.id) ?? 0,
     audioUrl: s.audio_url ?? null,
     durationSeconds: s.duration_seconds ?? null
   }))
