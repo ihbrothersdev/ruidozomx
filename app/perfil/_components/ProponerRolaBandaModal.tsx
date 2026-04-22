@@ -6,11 +6,14 @@ import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
+import { sileo } from 'sileo'
+import { submitSongProposal } from '../actions'
 
 interface ProponerRolaBandaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bandName: string
+  showVibes?: boolean
 }
 
 const VIBES = [
@@ -30,11 +33,45 @@ const VIBES = [
 const inputCls =
   'h-auto max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
 
-export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }: ProponerRolaBandaModalProps) {
+export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, showVibes = true }: ProponerRolaBandaModalProps) {
+  const [artistName, setArtistName] = useState('')
+  const [songName, setSongName] = useState('')
+  const [listenLink, setListenLink] = useState('')
   const [selectedVibes, setSelectedVibes] = useState<string[]>([])
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const isBandPrefilled = bandName.trim().length > 0
+  const artist = isBandPrefilled ? bandName : artistName
+  const canSubmit = songName.trim().length > 0 && artist.trim().length > 0
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
+  }
+
+  async function handleSubmit() {
+    if (!canSubmit) return
+    setSending(true)
+    const result = await submitSongProposal({
+      title: songName,
+      artist,
+      externalLink: listenLink || undefined,
+      vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
+    })
+    setSending(false)
+    if (result.error) {
+      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+    } else {
+      setSent(true)
+      setSongName('')
+      setListenLink('')
+      setArtistName('')
+      setSelectedVibes([])
+      setTimeout(() => {
+        setSent(false)
+        onOpenChange(false)
+      }, 2500)
+    }
   }
 
   return (
@@ -49,7 +86,18 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }:
         <DialogTitle className='sr-only'>Proponer rola de esta banda</DialogTitle>
 
         <div className='relative'>
-          {/* Membrete background */}
+          {sent ? (
+            <div className='flex items-center justify-center p-6'>
+              <Image
+                src='/assets/success-propon-rola.png'
+                alt='Rola propuesta'
+                width={500}
+                height={400}
+                className='h-auto w-full max-w-md'
+                unoptimized
+              />
+            </div>
+          ) : (
           <div className='relative min-h-full'>
             <Image
               src='/assets/membrete-background.png'
@@ -81,11 +129,19 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }:
 
               {/* Form */}
               <div className='mt-5 w-full space-y-4'>
-                {/* Banda/Proyecto — prellenado bloqueado */}
+                {/* Banda/Proyecto */}
                 <div className='space-y-1'>
                   <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Banda/Proyecto: {bandName}
+                    {isBandPrefilled ? `Banda/Proyecto: ${bandName}` : 'Banda/Proyecto'}
                   </Label>
+                  {!isBandPrefilled && (
+                    <Input
+                      value={artistName}
+                      onChange={e => setArtistName(e.target.value)}
+                      placeholder='Nombre de la banda o proyecto'
+                      className={inputCls}
+                    />
+                  )}
                 </div>
 
                 {/* Nombre de la rola */}
@@ -94,7 +150,8 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }:
                     Nombre de la rola
                   </Label>
                   <Input
-                    name='title'
+                    value={songName}
+                    onChange={e => setSongName(e.target.value)}
                     placeholder=''
                     className={inputCls}
                   />
@@ -106,44 +163,51 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }:
                     Link de escucha
                   </Label>
                   <Input
-                    name='external_link'
+                    value={listenLink}
+                    onChange={e => setListenLink(e.target.value)}
                     type='url'
                     placeholder='Spotify, YouTube, Bandcamp, SoundCloud o link directo'
                     className={inputCls}
                   />
                 </div>
 
-                {/* Vibes section */}
-                <div className='space-y-2'>
-                  <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>¿Qué te vibra?</p>
-                  <div className='flex flex-col gap-1.5'>
-                    {VIBES.map(vibe => (
-                      <div
-                        key={vibe}
-                        className='flex items-center gap-2'
-                      >
-                        <Checkbox
-                          id={`vibe-${vibe}`}
-                          checked={selectedVibes.includes(vibe)}
-                          onCheckedChange={() => toggleVibe(vibe)}
-                          className='h-4 w-4 rounded-none border-1 border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
-                        />
-                        <Label
-                          htmlFor={`vibe-${vibe}`}
-                          className='font-pt-mono cursor-pointer text-xs tracking-wider text-black'
+                {/* Vibes section — only shown when showVibes is true */}
+                {showVibes && (
+                  <div className='space-y-2'>
+                    <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>¿Qué te vibra?</p>
+                    <div className='flex flex-col gap-1.5'>
+                      {VIBES.map(vibe => (
+                        <div
+                          key={vibe}
+                          className='flex items-center gap-2'
                         >
-                          {vibe}
-                        </Label>
-                      </div>
-                    ))}
+                          <Checkbox
+                            id={`vibe-${vibe}`}
+                            checked={selectedVibes.includes(vibe)}
+                            onCheckedChange={() => toggleVibe(vibe)}
+                            className='h-4 w-4 rounded-none border-1 border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
+                          />
+                          <Label
+                            htmlFor={`vibe-${vibe}`}
+                            className='font-pt-mono cursor-pointer text-xs tracking-wider text-black'
+                          >
+                            {vibe}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Action buttons */}
               <div className='mt-5 flex items-center gap-3'>
-                <button className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'>
-                  Enviar
+                <button
+                  onClick={handleSubmit}
+                  disabled={!canSubmit || sending}
+                  className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+                >
+                  {sending ? 'Enviando...' : 'Enviar'}
                 </button>
                 <button
                   onClick={() => onOpenChange(false)}
@@ -154,6 +218,7 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName }:
               </div>
             </div>
           </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

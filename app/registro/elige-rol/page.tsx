@@ -102,7 +102,7 @@ function EligeRolContent() {
             alt='¿Ya tienes cuenta?'
             width={200}
             height={36}
-            className='h-auto w-36 sm:w-44'
+            className='h-auto w-48 sm:w-56'
             unoptimized
           />
           <Image
@@ -110,7 +110,7 @@ function EligeRolContent() {
             alt=''
             width={60}
             height={40}
-            className='h-auto w-10 sm:w-12'
+            className='h-auto w-14 sm:w-16'
             unoptimized
           />
           <Link href='/iniciar-sesion'>
@@ -119,7 +119,7 @@ function EligeRolContent() {
               alt='Entra'
               width={100}
               height={36}
-              className='h-auto w-16 transition-transform hover:scale-105 sm:w-20'
+              className='h-auto w-24 transition-transform hover:scale-105 sm:w-28'
               unoptimized
             />
           </Link>

@@ -11,29 +11,35 @@ import ReviewSection from './ReviewSection'
 import UltimaActividad from './UltimaActividad'
 
 export interface ProfileViewProps {
+  profileId?: string
   displayName: string
   role: Role | null
   location: string
   photoUrl: string | null
+  contact: string | null
   socialLinks: Record<string, string> | null
   roleProfile: Record<string, any> | null
   isOwnProfile: boolean
   isLoggedIn: boolean
   acceptProposals: boolean
   bio?: string
+  alreadySent?: { proposal: boolean; sendInterest: boolean }
 }
 
 export default function ProfileView({
+  profileId,
   displayName,
   role,
   location,
   photoUrl,
+  contact,
   socialLinks,
   roleProfile,
   isOwnProfile,
   isLoggedIn,
   acceptProposals,
-  bio
+  bio,
+  alreadySent
 }: ProfileViewProps) {
   const logoDecoration = (
     <div className='flex items-center gap-2'>
@@ -42,7 +48,7 @@ export default function ProfileView({
         alt=''
         width={80}
         height={80}
-        className='h-17 w-auto'
+        className='h-10 w-auto sm:h-17'
         unoptimized
       />
       <Link href='/'>
@@ -51,7 +57,7 @@ export default function ProfileView({
           alt='Ruidozo'
           width={380}
           height={183}
-          className='h-40 w-auto'
+          className='h-24 w-auto sm:h-40'
           unoptimized
         />
       </Link>
@@ -106,24 +112,28 @@ export default function ProfileView({
           </div>
 
           {/* Dynamic modules */}
-          {role && <DynamicModules role={role} />}
-
-          {/* Links */}
-          {role && roleProfile && (
-            <LinksSection
+          {role && (
+            <DynamicModules
               role={role}
               roleProfile={roleProfile}
-              socialLinks={socialLinks}
             />
           )}
 
+          {/* Links */}
+          <LinksSection
+            socialLinks={socialLinks}
+            contact={contact}
+          />
+
           {/* Action buttons */}
           <ActionButtons
+            profileId={profileId}
             isOwnProfile={isOwnProfile}
             isLoggedIn={isLoggedIn}
             role={role}
             acceptProposals={acceptProposals}
             displayName={displayName}
+            alreadySent={alreadySent}
           />
         </>
       }

@@ -14,6 +14,11 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
     if (!error) {
+      // Recovery flow: redirect to password reset page
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/nueva-contrasena`)
+      }
+
       const {
         data: { user }
       } = await supabase.auth.getUser()

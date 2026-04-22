@@ -35,7 +35,7 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
   return (
     <>
       {/* Body 1: Cassette player area */}
-      <section className='relative flex flex-col items-center px-4 pt-4 pb-8'>
+      <section className='relative flex flex-col items-center px-4 pt-4 pb-4'>
         <div className='relative mx-auto w-full max-w-5xl'>
           <div className='flex justify-center'>
             <CassettePlayer
@@ -59,12 +59,12 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
         </div>
       </section>
 
-      <div className='pb-30'>
+      <div className='pb-6'>
         <MientrasSuena />
       </div>
 
       {/* Body 2: Song list */}
-      <section className='relative px-4 py-8'>
+      <section className='relative px-4 pt-8 pb-16'>
         <div className='relative mx-auto max-w-5xl'>
           <div className='flex flex-col items-center gap-2 md:flex-row md:items-start md:justify-center'>
             <div className='w-full max-w-[793px] flex-1'>

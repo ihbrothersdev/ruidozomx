@@ -18,15 +18,15 @@ export function PrevButton({ onClick }: ButtonProps) {
         alt='Regresar'
         width={87}
         height={81}
-        className='transition-opacity group-hover:opacity-0 group-active:opacity-0'
+        className='pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0'
         unoptimized
       />
       <Image
         src='/assets/controles/regresar-on.png'
-        alt='Regresar'
+        alt=''
         width={87}
         height={82}
-        className='absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100'
+        className='pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100'
         unoptimized
       />
     </button>
@@ -44,15 +44,15 @@ export function StopButton({ active, onClick }: ButtonProps) {
         alt='Stop'
         width={87}
         height={81}
-        className={`transition-opacity group-hover:opacity-0 group-active:opacity-0 ${active ? 'opacity-0' : ''}`}
+        className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${active ? 'opacity-0' : ''}`}
         unoptimized
       />
       <Image
         src='/assets/controles/stop-on.png'
-        alt='Stop'
+        alt=''
         width={87}
         height={82}
-        className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100 ${active ? 'opacity-100' : ''}`}
+        className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${active ? 'opacity-100' : ''}`}
         unoptimized
       />
     </button>
@@ -70,15 +70,15 @@ export function PlayButton({ active, onClick }: ButtonProps) {
         alt='Play'
         width={87}
         height={81}
-        className={`transition-opacity group-hover:opacity-0 group-active:opacity-0 ${active ? 'opacity-0' : ''}`}
+        className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${active ? 'opacity-0' : ''}`}
         unoptimized
       />
       <Image
         src='/assets/controles/play-on.png'
-        alt='Play'
+        alt=''
         width={87}
         height={82}
-        className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100 ${active ? 'opacity-100' : ''}`}
+        className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${active ? 'opacity-100' : ''}`}
         unoptimized
       />
     </button>
@@ -96,15 +96,15 @@ export function PauseButton({ active, onClick }: ButtonProps) {
         alt='Pausa'
         width={87}
         height={81}
-        className={`transition-opacity group-hover:opacity-0 group-active:opacity-0 ${active ? 'opacity-0' : ''}`}
+        className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${active ? 'opacity-0' : ''}`}
         unoptimized
       />
       <Image
         src='/assets/controles/pausa-on.png'
-        alt='Pausa'
+        alt=''
         width={87}
         height={82}
-        className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100 ${active ? 'opacity-100' : ''}`}
+        className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${active ? 'opacity-100' : ''}`}
         unoptimized
       />
     </button>
@@ -122,15 +122,15 @@ export function NextButton({ onClick }: ButtonProps) {
         alt='Adelantar'
         width={87}
         height={81}
-        className='transition-opacity group-hover:opacity-0 group-active:opacity-0'
+        className='pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0'
         unoptimized
       />
       <Image
         src='/assets/controles/adelantar-on.png'
-        alt='Adelantar'
+        alt=''
         width={87}
         height={82}
-        className='absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100'
+        className='pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100'
         unoptimized
       />
     </button>

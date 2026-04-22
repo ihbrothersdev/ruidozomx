@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import type { CommunityProfile, RoleFilter } from '../types'
-// import { FilterBar } from './FilterBar'
+import { FilterBar } from './FilterBar'
 import { ProfileCard } from './ProfileCard'
 import { ProfileCardSkeleton } from './ProfileCardSkeleton'
 
@@ -13,15 +13,33 @@ interface CommunityGridProps {
 
 export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
   const [activeFilter, setActiveFilter] = useState<RoleFilter>('todos')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const filtered = useMemo(() => {
-    if (activeFilter === 'todos') return profiles
-    return profiles.filter(p => p.role === activeFilter)
-  }, [profiles, activeFilter])
+    let result = profiles
+    if (activeFilter !== 'todos') {
+      result = result.filter(p => p.role === activeFilter)
+    }
+    const q = searchQuery.toLowerCase()
+    if (q) {
+      result = result.filter(p =>
+        p.display_name.toLowerCase().includes(q) ||
+        p.role.toLowerCase().includes(q) ||
+        p.city?.toLowerCase().includes(q) ||
+        p.state?.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [profiles, activeFilter, searchQuery])
 
   return (
     <div className='flex flex-col gap-8'>
-      {/* <FilterBar activeFilter={activeFilter} onFilterChange={setActiveFilter} /> */}
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       {loading ? (
         <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-3 xl:grid-cols-4'>

@@ -41,8 +41,8 @@ export default async function PerfilPage() {
     }
   }
 
+  const contact = (profile?.contact as string) || null
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
-  console.log('PerfilPage data:', { displayName, role, location, photoUrl, socialLinks, roleProfile, acceptProposals }) // Debug log to check all fetched data
 
   return (
     <ProfileView
@@ -50,9 +50,10 @@ export default async function PerfilPage() {
       role={role}
       location={location}
       photoUrl={photoUrl}
+      bio={bio || undefined}
+      contact={contact}
       socialLinks={socialLinks}
       roleProfile={roleProfile}
-      bio={bio || undefined}
       isOwnProfile={true}
       isLoggedIn={true}
       acceptProposals={acceptProposals}
