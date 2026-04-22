@@ -29,7 +29,7 @@ function TicketContent() {
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
       position: 'top-center',
-      duration: 8000
+      duration: 5000
     })
   }, [displayName])
 
