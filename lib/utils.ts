@@ -45,3 +45,27 @@ export function formatCassetteDate(): string {
   const now = new Date()
   return `${months[now.getMonth()]} ${now.getFullYear()}`
 }
+
+const SHORT_MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/**
+ * Deterministic short date formatter ("1 abr") that produces identical output
+ * on Node.js (server) and any browser (client). We avoid `Intl.DateTimeFormat`
+ * because Node's ICU emits "1 de abr." while browsers render "1 abr",
+ * triggering React hydration mismatches when the same date is rendered on
+ * both sides.
+ *
+ * Uses UTC to stay independent of server/client timezones.
+ */
+export function formatShortDateMX(input: string | Date): string {
+  const d = input instanceof Date ? input : new Date(input)
+  return `${d.getUTCDate()} ${SHORT_MONTHS_ES[d.getUTCMonth()]}`
+}
+
+/**
+ * Deterministic long date formatter ("1 abr 2026") for cards / lists.
+ */
+export function formatLongDateMX(input: string | Date): string {
+  const d = input instanceof Date ? input : new Date(input)
+  return `${d.getUTCDate()} ${SHORT_MONTHS_ES[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+}

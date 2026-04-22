@@ -85,11 +85,11 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
               <>
                 <div className='mx-3 border-t border-black/10' />
                 <Link
-                  href='/rolas-propuestas'
+                  href='/admin'
                   onClick={() => setOpen(false)}
                   className='font-pt-mono px-4 py-2.5 text-sm font-bold tracking-wider text-black uppercase transition-colors hover:bg-black/10'
                 >
-                  Rolas propuestas
+                  Panel admin
                 </Link>
               </>
             )}

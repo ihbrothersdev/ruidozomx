@@ -197,9 +197,19 @@ export interface Cassette {
   cover_image_url: string | null
   active: boolean
   archived: boolean
+  is_next: boolean
   total_plays: number
   created_at: string
   updated_at: string
+}
+
+export type CassetteState = 'active' | 'next' | 'draft' | 'archived'
+
+export function getCassetteState(c: Pick<Cassette, 'active' | 'archived' | 'is_next'>): CassetteState {
+  if (c.active) return 'active'
+  if (c.archived) return 'archived'
+  if (c.is_next) return 'next'
+  return 'draft'
 }
 
 export interface Song {
