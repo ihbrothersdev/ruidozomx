@@ -152,7 +152,7 @@ export function RemoveSongButton({ songId, cassetteId }: { songId: string; casse
                 type='button'
                 variant='ghost'
                 size='icon-sm'
-                className='text-white/30 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-300'
+                className='text-white/40 transition-colors hover:bg-red-500/20 hover:text-red-300'
               >
                 <Trash2 className='h-3.5 w-3.5' />
               </Button>
