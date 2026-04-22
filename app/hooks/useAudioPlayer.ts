@@ -167,14 +167,40 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   const next = useCallback(() => {
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongId)
-    if (idx < sorted.length - 1) setCurrentSongId(sorted[idx + 1].id)
-  }, [currentSongId])
+    if (idx < sorted.length - 1) {
+      const nextSong = sorted[idx + 1]
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+      setIsStopped(false)
+      setCurrentSongId(nextSong.id)
+      const audio = getAudio(nextSong)
+      audio.currentTime = 0
+      audio.play().catch(() => {})
+    }
+  }, [currentSongId, getAudio])
 
   const prev = useCallback(() => {
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongId)
-    if (idx > 0) setCurrentSongId(sorted[idx - 1].id)
-  }, [currentSongId])
+    if (idx > 0) {
+      const prevSong = sorted[idx - 1]
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+      setIsStopped(false)
+      setCurrentSongId(prevSong.id)
+      const audio = getAudio(prevSong)
+      audio.currentTime = 0
+      audio.play().catch(() => {})
+    }
+  }, [currentSongId, getAudio])
 
   const seek = useCallback((pct: number) => {
     const audio = activeRef.current
