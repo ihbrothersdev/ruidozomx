@@ -51,24 +51,46 @@ export async function acceptProposal(formData: FormData) {
     redirect('/rolas-propuestas?error=' + encodeURIComponent('Propuesta no encontrada.'))
   }
 
+  // Guard: ensure (cassette, side, position) slot is free
+  const { data: slotTaken } = await supabase
+    .from('songs')
+    .select('id, title, artist')
+    .eq('cassette_id', cassette.id)
+    .eq('side', side)
+    .eq('position', position)
+    .maybeSingle()
+
+  if (slotTaken) {
+    redirect(
+      '/rolas-propuestas?error=' +
+        encodeURIComponent(
+          `El lado ${side} posición #${position} ya está ocupado por "${slotTaken.artist} — ${slotTaken.title}".`
+        )
+    )
+  }
+
   // Insert into songs
-  const { error: songError } = await supabase.from('songs').insert({
-    cassette_id: cassette.id,
-    title: proposal.title,
-    artist: proposal.artist,
-    genre: proposal.genre,
-    side,
-    position,
-    audio_url: proposal.external_link || proposal.audio_file_path,
-    proposal_id: proposal.id
-  })
+  const { data: insertedSong, error: songError } = await supabase
+    .from('songs')
+    .insert({
+      cassette_id: cassette.id,
+      title: proposal.title,
+      artist: proposal.artist,
+      genre: proposal.genre,
+      side,
+      position,
+      audio_url: proposal.external_link || proposal.audio_file_path,
+      proposal_id: proposal.id
+    })
+    .select('id')
+    .single()
 
   if (songError) {
     redirect('/rolas-propuestas?error=' + encodeURIComponent('Error al insertar canción: ' + songError.message))
   }
 
-  // Update proposal status
-  await supabase
+  // Update proposal status — surface error and roll back the song insert if it fails
+  const { error: updateError } = await supabase
     .from('song_proposals')
     .update({
       status: 'selected',
@@ -77,6 +99,17 @@ export async function acceptProposal(formData: FormData) {
       reviewed_by: user.id
     })
     .eq('id', proposalId)
+
+  if (updateError) {
+    // Manual rollback to avoid an orphaned song with a still-pending proposal
+    if (insertedSong?.id) {
+      await supabase.from('songs').delete().eq('id', insertedSong.id)
+    }
+    redirect(
+      '/rolas-propuestas?error=' +
+        encodeURIComponent('Error al actualizar propuesta (canción revertida): ' + updateError.message)
+    )
+  }
 
   revalidatePath('/rolas-propuestas')
 }

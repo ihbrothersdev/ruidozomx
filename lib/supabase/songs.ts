@@ -1,14 +1,30 @@
 import type { PlayerSong } from '@/lib/types'
 import { createClient } from './server'
 
+const FALLBACK_CASSETTE_NAME = 'Cassette'
+
+/** Single silent-placeholder song so the player always has something to render. */
+const FALLBACK_SONGS: PlayerSong[] = [
+  {
+    id: 'fallback-1',
+    title: 'Próximamente',
+    artist: 'Ru!dozo',
+    side: 'A',
+    position: 1,
+    durationSeconds: 0,
+    audioSrc: ''
+  }
+]
+
 /**
  * Fetch songs from the active cassette.
  * Maps DB `songs` rows → `PlayerSong` for the audio player.
- * Returns { songs, cassetteName } or empty if no active cassette.
+ * Always returns a non-empty `songs` array and a `cassetteName` so callers
+ * never have to handle "no data" states.
  */
 export async function getActiveCassetteSongs(): Promise<{
   songs: PlayerSong[]
-  cassetteName: string | null
+  cassetteName: string
 }> {
   const supabase = await createClient()
 
@@ -16,7 +32,7 @@ export async function getActiveCassetteSongs(): Promise<{
   const { data: cassette } = await supabase.from('cassettes').select('id, name').eq('active', true).single()
 
   if (!cassette) {
-    return { songs: [], cassetteName: null }
+    return { songs: FALLBACK_SONGS, cassetteName: FALLBACK_CASSETTE_NAME }
   }
 
   // 2. Fetch songs ordered by side + position
@@ -28,7 +44,7 @@ export async function getActiveCassetteSongs(): Promise<{
     .order('position', { ascending: true })
 
   if (!rows || rows.length === 0) {
-    return { songs: [], cassetteName: cassette.name }
+    return { songs: FALLBACK_SONGS, cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME }
   }
 
   // 3. Map DB rows → PlayerSong
@@ -42,5 +58,5 @@ export async function getActiveCassetteSongs(): Promise<{
     audioSrc: row.audio_url ?? ''
   }))
 
-  return { songs, cassetteName: cassette.name }
+  return { songs, cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME }
 }
