@@ -9,6 +9,7 @@ import { createClient } from './server'
 export async function getActiveCassetteSongs(): Promise<{
   songs: PlayerSong[]
   cassetteName: string | null
+  cassetteId: string | null
 }> {
   const supabase = await createClient()
 
@@ -16,7 +17,7 @@ export async function getActiveCassetteSongs(): Promise<{
   const { data: cassette } = await supabase.from('cassettes').select('id, name').eq('active', true).single()
 
   if (!cassette) {
-    return { songs: [], cassetteName: null }
+    return { songs: [], cassetteName: null, cassetteId: null }
   }
 
   // 2. Fetch songs ordered by side + position
@@ -28,7 +29,7 @@ export async function getActiveCassetteSongs(): Promise<{
     .order('position', { ascending: true })
 
   if (!rows || rows.length === 0) {
-    return { songs: [], cassetteName: cassette.name }
+    return { songs: [], cassetteName: cassette.name, cassetteId: cassette.id }
   }
 
   // 3. Map DB rows → PlayerSong
@@ -42,5 +43,5 @@ export async function getActiveCassetteSongs(): Promise<{
     audioSrc: row.audio_url ?? ''
   }))
 
-  return { songs, cassetteName: cassette.name }
+  return { songs, cassetteName: cassette.name, cassetteId: cassette.id }
 }

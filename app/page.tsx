@@ -26,7 +26,7 @@ export default async function Home() {
   }
 
   // Fetch songs from the active cassette in Supabase
-  const { songs } = await getActiveCassetteSongs()
+  const { songs, cassetteId } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
@@ -67,6 +67,7 @@ export default async function Home() {
             initialSongId={songs[0].id}
             date={formatCassetteDate()}
             isAuthenticated={!!user}
+            cassetteId={cassetteId}
           />
         )}
 

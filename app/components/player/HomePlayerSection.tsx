@@ -11,9 +11,10 @@ interface HomePlayerSectionProps {
   initialSongId: string
   date: string
   isAuthenticated: boolean
+  cassetteId: string | null
 }
 
-export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated }: HomePlayerSectionProps) {
+export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated, cassetteId }: HomePlayerSectionProps) {
   const {
     isPlaying,
     isStopped,
@@ -28,7 +29,7 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
     prev,
     seek,
     playSong
-  } = useAudioPlayer(songs, initialSongId)
+  } = useAudioPlayer(songs, initialSongId, cassetteId)
 
   const currentSong = songs.find(s => s.id === currentSongId)
 

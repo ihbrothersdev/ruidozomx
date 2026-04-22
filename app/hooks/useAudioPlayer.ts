@@ -1,5 +1,7 @@
 'use client'
 
+import { logEvent, type SongEventType } from '@/app/analytics/actions'
+import { getAnonSessionId } from '@/lib/analytics/session'
 import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -23,7 +25,11 @@ interface AudioPlayerActions {
   playSong: (id: string) => void
 }
 
-export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
+export function useAudioPlayer(
+  songs: PlayerSong[],
+  initialSongId: string,
+  cassetteId: string | null = null
+): AudioPlayerState & AudioPlayerActions {
   const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
   const activeRef = useRef<HTMLAudioElement | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
@@ -31,6 +37,29 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Analytics tracking
+  // ──────────────────────────────────────────────────────────────────────────
+  const sessionIdRef = useRef<string>('')
+  const sessionStartedRef = useRef(false)
+  const playStartLoggedForRef = useRef<string | null>(null) // song id we already logged play_start for in current play
+  const completedSongsRef = useRef<Set<string>>(new Set()) // songs we already logged play_complete for in this session
+
+  function emit(type: SongEventType, songId: string | null, metadata?: Record<string, unknown>) {
+    if (!cassetteId && !songId) return
+    void logEvent({
+      type,
+      songId,
+      cassetteId,
+      sessionId: sessionIdRef.current || null,
+      metadata
+    }).catch(() => {})
+  }
+
+  useEffect(() => {
+    sessionIdRef.current = getAnonSessionId()
+  }, [])
 
   const sortedSongsRef = useRef<PlayerSong[]>([])
   sortedSongsRef.current = [...songs].sort((a, b) => {
@@ -122,8 +151,13 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (a) setDuration(Math.floor(a.duration) || 0)
   }
   function onEnded() {
+    const songId = currentSongId
+    if (songId && !completedSongsRef.current.has(songId)) {
+      completedSongsRef.current.add(songId)
+      emit('play_complete', songId, { duration_listened: Math.round(activeRef.current?.duration ?? 0) })
+    }
     const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
+    const idx = sorted.findIndex(s => s.id === songId)
     if (idx < sorted.length - 1) {
       setCurrentSongId(sorted[idx + 1].id)
       setTimeout(() => activeRef.current?.play().catch(() => {}), 0)
@@ -132,18 +166,60 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       setIsPlaying(false)
     }
   }
-  function onPlay() { setIsPlaying(true) }
-  function onPause() { setIsPlaying(false) }
+  function onPlay() {
+    setIsPlaying(true)
+    if (!sessionStartedRef.current) {
+      sessionStartedRef.current = true
+      emit('cassette_session_start', null, { initial_song_id: currentSongId })
+    }
+    if (playStartLoggedForRef.current !== currentSongId) {
+      playStartLoggedForRef.current = currentSongId
+      emit('play_start', currentSongId, {
+        side: songs.find(s => s.id === currentSongId)?.side,
+        position: songs.find(s => s.id === currentSongId)?.position
+      })
+    }
+  }
+  function onPause() {
+    setIsPlaying(false)
+  }
 
-  // Cleanup pool on unmount
+  // Reset the play_start dedup flag when the active song changes,
+  // so the next time the user presses Play we log a new event for the new song.
   useEffect(() => {
+    playStartLoggedForRef.current = null
+  }, [currentSongId])
+
+  // Cleanup pool on unmount + emit session_end if a session was started.
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      if (sessionStartedRef.current) {
+        const a = activeRef.current
+        emit('cassette_session_end', null, {
+          last_song_id: currentSongId,
+          elapsed_seconds: Math.round(a?.currentTime ?? 0)
+        })
+        sessionStartedRef.current = false
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
     return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      if (sessionStartedRef.current) {
+        const a = activeRef.current
+        emit('cassette_session_end', null, {
+          last_song_id: currentSongId,
+          elapsed_seconds: Math.round(a?.currentTime ?? 0)
+        })
+        sessionStartedRef.current = false
+      }
       poolRef.current.forEach(audio => {
         audio.pause()
         audio.src = ''
       })
       poolRef.current.clear()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const play = useCallback(() => {

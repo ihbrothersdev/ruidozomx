@@ -1,5 +1,6 @@
 'use server'
 
+import { logEvent } from '@/app/analytics/actions'
 import { createClient } from '@/lib/supabase/server'
 import type { UserProposalType } from '@/lib/types'
 
@@ -46,6 +47,9 @@ export async function sendProposal(input: SendProposalInput) {
 interface SendInterestInput {
   toProfileId: string
   motivo: string
+  songId?: string | null
+  cassetteId?: string | null
+  sessionId?: string | null
 }
 
 export async function sendInterest(input: SendInterestInput) {
@@ -80,6 +84,14 @@ export async function sendInterest(input: SendInterestInput) {
     console.error('Error saving interest:', error)
     return { error: 'No se pudo enviar la conexión. Intenta de nuevo.' }
   }
+
+  await logEvent({
+    type: 'interest_click',
+    songId: input.songId ?? null,
+    cassetteId: input.cassetteId ?? null,
+    sessionId: input.sessionId ?? null,
+    metadata: { target_profile_id: input.toProfileId, motivo: input.motivo.trim() }
+  })
 
   return { success: true }
 }
