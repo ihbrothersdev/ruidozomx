@@ -17,7 +17,11 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/iniciar-sesion?error=' + encodeURIComponent(translateAuthError(error.message)))
+    const lower = error.message.toLowerCase()
+    if (lower.includes('invalid login credentials')) {
+      redirect('/iniciar-sesion?e=credenciales')
+    }
+    redirect('/iniciar-sesion?e=error&m=' + encodeURIComponent(translateAuthError(error.message)))
   }
 
   revalidatePath('/', 'layout')

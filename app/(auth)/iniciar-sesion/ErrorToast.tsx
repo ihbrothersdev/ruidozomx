@@ -23,16 +23,16 @@ export function ErrorToast() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const code = searchParams.get('e')
+  const customMessage = searchParams.get('m')
 
   useEffect(() => {
     if (!code) return
-    const msg = ERROR_MESSAGES[code]
-    if (msg) {
-      sileo.error({ title: msg.title, description: msg.description, position: 'top-center', duration: 5000 })
-    }
-    // Limpia la URL sin recargar
+    const mapped = ERROR_MESSAGES[code]
+    const title = mapped?.title ?? 'Error'
+    const description = mapped?.description ?? customMessage ?? 'Ocurrió un error inesperado. Intenta de nuevo.'
+    sileo.error({ title, description, position: 'top-center', duration: 5000 })
     router.replace('/iniciar-sesion')
-  }, [code, router])
+  }, [code, customMessage, router])
 
   return null
 }
