@@ -16,7 +16,7 @@
 -- ============================================================
 
 CREATE TYPE profile_role AS ENUM (
-  'fan', 'banda', 'manager', 'agente', 'promotor', 'proveedor', 'venue'
+  'fan', 'banda', 'manager', 'agente', 'promotor', 'proveedor', 'venue', 'admin'
 );
 
 CREATE TYPE proposal_status AS ENUM (

@@ -19,7 +19,8 @@ const REQUIRED_FIELD_BY_ROLE: Record<Role, string> = {
   promotor: 'full_name',
   agente: 'full_name',
   proveedor: 'brand_name',
-  venue: 'venue_name'
+  venue: 'venue_name',
+  admin: ''
 }
 
 const FORM_FIELDS: {

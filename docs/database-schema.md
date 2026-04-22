@@ -647,14 +647,14 @@ Foro independiente, Bar con música en vivo, Espacio cultural, Foro alternativo
 
 ## Cassette Player (Home)
 
-The home page renders a cassette player using **mock data** (`lib/mock-data.ts`).
+The home page renders a cassette player backed by Supabase.
 
-- `MOCK_SONGS`: 26 tracks (13 Side A + 13 Side B) with local MP3 files in `/songs/`
-- `MOCK_PLAYER_STATE`: initial state with `date: 'MAR. 20/26'`
+- Source: `getActiveCassetteSongs()` in `lib/supabase/songs.ts` fetches songs from the active cassette (`cassettes.active = true`), ordered by `side` (A/B) then `position`.
+- Fallback: if there's no active cassette or it has no songs, the helper returns a single silent `PlayerSong` placeholder (`"Próximamente"`) and a default `cassetteName`, so the player always has something to render.
 - Player components: `CassettePlayer`, `SongList`, `SongRow`, `DialogBubble`, `HomePlayerSection`
-- Audio hook: `useAudioPlayer` manages playback state client-side
+- Audio hook: `useAudioPlayer` manages playback state client-side (audio-element pool with staggered preload).
 
-The player uses `PlayerSong` (client interface with `string` IDs), aligned with the DB `Song` interface (uuid IDs). When connected to real data, swap mock data for a Supabase query.
+The player uses `PlayerSong` (client interface with `string` IDs), mapped from the DB `songs` rows (uuid IDs, `audio_url`, `duration_seconds`).
 
 ---
 

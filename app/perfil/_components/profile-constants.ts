@@ -1,13 +1,14 @@
 import type { Role } from '@/lib/types'
 
-export const ROLE_TABLE: Record<Role, string> = {
+export const ROLE_TABLE: Record<Role, string | null> = {
   banda: 'band_profiles',
   fan: 'fan_profiles',
   manager: 'industry_profiles',
   agente: 'industry_profiles',
   promotor: 'industry_profiles',
   proveedor: 'provider_profiles',
-  venue: 'venue_profiles'
+  venue: 'venue_profiles',
+  admin: null
 }
 
 /** Chip config per role: which fields to display as red chips and their short labels.
@@ -48,7 +49,8 @@ export const ROLE_CHIP_CONFIG: Record<Role, { key: string; label: string; type: 
     { key: 'venue_type', label: 'Tipo', type: 'array' },
     { key: 'has_audio', label: 'Audio propio', type: 'boolean' },
     { key: 'has_lighting', label: 'Iluminación', type: 'boolean' }
-  ]
+  ],
+  admin: []
 }
 
 /** Dynamic module sections for the right column, per role.
@@ -84,5 +86,30 @@ export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; da
     { title: 'Convocatorias publicadas', key: 'calls' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
-  ]
+  ],
+  admin: []
+}
+
+/** Primary name field per role (for display in identity block) */
+export const ROLE_NAME_FIELD: Record<Role, string> = {
+  banda: 'band_name',
+  fan: 'alias',
+  manager: 'full_name',
+  agente: 'full_name',
+  promotor: 'full_name',
+  proveedor: 'brand_name',
+  venue: 'venue_name',
+  admin: 'display_name'
+}
+
+/** Link field names per role */
+export const ROLE_LINK_FIELD: Record<Role, string> = {
+  banda: 'project_link',
+  fan: '',
+  manager: 'web_link',
+  agente: 'web_link',
+  promotor: 'web_link',
+  proveedor: 'web_link',
+  venue: 'web_link',
+  admin: ''
 }

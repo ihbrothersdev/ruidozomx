@@ -198,12 +198,14 @@ function ProponerRolaContent() {
               style={{ height: 'auto' }}
               unoptimized
             />
-            {/* Close on click anywhere on the image */}
-            <button
-              onClick={() => setShowModal(false)}
-              className='absolute inset-0 cursor-pointer'
-              aria-label='Cerrar'
-            />
+            <div className='mt-4 flex justify-center'>
+              <Link
+                href='/'
+                className='font-pt-mono rounded-sm bg-red-600 px-6 py-2.5 text-sm font-bold tracking-wider text-white uppercase shadow-md transition-colors hover:bg-red-500'
+              >
+                Ir al cassette
+              </Link>
+            </div>
           </div>
         </div>
       )}
