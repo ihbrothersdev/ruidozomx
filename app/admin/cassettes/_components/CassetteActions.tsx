@@ -1,6 +1,12 @@
 'use client'
 
-import { deleteCassette, publishCassette, removeSongFromCassette, setNextCassette } from '@/app/admin/actions'
+import {
+  deleteCassette,
+  migrateCassetteAudioToFolders,
+  publishCassette,
+  removeSongFromCassette,
+  setNextCassette
+} from '@/app/admin/actions'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +20,9 @@ import {
 } from '@/app/components/ui/alert-dialog'
 import { Button } from '@/app/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
-import { Disc3, Sparkles, Trash2 } from 'lucide-react'
-import { useRef } from 'react'
+import { Disc3, FolderTree, Loader2, Sparkles, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { sileo } from 'sileo'
 
 export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
   return (
@@ -231,5 +238,57 @@ export function RemoveSongButton({ songId, cassetteId }: { songId: string; casse
         </form>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+export function MigrateAudioButton({ cassetteId, count }: { cassetteId: string; count: number }) {
+  const [pending, setPending] = useState(false)
+
+  async function onClick() {
+    setPending(true)
+    const fd = new FormData()
+    fd.append('cassette_id', cassetteId)
+    const res = await migrateCassetteAudioToFolders(fd)
+    setPending(false)
+
+    if (!res.ok) {
+      sileo.error({ title: 'Error al reorganizar', description: res.error, position: 'top-center', duration: 5000 })
+      return
+    }
+
+    const parts: string[] = []
+    if (res.moved > 0) parts.push(`${res.moved} movida${res.moved === 1 ? '' : 's'}`)
+    if (res.skipped > 0) parts.push(`${res.skipped} ya en su lugar`)
+    if (res.failed > 0) parts.push(`${res.failed} falló${res.failed === 1 ? '' : 'n'}`)
+
+    if (res.failed > 0) {
+      sileo.error({
+        title: 'Reorganización parcial',
+        description: parts.join(' · '),
+        position: 'top-center',
+        duration: 5000
+      })
+    } else {
+      sileo.success({
+        title: 'Archivos reorganizados',
+        description: parts.join(' · ') || 'Sin cambios',
+        position: 'top-center',
+        duration: 4000
+      })
+    }
+  }
+
+  return (
+    <Button
+      type='button'
+      onClick={onClick}
+      disabled={pending}
+      variant='outline'
+      size='sm'
+      className='font-pt-mono border-white/20 bg-white/5 text-xs tracking-wide text-white uppercase hover:bg-white/10'
+    >
+      {pending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <FolderTree className='h-3.5 w-3.5' />}
+      Reorganizar {count} archivo{count === 1 ? '' : 's'}
+    </Button>
   )
 }

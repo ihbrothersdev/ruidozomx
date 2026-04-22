@@ -3,14 +3,16 @@ import { Badge } from '@/app/components/ui/badge'
 import { Button } from '@/app/components/ui/button'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Progress } from '@/app/components/ui/progress'
-import { isPlayableAudio } from '@/lib/audio'
+import { extractStorageKey, isPlayableAudio } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ArrowLeft, Music2, Sparkles, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CassetteSides, type CassetteSong } from '../_components/CassetteSides'
-import { DeleteButton, MarkAsNextButton, PublishButton } from '../_components/CassetteActions'
+import { DeleteButton, MarkAsNextButton, MigrateAudioButton, PublishButton } from '../_components/CassetteActions'
+
+const SONGS_BUCKET = 'songs'
 
 function formatTime(seconds: number): string {
   if (!seconds || seconds <= 0) return '0:00'
@@ -46,6 +48,11 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
   }))
   const missingAudio = cassetteSongs.filter(s => !isPlayableAudio(s.audioUrl))
   const missingAudioCount = missingAudio.length
+
+  const unorganizedAudioCount = cassetteSongs.filter(s => {
+    const key = extractStorageKey(s.audioUrl, SONGS_BUCKET)
+    return key !== null && !key.startsWith(`${cassette.id}/`)
+  }).length
 
   const durationLimitMinutes = cassette.duration_minutes ?? 90
   const sumKnown = (songs ?? []).reduce((acc, s) => acc + (s.duration_seconds ?? 0), 0)
@@ -132,6 +139,26 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
               el ícono <UploadCloud className='inline h-3 w-3 align-middle' /> en cada fila. Sin esto el cassette no se
               puede publicar.
             </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {unorganizedAudioCount > 0 && state !== 'archived' && (
+        <Alert className='border-white/10 bg-white/3 text-white/70'>
+          <Music2 />
+          <AlertTitle className='font-pt-mono text-white'>
+            {unorganizedAudioCount} archivo{unorganizedAudioCount === 1 ? '' : 's'} en la raíz del bucket
+          </AlertTitle>
+          <AlertDescription className='font-pt-mono text-white/60'>
+            <p className='mb-3'>
+              Estos MP3s viven en <code className='text-white/80'>songs/</code> directamente. Los puedes reorganizar a{' '}
+              <code className='text-white/80'>songs/{cassette.id.slice(0, 8)}…/artista-titulo.mp3</code> con un solo
+              clic. Es seguro: mueve los archivos y actualiza las URLs atómicamente.
+            </p>
+            <MigrateAudioButton
+              cassetteId={cassette.id}
+              count={unorganizedAudioCount}
+            />
           </AlertDescription>
         </Alert>
       )}

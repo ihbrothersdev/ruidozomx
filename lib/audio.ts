@@ -66,3 +66,31 @@ export function songStorageKey(opts: { cassetteId: string; artist: string; title
   const safeExt = opts.ext.replace(/^\./, '').toLowerCase() || 'mp3'
   return `${opts.cassetteId}/${slugify(opts.artist)}-${slugify(opts.title)}.${safeExt}`
 }
+
+/**
+ * Extracts the storage key (relative to the bucket) from a Supabase Storage
+ * public URL. Returns null if the URL doesn't point to the given bucket.
+ *
+ * Examples (bucket = "songs"):
+ *   ".../public/songs/CLOTHING_ToxicoSaico.mp3" → "CLOTHING_ToxicoSaico.mp3"
+ *   ".../public/songs/abc-123/foo-bar.mp3"      → "abc-123/foo-bar.mp3"
+ */
+export function extractStorageKey(url: string | null | undefined, bucket: string): string | null {
+  if (!url) return null
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return null
+  }
+  const marker = `/storage/v1/object/public/${bucket}/`
+  const idx = parsed.pathname.indexOf(marker)
+  if (idx === -1) return null
+  const key = parsed.pathname.slice(idx + marker.length)
+  if (!key) return null
+  try {
+    return decodeURIComponent(key)
+  } catch {
+    return key
+  }
+}

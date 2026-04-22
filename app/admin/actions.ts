@@ -1,6 +1,6 @@
 'use server'
 
-import { isPlayableAudio, songStorageKey } from '@/lib/audio'
+import { extractStorageKey, isPlayableAudio, songStorageKey } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
@@ -396,4 +396,74 @@ export async function uploadSongAudio(
   revalidatePath(`/admin/cassettes/${cassetteId}`)
   revalidatePath('/')
   return { ok: true, url: publicUrl }
+}
+
+/**
+ * One-shot migration: move every track of a cassette into the canonical
+ * `{cassetteId}/{artist-slug}-{title-slug}.{ext}` layout in the `songs` bucket.
+ *
+ * Skips:
+ *  - Tracks whose `audio_url` doesn't point to the `songs` bucket (e.g. external
+ *    Spotify/YouTube link — those need a real upload, not a move).
+ *  - Tracks already at the target key (idempotent).
+ */
+export async function migrateCassetteAudioToFolders(
+  formData: FormData
+): Promise<{ ok: true; moved: number; skipped: number; failed: number } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const cassetteId = formData.get('cassette_id') as string
+  if (!cassetteId) return { ok: false, error: 'faltan_datos' }
+
+  const { data: tracks, error: tracksError } = await svc
+    .from('songs')
+    .select('id, artist, title, audio_url')
+    .eq('cassette_id', cassetteId)
+  if (tracksError) return { ok: false, error: tracksError.message }
+  if (!tracks || tracks.length === 0) return { ok: true, moved: 0, skipped: 0, failed: 0 }
+
+  let moved = 0
+  let skipped = 0
+  let failed = 0
+
+  for (const track of tracks) {
+    const oldKey = extractStorageKey(track.audio_url, SONGS_BUCKET)
+    if (!oldKey) {
+      skipped++
+      continue
+    }
+
+    const ext = (oldKey.split('.').pop() ?? 'mp3').split('?')[0].toLowerCase()
+    const newKey = songStorageKey({ cassetteId, artist: track.artist, title: track.title, ext })
+
+    if (oldKey === newKey) {
+      skipped++
+      continue
+    }
+
+    const { error: moveError } = await svc.storage.from(SONGS_BUCKET).move(oldKey, newKey)
+    if (moveError) {
+      failed++
+      continue
+    }
+
+    const {
+      data: { publicUrl }
+    } = svc.storage.from(SONGS_BUCKET).getPublicUrl(newKey)
+
+    const { error: updateError } = await svc.from('songs').update({ audio_url: publicUrl }).eq('id', track.id)
+    if (updateError) {
+      // Roll the file back to its original location to keep DB and Storage in sync.
+      await svc.storage.from(SONGS_BUCKET).move(newKey, oldKey)
+      failed++
+      continue
+    }
+
+    moved++
+  }
+
+  revalidatePath(`/admin/cassettes/${cassetteId}`)
+  revalidatePath('/')
+  return { ok: true, moved, skipped, failed }
 }
