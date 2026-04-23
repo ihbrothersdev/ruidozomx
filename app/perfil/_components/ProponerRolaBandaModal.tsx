@@ -43,13 +43,15 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, s
 
   const isBandPrefilled = bandName.trim().length > 0
   const artist = isBandPrefilled ? bandName : artistName
-  const canSubmit = songName.trim().length > 0 && artist.trim().length > 0
+  const canSubmit =
+    songName.trim().length > 0 && artist.trim().length > 0 && listenLink.trim().length > 0
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     if (!canSubmit) return
     setSending(true)
     const result = await submitSongProposal({
@@ -128,17 +130,24 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, s
               </p>
 
               {/* Form */}
-              <div className='mt-5 w-full space-y-4'>
+              <form onSubmit={handleSubmit} className='mt-5 w-full space-y-4'>
                 {/* Banda/Proyecto */}
                 <div className='space-y-1'>
                   <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    {isBandPrefilled ? `Banda/Proyecto: ${bandName}` : 'Banda/Proyecto'}
+                    {isBandPrefilled ? (
+                      `Banda/Proyecto: ${bandName}`
+                    ) : (
+                      <>
+                        Banda/Proyecto<span className='text-red-600'>*</span>
+                      </>
+                    )}
                   </Label>
                   {!isBandPrefilled && (
                     <Input
                       value={artistName}
                       onChange={e => setArtistName(e.target.value)}
                       placeholder='Nombre de la banda o proyecto'
+                      required
                       className={inputCls}
                     />
                   )}
@@ -147,12 +156,13 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, s
                 {/* Nombre de la rola */}
                 <div className='space-y-1'>
                   <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Nombre de la rola
+                    Nombre de la rola<span className='text-red-600'>*</span>
                   </Label>
                   <Input
                     value={songName}
                     onChange={e => setSongName(e.target.value)}
                     placeholder=''
+                    required
                     className={inputCls}
                   />
                 </div>
@@ -160,13 +170,14 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, s
                 {/* Link de escucha */}
                 <div className='space-y-1'>
                   <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Link de escucha
+                    Link de escucha<span className='text-red-600'>*</span>
                   </Label>
                   <Input
                     value={listenLink}
                     onChange={e => setListenLink(e.target.value)}
                     type='url'
                     placeholder='Spotify, YouTube, Bandcamp, SoundCloud o link directo'
+                    required
                     className={inputCls}
                   />
                 </div>
@@ -198,24 +209,25 @@ export default function ProponerRolaBandaModal({ open, onOpenChange, bandName, s
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Action buttons */}
-              <div className='mt-5 flex items-center gap-3'>
-                <button
-                  onClick={handleSubmit}
-                  disabled={!canSubmit || sending}
-                  className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-                >
-                  {sending ? 'Enviando...' : 'Enviar'}
-                </button>
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
-                >
-                  Cancelar
-                </button>
-              </div>
+                {/* Action buttons */}
+                <div className='mt-5 flex items-center gap-3'>
+                  <button
+                    type='submit'
+                    disabled={!canSubmit || sending}
+                    className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+                  >
+                    {sending ? 'Enviando...' : 'Enviar'}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => onOpenChange(false)}
+                    className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
           )}

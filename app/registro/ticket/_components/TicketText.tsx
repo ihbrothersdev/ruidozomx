@@ -22,121 +22,160 @@ export default function TicketText({ role, className = '', displayName = '' }: T
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
       {/* ── Row 1: headline pre-text (role-specific) ── */}
       <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
-        {(role === 'promotor' || role === 'agente' || role === 'manager') && (
-          <>
-            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
+        {role === 'manager' && (
+          <button
+            onClick={() => setProponerRolaOpen(true)}
+            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+          >
+            <p className='text-4xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+          </button>
+        )}
+        {/* TODO: Uncomment when publica una fecha modal is done */}
+        {/* {(role === 'promotor' || role === 'agente' || role === 'manager') && (
+          <button className='group pointer-events-auto flex cursor-pointer flex-col items-center'>
+            <p className='text-base leading-tight text-black group-hover:underline uppercase md:text-xl lg:text-3xl xl:text-4xl'>
               PUBLICA UNA FECHA O UNA
             </p>
-            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
+            <p className='text-base leading-tight text-black group-hover:underline uppercase md:text-xl lg:text-3xl xl:text-4xl'>
               CONVOCATORIA
             </p>
-          </>
-        )}
+          </button>
+        )} */}
         <button
           onClick={() => setCompartirEventoOpen(true)}
           className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
         >
           {role === 'venue' && (
             <>
-              <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-3xl xl:text-4xl'>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl xl:text-4xl'>
                 PUBLICA UNA TOCADA O
               </p>
-              <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl xl:text-4xl'>
                 ABRE FECHAS DISPONIBLES
               </p>
             </>
           )}
         </button>
         {role === 'fan' && (
-          <p className='text-2xl leading-tight font-bold text-red-500 uppercase md:text-2xl lg:text-5xl xl:text-5xl'>
-            PROPÓN UNA
-          </p>
+          <button
+            onClick={() => setProponerRolaOpen(true)}
+            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+          >
+            <p className='text-4xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+          </button>
         )}
         {role === 'banda' && (
-          <p className='text-base leading-tight font-bold text-black uppercase md:text-lg lg:text-xl xl:text-2xl'>
-            Publica una fecha o una convocatoria
-          </p>
-        )}
-
-        {role === 'proveedor' && (
-          <>
-            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
-              PUBLICA UN SERVICIO U OFERTA
+          <button
+            onClick={() => setProponerRolaOpen(true)}
+            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+          >
+            <p className='text-2xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
+              PROPÓN UNA DE TUS
             </p>
-          </>
+          </button>
         )}
+        {/* TODO: Uncomment when publica una fecha modal is done */}
+        {/* {role === 'proveedor' && (
+          <button
+            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+          >
+            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
+              PUBLICA UNA PROMO
+            </p>
+          </button>
+        )} */}
       </div>
 
       {/* ── Row 2: big headline + detail (role-specific) — clickable to open proponer rola modal ── */}
       <button
         onClick={() => setProponerRolaOpen(true)}
-        className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+        className='group pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
-        {(role === 'promotor' || role === 'agente' || role === 'manager') && (
+        {role === 'manager' && (
           <>
-            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-xl lg:text-xl xl:text-5xl'>
-              PROPÓN UNA
-            </p>
-            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
+            <p className='text-7xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLA
             </p>
-            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-base xl:text-xl'>
-              DE TU TALENTO QUE MUEVES PARA NUESTRO CASETE SEMANAL
-            </p>
-          </>
-        )}
-        {role === 'venue' && (
-          <>
-            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-xl lg:text-xl xl:text-5xl'>
-              PROPÓN UNA
-            </p>
-            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
-              ROLA
-            </p>
-            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-xl xl:text-3xl'>
+            <p className='text-md leading-tight text-red-500 uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
               Del talento que mueves
             </p>
-            <p className='text-xs leading-tight font-bold text-red-500 uppercase md:text-sm lg:text-xl xl:text-3xl'>
+            <p className='text-md leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
               para nuestro cassete semanal
             </p>
           </>
         )}
-        {role === 'fan' && (
+        {(role === 'promotor' || role === 'agente') && (
           <>
-            <p className='text-6xl leading-none font-bold text-red-500 uppercase md:text-5xl lg:text-8xl xl:text-8xl'>
+            <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-lg lg:text-xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+            <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-7xl'>
               ROLA
             </p>
-            <p className='mt-0.5 text-base leading-tight text-red-500 uppercase lg:text-xl xl:text-xl'>
-              PARA NUESTRO CASETE SEMANAL
+            <p className='text-md leading-tight text-red-500 uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              Del talento que mueves
+            </p>
+            <p className='text-md leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              para nuestro cassete semanal
+            </p>
+          </>
+        )}
+        {role === 'venue' && (
+          <button className='group pointer-events-auto cursor-pointer'>
+            <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-xl lg:text-xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
+            <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-7xl'>
+              ROLA
+            </p>
+            <p className='text-md leading-tight text-red-500 uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              De tu banda o artista favorito
+            </p>
+            <p className='text-md leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              para nuestro cassete semanal
+            </p>
+          </button>
+        )}
+        {role === 'fan' && (
+          <>
+            <p className='text-7xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-7xl'>
+              ROLA
+            </p>
+            <p className='text-md leading-tight text-red-500 uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              De tu banda o artista favorito
+            </p>
+            <p className='text-md leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl xl:text-3xl'>
+              para nuestro cassete semanal
             </p>
           </>
         )}
         {role === 'banda' && (
           <>
-            <p className='text-base leading-tight font-bold text-red-500 uppercase md:text-lg lg:text-xl xl:text-2xl'>
-              PROPÓN UNA DE TUS
-            </p>
-            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
+            <p className='text-7xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-9xl'>
               ROLAS
             </p>
-            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
-              PARA NUESTRO CASETE SEMANAL
+            <p className='text-md text-BLACK mt-0.5 leading-tight uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-3xl'>
+              PARA NUESTRO CASSETE SEMANAL
             </p>
           </>
         )}
         {role === 'proveedor' && (
           <>
-            <p className='text-base leading-tight text-red-500 uppercase md:text-lg lg:text-xl xl:text-2xl'>
+            <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-lg lg:text-xl xl:text-4xl'>
               PROPÓN UNA
             </p>
-            <p className='text-3xl leading-none font-black text-red-500 uppercase md:text-5xl lg:text-6xl xl:text-7xl'>
+            <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl xl:text-8xl'>
               ROLA
             </p>
-            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
-              Del talento que mueves
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-sm xl:text-xl'>
+              De tu banda o artista favorito
             </p>
-            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase md:text-xs lg:mt-1 lg:text-sm xl:text-sm'>
-              para nuestro casete semanal
+            <p className='mt-0.5 text-xs leading-tight text-black uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-sm xl:text-xl'>
+              para nuestro cassete semanal
             </p>
           </>
         )}
