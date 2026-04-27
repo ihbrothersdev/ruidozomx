@@ -51,7 +51,7 @@ export default function ActionButtons({
   // }
 
   return (
-    <div className='space-y-3'>
+    <div className='flex flex-col items-center space-y-3 lg:items-start'>
       {role !== 'fan' && !isOwnProfile && (
         <>
           <button
