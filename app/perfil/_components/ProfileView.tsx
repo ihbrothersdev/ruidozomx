@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Role } from '@/lib/types'
+import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import ActionButtons from './ActionButtons'
 import DynamicModules from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -11,6 +12,7 @@ import ReviewSection from './ReviewSection'
 import UltimaActividad from './UltimaActividad'
 
 export interface ProfileViewProps {
+  profileId?: string
   displayName: string
   role: Role | null
   location: string
@@ -22,9 +24,11 @@ export interface ProfileViewProps {
   isLoggedIn: boolean
   acceptProposals: boolean
   bio?: string
+  alreadySent?: { proposal: boolean; sendInterest: boolean }
 }
 
 export default function ProfileView({
+  profileId,
   displayName,
   role,
   location,
@@ -35,34 +39,36 @@ export default function ProfileView({
   isOwnProfile,
   isLoggedIn,
   acceptProposals,
-  bio
+  bio,
+  alreadySent
 }: ProfileViewProps) {
-  const logoDecoration = (
-    <div className='flex items-center gap-2'>
-      <Image
-        src='/assets/registro/explicacion-rol/shared/mano.png'
-        alt=''
-        width={80}
-        height={80}
-        className='h-17 w-auto'
-        unoptimized
-      />
-      <Link href='/'>
-        <Image
-          src='/assets/logo.png'
-          alt='Ruidozo'
-          width={380}
-          height={183}
-          className='h-40 w-auto'
-          unoptimized
-        />
-      </Link>
-    </div>
-  )
+  // const logoDecoration = (
+  //   <div className='flex items-center justify-center gap-2'>
+  //     <Image
+  //       src='/assets/registro/explicacion-rol/shared/mano.png'
+  //       alt=''
+  //       width={80}
+  //       height={80}
+  //       className='h-10 w-auto sm:h-17'
+  //       unoptimized
+  //     />
+  //     <Link href='/'>
+  //       <Image
+  //         src='/assets/logo.png'
+  //         alt='Ruidozo'
+  //         width={380}
+  //         height={183}
+  //         className='h-24 w-auto sm:h-40'
+  //         unoptimized
+  //       />
+  //     </Link>
+  //   </div>
+  // )
 
   return (
     <ProfileLayout
-      topDecoration={logoDecoration}
+      floatingNav={<BackHomeNav />}
+      // topDecoration={logoDecoration}
       leftColumn={
         <>
           {/* Photo + Identity */}
@@ -86,7 +92,7 @@ export default function ProfileView({
       rightColumn={
         <>
           {/* Logo + hand decoration — hidden on mobile (shown via topDecoration) */}
-          <div className='hidden items-center gap-2 lg:flex'>
+          {/* <div className='hidden items-center gap-2 lg:flex'>
             <Image
               src='/assets/registro/explicacion-rol/shared/mano.png'
               alt=''
@@ -105,7 +111,7 @@ export default function ProfileView({
                 unoptimized
               />
             </Link>
-          </div>
+          </div> */}
 
           {/* Dynamic modules */}
           {role && (
@@ -119,15 +125,18 @@ export default function ProfileView({
           <LinksSection
             socialLinks={socialLinks}
             contact={contact}
+            role={role}
           />
 
           {/* Action buttons */}
           <ActionButtons
+            profileId={profileId}
             isOwnProfile={isOwnProfile}
             isLoggedIn={isLoggedIn}
             role={role}
             acceptProposals={acceptProposals}
             displayName={displayName}
+            alreadySent={alreadySent}
           />
         </>
       }

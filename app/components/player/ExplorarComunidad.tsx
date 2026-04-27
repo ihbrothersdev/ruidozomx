@@ -8,8 +8,8 @@ export function ExplorarComunidad() {
       className='flex flex-col items-center transition-transform hover:scale-105'
     >
       <div
-        className='relative overflow-hidden'
-        style={{ width: 340, aspectRatio: '1206 / 759' }}
+        className='relative w-52 overflow-hidden lg:w-[340px]'
+        style={{ aspectRatio: '1206 / 759' }}
       >
         <Image
           src='/assets/body2/textura-back-video.png'
@@ -24,15 +24,22 @@ export function ExplorarComunidad() {
           loop
           muted
           playsInline
-          className='absolute inset-[8%] -top-3 z-[1] object-cover'
+          poster='/assets/binoculares.png'
+          className='absolute inset-[8%] -top-3 z-[3] object-cover'
           style={{ width: '100%', height: '100%' }}
           aria-label='Video de la comunidad Ruidozo'
         >
           <source
             src='/assets/body2/binoculares.webm'
-            type='video/mp4'
+            type='video/webm'
           />
-          Tu navegador no soporta el elemento de video.
+          <Image
+            src='/assets/binoculares.png'
+            alt='Explorar comunidad'
+            fill
+            className='object-cover'
+            unoptimized
+          />
         </video>
       </div>
 

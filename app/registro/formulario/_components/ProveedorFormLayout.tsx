@@ -6,6 +6,8 @@ import { Label } from '@/app/components/ui/label'
 import { Textarea } from '@/app/components/ui/textarea'
 import { SERVICE_TYPE_OPTIONS, TERRITORIAL_REACH_OPTIONS } from '@/lib/types'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
@@ -14,6 +16,10 @@ import { YesNoField } from './YesNoField'
 import { inputCls, labelCls } from './form-styles'
 
 export function ProveedorFormLayout() {
+  const searchParams = useSearchParams()
+  const source = searchParams.get('source') ?? 'registro'
+  const backHref = `/registro/explicacion-rol?role=proveedor&source=${source}`
+
   const [serviceTypes, setServiceTypes] = useState<string[]>([])
   const [otherService, setOtherService] = useState('')
 
@@ -22,6 +28,7 @@ export function ProveedorFormLayout() {
   }
 
   return (
+    <>
     <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
       {/* ── Left column ── */}
       <div className='w-full min-w-0 space-y-3 lg:w-1/2'>
@@ -122,7 +129,7 @@ export function ProveedorFormLayout() {
       </div>
 
       {/* ── Right column ── */}
-      <div className='flex w-full flex-col gap-4 lg:w-1/2'>
+      <div className='order-first flex w-full flex-col gap-4 lg:order-none lg:w-1/2'>
         <PhotoUpload />
         <div className='space-y-0.5'>
           <Label
@@ -154,23 +161,38 @@ export function ProveedorFormLayout() {
           label='Contacto'
           name='contact'
         />
-        <div className='flex flex-1 items-end justify-end'>
-          <button
-            type='submit'
-            className='cursor-pointer'
-          >
-            <Image
-              src='/assets/registro/formulario/shared/boton-siguiente.png'
-              alt='Siguiente'
-              width={220}
-              height={65}
-              className='w-36 transition-opacity hover:opacity-80 sm:w-44'
-              style={{ height: 'auto' }}
-              unoptimized
-            />
-          </button>
-        </div>
       </div>
     </div>
+    <div className='flex justify-end pt-4'>
+      <Link
+        href={backHref}
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-volver.png'
+          alt='Volver'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </Link>
+      <button
+        type='submit'
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-siguiente.png'
+          alt='Siguiente'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </button>
+    </div>
+    </>
   )
 }

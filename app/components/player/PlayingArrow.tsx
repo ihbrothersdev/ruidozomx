@@ -3,8 +3,7 @@ import Image from 'next/image'
 export function PlayingArrow() {
   return (
     <div
-      className='absolute top-15 -right-25 z-10 hidden md:block'
-      style={{ width: 200 }}
+      className='absolute top-5 -right-3 z-10 w-[100px] md:top-15 md:-right-25 md:w-[200px]'
     >
       <Image
         src='/assets/decorativos/senal.png'

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import { Manifesto } from './_components/Manifesto'
 
-type Phase = 'waiting' | 'video' | 'transition' | 'manifesto'
+type Phase = 'waiting' | 'video' | 'transition' | 'manifesto' | 'playing'
 
 export default function QuienesSomosPage() {
   const router = useRouter()
@@ -85,6 +85,16 @@ export default function QuienesSomosPage() {
           </div>
 
           {/* Skip button */}
+          {phase === 'playing' && (
+            <button
+              onClick={() => router.push('/')}
+              className='font-pt-mono absolute right-4 bottom-6 z-20 rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
+            >
+              Saltar
+            </button>
+          )}
+
+          {/* Skip button */}
           {phase === 'video' && (
             <button
               onClick={() => {
@@ -123,7 +133,11 @@ export default function QuienesSomosPage() {
                 unoptimized
               />
               <div className='relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-600 bg-red-600/20 transition-transform hover:scale-110'>
-                <svg viewBox='0 0 24 24' fill='#dc2626' className='h-7 w-7 translate-x-0.5'>
+                <svg
+                  viewBox='0 0 24 24'
+                  fill='#dc2626'
+                  className='h-7 w-7 translate-x-0.5'
+                >
                   <path d='M8 5v14l11-7z' />
                 </svg>
               </div>
@@ -147,7 +161,10 @@ export default function QuienesSomosPage() {
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
             >
-              <source src='/assets/quienes-somos/identity-desktop.mp4' type='video/mp4' />
+              <source
+                src='/assets/quienes-somos/identity-desktop.mp4'
+                type='video/mp4'
+              />
             </video>
             <video
               ref={mobileRef}
@@ -157,7 +174,10 @@ export default function QuienesSomosPage() {
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
             >
-              <source src='/assets/quienes-somos/identity-mobile.mp4' type='video/mp4' />
+              <source
+                src='/assets/quienes-somos/identity-mobile.mp4'
+                type='video/mp4'
+              />
             </video>
           </div>
 

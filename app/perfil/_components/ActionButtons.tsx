@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Role } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import ConectarModal from './ConectarModal'
@@ -8,17 +9,32 @@ import EnviarPropuestaModal from './EnviarPropuestaModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 
 interface ActionButtonsProps {
+  profileId?: string
   isOwnProfile: boolean
   isLoggedIn: boolean
   role: Role | null
   acceptProposals: boolean
   displayName?: string
+  alreadySent?: { proposal: boolean; sendInterest: boolean }
 }
 
-export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptProposals, displayName = '' }: ActionButtonsProps) {
+export default function ActionButtons({
+  profileId,
+  isOwnProfile,
+  isLoggedIn,
+  role,
+  acceptProposals,
+  displayName = '',
+  alreadySent
+}: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
   const [conectarOpen, setConectarOpen] = useState(false)
+  const [proposalSent, setProposalSent] = useState(false)
+  const [interestSent, setInterestSent] = useState(false)
+
+  const isProposalDisabled = alreadySent?.proposal || proposalSent
+  const isInterestDisabled = alreadySent?.sendInterest || interestSent
 
   // TODO: Add functionality later, not part of MVP.
   // if (isOwnProfile) {
@@ -35,31 +51,37 @@ export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptPr
   // }
 
   return (
-    <div className='space-y-3'>
-      {role !== 'fan' && (
+    <div className='flex flex-col items-center space-y-3 lg:items-start'>
+      {role !== 'fan' && !isOwnProfile && (
         <>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm border-2 border-black bg-black px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+            disabled={isProposalDisabled}
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
           >
-            Enviar propuesta
+            {isProposalDisabled ? 'Propuesta enviada' : 'Enviar propuesta'}
           </button>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setConectarOpen(true)}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm border-2 border-black bg-black px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+            disabled={isInterestDisabled}
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
           >
-            Conectar
+            {isInterestDisabled ? 'Conexión enviada' : 'Conectar'}
           </button>
           <EnviarPropuestaModal
             open={enviarPropuestaOpen}
             onOpenChange={setEnviarPropuestaOpen}
+            profileId={profileId}
             profileName={displayName}
             profileRole={role}
+            onSuccess={() => setProposalSent(true)}
           />
           <ConectarModal
             open={conectarOpen}
             onOpenChange={setConectarOpen}
+            profileId={profileId}
             profileName={displayName}
+            onSuccess={() => setInterestSent(true)}
           />
         </>
       )}
@@ -68,10 +90,18 @@ export default function ActionButtons({ isOwnProfile, isLoggedIn, role, acceptPr
       {role === 'banda' && (
         <>
           <button
+            type='button'
             onClick={() => setProponerRolaOpen(true)}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm bg-red-600 px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700'
+            className='block cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
           >
-            Proponer rola de esta banda
+            <Image
+              src='/assets/proponer-rola-banda.png'
+              alt='Proponer rola de esta banda'
+              width={600}
+              height={120}
+              className='mx-auto h-auto w-full max-w-xs'
+              unoptimized
+            />
           </button>
           <ProponerRolaBandaModal
             open={proponerRolaOpen}

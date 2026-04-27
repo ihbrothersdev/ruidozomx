@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
+import BackButton from '@/app/components/layout/BackButton'
 import { PROVEEDOR_CARD, TOP_ROW_CARDS, type RoleCard } from './constants'
 
 export default function EligeRolPage() {
@@ -64,6 +65,11 @@ function EligeRolContent() {
         backgroundPosition: 'center'
       }}
     >
+      {/* Back-to-landing button — centered on mobile, top-left on desktop */}
+      <div className='relative z-20 flex justify-center pt-4 lg:absolute lg:top-6 lg:left-6 lg:justify-start lg:pt-0'>
+        <BackButton href='/' sizeCls='h-20' />
+      </div>
+
       {/* === MOBILE (< lg) === */}
       <div className='relative z-10 flex min-h-screen flex-col items-center gap-6 px-6 py-12 lg:hidden'>
         <Image
@@ -102,7 +108,7 @@ function EligeRolContent() {
             alt='¿Ya tienes cuenta?'
             width={200}
             height={36}
-            className='h-auto w-36 sm:w-44'
+            className='h-auto w-48 sm:w-56'
             unoptimized
           />
           <Image
@@ -110,7 +116,7 @@ function EligeRolContent() {
             alt=''
             width={60}
             height={40}
-            className='h-auto w-10 sm:w-12'
+            className='h-auto w-14 sm:w-16'
             unoptimized
           />
           <Link href='/iniciar-sesion'>
@@ -119,7 +125,7 @@ function EligeRolContent() {
               alt='Entra'
               width={100}
               height={36}
-              className='h-auto w-16 transition-transform hover:scale-105 sm:w-20'
+              className='h-auto w-24 transition-transform hover:scale-105 sm:w-28'
               unoptimized
             />
           </Link>

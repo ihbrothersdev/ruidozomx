@@ -18,7 +18,8 @@ const ROLE_FORM_MAP: Record<Role, (role: Role) => React.ReactNode> = {
   agente: r => <ManagerGroupFormLayout initialRole={r as 'manager' | 'promotor' | 'agente'} />,
   fan: () => <FanFormLayout />,
   proveedor: () => <ProveedorFormLayout />,
-  venue: () => <VenueFormLayout />
+  venue: () => <VenueFormLayout />,
+  admin: () => null
 }
 
 export default function FormularioPage() {
@@ -75,32 +76,45 @@ function FormularioContent() {
       <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 py-6 sm:px-6'>
         {/* Grey folder card */}
         <div className='relative w-full overflow-hidden'>
-          {/* Grey folder background — natural shape with tab cut */}
+          {/* Mobile: simple rectangular background */}
+          <Image
+            src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
+            alt=''
+            fill
+            className='object-cover lg:hidden'
+            unoptimized
+          />
+          {/* Desktop: folder with tab cut */}
           <Image
             src='/assets/registro/formulario/shared/folder-grey-back.png'
             alt=''
             fill
-            className='object-fill'
+            className='hidden object-fill lg:block'
             unoptimized
           />
-          <div className='relative z-10 px-5 py-3 sm:p-5 lg:p-8'>
+          <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-4 lg:pb-12'>
             {/* Role etiqueta */}
-            <div className='mb-4'>
-              {role === 'banda' ? (
-                <span className='font-baby-doll inline-block -rotate-2 rounded-sm bg-red-600 px-5 py-2 text-xl tracking-wider text-white shadow-md sm:text-2xl'>
-                  BANDA / SOLISTA
-                </span>
-              ) : etiquetaSrc ? (
+            <div className='relative mb-4 flex justify-center lg:justify-start'>
+              {/* Rayo - mobile only, right side */}
+              <Image
+                src='/assets/registro/formulario/shared/rayo.png'
+                alt=''
+                width={60}
+                height={80}
+                className='absolute right-0 top-0 h-8 w-auto lg:hidden'
+                unoptimized
+              />
+              {etiquetaSrc && (
                 <Image
                   src={etiquetaSrc}
                   alt={role}
-                  width={250}
-                  height={60}
-                  className='w-40 -rotate-2 sm:w-48'
+                  width={350}
+                  height={80}
+                  className='w-56 -rotate-2 sm:w-72 lg:w-[350px]'
                   style={{ height: 'auto' }}
                   unoptimized
                 />
-              ) : null}
+              )}
             </div>
 
             {error && (

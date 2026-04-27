@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/app/components/ui/textarea'
 import { EVENT_TYPE_OPTIONS, TERRITORIAL_REACH_OPTIONS } from '@/lib/types'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
@@ -17,6 +19,10 @@ import { inputCls, labelCls, selectTriggerCls } from './form-styles'
 type SubRole = 'manager' | 'promotor' | 'agente'
 
 export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRole?: SubRole }) {
+  const searchParams = useSearchParams()
+  const source = searchParams.get('source') ?? 'registro'
+  const backHref = `/registro/explicacion-rol?role=manager_group&source=${source}`
+
   const [subRole, setSubRole] = useState<SubRole>(initialRole)
   const [eventTypes, setEventTypes] = useState<string[]>([])
   const [otherEvent, setOtherEvent] = useState('')
@@ -26,6 +32,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
   }
 
   return (
+    <>
     <div className='flex flex-col gap-3 md:flex-row md:gap-5'>
       {/* ── Left column ── */}
       <div className='w-full min-w-0 space-y-2 md:w-1/2'>
@@ -79,7 +86,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
       </div>
 
       {/* ── Right column ── */}
-      <div className='flex w-full flex-col gap-3 md:w-1/2'>
+      <div className='order-first flex w-full flex-col gap-3 md:order-none md:w-1/2'>
         <PhotoUpload />
 
         <div className='space-y-0.5'>
@@ -104,25 +111,39 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
         {subRole === 'manager' && <ManagerRightFields />}
         {subRole === 'agente' && <AgenteRightFields />}
 
-        {/* Siguiente */}
-        <div className='flex flex-1 items-end justify-end'>
-          <button
-            type='submit'
-            className='cursor-pointer'
-          >
-            <Image
-              src='/assets/registro/formulario/shared/boton-siguiente.png'
-              alt='Siguiente'
-              width={220}
-              height={65}
-              className='w-36 transition-opacity hover:opacity-80 sm:w-44'
-              style={{ height: 'auto' }}
-              unoptimized
-            />
-          </button>
-        </div>
       </div>
     </div>
+    <div className='flex justify-end pt-4'>
+      <Link
+        href={backHref}
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-volver.png'
+          alt='Volver'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </Link>
+      <button
+        type='submit'
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-siguiente.png'
+          alt='Siguiente'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </button>
+    </div>
+    </>
   )
 }
 
