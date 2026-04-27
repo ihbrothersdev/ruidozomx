@@ -15,6 +15,8 @@ export default function QuienesSomosPage() {
   const [phase, setPhase] = useState<Phase>('waiting')
   const [needsTap, setNeedsTap] = useState(false)
 
+  const handleVideoError = useCallback(() => setPhase('manifesto'), [])
+
   const getActiveVideo = useCallback(() => {
     return desktopRef.current?.offsetParent !== null ? desktopRef.current : mobileRef.current
   }, [])
@@ -35,8 +37,9 @@ export default function QuienesSomosPage() {
         setTimeout(() => setPhase('video'), 300)
       })
       .catch(() => {
+        // Autoplay blocked (direct navigation / F5) → skip to manifesto
         startedRef.current = false
-        setNeedsTap(true)
+        setPhase('manifesto')
       })
   }, [getActiveVideo])
 
@@ -160,6 +163,7 @@ export default function QuienesSomosPage() {
               preload='auto'
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
+              onError={handleVideoError}
             >
               <source
                 src='/assets/quienes-somos/identity-desktop.mp4'
@@ -173,6 +177,7 @@ export default function QuienesSomosPage() {
               preload='auto'
               onCanPlayThrough={handleCanPlay}
               onEnded={handleEnded}
+              onError={handleVideoError}
             >
               <source
                 src='/assets/quienes-somos/identity-mobile.mp4'
