@@ -51,11 +51,18 @@ export function ProponRolaModal({ open, onOpenChange }: ProponRolaModalProps) {
 
           {/* CTA */}
           <Link
-            href='/registro/elige-rol'
+            href='/iniciar-sesion'
             onClick={() => onOpenChange(false)}
             className='font-baby-doll text-2xl tracking-wider text-red-600 transition-colors hover:text-red-400 sm:text-3xl'
           >
-            REGÍSTRATE
+            INICIA SESIÓN
+          </Link>
+          <Link
+            href='/registro/elige-rol'
+            onClick={() => onOpenChange(false)}
+            className='font-baby-doll text-2xl tracking-wider text-red-600 transition-colors hover:text-red-400 sm:text-lg'
+          >
+            O REGÍSTRATE
           </Link>
         </div>
       </DialogContent>

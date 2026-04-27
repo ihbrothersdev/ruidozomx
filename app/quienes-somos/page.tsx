@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import { Manifesto } from './_components/Manifesto'
 
-type Phase = 'waiting' | 'video' | 'transition' | 'manifesto' | 'playing'
+type Phase = 'waiting' | 'video' | 'transition' | 'manifesto'
 
 export default function QuienesSomosPage() {
   const router = useRouter()
@@ -28,6 +28,7 @@ export default function QuienesSomosPage() {
     const video = getActiveVideo()
     if (!video) return
 
+    // Try with sound first (works if user got here via in-page navigation/click).
     video.muted = false
     video.volume = 0.5
     video
@@ -37,9 +38,20 @@ export default function QuienesSomosPage() {
         setTimeout(() => setPhase('video'), 300)
       })
       .catch(() => {
-        // Autoplay blocked (direct navigation / F5) → skip to manifesto
-        startedRef.current = false
-        setPhase('manifesto')
+        // Autoplay-with-sound blocked (typical on iOS Safari / Chrome Android on hard
+        // navigation or refresh). Fall back to muted autoplay so the video still plays.
+        video.muted = true
+        video
+          .play()
+          .then(() => {
+            setNeedsTap(false)
+            setTimeout(() => setPhase('video'), 300)
+          })
+          .catch(() => {
+            // Even muted autoplay was blocked → show the tap-to-play overlay.
+            startedRef.current = false
+            setNeedsTap(true)
+          })
       })
   }, [getActiveVideo])
 
@@ -54,10 +66,25 @@ export default function QuienesSomosPage() {
     startedRef.current = true
     video.muted = false
     video.volume = 0.5
-    video.play().then(() => {
-      setNeedsTap(false)
-      setTimeout(() => setPhase('video'), 300)
-    })
+    video
+      .play()
+      .then(() => {
+        setNeedsTap(false)
+        setTimeout(() => setPhase('video'), 300)
+      })
+      .catch(() => {
+        // Some browsers still refuse with sound on the first gesture — retry muted.
+        video.muted = true
+        video
+          .play()
+          .then(() => {
+            setNeedsTap(false)
+            setTimeout(() => setPhase('video'), 300)
+          })
+          .catch(() => {
+            startedRef.current = false
+          })
+      })
   }, [getActiveVideo])
 
   // Video ends → transition → manifesto
@@ -86,16 +113,6 @@ export default function QuienesSomosPage() {
               unoptimized
             />
           </div>
-
-          {/* Skip button */}
-          {phase === 'playing' && (
-            <button
-              onClick={() => router.push('/')}
-              className='font-pt-mono absolute right-4 bottom-6 z-20 rounded-sm border border-white/20 px-4 py-1.5 text-xs tracking-widest text-white/50 uppercase transition-colors hover:border-white/40 hover:text-white/80 sm:right-6'
-            >
-              Saltar
-            </button>
-          )}
 
           {/* Skip button */}
           {phase === 'video' && (
