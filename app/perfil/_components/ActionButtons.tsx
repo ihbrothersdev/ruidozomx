@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Role } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import ConectarModal from './ConectarModal'
@@ -17,7 +18,15 @@ interface ActionButtonsProps {
   alreadySent?: { proposal: boolean; sendInterest: boolean }
 }
 
-export default function ActionButtons({ profileId, isOwnProfile, isLoggedIn, role, acceptProposals, displayName = '', alreadySent }: ActionButtonsProps) {
+export default function ActionButtons({
+  profileId,
+  isOwnProfile,
+  isLoggedIn,
+  role,
+  acceptProposals,
+  displayName = '',
+  alreadySent
+}: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
   const [conectarOpen, setConectarOpen] = useState(false)
@@ -48,14 +57,14 @@ export default function ActionButtons({ profileId, isOwnProfile, isLoggedIn, rol
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
             disabled={isProposalDisabled}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm border-2 border-black bg-black px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
           >
             {isProposalDisabled ? 'Propuesta enviada' : 'Enviar propuesta'}
           </button>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setConectarOpen(true)}
             disabled={isInterestDisabled}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm border-2 border-black bg-black px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
           >
             {isInterestDisabled ? 'Conexión enviada' : 'Conectar'}
           </button>
@@ -81,10 +90,18 @@ export default function ActionButtons({ profileId, isOwnProfile, isLoggedIn, rol
       {role === 'banda' && (
         <>
           <button
+            type='button'
             onClick={() => setProponerRolaOpen(true)}
-            className='font-pt-mono block w-full cursor-pointer rounded-sm bg-red-600 px-6 py-2.5 text-center text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700'
+            className='block cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
           >
-            Proponer rola de esta banda
+            <Image
+              src='/assets/proponer-rola-banda.png'
+              alt='Proponer rola de esta banda'
+              width={600}
+              height={120}
+              className='mx-auto h-auto w-full max-w-xs'
+              unoptimized
+            />
           </button>
           <ProponerRolaBandaModal
             open={proponerRolaOpen}

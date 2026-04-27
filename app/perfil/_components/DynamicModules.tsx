@@ -35,22 +35,20 @@ export default function DynamicModules({ role, roleProfile }: DynamicModulesProp
             key={mod.key}
             className='border border-dashed border-black/20 p-4'
           >
-            <h4 className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>{mod.title}</h4>
-            {items.length > 0 ? (
+            <h4 className='font-impact-label text-lg font-bold tracking-wider text-black uppercase'>{mod.title}</h4>
+            {items.length > 0 && (
               <ul className='mt-2 space-y-1'>
                 {items.map((item, i) => (
                   <li
                     key={i}
-                    className='font-pt-mono flex items-center gap-2 text-sm text-black/80'
+                    className='font-impact-label flex items-center gap-2 text-sm text-black/80'
                   >
                     <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
                     {item}
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className='font-pt-mono mt-2 text-xs text-black/40 italic'>Próximamente</p>
-            )}
+            )}  
           </div>
         )
       })}
