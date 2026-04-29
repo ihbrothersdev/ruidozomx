@@ -132,8 +132,19 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       setIsPlaying(false)
     }
   }
-  function onPlay() { setIsPlaying(true) }
-  function onPause() { setIsPlaying(false) }
+  function onPlay() {
+    setIsPlaying(true)
+    // Update OS-level UI immediately — don't wait for React's effect cycle.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+    }
+  }
+  function onPause() {
+    setIsPlaying(false)
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused'
+    }
+  }
 
   // Cleanup pool on unmount
   useEffect(() => {
@@ -153,11 +164,13 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
     if (!currentSong) return
 
-    const artworkUrl = `${window.location.origin}/assets/logo.png`
+    const artworkUrl = `${window.location.origin}/assets/quienes-somos/rayo.png`
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: currentSong.title,
-      artist: currentSong.artist,
-      album: 'Ruidozo · Cassette semanal',
+      // Line 1 on the lock screen: "Canción - Autor"
+      title: `${currentSong.title} - ${currentSong.artist}`,
+      // Line 2 on the lock screen: brand
+      artist: 'Ruidozo MX',
+      album: 'Cassette semanal',
       artwork: [
         { src: artworkUrl, sizes: '96x96', type: 'image/png' },
         { src: artworkUrl, sizes: '192x192', type: 'image/png' },
@@ -168,7 +181,10 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     })
   }, [currentSong])
 
-  // Keep MediaSession playback state in sync so the OS shows the correct play/pause icon
+  // Keep MediaSession playback state in sync so the OS shows the correct play/pause icon.
+  // We also push the value directly inside the audio element's onPlay/onPause listeners
+  // (see below) because iOS Safari sometimes reads playbackState faster than React's
+  // state-driven re-render can catch up.
   useEffect(() => {
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
