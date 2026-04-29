@@ -32,7 +32,7 @@ export default function LinksSection({ socialLinks, contact, role }: LinksSectio
 
   return (
     <div className='border border-dashed border-black/20 p-4'>
-      <h4 className='font-impact-label text-lg font-bold tracking-wider text-black uppercase'>Links</h4>
+      <h4 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>Links</h4>
       <div className='mt-2 space-y-1'>
         {hasSocialLinks &&
           Object.entries(socialLinks!).map(([platform, url]) => (

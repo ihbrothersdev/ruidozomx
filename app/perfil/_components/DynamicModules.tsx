@@ -74,7 +74,7 @@ export default function DynamicModules({
           className='border border-dashed border-black/20 p-4'
         >
           <div className='flex items-baseline justify-between gap-3'>
-            <h4 className='font-impact-label text-lg font-bold tracking-wider text-black uppercase'>{entry.mod.title}</h4>
+            <h4 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>{entry.mod.title}</h4>
             {entry.kind === 'proposals' && (
               <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
                 {entry.total}
@@ -87,7 +87,7 @@ export default function DynamicModules({
               {entry.items.map((item, i) => (
                 <li
                   key={i}
-                  className='font-impact-label flex items-center gap-2 text-sm text-black/80'
+                  className='font-pt-mono flex items-center gap-2 text-sm text-black/80'
                 >
                   <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
                   {item}
@@ -106,10 +106,10 @@ export default function DynamicModules({
                     className='flex items-start gap-2 text-sm'
                   >
                     <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-                    <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-                      <span className='font-impact-label font-bold text-black'>{p.title}</span>
-                      <span className='font-pt-mono text-xs text-black/60'>— {p.artist}</span>
-                      <span className={`font-pt-mono ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}>
+                    <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+                      <span className='font-bold text-black'>{p.title}</span>
+                      <span className='text-xs text-black/60'>— {p.artist}</span>
+                      <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}>
                         {status.label}
                       </span>
                     </div>
