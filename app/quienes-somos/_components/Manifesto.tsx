@@ -83,7 +83,7 @@ function Reveal({
 }
 
 const hl = (size: string) =>
-  `font-baby-doll font-black uppercase leading-[0.9] tracking-tight ${size}`
+  `font-pt-mono font-black uppercase leading-[0.9] tracking-tight ${size}`
 
 const body = 'font-pt-mono text-lg sm:text-xl leading-relaxed'
 
@@ -141,7 +141,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
         {/* RU!DOZO no debería existir */}
         <Reveal delay={0.05} className='mt-4 pl-4'>
           <span
-            className='font-baby-doll text-2xl font-black uppercase sm:text-3xl'
+            className='font-pt-mono text-2xl font-black uppercase sm:text-3xl'
             style={{ color: C.red }}
           >
             RU!DOZO
@@ -230,7 +230,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
             <span style={{ color: `${C.white}66` }}>&gt; </span>
             se pierde:{' '}
             <strong
-              className='font-baby-doll text-2xl font-black uppercase sm:text-4xl'
+              className='font-pt-mono text-2xl font-black uppercase sm:text-4xl'
               style={{ color: C.white }}
             >
               EL ENCUENTRO.
@@ -297,7 +297,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
 
         <Reveal>
           <h2
-            className='font-baby-doll text-xl leading-[1.1] font-black sm:text-3xl'
+            className='font-pt-mono text-xl leading-[1.1] font-black sm:text-3xl'
             style={{ color: C.red }}
           >
             RU!DOZO no es solo lo que suena.
