@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export default function QuienesSomosPage() {
   const router = useRouter()
@@ -15,25 +15,39 @@ export default function QuienesSomosPage() {
     return desktopRef.current?.offsetParent !== null ? desktopRef.current : mobileRef.current
   }, [])
 
-  // Called once when video is ready — try unmuted, fallback to muted
-  const handleCanPlay = useCallback(() => {
+  const startPlayback = useCallback((video: HTMLVideoElement) => {
     if (startedRef.current) return
     startedRef.current = true
 
-    const video = getActiveVideo()
-    if (!video) return
-
-    // Try playing with sound at 50% volume (works if user clicked a link to get here)
     video.muted = false
     video.volume = 0.5
     video.play().catch(() => {
-      // Browser blocked — fallback to muted autoplay
       video.muted = true
-      video.play()
+      video.play().catch(() => {})
     })
 
     setTimeout(() => setPhase('playing'), 300)
-  }, [getActiveVideo])
+  }, [])
+
+  const handleCanPlay = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement>) => {
+      const active = getActiveVideo()
+      if (!active || e.currentTarget !== active) return
+      startPlayback(active)
+    },
+    [getActiveVideo, startPlayback]
+  )
+
+  useEffect(() => {
+    const video = getActiveVideo()
+    if (!video || startedRef.current) return
+
+    if (video.readyState >= 3) {
+      startPlayback(video)
+    } else {
+      video.load()
+    }
+  }, [getActiveVideo, startPlayback])
 
   const handleEnded = useCallback(() => {
     setPhase('outro')
@@ -82,7 +96,7 @@ export default function QuienesSomosPage() {
           className='hidden h-screen w-screen object-contain md:block'
           playsInline
           preload='auto'
-          onCanPlayThrough={handleCanPlay}
+          onCanPlay={handleCanPlay}
           onEnded={handleEnded}
         >
           <source
@@ -97,7 +111,7 @@ export default function QuienesSomosPage() {
           className='block h-screen w-screen object-contain md:hidden'
           playsInline
           preload='auto'
-          onCanPlayThrough={handleCanPlay}
+          onCanPlay={handleCanPlay}
           onEnded={handleEnded}
         >
           <source
