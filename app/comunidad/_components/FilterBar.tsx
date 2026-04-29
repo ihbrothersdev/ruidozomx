@@ -15,7 +15,7 @@ const FILTERS: RoleFilter[] = ['todos', 'banda', 'venue', 'promotor', 'manager',
 export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchChange }: FilterBarProps) {
   return (
     <div className='flex flex-col gap-4'>
-      {/* <div className='flex flex-wrap justify-center gap-2'>
+      <div className='flex flex-wrap justify-center gap-2'>
         {FILTERS.map(filter => (
           <button
             key={filter}
@@ -29,7 +29,7 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
             {ROLE_FILTER_LABELS[filter]}
           </button>
         ))}
-      </div> */}
+      </div>
 
       <div className='mx-auto flex w-full max-w-lg items-center'>
         <div className='relative flex-1'>
@@ -38,7 +38,7 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
             alt=''
             width={600}
             height={100}
-            className='h-auto w-full'
+            className='h-auto w-100'
             unoptimized
           />
           <input

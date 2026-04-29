@@ -80,6 +80,23 @@ export default async function PublicPerfilPage({ params }: Props) {
     alreadySent.sendInterest = !!interestCheck.data
   }
 
+  // Profile owner's song proposals (latest 3 for display) + total count for
+  // the badge. RLS only returns rows when the viewer is the proposal owner
+  // or an admin — for everyone else both come back empty and the module is
+  // auto-hidden by DynamicModules.
+  const [{ data: songProposalsData }, { count: songProposalsCount }] = await Promise.all([
+    supabase
+      .from('song_proposals')
+      .select('id, title, artist, status, created_at')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase
+      .from('song_proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+  ])
+
   return (
     <ProfileView
       profileId={profile.id}
@@ -95,6 +112,8 @@ export default async function PublicPerfilPage({ params }: Props) {
       isLoggedIn={!!user}
       acceptProposals={acceptProposals}
       alreadySent={alreadySent}
+      songProposals={songProposalsData ?? []}
+      songProposalsCount={songProposalsCount ?? 0}
     />
   )
 }
