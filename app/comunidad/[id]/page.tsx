@@ -1,6 +1,7 @@
 import { Footer } from '@/app/components/layout/Footer'
 import { Header } from '@/app/components/layout/Header'
 import { createClient } from '@/lib/supabase/server'
+import { getAvatarUrl } from '@/lib/supabase/storage'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -70,7 +71,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <div className='relative h-24 w-24 flex-shrink-0 overflow-hidden border-2 border-red-800/30 bg-amber-100 sm:h-32 sm:w-32'>
                   {profile.photo_url ? (
                     <Image
-                      src={profile.photo_url}
+                      src={getAvatarUrl(profile.photo_url, 256) ?? profile.photo_url}
                       alt={profile.display_name}
                       fill
                       className='object-cover'

@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image'
 import Link from 'next/link'
+import { getAvatarUrl } from '@/lib/supabase/storage'
 import type { CommunityProfile } from '../types'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -56,7 +57,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         >
           {profile.photo_url ? (
             <img
-              src={profile.photo_url}
+              src={getAvatarUrl(profile.photo_url, 240) ?? profile.photo_url}
               alt={profile.display_name}
               className='h-full w-full object-cover'
             />
