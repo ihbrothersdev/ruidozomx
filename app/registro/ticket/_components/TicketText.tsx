@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { sileo } from 'sileo'
 import type { Role } from '@/lib/types'
 import CompartirModal from '@/app/perfil/_components/CompartirModal'
 import ProponerRolaBandaModal from '@/app/perfil/_components/ProponerRolaBandaModal'
@@ -11,12 +12,32 @@ interface TicketTextProps {
   role: Role
   className?: string
   displayName?: string
+  /** When false, ticket buttons re-trigger the "confirma tu correo" toast
+   *  instead of opening modals — the user can't act until their account is active. */
+  isLoggedIn?: boolean
 }
 
-export default function TicketText({ role, className = '', displayName = '' }: TicketTextProps) {
+export default function TicketText({ role, className = '', displayName = '', isLoggedIn = false }: TicketTextProps) {
   const [compartirOpen, setCompartirOpen] = useState(false)
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [compartirEventoOpen, setCompartirEventoOpen] = useState(false)
+
+  /** Wrap any modal-opener so it fires the confirmation toast when the user
+   *  hasn't confirmed their email yet. */
+  function gated(open: () => void) {
+    return () => {
+      if (!isLoggedIn) {
+        sileo.info({
+          title: 'Confirma tu correo electrónico',
+          description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
+          position: 'top-center',
+          duration: 6000
+        })
+        return
+      }
+      open()
+    }
+  }
 
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
@@ -24,7 +45,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
       <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
         {role === 'manager' && (
           <button
-            onClick={() => setProponerRolaOpen(true)}
+            onClick={gated(() => setProponerRolaOpen(true))}
             className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
             <p className='text-4xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
@@ -44,7 +65,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
           </button>
         )} */}
         <button
-          onClick={() => setCompartirEventoOpen(true)}
+          onClick={gated(() => setCompartirEventoOpen(true))}
           className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
         >
           {role === 'venue' && (
@@ -60,7 +81,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         </button>
         {role === 'fan' && (
           <button
-            onClick={() => setProponerRolaOpen(true)}
+            onClick={gated(() => setProponerRolaOpen(true))}
             className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
             <p className='text-4xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
@@ -70,7 +91,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
         )}
         {role === 'banda' && (
           <button
-            onClick={() => setProponerRolaOpen(true)}
+            onClick={gated(() => setProponerRolaOpen(true))}
             className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
             <p className='text-2xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
@@ -92,7 +113,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
 
       {/* ── Row 2: big headline + detail (role-specific) — clickable to open proponer rola modal ── */}
       <button
-        onClick={() => setProponerRolaOpen(true)}
+        onClick={gated(() => setProponerRolaOpen(true))}
         className='group pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
         {role === 'manager' && (
@@ -183,7 +204,7 @@ export default function TicketText({ role, className = '', displayName = '' }: T
 
       {/* ── Row 3: Static share text — clickable ── */}
       <button
-        onClick={() => setCompartirOpen(true)}
+        onClick={gated(() => setCompartirOpen(true))}
         className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
         <p className='text-base leading-tight text-black uppercase group-hover:underline lg:text-2xl xl:text-3xl'>

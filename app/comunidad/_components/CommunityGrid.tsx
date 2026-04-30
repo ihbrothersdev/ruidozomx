@@ -16,7 +16,8 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
   const filtered = useMemo(() => {
-    let result = profiles
+    // Hide admin accounts from the public community grid.
+    let result = profiles.filter(p => p.role !== 'admin')
     if (activeFilter) {
       result = result.filter(p => p.role === activeFilter)
     }
