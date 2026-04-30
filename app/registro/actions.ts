@@ -208,19 +208,24 @@ export async function registroSignup(formData: FormData) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
   // After email confirmation we want the user to land on their onboarding
-  // ticket — not /perfil — so they don't miss it. Supabase will verify the
-  // token, set the session cookies, and finally redirect here.
+  // ticket — not /perfil — so they don't miss it.
   //
-  // NOTE: this URL must be added to "Redirect URLs" in the Supabase auth
-  // settings (use the wildcard `${SITE_URL}/registro/ticket*` to allow the
-  // role/name query string).
-  const ticketRedirectUrl = `${siteUrl}/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`
+  // The email-confirmation flow is PKCE: Supabase appends `?code=<pkce>` to
+  // `emailRedirectTo` and the app must call `exchangeCodeForSession(code)`
+  // to create the session cookies. We can't do that exchange on the ticket
+  // page itself, so we point Supabase to /auth/callback (which does the
+  // exchange) and let the callback forward to the ticket via `next`.
+  //
+  // NOTE: `${SITE_URL}/auth/callback` (and ideally `${SITE_URL}/registro/ticket*`)
+  // must be present in "Redirect URLs" in the Supabase auth settings.
+  const ticketPath = `/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`
+  const callbackUrl = `${siteUrl}/auth/callback?next=${encodeURIComponent(ticketPath)}`
 
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: ticketRedirectUrl,
+      emailRedirectTo: callbackUrl,
       data: { display_name: displayName, role: actualRole, registration_source: source }
     }
   })
