@@ -9,15 +9,20 @@ import { Suspense, useEffect } from 'react'
 import { sileo } from 'sileo'
 import TicketText from './TicketText'
 
-export default function TicketView() {
+interface TicketViewProps {
+  /** Whether the visitor already confirmed their email (and has an active session). */
+  isLoggedIn?: boolean
+}
+
+export default function TicketView({ isLoggedIn = false }: TicketViewProps) {
   return (
     <Suspense>
-      <TicketContent />
+      <TicketContent isLoggedIn={isLoggedIn} />
     </Suspense>
   )
 }
 
-function TicketContent() {
+function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
@@ -25,13 +30,24 @@ function TicketContent() {
 
   useEffect(() => {
     if (!displayName) return
+    // After email confirmation the user IS logged in — show a welcome toast
+    // instead of asking them to confirm something they already did.
+    if (isLoggedIn) {
+      sileo.success({
+        title: `¡Bienvenido${displayName ? `, ${displayName}` : ''}!`,
+        description: 'Tu cuenta está lista.',
+        position: 'top-center',
+        duration: 6000
+      })
+      return
+    }
     sileo.info({
       title: 'Confirma tu correo electrónico',
       description: 'Revisa tu bandeja de entrada (y spam) para activar tu cuenta.',
       position: 'top-center',
       duration: 8000
     })
-  }, [displayName])
+  }, [displayName, isLoggedIn])
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
@@ -69,6 +85,7 @@ function TicketContent() {
             <TicketText
               role={role}
               displayName={displayName}
+              isLoggedIn={isLoggedIn}
               className='h-full'
             />
           </div>
@@ -161,6 +178,7 @@ function TicketContent() {
             <TicketText
               role={role}
               displayName={displayName}
+              isLoggedIn={isLoggedIn}
               className='h-full'
             />
           </div>
