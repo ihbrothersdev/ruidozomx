@@ -207,11 +207,20 @@ export async function registroSignup(formData: FormData) {
   const contact = getStr(formData, 'contact')
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+  // After email confirmation we want the user to land on their onboarding
+  // ticket — not /perfil — so they don't miss it. Supabase will verify the
+  // token, set the session cookies, and finally redirect here.
+  //
+  // NOTE: this URL must be added to "Redirect URLs" in the Supabase auth
+  // settings (use the wildcard `${SITE_URL}/registro/ticket*` to allow the
+  // role/name query string).
+  const ticketRedirectUrl = `${siteUrl}/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      emailRedirectTo: ticketRedirectUrl,
       data: { display_name: displayName, role: actualRole, registration_source: source }
     }
   })
