@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { getAvatarUrl } from '@/lib/supabase/storage'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -188,7 +187,7 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                     >
                       {proposer?.photo_url ? (
                         <Image
-                          src={getAvatarUrl(proposer.photo_url, 72) ?? proposer.photo_url}
+                          src={proposer.photo_url}
                           alt=''
                           width={36}
                           height={36}

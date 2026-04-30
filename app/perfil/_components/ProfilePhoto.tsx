@@ -20,15 +20,12 @@ export default function ProfilePhoto({ photoUrl, displayName }: ProfilePhotoProp
       />
       <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
         {photoUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photoUrl}
-              alt={displayName}
-              className='h-full w-full object-cover'
-            />
-            <div className='absolute inset-0 bg-red-600/40 mix-blend-multiply' />
-          </>
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={photoUrl}
+            alt={displayName}
+            className='h-full w-full object-cover'
+          />
         ) : (
           <div className='flex h-full w-full items-center justify-center bg-[#e8b4a8]'>
             <span className='font-baby-doll text-4xl font-bold text-black/40 uppercase'>
