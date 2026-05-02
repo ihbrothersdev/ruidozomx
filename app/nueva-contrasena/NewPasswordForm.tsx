@@ -16,22 +16,25 @@ const passwordToggleCls =
 
 export function NewPasswordForm() {
   const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  // Only show the mismatch hint after the user has attempted to submit at least once,
+  // and clear it automatically as soon as the values match.
+  const mismatch = submitted && password !== '' && confirm !== '' && password !== confirm
+  const tooShort = submitted && password !== '' && password.length < 6
+  const error = mismatch
+    ? 'Las contraseñas no coinciden.'
+    : tooShort
+      ? 'La contraseña debe tener al menos 6 caracteres.'
+      : ''
 
   function handleSubmit(formData: FormData) {
-    setError('')
-    const password = formData.get('password') as string
-    const confirm = formData.get('confirm') as string
+    setSubmitted(true)
 
-    if (password !== confirm) {
-      setError('Las contraseñas no coinciden.')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
-      return
-    }
+    if (password !== confirm) return
+    if (password.length < 6) return
 
     startTransition(async () => {
       const result = await updatePassword(formData)
@@ -61,6 +64,8 @@ export function NewPasswordForm() {
         inputClassName={passwordInputCls}
         toggleClassName={passwordToggleCls}
         disabled={isPending}
+        value={password}
+        onChange={e => setPassword(e.target.value)}
       />
 
       <PasswordInput
@@ -72,6 +77,8 @@ export function NewPasswordForm() {
         inputClassName={passwordInputCls}
         toggleClassName={passwordToggleCls}
         disabled={isPending}
+        value={confirm}
+        onChange={e => setConfirm(e.target.value)}
       />
 
       {error && <p className='font-pt-mono text-xs font-bold text-red-600'>{error}</p>}

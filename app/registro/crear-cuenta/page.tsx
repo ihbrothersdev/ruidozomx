@@ -102,17 +102,21 @@ function CrearCuentaContent() {
   const serverError = searchParams.get('error')
   const message = searchParams.get('message')
 
-  const [profileData] = useState<Record<string, string | string[]>>(() => {
+  const [profileData, setProfileData] = useState<Record<string, string | string[]> | null>(null)
+
+  // Load profile from sessionStorage after mount to avoid SSR/CSR hydration mismatch
+  useEffect(() => {
     try {
-      const stored = typeof window !== 'undefined' ? sessionStorage.getItem('ruidozo_profile') : null
-      return stored ? JSON.parse(stored) : {}
+      const stored = sessionStorage.getItem('ruidozo_profile')
+      setProfileData(stored ? JSON.parse(stored) : {})
     } catch {
-      return {}
+      setProfileData({})
     }
-  })
+  }, [])
 
   // Guard: if the role-specific required field is missing, the user skipped the form
   useEffect(() => {
+    if (profileData === null) return
     const requiredField = REQUIRED_FIELD_BY_ROLE[role]
     const value = profileData[requiredField]
     if (!value || (typeof value === 'string' && !value.trim())) {
@@ -267,7 +271,7 @@ function CrearCuentaContent() {
                   name='source'
                   value={source}
                 />
-                <HiddenProfileInputs data={profileData} />
+                <HiddenProfileInputs data={profileData ?? {}} />
 
                 {FORM_FIELDS.map(field => (
                   <div
