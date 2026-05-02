@@ -1,12 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { login } from '../actions'
 import { ErrorToast } from './ErrorToast'
 import { ForgotPasswordModal } from './ForgotPasswordModal'
-
-const inputCls =
-  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold focus:border-red-700 focus:outline-none'
+import { LoginForm } from './LoginForm'
 
 export default async function LoginPage() {
   return (
@@ -120,43 +117,7 @@ export default async function LoginPage() {
               unoptimized
             />
 
-            <form className='relative z-10 space-y-4 px-8 py-8 sm:px-12 sm:py-10'>
-              <input
-                id='email'
-                name='email'
-                type='email'
-                required
-                placeholder='EMAIL'
-                className={inputCls}
-              />
-
-              <input
-                id='password'
-                name='password'
-                type='password'
-                required
-                minLength={6}
-                placeholder='CONTRASEÑA'
-                className={inputCls}
-              />
-
-              <div className='flex justify-center pt-2'>
-                <button
-                  formAction={login}
-                  className='cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
-                >
-                  <Image
-                    src='/assets/iniciar-sesion/boton-entrar.png'
-                    alt='Entrar'
-                    width={240}
-                    height={70}
-                    className='w-32 sm:w-36'
-                    style={{ height: 'auto' }}
-                    unoptimized
-                  />
-                </button>
-              </div>
-            </form>
+            <LoginForm />
           </div>
 
           <div className='font-pt-mono mt-8 text-center text-[20px] font-bold tracking-wider uppercase'>

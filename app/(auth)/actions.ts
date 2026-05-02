@@ -6,7 +6,9 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export async function login(formData: FormData) {
+export type LoginState = { error?: string } | undefined
+
+export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const supabase = await createClient()
 
   const data = {
@@ -17,7 +19,7 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/iniciar-sesion?error=' + encodeURIComponent(translateAuthError(error.message)))
+    return { error: translateAuthError(error.message) }
   }
 
   revalidatePath('/', 'layout')
