@@ -33,116 +33,115 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
 
   return (
     <>
-    <div className='flex flex-col gap-3 md:flex-row md:gap-5'>
-      {/* ── Left column ── */}
-      <div className='w-full min-w-0 space-y-2 md:w-1/2'>
-        <LocationFields />
+      <div className='flex flex-col gap-3 md:flex-row md:gap-5'>
+        {/* ── Left column ── */}
+        <div className='w-full min-w-0 space-y-2 md:w-1/2'>
+          <LocationFields />
 
-        <Field
-          label='Nombre completo'
-          name='full_name'
-          required
-          placeholder='Tu nombre completo'
-        />
-        <Field
-          label='Link a web o redes'
-          name='web_link'
-          placeholder='https://...'
-        />
-
-        {/* Cuál es tu rol — dropdown */}
-        <div className='min-w-0 space-y-0.5'>
-          <Label className={labelCls}>
-            Cuál es tu rol<span className='text-red-600'>*</span>
-          </Label>
-          <Select
-            name='role_type'
+          <Field
+            label='Nombre completo'
+            name='full_name'
             required
-            value={subRole}
-            onValueChange={v => setSubRole(v as SubRole)}
-          >
-            <SelectTrigger className={selectTriggerCls}>
-              <SelectValue placeholder='Selecciona tu rol' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='manager'>Manager</SelectItem>
-              <SelectItem value='promotor'>Promotor</SelectItem>
-              <SelectItem value='agente'>Agente</SelectItem>
-            </SelectContent>
-          </Select>
+            placeholder='Tu nombre completo'
+          />
+          <Field
+            label='Link a web o redes'
+            name='web_link'
+            placeholder='https://...'
+          />
+
+          {/* Cuál es tu rol — dropdown */}
+          <div className='min-w-0 space-y-0.5'>
+            <Label className={labelCls}>
+              Cuál es tu rol<span className='ml-2 text-red-600'>*</span>
+            </Label>
+            <Select
+              name='role_type'
+              required
+              value={subRole}
+              onValueChange={v => setSubRole(v as SubRole)}
+            >
+              <SelectTrigger className={selectTriggerCls}>
+                <SelectValue placeholder='Selecciona tu rol' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='manager'>Manager</SelectItem>
+                <SelectItem value='promotor'>Promotor</SelectItem>
+                <SelectItem value='agente'>Agente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Role-specific left fields */}
+          {subRole === 'promotor' && (
+            <PromotorLeftFields
+              eventTypes={eventTypes}
+              otherEvent={otherEvent}
+              setOtherEvent={setOtherEvent}
+              toggleEvent={toggleEvent}
+            />
+          )}
+          {subRole === 'manager' && <ManagerLeftFields />}
+          {subRole === 'agente' && <AgenteLeftFields />}
         </div>
 
-        {/* Role-specific left fields */}
-        {subRole === 'promotor' && (
-          <PromotorLeftFields
-            eventTypes={eventTypes}
-            otherEvent={otherEvent}
-            setOtherEvent={setOtherEvent}
-            toggleEvent={toggleEvent}
-          />
-        )}
-        {subRole === 'manager' && <ManagerLeftFields />}
-        {subRole === 'agente' && <AgenteLeftFields />}
-      </div>
+        {/* ── Right column ── */}
+        <div className='order-first flex w-full flex-col gap-3 md:order-none md:w-1/2'>
+          <PhotoUpload />
 
-      {/* ── Right column ── */}
-      <div className='order-first flex w-full flex-col gap-3 md:order-none md:w-1/2'>
-        <PhotoUpload />
+          <div className='space-y-0.5'>
+            <Label
+              htmlFor='review'
+              className={labelCls}
+            >
+              Reseña<span className='ml-2 text-red-600'>*</span>
+            </Label>
+            <Textarea
+              id='review'
+              name='review'
+              required
+              placeholder='600 caracteres máximo'
+              maxLength={600}
+              className={inputCls + ' min-h-[140px] resize-none md:min-h-[180px]'}
+            />
+          </div>
 
-        <div className='space-y-0.5'>
-          <Label
-            htmlFor='review'
-            className={labelCls}
-          >
-            Reseña<span className='text-red-600'>*</span>
-          </Label>
-          <Textarea
-            id='review'
-            name='review'
-            required
-            placeholder='600 caracteres máximo'
-            maxLength={600}
-            className={inputCls + ' min-h-[140px] resize-none md:min-h-[180px]'}
-          />
+          {/* Role-specific right fields */}
+          {subRole === 'promotor' && <PromotorRightFields />}
+          {subRole === 'manager' && <ManagerRightFields />}
+          {subRole === 'agente' && <AgenteRightFields />}
         </div>
-
-        {/* Role-specific right fields */}
-        {subRole === 'promotor' && <PromotorRightFields />}
-        {subRole === 'manager' && <ManagerRightFields />}
-        {subRole === 'agente' && <AgenteRightFields />}
-
       </div>
-    </div>
-    <div className='flex justify-end pt-4'>
-      <Link
-        href={backHref}
-        className='cursor-pointer'
-      >
-        <Image
-          src='/assets/registro/formulario/shared/boton-volver.png'
-          alt='Volver'
-          width={220}
-          height={65}
-          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
-          style={{ height: 'auto' }}
-          unoptimized
-        />
-      </Link>
-      <button
-        type='submit'
-        className='cursor-pointer'
-      >
-        <Image
-          src='/assets/registro/formulario/shared/boton-siguiente.png'
-          alt='Siguiente'
-          width={220}
-          height={65}
-          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
-          style={{ height: 'auto' }}
-          unoptimized
-        />
-      </button>
-    </div>
+      <div className='flex justify-end pt-4'>
+        <Link
+          href={backHref}
+          className='cursor-pointer'
+        >
+          <Image
+            src='/assets/registro/formulario/shared/boton-volver.png'
+            alt='Volver'
+            width={220}
+            height={65}
+            className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+            style={{ height: 'auto' }}
+            unoptimized
+          />
+        </Link>
+        <button
+          type='submit'
+          className='cursor-pointer'
+        >
+          <Image
+            src='/assets/registro/formulario/shared/boton-siguiente.png'
+            alt='Siguiente'
+            width={220}
+            height={65}
+            className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+            style={{ height: 'auto' }}
+            unoptimized
+          />
+        </button>
+      </div>
     </>
   )
 }
@@ -193,7 +192,7 @@ function PromotorLeftFields({
 
       <div className='space-y-1'>
         <Label className={labelCls}>
-          Tipos de eventos<span className='text-red-600'>*</span>
+          Tipos de eventos<span className='ml-2 text-red-600'>*</span>
         </Label>
         {EVENT_TYPE_OPTIONS.map(event => {
           const isOtro = event === 'Otro'

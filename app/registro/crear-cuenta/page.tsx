@@ -127,30 +127,60 @@ function CrearCuentaContent() {
     }
   }, [serverError])
 
-  const [clientError, setClientError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const error = clientError
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const form = e.currentTarget
+
+    if (!form.checkValidity()) {
+      e.preventDefault()
+      const invalid = form.querySelector(':invalid') as HTMLInputElement | null
+      if (invalid) {
+        const id = invalid.id || invalid.name || ''
+        const labelEl =
+          (id && (form.querySelector(`label[for="${id}"]`) as HTMLLabelElement | null)) ||
+          (invalid.closest('div')?.querySelector('label') as HTMLLabelElement | null)
+        const labelText = labelEl?.textContent?.replace(/\*$/, '').trim() || id || 'campo obligatorio'
+
+        sileo.error({
+          title: 'Falta un dato',
+          description: `Por favor completa: ${labelText}`,
+          position: 'top-center',
+          duration: 4000
+        })
+
+        invalid.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        invalid.focus()
+      }
+      return
+    }
+
     const password = (form.elements.namedItem('password') as HTMLInputElement)?.value
     const confirm = (form.elements.namedItem('confirm_password') as HTMLInputElement)?.value
 
     if (password !== confirm) {
       e.preventDefault()
-      setClientError('Las contraseñas no coinciden.')
+      sileo.error({
+        title: 'Error',
+        description: 'Las contraseñas no coinciden.',
+        position: 'top-center',
+        duration: 4000
+      })
       return
     }
 
     if (password.length < 6) {
       e.preventDefault()
-      setClientError('La contraseña debe tener al menos 6 caracteres.')
+      sileo.error({
+        title: 'Error',
+        description: 'La contraseña debe tener al menos 6 caracteres.',
+        position: 'top-center',
+        duration: 4000
+      })
       return
     }
 
-    setClientError(null)
     setIsSubmitting(true)
   }
 
@@ -210,7 +240,6 @@ function CrearCuentaContent() {
               Registrándote como: <strong>{ROLE_LABELS[role]}</strong>
             </p>
 
-            {error && <Alert variant='error'>{error}</Alert>}
             {message && <Alert variant='success'>{message}</Alert>}
 
             <div className='relative overflow-visible'>
@@ -223,6 +252,7 @@ function CrearCuentaContent() {
               />
               <form
                 ref={formRef}
+                noValidate
                 action={registroSignup}
                 onSubmit={handleSubmit}
                 className='relative z-10 space-y-3 p-4 sm:p-6'

@@ -50,7 +50,7 @@ function ExplicacionRolContent() {
 
       <div className='relative z-10 flex h-[100dvh] flex-col px-[50px] pt-6 pb-4 lg:hidden'>
         {/* Rayo top-right */}
-        <div className='flex justify-end'>
+        <div className='flex justify-end max-[400px]:hidden'>
           <img
             src={`${S}/rayo.png`}
             alt=''
@@ -82,9 +82,7 @@ function ExplicacionRolContent() {
                 className='flex items-start gap-2'
               >
                 <span className='mt-[0.2em] shrink-0 text-[clamp(0.7rem,3vw,25px)] leading-none text-black'>•</span>
-                <span className='font-pt-mono text-[clamp(0.7rem,3vw,25px)] leading-snug text-black/80'>
-                  {bullet}
-                </span>
+                <span className='font-pt-mono text-[clamp(0.7rem,3vw,25px)] leading-snug text-black/80'>{bullet}</span>
               </li>
             ))}
           </ul>

@@ -44,7 +44,7 @@ export function LocationFields() {
               htmlFor='state'
               className={labelCls}
             >
-              Estado/Provincia<span className='text-red-600'>*</span>
+              Estado/Provincia<span className='ml-2 text-red-600'>*</span>
             </Label>
             <input
               id='state'
@@ -61,7 +61,7 @@ export function LocationFields() {
               htmlFor='city'
               className={labelCls}
             >
-              Ciudad<span className='text-red-600'>*</span>
+              Ciudad<span className='ml-2 text-red-600'>*</span>
             </Label>
             <input
               id='city'

@@ -4,6 +4,7 @@ import { type RegistrationSource, type Role } from '@/lib/types'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { sileo } from 'sileo'
 import { BandaFormLayout } from './_components/BandaFormLayout'
 import { FanFormLayout } from './_components/FanFormLayout'
 import { ManagerGroupFormLayout } from './_components/ManagerGroupFormLayout'
@@ -44,6 +45,31 @@ function FormularioContent() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
+
+    if (!form.checkValidity()) {
+      const invalid = form.querySelector(':invalid') as HTMLInputElement | null
+      if (invalid) {
+        const id = invalid.id || invalid.name || ''
+        const cleanedName = id.replace(/^_/, '').replace(/_required$/, '')
+        const labelEl =
+          (id && (form.querySelector(`label[for="${id}"]`) as HTMLLabelElement | null)) ||
+          (invalid.closest('div')?.querySelector('label') as HTMLLabelElement | null)
+        const labelText = labelEl?.textContent?.replace(/\*$/, '').trim() || cleanedName || 'campo obligatorio'
+
+        sileo.error({
+          title: 'Falta un dato',
+          description: `Por favor completa: ${labelText}`,
+          position: 'top-center',
+          duration: 4000
+        })
+
+        const focusTarget = invalid.type === 'hidden' ? (invalid.closest('div') as HTMLElement | null) : invalid
+        focusTarget?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        if (invalid.type !== 'hidden') invalid.focus()
+      }
+      return
+    }
+
     const formData = new FormData(form)
 
     const data: Record<string, string | string[]> = {}
@@ -101,7 +127,7 @@ function FormularioContent() {
                 alt=''
                 width={60}
                 height={80}
-                className='absolute right-0 top-0 h-8 w-auto lg:hidden'
+                className='absolute top-0 right-0 h-8 w-auto max-[400px]:hidden lg:hidden'
                 unoptimized
               />
               {etiquetaSrc && (
@@ -124,6 +150,7 @@ function FormularioContent() {
             )}
 
             <form
+              noValidate
               onSubmit={handleSubmit}
               className='space-y-3'
             >
