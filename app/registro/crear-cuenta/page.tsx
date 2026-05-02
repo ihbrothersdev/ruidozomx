@@ -2,6 +2,7 @@
 
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
+import { PasswordInput } from '@/app/components/ui/password-input'
 import type { RegistrationSource, Role } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/types'
 import Image from 'next/image'
@@ -249,15 +250,28 @@ function CrearCuentaContent() {
                     >
                       {field.label}
                     </Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type={field.type}
-                      required
-                      placeholder={field.placeholder}
-                      minLength={field.minLength}
-                      className={inputCls}
-                    />
+                    {field.type === 'password' ? (
+                      <PasswordInput
+                        id={field.name}
+                        name={field.name}
+                        required
+                        placeholder={field.placeholder}
+                        minLength={field.minLength}
+                        className={`${inputCls} focus-within:border-red-800`}
+                        inputClassName='placeholder:text-black/30'
+                        toggleClassName='shrink-0 text-red-600/70 transition-colors hover:text-red-800 focus:outline-none disabled:opacity-50'
+                      />
+                    ) : (
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type={field.type}
+                        required
+                        placeholder={field.placeholder}
+                        minLength={field.minLength}
+                        className={inputCls}
+                      />
+                    )}
                   </div>
                 ))}
 

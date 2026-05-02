@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useTransition } from 'react'
 import { updatePassword } from '@/app/(auth)/actions'
+import { PasswordInput } from '@/app/components/ui/password-input'
+import { useState, useTransition } from 'react'
 import { sileo } from 'sileo'
 
-const inputCls =
-  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold focus:border-red-700 focus:outline-none'
+const passwordWrapperCls =
+  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black focus-within:border-red-700'
+
+const passwordInputCls =
+  'placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold'
+
+const passwordToggleCls =
+  'shrink-0 text-red-600/70 transition-colors hover:text-red-700 focus:outline-none disabled:opacity-50'
 
 export function NewPasswordForm() {
   const [isPending, startTransition] = useTransition()
@@ -45,23 +52,25 @@ export function NewPasswordForm() {
       action={handleSubmit}
       className='relative z-10 space-y-4 px-8 py-8 sm:px-12 sm:py-10'
     >
-      <input
+      <PasswordInput
         name='password'
-        type='password'
         required
         minLength={6}
         placeholder='NUEVA CONTRASEÑA'
-        className={inputCls}
+        className={passwordWrapperCls}
+        inputClassName={passwordInputCls}
+        toggleClassName={passwordToggleCls}
         disabled={isPending}
       />
 
-      <input
+      <PasswordInput
         name='confirm'
-        type='password'
         required
         minLength={6}
         placeholder='CONFIRMAR CONTRASEÑA'
-        className={inputCls}
+        className={passwordWrapperCls}
+        inputClassName={passwordInputCls}
+        toggleClassName={passwordToggleCls}
         disabled={isPending}
       />
 

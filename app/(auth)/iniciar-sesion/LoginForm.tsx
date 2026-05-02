@@ -1,5 +1,6 @@
 'use client'
 
+import { PasswordInput } from '@/app/components/ui/password-input'
 import Image from 'next/image'
 import { useActionState, useEffect, useState } from 'react'
 import { sileo } from 'sileo'
@@ -7,6 +8,12 @@ import { login, type LoginState } from '../actions'
 
 const inputCls =
   'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold focus:border-red-700 focus:outline-none'
+
+const passwordWrapperCls =
+  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black focus-within:border-red-700'
+
+const passwordInputCls =
+  'placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold'
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(login, undefined)
@@ -40,14 +47,15 @@ export function LoginForm() {
         onChange={e => setEmail(e.target.value)}
       />
 
-      <input
+      <PasswordInput
         id='password'
         name='password'
-        type='password'
         required
         minLength={6}
         placeholder='CONTRASEÑA'
-        className={inputCls}
+        className={passwordWrapperCls}
+        inputClassName={passwordInputCls}
+        toggleClassName='shrink-0 text-red-600/70 transition-colors hover:text-red-700 focus:outline-none disabled:opacity-50'
         disabled={pending}
       />
 

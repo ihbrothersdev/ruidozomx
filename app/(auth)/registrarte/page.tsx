@@ -1,6 +1,7 @@
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
+import { PasswordInput } from '@/app/components/ui/password-input'
 import Link from 'next/link'
 import { signup } from '../actions'
 import { type AuthSearchParams } from '../types'
@@ -51,14 +52,15 @@ export default async function SignupPage({ searchParams }: { searchParams: AuthS
             >
               Contraseña
             </Label>
-            <Input
+            <PasswordInput
               id='password'
               name='password'
-              type='password'
               required
               minLength={6}
               placeholder='••••••••'
-              className='border-gray-700 bg-gray-900 text-white placeholder:text-gray-500 focus-visible:border-white focus-visible:ring-0'
+              className='h-9 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-1 text-base text-white shadow-xs focus-within:border-white md:text-sm'
+              inputClassName='placeholder:text-gray-500'
+              toggleClassName='shrink-0 text-gray-400 transition-colors hover:text-white focus:outline-none disabled:opacity-50'
             />
           </div>
 
