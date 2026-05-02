@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
+import { SocialLinksFields } from './SocialLinksFields'
 import { YesNoField } from './YesNoField'
 import { inputCls, labelCls, selectTriggerCls } from './form-styles'
 
@@ -62,9 +63,11 @@ export function BandaFormLayout() {
           <Field
             label='Link a tu proyecto'
             name='project_link'
+            type='url'
             required
-            placeholder='https://...'
+            placeholder='Spotify, Bandcamp, SoundCloud...'
           />
+          <SocialLinksFields />
           <YesNoField
             label='Disponible para tocar en vivo'
             name='available_live'

@@ -38,7 +38,8 @@ CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
 -- Mapping from forms → profiles:
 --   band_name / full_name / alias / venue_name / brand_name → display_name (via buildDisplayName)
 --   review / description                                    → bio
---   web_link / project_link                                 → social_links.web
+--   web_link                                                → social_links.web
+--   project_link (banda)                                    → social_links.project
 --   contact                                                 → contact
 -- ============================================================
 
@@ -549,5 +550,5 @@ CREATE TRIGGER events_activity         AFTER INSERT ON events          FOR EACH 
 -- * Registration action (registroSignup) uses service_role client to bypass RLS
 -- * For manager/promotor/agente: actions.ts reads role_type from form dropdown
 --   and updates profiles.role after the initial insert
--- * social_links JSONB keys: {web, instagram, spotify, soundcloud, bandcamp, maps}
+-- * social_links JSONB keys: {web, project, instagram, spotify, soundcloud, bandcamp, maps}
 -- * contact is free text: could be email, phone, IG handle, etc.
