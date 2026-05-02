@@ -61,9 +61,9 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
         />
       </div>
 
-      {/* ── Mobile layout ── */}
+      {/* ── Mobile layout (<768) ── */}
       <div className='relative z-20 flex min-h-screen flex-col items-center md:hidden'>
-        {/* Logo */}
+        {/* Logo — top */}
         <div className='w-full px-4 pt-6 pb-2'>
           <img
             src='/assets/registro/tickets/shared/logo.png'
@@ -74,8 +74,8 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           />
         </div>
 
-        {/* Ticket with text */}
-        <div className='relative mx-auto w-[85%] max-w-sm'>
+        {/* Ticket — small hand pegged to the right */}
+        <div className='relative w-[95%] max-w-md self-end sm:w-[85%] sm:max-w-lg'>
           <img
             src='/assets/registro/tickets/shared/mano-boleto-sm.png'
             alt='Boleto'
@@ -100,7 +100,7 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           />
         </div>
 
-        {/* ENTRA button */}
+        {/* ENTRA button — bottom centered */}
         <Link
           href='/'
           className='group relative flex flex-col items-center gap-2 pb-8'
@@ -115,39 +115,37 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
             alt=''
             className='absolute top-0 left-1/2 w-20 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100'
           />
-          <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black'>
-            ENTRA
-          </span>
+          <span className='font-baby-doll text-md font-bold tracking-[0.2em] text-black'>ENTRA</span>
         </Link>
       </div>
 
-      {/* ── Desktop layout ── */}
+      {/* ── Desktop layout (md+) ── */}
       <div className='relative z-20 hidden min-h-screen md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)]'>
         {/* DIT — left column */}
-        <div className='flex items-center justify-center px-4 xl:px-6'>
+        <div className='flex items-start justify-center px-4 pt-6 lg:items-center lg:pt-0 xl:px-6'>
           <img
             src='/assets/registro/tickets/shared/dit.png'
             alt='DIT Do it together'
-            className='h-[75vh] w-auto max-w-full object-contain xl:h-[80vh]'
+            className='h-auto max-h-[60vh] w-auto max-w-full object-contain lg:h-[75vh] lg:max-h-none xl:h-[80vh]'
           />
         </div>
 
         <div />
 
         {/* Logo + ENTRA — right column */}
-        <div className='relative flex flex-col items-center justify-start gap-32 px-2 py-4 xl:gap-64 xl:py-5'>
+        <div className='relative flex flex-col items-center justify-start gap-12 px-2 py-4 lg:gap-32 xl:gap-64 xl:py-5'>
           <div className='w-full'>
             <img
               src='/assets/registro/tickets/shared/logo.png'
               alt='Ruidozo'
               width={400}
               height={200}
-              className='ml-auto h-24 w-48 object-contain object-top lg:h-[140px] lg:w-[280px] xl:h-[170px] xl:w-[340px]'
+              className='ml-auto h-20 w-40 object-contain object-top lg:h-[140px] lg:w-[280px] xl:h-[170px] xl:w-[340px]'
             />
           </div>
           <Link
             href='/perfil'
-            className='group relative flex flex-col items-center gap-2 md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2'
+            className='group relative flex flex-col items-center gap-2 lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2'
           >
             <img
               src='/assets/registro/tickets/shared/boton-entrar.png'
@@ -159,20 +157,18 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
               alt=''
               className='absolute top-0 left-1/2 w-28 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 lg:w-36 xl:w-40'
             />
-            <span className='font-baby-doll text-xl font-bold tracking-[0.2em] text-black'>
-              ENTRA
-            </span>
+            <span className='font-baby-doll text-xl font-bold tracking-[0.2em] text-black'>ENTRA</span>
           </Link>
         </div>
       </div>
 
-      {/* Ticket — fixed at bottom (desktop only) */}
+      {/* Ticket — fixed at bottom (md+ only) */}
       <div className='pointer-events-none fixed right-0 bottom-0 left-0 z-30 hidden justify-center md:flex'>
         <div className='relative'>
           <img
             src='/assets/registro/tickets/shared/mano-boleto-lg.png'
             alt='Boleto'
-            className='h-[60vh] w-auto object-contain object-bottom lg:h-[85vh] xl:h-[90vh]'
+            className='h-[78vh] w-auto object-contain object-bottom lg:h-[85vh] xl:h-[90vh]'
           />
           <div className='absolute top-[5%] left-[8%] h-[62%] w-[55%]'>
             <TicketText
