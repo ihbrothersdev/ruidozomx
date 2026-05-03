@@ -157,6 +157,20 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     }
   }, [])
 
+  // iOS fires a spurious 'pause' event when locking the screen even if audio
+  // continues. Re-sync playbackState from the audio element's actual state
+  // when the page becomes visible again (user unlocks).
+  useEffect(() => {
+    if (typeof document === 'undefined' || !('mediaSession' in navigator)) return
+    const sync = () => {
+      const audio = activeRef.current
+      if (!audio) return
+      navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing'
+    }
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
   // ── MediaSession: lock screen / notification / car / Bluetooth controls ──
   // Sets the now-playing metadata (title, artist, artwork) and action handlers
   // so the OS-level media controls work and show the Ruidozo branding.
@@ -186,10 +200,18 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
   const play = useCallback(() => {
     setIsStopped(false)
+    // Set eagerly before the audio element fires its 'play' event — iOS reads
+    // playbackState as soon as the lock screen appears, before React can react.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+    }
     activeRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused'
+    }
     activeRef.current?.pause()
   }, [])
 
