@@ -1,3 +1,4 @@
+import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { Toaster } from 'sileo'
@@ -51,11 +52,13 @@ export const metadata: Metadata = {
   title: 'Ruidozo MX'
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const { songs } = await getActiveCassetteSongs()
+
   return (
     <html
       lang='es'
@@ -64,7 +67,7 @@ export default function RootLayout({
       <body
         className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen pb-40 antialiased md:pb-16`}
       >
-        <AudioProvider>
+        <AudioProvider initialSongs={songs}>
           {children}
           <PersistentPlayerBar />
         </AudioProvider>

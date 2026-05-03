@@ -4,6 +4,8 @@ import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Textarea } from '@/app/components/ui/textarea'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
@@ -11,6 +13,10 @@ import { YesNoField } from './YesNoField'
 import { inputCls, labelCls, selectTriggerCls } from './form-styles'
 
 export function BandaFormLayout() {
+  const searchParams = useSearchParams()
+  const source = searchParams.get('source') ?? 'registro'
+  const backHref = `/registro/explicacion-rol?role=banda&source=${source}`
+
   return (
     <>
     <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
@@ -117,6 +123,20 @@ export function BandaFormLayout() {
       </div>
     </div>
     <div className='flex justify-end pt-4'>
+      <Link
+        href={backHref}
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-volver.png'
+          alt='Volver'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </Link>
       <button
         type='submit'
         className='cursor-pointer'

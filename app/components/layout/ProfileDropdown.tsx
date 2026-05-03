@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from 'react'
 interface ProfileDropdownProps {
   photoUrl: string | null
   displayName: string
+  role?: string | null
 }
 
-export function ProfileDropdown({ photoUrl, displayName }: ProfileDropdownProps) {
+export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdownProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -80,6 +81,18 @@ export function ProfileDropdown({ photoUrl, displayName }: ProfileDropdownProps)
             >
               Perfil
             </Link>
+            {role === 'admin' && (
+              <>
+                <div className='mx-3 border-t border-black/10' />
+                <Link
+                  href='/rolas-propuestas'
+                  onClick={() => setOpen(false)}
+                  className='font-pt-mono px-4 py-2.5 text-sm font-bold tracking-wider text-black uppercase transition-colors hover:bg-black/10'
+                >
+                  Rolas propuestas
+                </Link>
+              </>
+            )}
             <div className='mx-3 border-t border-black/10' />
             <form>
               <button

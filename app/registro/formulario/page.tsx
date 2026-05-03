@@ -18,7 +18,8 @@ const ROLE_FORM_MAP: Record<Role, (role: Role) => React.ReactNode> = {
   agente: r => <ManagerGroupFormLayout initialRole={r as 'manager' | 'promotor' | 'agente'} />,
   fan: () => <FanFormLayout />,
   proveedor: () => <ProveedorFormLayout />,
-  venue: () => <VenueFormLayout />
+  venue: () => <VenueFormLayout />,
+  admin: () => null
 }
 
 export default function FormularioPage() {

@@ -9,14 +9,16 @@ import { HomePlayerSection } from './components/player/HomePlayerSection'
 export default async function Home() {
   let user = null
   let photoUrl: string | null = null
+  let userRole: string | null = null
   try {
     const { createClient } = await import('@/lib/supabase/server')
     const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     user = data.user
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('photo_url').eq('id', user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('photo_url, role').eq('id', user.id).single()
       photoUrl = (profile?.photo_url as string) || null
+      userRole = (profile?.role as string) || null
     }
   } catch {
     // Supabase not configured — continue without auth
@@ -52,6 +54,7 @@ export default async function Home() {
         <Header
           user={user}
           photoUrl={photoUrl}
+          role={userRole}
         />
 
         <HomePlayerSection

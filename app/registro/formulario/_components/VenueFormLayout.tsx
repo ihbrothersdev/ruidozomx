@@ -6,6 +6,8 @@ import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group'
 import { Textarea } from '@/app/components/ui/textarea'
 import { CAPACITY_OPTIONS, VENUE_TYPE_OPTIONS } from '@/lib/types'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
@@ -13,6 +15,10 @@ import { YesNoField } from './YesNoField'
 import { inputCls, labelCls } from './form-styles'
 
 export function VenueFormLayout() {
+  const searchParams = useSearchParams()
+  const source = searchParams.get('source') ?? 'registro'
+  const backHref = `/registro/explicacion-rol?role=venue&source=${source}`
+
   return (
     <>
     <div className='flex flex-col gap-4 lg:flex-row lg:gap-6'>
@@ -131,6 +137,20 @@ export function VenueFormLayout() {
       </div>
     </div>
     <div className='flex justify-end pt-4'>
+      <Link
+        href={backHref}
+        className='cursor-pointer'
+      >
+        <Image
+          src='/assets/registro/formulario/shared/boton-volver.png'
+          alt='Volver'
+          width={220}
+          height={65}
+          className='w-36 transition-opacity hover:opacity-80 sm:w-44'
+          style={{ height: 'auto' }}
+          unoptimized
+        />
+      </Link>
       <button
         type='submit'
         className='cursor-pointer'

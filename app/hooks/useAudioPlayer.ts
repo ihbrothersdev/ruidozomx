@@ -29,79 +29,84 @@ interface AudioPlayerActions {
 }
 
 export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
+  const activeRef = useRef<HTMLAudioElement | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
 
+  const sortedSongsRef = useRef<PlayerSong[]>([])
+  sortedSongsRef.current = [...songs].sort((a, b) => {
+    if (a.side !== b.side) return a.side === 'A' ? -1 : 1
+    return a.position - b.position
+  })
+
   const currentSong = songs.find(s => s.id === currentSongId)
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
-  // Initialize audio element
-  useEffect(() => {
-    const audio = new Audio()
-    audioRef.current = audio
-
-    return () => {
-      audio.pause()
-      audio.src = ''
+  /** Get or create an Audio element for a song */
+  const getAudio = useCallback((song: PlayerSong): HTMLAudioElement => {
+    const pool = poolRef.current
+    let audio = pool.get(song.id)
+    if (!audio) {
+      audio = new Audio()
+      audio.preload = 'auto'
+      audio.src = song.audioSrc
+      pool.set(song.id, audio)
     }
+    return audio
   }, [])
 
-  // Load song when currentSongId changes
+  // Build pool for all songs on mount (staggered, non-blocking)
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentSong) return
+    const sorted = sortedSongsRef.current
+    if (sorted.length === 0) return
 
-    const wasPlaying = isPlaying
-    audio.src = currentSong.audioSrc
-    audio.load()
-
-    if (wasPlaying) {
-      audio.play().catch(() => {})
-    }
-  }, [currentSongId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Attach event listeners
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const onTimeUpdate = () => {
-      setElapsedSeconds(Math.floor(audio.currentTime))
-    }
-
-    const onDurationChange = () => {
-      setDuration(Math.floor(audio.duration) || 0)
-    }
-
-    const onEnded = () => {
-      // Auto-advance to next song
-      const sortedSongs = [...songs].sort((a, b) => {
-        if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-        return a.position - b.position
-      })
-      const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-      if (currentIndex < sortedSongs.length - 1) {
-        setCurrentSongId(sortedSongs[currentIndex + 1].id)
-      } else {
-        // Wrap to first song
-        setCurrentSongId(sortedSongs[0].id)
-        setIsPlaying(false)
+    let i = 0
+    // Create one Audio element every 200ms to avoid hammering the network
+    const interval = setInterval(() => {
+      if (i >= sorted.length) {
+        clearInterval(interval)
+        return
       }
+      getAudio(sorted[i])
+      i++
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [songs, getAudio])
+
+  // Wire up the active audio element when currentSongId changes
+  useEffect(() => {
+    if (!currentSong) return
+
+    // Detach old listeners
+    const prev = activeRef.current
+    if (prev) {
+      prev.pause()
+      prev.removeEventListener('timeupdate', onTimeUpdate)
+      prev.removeEventListener('durationchange', onDurationChange)
+      prev.removeEventListener('ended', onEnded)
+      prev.removeEventListener('play', onPlay)
+      prev.removeEventListener('pause', onPause)
     }
 
-    const onPlay = () => setIsPlaying(true)
-    const onPause = () => setIsPlaying(false)
+    const audio = getAudio(currentSong)
+    activeRef.current = audio
 
+    // Attach listeners
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+
+    // Sync state
+    setElapsedSeconds(Math.floor(audio.currentTime))
+    setDuration(Math.floor(audio.duration) || 0)
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
@@ -110,19 +115,97 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
     }
-  }, [songs, currentSongId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSongId])
+
+  function onTimeUpdate() {
+    const a = activeRef.current
+    if (a) setElapsedSeconds(Math.floor(a.currentTime))
+  }
+  function onDurationChange() {
+    const a = activeRef.current
+    if (a) setDuration(Math.floor(a.duration) || 0)
+  }
+  function onEnded() {
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx < sorted.length - 1) {
+      setCurrentSongId(sorted[idx + 1].id)
+      setTimeout(() => activeRef.current?.play().catch(() => {}), 0)
+    } else {
+      setCurrentSongId(sorted[0].id)
+      setIsPlaying(false)
+    }
+  }
+  function onPlay() {
+    setIsPlaying(true)
+    // Update OS-level UI immediately — don't wait for React's effect cycle.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+    }
+  }
+  function onPause() {
+    setIsPlaying(false)
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused'
+    }
+  }
+
+  // Cleanup pool on unmount
+  useEffect(() => {
+    return () => {
+      poolRef.current.forEach(audio => {
+        audio.pause()
+        audio.src = ''
+      })
+      poolRef.current.clear()
+    }
+  }, [])
+
+  // ── MediaSession: lock screen / notification / car / Bluetooth controls ──
+  // Sets the now-playing metadata (title, artist, artwork) and action handlers
+  // so the OS-level media controls work and show the Ruidozo branding.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+    if (!currentSong) return
+
+    const artworkUrl = `${window.location.origin}/assets/quienes-somos/rayo.png`
+    navigator.mediaSession.metadata = new MediaMetadata({
+      // Line 1 on the lock screen: "Canción - Autor"
+      title: `${currentSong.title} - ${currentSong.artist}`,
+      // Line 2 on the lock screen: brand
+      artist: 'Ruidozo MX',
+      album: 'Cassette semanal',
+      artwork: [
+        { src: artworkUrl, sizes: '96x96', type: 'image/png' },
+        { src: artworkUrl, sizes: '192x192', type: 'image/png' },
+        { src: artworkUrl, sizes: '256x256', type: 'image/png' },
+        { src: artworkUrl, sizes: '384x384', type: 'image/png' },
+        { src: artworkUrl, sizes: '512x512', type: 'image/png' }
+      ]
+    })
+  }, [currentSong])
+
+  // Keep MediaSession playback state in sync so the OS shows the correct play/pause icon.
+  // We also push the value directly inside the audio element's onPlay/onPause listeners
+  // (see below) because iOS Safari sometimes reads playbackState faster than React's
+  // state-driven re-render can catch up.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+  }, [isPlaying])
 
   const play = useCallback(() => {
     setIsStopped(false)
-    audioRef.current?.play().catch(() => {})
+    activeRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
-    audioRef.current?.pause()
+    activeRef.current?.pause()
   }, [])
 
   const stop = useCallback(() => {
-    const audio = audioRef.current
+    const audio = activeRef.current
     if (!audio) return
     audio.pause()
     audio.currentTime = 0
@@ -131,40 +214,127 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [])
 
   const next = useCallback(() => {
-    const sortedSongs = [...songs].sort((a, b) => {
-      if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-      return a.position - b.position
-    })
-    const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-    if (currentIndex < sortedSongs.length - 1) {
-      setCurrentSongId(sortedSongs[currentIndex + 1].id)
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx < sorted.length - 1) {
+      const nextSong = sorted[idx + 1]
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+      setIsStopped(false)
+      setCurrentSongId(nextSong.id)
+      const audio = getAudio(nextSong)
+      audio.currentTime = 0
+      audio.play().catch(() => {})
     }
-  }, [songs, currentSongId])
+  }, [currentSongId, getAudio])
 
   const prev = useCallback(() => {
-    const sortedSongs = [...songs].sort((a, b) => {
-      if (a.side !== b.side) return a.side === 'A' ? -1 : 1
-      return a.position - b.position
-    })
-    const currentIndex = sortedSongs.findIndex(s => s.id === currentSongId)
-    if (currentIndex > 0) {
-      setCurrentSongId(sortedSongs[currentIndex - 1].id)
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongId)
+    if (idx > 0) {
+      const prevSong = sorted[idx - 1]
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+      setIsStopped(false)
+      setCurrentSongId(prevSong.id)
+      const audio = getAudio(prevSong)
+      audio.currentTime = 0
+      audio.play().catch(() => {})
     }
-  }, [songs, currentSongId])
+  }, [currentSongId, getAudio])
 
   const seek = useCallback((pct: number) => {
-    const audio = audioRef.current
+    const audio = activeRef.current
     if (!audio || !audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
 
-  const playSong = useCallback((id: string) => {
-    setCurrentSongId(id)
-    // Will auto-play via the useEffect that watches currentSongId
-    setTimeout(() => {
-      audioRef.current?.play().catch(() => {})
-    }, 100)
-  }, [])
+  // Wire MediaSession action handlers so OS-level controls (lock screen, notification,
+  // headphones, Bluetooth, CarPlay/Android Auto, steering wheel) drive the player.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+
+    const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler)
+      } catch {
+        // Action not supported on this platform — ignore.
+      }
+    }
+
+    setHandler('play', () => play())
+    setHandler('pause', () => pause())
+    setHandler('previoustrack', () => prev())
+    setHandler('nexttrack', () => next())
+    setHandler('stop', () => stop())
+    setHandler('seekto', details => {
+      const audio = activeRef.current
+      if (!audio || details.seekTime == null) return
+      audio.currentTime = details.seekTime
+    })
+    setHandler('seekbackward', details => {
+      const audio = activeRef.current
+      if (!audio) return
+      audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 10))
+    })
+    setHandler('seekforward', details => {
+      const audio = activeRef.current
+      if (!audio) return
+      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (details.seekOffset ?? 10))
+    })
+
+    return () => {
+      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto', 'seekbackward', 'seekforward'] as MediaSessionAction[]).forEach(a =>
+        setHandler(a, null)
+      )
+    }
+  }, [play, pause, next, prev, stop])
+
+  // Keep MediaSession position state up-to-date so scrubbers in the OS UI work
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return
+    if (!duration) return
+    try {
+      navigator.mediaSession.setPositionState({
+        duration,
+        position: Math.min(elapsedSeconds, duration),
+        playbackRate: activeRef.current?.playbackRate ?? 1
+      })
+    } catch {
+      // Some browsers throw if values are inconsistent — safe to ignore.
+    }
+  }, [elapsedSeconds, duration])
+
+  const playSong = useCallback(
+    (id: string) => {
+      // Stop current
+      const current = activeRef.current
+      if (current) {
+        current.pause()
+        current.currentTime = 0
+      }
+
+      setIsStopped(false)
+      setCurrentSongId(id)
+
+      // Play from pool immediately — the Audio element may already be buffered
+      const song = songs.find(s => s.id === id)
+      if (song) {
+        const audio = getAudio(song)
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      }
+    },
+    [songs, getAudio]
+  )
 
   return {
     isPlaying,

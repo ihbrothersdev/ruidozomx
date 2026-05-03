@@ -1,15 +1,22 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useAudioStore } from '@/lib/store/audio-store'
-import { MOCK_SONGS } from '@/lib/mock-data'
+import type { PlayerSong } from '@/lib/types'
+import { useEffect } from 'react'
 
-export function AudioProvider({ children }: { children: React.ReactNode }) {
+interface AudioProviderProps {
+  children: React.ReactNode
+  initialSongs: PlayerSong[]
+  initialSongId?: string
+}
+
+export function AudioProvider({ children, initialSongs, initialSongId }: AudioProviderProps) {
   const loadSongs = useAudioStore(s => s.loadSongs)
 
   useEffect(() => {
-    loadSongs(MOCK_SONGS, 'a01')
-  }, [loadSongs])
+    if (initialSongs.length === 0) return
+    loadSongs(initialSongs, initialSongId ?? initialSongs[0].id)
+  }, [loadSongs, initialSongs, initialSongId])
 
   return <>{children}</>
 }
