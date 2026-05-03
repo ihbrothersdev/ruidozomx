@@ -26,6 +26,7 @@ interface AudioPlayerActions {
 export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
   const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
   const activeRef = useRef<HTMLAudioElement | null>(null)
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(false)
@@ -133,20 +134,27 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     }
   }
   function onPlay() {
+    // Cancel any pending pause triggered by an iOS lock-screen interruption.
+    if (pauseTimerRef.current) {
+      clearTimeout(pauseTimerRef.current)
+      pauseTimerRef.current = null
+    }
     setIsPlaying(true)
-    // Update OS-level UI immediately — don't wait for React's effect cycle.
     if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'playing'
     }
   }
   function onPause() {
-    // iOS fires a spurious pause when locking the screen — ignore it so the
-    // lock screen keeps showing the play/pause button in the correct state.
-    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
-    setIsPlaying(false)
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'paused'
-    }
+    // iOS fires a spurious pause when locking the screen, then immediately
+    // resumes audio and fires 'play'. Debounce 300 ms so the lock-screen UI
+    // never flashes "paused" for genuine iOS interruptions.
+    pauseTimerRef.current = setTimeout(() => {
+      pauseTimerRef.current = null
+      setIsPlaying(false)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused'
+      }
+    }, 300)
   }
 
   // Cleanup pool on unmount
