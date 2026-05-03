@@ -1,4 +1,5 @@
 import type { PlayerSong } from '@/lib/types'
+import { NowPlayingBars } from './NowPlayingBars'
 
 interface SongRowProps {
   index: number
@@ -25,7 +26,7 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
             style={{ fontSize: 'clamp(9px, 1.4vw, 14px)' }}
             onClick={() => onSelectSong?.(song.id)}
           >
-            {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
+            {isActive && <NowPlayingBars className='h-3' />}
             <span className='font-corose-alt shrink-0 text-[16px] font-bold'>
               {index + 1}. {song.title}
             </span>

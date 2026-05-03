@@ -140,6 +140,9 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     }
   }
   function onPause() {
+    // iOS fires a spurious pause when locking the screen — ignore it so the
+    // lock screen keeps showing the play/pause button in the correct state.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
     setIsPlaying(false)
     if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused'
@@ -178,7 +181,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
     if (!currentSong) return
 
-    const artworkUrl = `${window.location.origin}/assets/media-artwork.png`
+    const artworkUrl = `${window.location.origin}/assets/media-artwork.png?v=2`
     navigator.mediaSession.metadata = new MediaMetadata({
       // Line 1 on the lock screen: "Canción - Autor"
       title: `${currentSong.title} - ${currentSong.artist}`,
@@ -229,7 +232,6 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     const idx = sorted.findIndex(s => s.id === currentSongId)
     if (idx < sorted.length - 1) {
       const nextSong = sorted[idx + 1]
-      // Stop current
       const current = activeRef.current
       if (current) {
         current.pause()
@@ -237,6 +239,9 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       setIsStopped(false)
       setCurrentSongId(nextSong.id)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
       const audio = getAudio(nextSong)
       audio.currentTime = 0
       audio.play().catch(() => {})
@@ -264,6 +269,9 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       setIsStopped(false)
       setCurrentSongId(prevSong.id)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
       const prevAudio = getAudio(prevSong)
       prevAudio.currentTime = 0
       prevAudio.play().catch(() => {})
@@ -338,6 +346,9 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
       setIsStopped(false)
       setCurrentSongId(id)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
 
       // Play from pool immediately — the Audio element may already be buffered
       const song = songs.find(s => s.id === id)
