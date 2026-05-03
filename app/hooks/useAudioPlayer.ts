@@ -164,20 +164,14 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
     if (!currentSong) return
 
-    const artworkUrl = `${window.location.origin}/assets/quienes-somos/rayo.png`
+    const artworkUrl = `${window.location.origin}/assets/media-artwork.png`
     navigator.mediaSession.metadata = new MediaMetadata({
       // Line 1 on the lock screen: "Canción - Autor"
       title: `${currentSong.title} - ${currentSong.artist}`,
       // Line 2 on the lock screen: brand
       artist: 'Ruidozo MX',
       album: 'Cassette semanal',
-      artwork: [
-        { src: artworkUrl, sizes: '96x96', type: 'image/png' },
-        { src: artworkUrl, sizes: '192x192', type: 'image/png' },
-        { src: artworkUrl, sizes: '256x256', type: 'image/png' },
-        { src: artworkUrl, sizes: '384x384', type: 'image/png' },
-        { src: artworkUrl, sizes: '512x512', type: 'image/png' }
-      ]
+      artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }]
     })
   }, [currentSong])
 
@@ -283,30 +277,11 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       if (!audio || details.seekTime == null) return
       audio.currentTime = details.seekTime
     })
-    setHandler('seekbackward', details => {
-      const audio = activeRef.current
-      if (!audio) return
-      audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 10))
-    })
-    setHandler('seekforward', details => {
-      const audio = activeRef.current
-      if (!audio) return
-      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (details.seekOffset ?? 10))
-    })
 
     return () => {
-      ;(
-        [
-          'play',
-          'pause',
-          'previoustrack',
-          'nexttrack',
-          'stop',
-          'seekto',
-          'seekbackward',
-          'seekforward'
-        ] as MediaSessionAction[]
-      ).forEach(a => setHandler(a, null))
+      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto'] as MediaSessionAction[]).forEach(a =>
+        setHandler(a, null)
+      )
     }
   }, [play, pause, next, prev, stop])
 
