@@ -280,6 +280,10 @@ export function useAudioPlayer(
   function onPlay() {
     setIsPlaying(true)
     setIsStopped(false)
+    // Update OS-level UI immediately — don't wait for React's effect cycle.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+    }
     if (!sessionStartedRef.current) {
       sessionStartedRef.current = true
       emit('cassette_session_start', null, { initial_song_id: currentSongId })
@@ -295,6 +299,9 @@ export function useAudioPlayer(
   }
   function onPause() {
     setIsPlaying(false)
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused'
+    }
   }
 
   // Reset the play_start dedup flag when the active song changes,
@@ -339,6 +346,39 @@ export function useAudioPlayer(
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── MediaSession: lock screen / notification / car / Bluetooth controls ──
+  // Sets the now-playing metadata (title, artist, artwork) and action handlers
+  // so the OS-level media controls work and show the Ruidozo branding.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+    if (!currentSong) return
+
+    const artworkUrl = `${window.location.origin}/assets/quienes-somos/rayo.png`
+    navigator.mediaSession.metadata = new MediaMetadata({
+      // Line 1 on the lock screen: "Canción - Autor"
+      title: `${currentSong.title} - ${currentSong.artist}`,
+      // Line 2 on the lock screen: brand
+      artist: 'Ruidozo MX',
+      album: 'Cassette semanal',
+      artwork: [
+        { src: artworkUrl, sizes: '96x96', type: 'image/png' },
+        { src: artworkUrl, sizes: '192x192', type: 'image/png' },
+        { src: artworkUrl, sizes: '256x256', type: 'image/png' },
+        { src: artworkUrl, sizes: '384x384', type: 'image/png' },
+        { src: artworkUrl, sizes: '512x512', type: 'image/png' }
+      ]
+    })
+  }, [currentSong])
+
+  // Keep MediaSession playback state in sync so the OS shows the correct play/pause icon.
+  // We also push the value directly inside the audio element's onPlay/onPause listeners
+  // (see below) because iOS Safari sometimes reads playbackState faster than React's
+  // state-driven re-render can catch up.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+  }, [isPlaying])
 
   const play = useCallback(() => {
     setIsStopped(false)
@@ -392,6 +432,62 @@ export function useAudioPlayer(
     if (!audio || !audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
+
+  // Wire MediaSession action handlers so OS-level controls (lock screen, notification,
+  // headphones, Bluetooth, CarPlay/Android Auto, steering wheel) drive the player.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+
+    const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler)
+      } catch {
+        // Action not supported on this platform — ignore.
+      }
+    }
+
+    setHandler('play', () => play())
+    setHandler('pause', () => pause())
+    setHandler('previoustrack', () => prev())
+    setHandler('nexttrack', () => next())
+    setHandler('stop', () => stop())
+    setHandler('seekto', details => {
+      const audio = activeRef.current
+      if (!audio || details.seekTime == null) return
+      audio.currentTime = details.seekTime
+    })
+    setHandler('seekbackward', details => {
+      const audio = activeRef.current
+      if (!audio) return
+      audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 10))
+    })
+    setHandler('seekforward', details => {
+      const audio = activeRef.current
+      if (!audio) return
+      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (details.seekOffset ?? 10))
+    })
+
+    return () => {
+      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto', 'seekbackward', 'seekforward'] as MediaSessionAction[]).forEach(a =>
+        setHandler(a, null)
+      )
+    }
+  }, [play, pause, next, prev, stop])
+
+  // Keep MediaSession position state up-to-date so scrubbers in the OS UI work
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return
+    if (!duration) return
+    try {
+      navigator.mediaSession.setPositionState({
+        duration,
+        position: Math.min(elapsedSeconds, duration),
+        playbackRate: activeRef.current?.playbackRate ?? 1
+      })
+    } catch {
+      // Some browsers throw if values are inconsistent — safe to ignore.
+    }
+  }, [elapsedSeconds, duration])
 
   const playSong = useCallback(
     (id: string) => {
