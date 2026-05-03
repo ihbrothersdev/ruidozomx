@@ -8,10 +8,11 @@ import { SongRow } from './SongRow'
 interface SongListProps {
   songs: PlayerSong[]
   currentSongId: string
+  isPlaying?: boolean
   onSelectSong?: (id: string) => void
 }
 
-export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
+export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong }: SongListProps) {
   const sides = {
     A: songs.filter(s => s.side === 'A'),
     B: songs.filter(s => s.side === 'B')
@@ -58,6 +59,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
               index={i}
               sides={sides}
               currentSongId={currentSongId}
+              isPlaying={isPlaying}
               onSelectSong={onSelectSong}
             />
           ))}
@@ -99,7 +101,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
                   style={{ fontSize: 'clamp(10px, 2.8vw, 14px)' }}
                   onClick={() => onSelectSong?.(song.id)}
                 >
-                  {isActive && <NowPlayingBars className='h-3' />}
+                  {isActive && isPlaying && <NowPlayingBars className='h-3' />}
                   <span className='font-corose-alt shrink-0 font-bold'>
                     {i + 1}. {song.title}
                   </span>
@@ -130,7 +132,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
                   style={{ fontSize: 'clamp(10px, 2.8vw, 14px)' }}
                   onClick={() => onSelectSong?.(song.id)}
                 >
-                  {isActive && <NowPlayingBars className='h-3' />}
+                  {isActive && isPlaying && <NowPlayingBars className='h-3' />}
                   <span className='font-corose-alt shrink-0 font-bold'>
                     {i + 1}. {song.title}
                   </span>
