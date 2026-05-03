@@ -2,9 +2,15 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { PasswordInput } from '@/app/components/ui/password-input'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { signup } from '../actions'
 import { type AuthSearchParams } from '../types'
+
+export const metadata: Metadata = {
+  title: 'Regístrate',
+  description: 'Crea tu cuenta en Ruidozo MX y forma parte de la trinchera musical mexicana.'
+}
 
 export default async function SignupPage({ searchParams }: { searchParams: AuthSearchParams }) {
   const { error, message } = await searchParams
