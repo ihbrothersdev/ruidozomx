@@ -228,21 +228,29 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [currentSongId, getAudio])
 
   const prev = useCallback(() => {
+    const audio = activeRef.current
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongId)
+
+    // Standard behaviour: if more than 3 s in, restart current song
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0
+      setElapsedSeconds(0)
+      return
+    }
+
+    // Otherwise go to previous song
     if (idx > 0) {
       const prevSong = sorted[idx - 1]
-      // Stop current
-      const current = activeRef.current
-      if (current) {
-        current.pause()
-        current.currentTime = 0
+      if (audio) {
+        audio.pause()
+        audio.currentTime = 0
       }
       setIsStopped(false)
       setCurrentSongId(prevSong.id)
-      const audio = getAudio(prevSong)
-      audio.currentTime = 0
-      audio.play().catch(() => {})
+      const prevAudio = getAudio(prevSong)
+      prevAudio.currentTime = 0
+      prevAudio.play().catch(() => {})
     }
   }, [currentSongId, getAudio])
 
@@ -287,15 +295,29 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     })
 
     return () => {
-      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto', 'seekbackward', 'seekforward'] as MediaSessionAction[]).forEach(a =>
-        setHandler(a, null)
-      )
+      ;(
+        [
+          'play',
+          'pause',
+          'previoustrack',
+          'nexttrack',
+          'stop',
+          'seekto',
+          'seekbackward',
+          'seekforward'
+        ] as MediaSessionAction[]
+      ).forEach(a => setHandler(a, null))
     }
   }, [play, pause, next, prev, stop])
 
   // Keep MediaSession position state up-to-date so scrubbers in the OS UI work
   useEffect(() => {
-    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return
+    if (
+      typeof window === 'undefined' ||
+      !('mediaSession' in navigator) ||
+      !('setPositionState' in navigator.mediaSession)
+    )
+      return
     if (!duration) return
     try {
       navigator.mediaSession.setPositionState({
