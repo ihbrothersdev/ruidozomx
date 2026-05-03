@@ -20,7 +20,6 @@ export function PrevButton({ onClick }: ButtonProps) {
         width={87}
         height={81}
         className='pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0'
-        unoptimized
       />
       <Image
         src='/assets/controles/regresar-on.png'
@@ -28,7 +27,6 @@ export function PrevButton({ onClick }: ButtonProps) {
         width={87}
         height={82}
         className='pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100'
-        unoptimized
       />
     </button>
   )
@@ -64,7 +62,6 @@ export function StopButton({ onClick }: ButtonProps) {
         width={87}
         height={81}
         className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${flash ? 'opacity-0' : ''}`}
-        unoptimized
       />
       <Image
         src='/assets/controles/stop-on.png'
@@ -72,7 +69,6 @@ export function StopButton({ onClick }: ButtonProps) {
         width={87}
         height={82}
         className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${flash ? 'opacity-100' : ''}`}
-        unoptimized
       />
     </button>
   )
@@ -90,7 +86,6 @@ export function PlayButton({ active, onClick }: ButtonProps) {
         width={87}
         height={81}
         className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${active ? 'opacity-0' : ''}`}
-        unoptimized
       />
       <Image
         src='/assets/controles/play-on.png'
@@ -98,7 +93,6 @@ export function PlayButton({ active, onClick }: ButtonProps) {
         width={87}
         height={82}
         className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${active ? 'opacity-100' : ''}`}
-        unoptimized
       />
     </button>
   )
@@ -116,7 +110,6 @@ export function PauseButton({ active, onClick }: ButtonProps) {
         width={87}
         height={81}
         className={`pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0 ${active ? 'opacity-0' : ''}`}
-        unoptimized
       />
       <Image
         src='/assets/controles/pausa-on.png'
@@ -124,7 +117,6 @@ export function PauseButton({ active, onClick }: ButtonProps) {
         width={87}
         height={82}
         className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100 ${active ? 'opacity-100' : ''}`}
-        unoptimized
       />
     </button>
   )
@@ -142,7 +134,6 @@ export function NextButton({ onClick }: ButtonProps) {
         width={87}
         height={81}
         className='pointer-events-none transition-opacity group-active:opacity-0 sm:group-hover:opacity-0'
-        unoptimized
       />
       <Image
         src='/assets/controles/adelantar-on.png'
@@ -150,7 +141,6 @@ export function NextButton({ onClick }: ButtonProps) {
         width={87}
         height={82}
         className='pointer-events-none absolute inset-0 opacity-0 transition-opacity group-active:opacity-100 sm:group-hover:opacity-100'
-        unoptimized
       />
     </button>
   )

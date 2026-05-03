@@ -103,7 +103,6 @@ export default function ProfileView({
               width={80}
               height={80}
               className='h-17 w-auto'
-              unoptimized
             />
             <Link href='/'>
               <Image
@@ -112,7 +111,6 @@ export default function ProfileView({
                 width={380}
                 height={183}
                 className='h-40 w-auto'
-                unoptimized
               />
             </Link>
           </div> */}

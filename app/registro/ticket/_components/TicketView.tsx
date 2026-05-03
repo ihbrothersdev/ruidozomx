@@ -57,7 +57,6 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
           alt=''
           fill
           className='object-cover'
-          unoptimized
         />
       </div>
 

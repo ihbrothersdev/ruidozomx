@@ -9,7 +9,6 @@ export function SomosTrinchera() {
         width={1978}
         height={323}
         className='w-full'
-        unoptimized
       />
     </div>
   )

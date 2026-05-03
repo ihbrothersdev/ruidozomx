@@ -96,7 +96,6 @@ function FormularioContent() {
         fill
         className='object-cover'
         priority
-        unoptimized
       />
 
       <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 py-6 sm:px-6'>
@@ -108,7 +107,6 @@ function FormularioContent() {
             alt=''
             fill
             className='object-cover lg:hidden'
-            unoptimized
           />
           {/* Desktop: folder with tab cut */}
           <Image
@@ -116,7 +114,6 @@ function FormularioContent() {
             alt=''
             fill
             className='hidden object-fill lg:block'
-            unoptimized
           />
           <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-4 lg:pb-12'>
             {/* Role etiqueta */}
@@ -128,7 +125,6 @@ function FormularioContent() {
                 width={60}
                 height={80}
                 className='absolute top-0 right-0 h-8 w-auto max-[400px]:hidden lg:hidden'
-                unoptimized
               />
               {etiquetaSrc && (
                 <Image
@@ -138,7 +134,6 @@ function FormularioContent() {
                   height={80}
                   className='w-56 -rotate-2 sm:w-72 lg:w-[350px]'
                   style={{ height: 'auto' }}
-                  unoptimized
                 />
               )}
             </div>

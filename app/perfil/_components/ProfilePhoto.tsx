@@ -16,7 +16,6 @@ export default function ProfilePhoto({ photoUrl, displayName }: ProfilePhotoProp
         alt='Marco de foto'
         fill
         className='object-contain'
-        unoptimized
       />
       <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
         {photoUrl ? (

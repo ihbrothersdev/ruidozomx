@@ -35,7 +35,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
             alt=''
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 
@@ -45,7 +44,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
             alt='Lista de canciones'
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 
@@ -77,7 +75,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
             alt='Lista de canciones'
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 

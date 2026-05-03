@@ -72,7 +72,6 @@ export function LoginForm() {
             height={70}
             className='w-32 sm:w-36'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </button>
       </div>

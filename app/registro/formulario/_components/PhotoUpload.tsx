@@ -58,7 +58,6 @@ export function PhotoUpload() {
         height={100}
         className='mb-6 hidden w-20 shrink-0 lg:block'
         style={{ height: 'auto' }}
-        unoptimized
       />
       <div className='relative flex flex-col items-center lg:pr-14'>
         <Image
@@ -68,7 +67,6 @@ export function PhotoUpload() {
           height={110}
           className='absolute top-[23%] -right-10 z-20 hidden w-36 lg:block'
           style={{ height: 'auto' }}
-          unoptimized
         />
         <Label className='relative flex cursor-pointer flex-col items-center'>
           <input
@@ -85,7 +83,6 @@ export function PhotoUpload() {
               height={250}
               className='w-40 lg:w-44'
               style={{ height: 'auto' }}
-              unoptimized
             />
             <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden bg-[#e8b4a8]'>
               {preview ? (
@@ -101,7 +98,6 @@ export function PhotoUpload() {
                   alt='Subir foto'
                   fill
                   className='object-fill opacity-60'
-                  unoptimized
                 />
               )}
             </div>

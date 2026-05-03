@@ -44,7 +44,6 @@ function ExplicacionRolContent() {
           fill
           className='object-cover'
           priority
-          unoptimized
         />
       </div>
 

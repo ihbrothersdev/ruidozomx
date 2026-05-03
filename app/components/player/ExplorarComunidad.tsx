@@ -65,7 +65,6 @@ export function ExplorarComunidad() {
           fill
           className='z-0 object-cover'
           style={{ width: '100%', height: '100%' }}
-          unoptimized
         />
 
         {showVideo ? (
@@ -93,7 +92,6 @@ export function ExplorarComunidad() {
             fill
             className='absolute inset-[8%] -top-3 z-[3] object-cover'
             style={{ width: '100%', height: '100%' }}
-            unoptimized
           />
         )}
       </div>

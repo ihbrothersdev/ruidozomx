@@ -38,7 +38,6 @@ export function ProponRolaModal({ open, onOpenChange }: ProponRolaModalProps) {
               height={400}
               className='w-full'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </div>
 

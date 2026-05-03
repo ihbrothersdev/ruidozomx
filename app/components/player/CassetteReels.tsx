@@ -18,7 +18,6 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
           alt=''
           fill
           className={`object-contain ${spinClass}`}
-          unoptimized
         />
       </div>
       {/* Left roller (centered on spool) */}
@@ -31,7 +30,6 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
           alt=''
           fill
           className={`object-contain ${spinClass}`}
-          unoptimized
         />
       </div>
 
@@ -45,7 +43,6 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
           alt=''
           fill
           className={`object-contain ${spinClass}`}
-          unoptimized
         />
       </div>
       {/* Right roller (centered on spool) */}
@@ -58,7 +55,6 @@ export function CassetteReels({ isPlaying }: CassetteReelsProps) {
           alt=''
           fill
           className={`object-contain ${spinClass}`}
-          unoptimized
         />
       </div>
     </>

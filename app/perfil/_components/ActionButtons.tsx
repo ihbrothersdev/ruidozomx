@@ -100,7 +100,6 @@ export default function ActionButtons({
               width={600}
               height={120}
               className='mx-auto h-auto w-full max-w-xs'
-              unoptimized
             />
           </button>
           <ProponerRolaBandaModal

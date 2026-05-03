@@ -196,7 +196,6 @@ function CrearCuentaContent() {
         fill
         className='object-cover'
         priority
-        unoptimized
       />
 
       <section className='relative z-10 flex w-full max-w-4xl rounded-sm shadow-2xl'>
@@ -206,7 +205,6 @@ function CrearCuentaContent() {
             alt=''
             fill
             className='object-cover'
-            unoptimized
           />
           <div className='relative z-10 p-8'>
             <Image
@@ -216,7 +214,6 @@ function CrearCuentaContent() {
               height={200}
               className='w-48'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </div>
         </aside>
@@ -227,7 +224,6 @@ function CrearCuentaContent() {
             alt=''
             fill
             className='object-cover'
-            unoptimized
           />
 
           <div className='relative z-10 p-6 sm:p-8'>
@@ -238,7 +234,6 @@ function CrearCuentaContent() {
               height={50}
               className='mb-2 w-56 sm:w-64'
               style={{ height: 'auto' }}
-              unoptimized
             />
             <p className='font-pt-mono mb-6 text-xs text-black/60'>
               Registrándote como: <strong>{ROLE_LABELS[role]}</strong>
@@ -252,7 +247,6 @@ function CrearCuentaContent() {
                 alt=''
                 fill
                 className='object-fill'
-                unoptimized
               />
               <form
                 ref={formRef}
@@ -327,7 +321,6 @@ function CrearCuentaContent() {
                         height={45}
                         className='w-24 transition-opacity hover:opacity-80 sm:w-28'
                         style={{ height: 'auto' }}
-                        unoptimized
                       />
                     )}
                   </button>

@@ -112,7 +112,6 @@ export function FanFormLayout() {
             height={65}
             className='w-36 transition-opacity hover:opacity-80 sm:w-44'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </Link>
         <button
@@ -126,7 +125,6 @@ export function FanFormLayout() {
             height={65}
             className='w-36 transition-opacity hover:opacity-80 sm:w-44'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </button>
       </div>

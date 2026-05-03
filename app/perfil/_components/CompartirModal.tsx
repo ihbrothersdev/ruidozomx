@@ -71,7 +71,6 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
             width={600}
             height={500}
             className='absolute inset-0 h-full w-full object-fill'
-            unoptimized
           />
 
           {/* Content */}
@@ -83,7 +82,6 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
               width={428}
               height={54}
               className='h-auto w-full max-w-72'
-              unoptimized
             />
 
             {/* Share icons row + URL */}
@@ -137,7 +135,6 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                   width={213}
                   height={273}
                   className='h-auto w-28 sm:w-40 lg:w-52'
-                  unoptimized
                 />
                 <a
                   href='/assets/compartir/post.png'
@@ -156,7 +153,6 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                   width={252}
                   height={447}
                   className='h-auto w-28 sm:w-40 lg:w-52'
-                  unoptimized
                 />
                 <a
                   href='/assets/compartir/reel.png'
