@@ -36,7 +36,6 @@ function ProponerRolaContent() {
         fill
         className='object-cover'
         priority
-        unoptimized
       />
 
       <div className='relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6'>
@@ -50,7 +49,6 @@ function ProponerRolaContent() {
               height={40}
               className='w-24 transition-opacity hover:opacity-80 sm:w-28'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </Link>
           <Link href='/'>
@@ -61,7 +59,6 @@ function ProponerRolaContent() {
               height={40}
               className='w-24 transition-opacity hover:opacity-80 sm:w-28'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </Link>
         </div>
@@ -73,7 +70,6 @@ function ProponerRolaContent() {
             alt=''
             fill
             className='object-fill'
-            unoptimized
           />
 
           <div className='relative z-10 p-6 sm:p-8 lg:p-10'>
@@ -85,7 +81,6 @@ function ProponerRolaContent() {
               height={50}
               className='mb-6 w-24 sm:w-28'
               style={{ height: 'auto' }}
-              unoptimized
             />
 
             {error && (
@@ -170,7 +165,6 @@ function ProponerRolaContent() {
                     height={100}
                     className={`w-28 transition-opacity sm:w-36 ${!accepted || limitReached ? 'opacity-50' : 'hover:opacity-90'}`}
                     style={{ height: 'auto' }}
-                    unoptimized
                   />
                 </button>
               </div>
@@ -196,7 +190,6 @@ function ProponerRolaContent() {
               height={400}
               className='w-full'
               style={{ height: 'auto' }}
-              unoptimized
             />
             <div className='mt-4 flex justify-center'>
               <Link

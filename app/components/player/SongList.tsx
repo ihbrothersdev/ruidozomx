@@ -2,15 +2,17 @@
 
 import type { PlayerSong } from '@/lib/types'
 import Image from 'next/image'
+import { NowPlayingBars } from './NowPlayingBars'
 import { SongRow } from './SongRow'
 
 interface SongListProps {
   songs: PlayerSong[]
   currentSongId: string
+  isPlaying?: boolean
   onSelectSong?: (id: string) => void
 }
 
-export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) {
+export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong }: SongListProps) {
   const sides = {
     A: songs.filter(s => s.side === 'A'),
     B: songs.filter(s => s.side === 'B')
@@ -33,7 +35,6 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
             alt=''
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 
@@ -43,7 +44,6 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
             alt='Lista de canciones'
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 
@@ -57,6 +57,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
               index={i}
               sides={sides}
               currentSongId={currentSongId}
+              isPlaying={isPlaying}
               onSelectSong={onSelectSong}
             />
           ))}
@@ -74,7 +75,6 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
             alt='Lista de canciones'
             fill
             className='object-contain'
-            unoptimized
           />
         </div>
 
@@ -86,7 +86,10 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
           {sides.A.map((song, i) => {
             const isActive = song.id === currentSongId
             return (
-              <div key={song.id} className='flex min-w-0 items-end overflow-hidden'>
+              <div
+                key={song.id}
+                className='flex min-w-0 items-end overflow-hidden'
+              >
                 <button
                   type='button'
                   className={`font-corose flex w-full min-w-0 cursor-pointer items-end pb-[2px] text-left leading-none ${
@@ -95,7 +98,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
                   style={{ fontSize: 'clamp(10px, 2.8vw, 14px)' }}
                   onClick={() => onSelectSong?.(song.id)}
                 >
-                  {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
+                  {isActive && isPlaying && <NowPlayingBars className='h-3' />}
                   <span className='font-corose-alt shrink-0 font-bold'>
                     {i + 1}. {song.title}
                   </span>
@@ -114,7 +117,10 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
           {sides.B.map((song, i) => {
             const isActive = song.id === currentSongId
             return (
-              <div key={song.id} className='flex min-w-0 items-end overflow-hidden'>
+              <div
+                key={song.id}
+                className='flex min-w-0 items-end overflow-hidden'
+              >
                 <button
                   type='button'
                   className={`font-corose flex w-full min-w-0 cursor-pointer items-end pb-[2px] text-left leading-none ${
@@ -123,7 +129,7 @@ export function SongList({ songs, currentSongId, onSelectSong }: SongListProps) 
                   style={{ fontSize: 'clamp(10px, 2.8vw, 14px)' }}
                   onClick={() => onSelectSong?.(song.id)}
                 >
-                  {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
+                  {isActive && isPlaying && <NowPlayingBars className='h-3' />}
                   <span className='font-corose-alt shrink-0 font-bold'>
                     {i + 1}. {song.title}
                   </span>

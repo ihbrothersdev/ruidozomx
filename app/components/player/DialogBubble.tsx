@@ -20,7 +20,6 @@ export function DialogBubble({ isAuthenticated }: DialogBubbleProps) {
         width={253}
         height={120}
         className='w-full'
-        unoptimized
       />
     </Link>
   )

@@ -109,7 +109,9 @@ export default function DynamicModules({
                     <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
                       <span className='font-bold text-black'>{p.title}</span>
                       <span className='text-xs text-black/60'>— {p.artist}</span>
-                      <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}>
+                      <span
+                        className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
+                      >
                         {status.label}
                       </span>
                     </div>

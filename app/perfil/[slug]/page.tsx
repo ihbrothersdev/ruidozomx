@@ -73,8 +73,20 @@ export default async function PublicPerfilPage({ params }: Props) {
   }
   if (user) {
     const [proposalCheck, interestCheck] = await Promise.all([
-      supabase.from('user_proposals').select('id').eq('from_profile_id', user.id).eq('to_profile_id', profile.id).limit(1).maybeSingle(),
-      supabase.from('interests').select('id').eq('from_profile_id', user.id).eq('to_profile_id', profile.id).limit(1).maybeSingle()
+      supabase
+        .from('user_proposals')
+        .select('id')
+        .eq('from_profile_id', user.id)
+        .eq('to_profile_id', profile.id)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('interests')
+        .select('id')
+        .eq('from_profile_id', user.id)
+        .eq('to_profile_id', profile.id)
+        .limit(1)
+        .maybeSingle()
     ])
     alreadySent.proposal = !!proposalCheck.data
     alreadySent.sendInterest = !!interestCheck.data
@@ -91,10 +103,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       .eq('user_id', profile.id)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase
-      .from('song_proposals')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
+    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', profile.id)
   ])
 
   return (

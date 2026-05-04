@@ -30,7 +30,6 @@ function CardLink({ card, href }: { card: RoleCard; href: string }) {
         height={520}
         className='max-h-[28vw] w-full object-contain drop-shadow-lg'
         style={{ height: 'auto' }}
-        unoptimized
       />
     </Link>
   )
@@ -67,7 +66,10 @@ function EligeRolContent() {
     >
       {/* Back-to-landing button — centered on mobile, top-left on desktop */}
       <div className='relative z-20 flex justify-center pt-4 lg:absolute lg:top-6 lg:left-6 lg:justify-start lg:pt-0'>
-        <BackButton href='/' sizeCls='h-20' />
+        <BackButton
+          href='/'
+          sizeCls='h-20'
+        />
       </div>
 
       {/* === MOBILE (< lg) === */}
@@ -79,7 +81,6 @@ function EligeRolContent() {
           height={320}
           className='w-24 sm:w-28'
           style={{ height: 'auto' }}
-          unoptimized
         />
 
         <div className='grid w-full max-w-md grid-cols-2 gap-3 sm:max-w-lg sm:gap-4'>
@@ -96,7 +97,6 @@ function EligeRolContent() {
                 height={420}
                 className='w-full drop-shadow-md'
                 style={{ height: 'auto' }}
-                unoptimized
               />
             </Link>
           ))}
@@ -109,7 +109,6 @@ function EligeRolContent() {
             width={200}
             height={36}
             className='h-auto w-48 sm:w-56'
-            unoptimized
           />
           <Image
             src='/assets/registro/elige-rol/flecha.png'
@@ -117,7 +116,6 @@ function EligeRolContent() {
             width={60}
             height={40}
             className='h-auto w-14 sm:w-16'
-            unoptimized
           />
           <Link href='/iniciar-sesion'>
             <Image
@@ -126,7 +124,6 @@ function EligeRolContent() {
               width={100}
               height={36}
               className='h-auto w-24 transition-transform hover:scale-105 sm:w-28'
-              unoptimized
             />
           </Link>
         </div>
@@ -142,7 +139,6 @@ function EligeRolContent() {
           height={400}
           className='w-[13vw] max-w-64 min-w-32 shrink-0'
           style={{ height: 'auto' }}
-          unoptimized
         />
 
         {/* Right side: two rows of cards */}
@@ -178,7 +174,6 @@ function EligeRolContent() {
                 width={300}
                 height={50}
                 className='h-auto w-[18vw] max-w-72 min-w-44'
-                unoptimized
               />
               <Image
                 src='/assets/registro/elige-rol/flecha.png'
@@ -186,7 +181,6 @@ function EligeRolContent() {
                 width={80}
                 height={50}
                 className='h-auto w-[7vw] max-w-24 min-w-16'
-                unoptimized
               />
               <Link
                 href='/iniciar-sesion'
@@ -198,7 +192,6 @@ function EligeRolContent() {
                   width={160}
                   height={50}
                   className='h-auto w-[8vw] max-w-32 min-w-20'
-                  unoptimized
                 />
               </Link>
             </div>

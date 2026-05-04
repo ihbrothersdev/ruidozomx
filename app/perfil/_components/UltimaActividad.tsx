@@ -1,6 +1,7 @@
 // TODO: Implement this section later (not part of MVP)
 export default function UltimaActividad() {
-  return (<></>
+  return (
+    <></>
     // <div className='border-t border-black/10 pt-6'>
     //   <h2 className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
     //     Última actividad{' '}

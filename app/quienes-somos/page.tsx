@@ -130,7 +130,6 @@ export default function QuienesSomosPage() {
               width={380}
               height={183}
               className='h-8 w-auto opacity-40 invert sm:h-10'
-              unoptimized
             />
           </div>
 
@@ -170,7 +169,6 @@ export default function QuienesSomosPage() {
                 width={380}
                 height={183}
                 className='relative z-10 h-12 w-auto invert'
-                unoptimized
               />
               <div className='relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-600 bg-red-600/20 transition-transform hover:scale-110'>
                 <svg

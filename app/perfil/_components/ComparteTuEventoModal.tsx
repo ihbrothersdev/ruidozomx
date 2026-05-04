@@ -51,7 +51,6 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
               width={600}
               height={800}
               className='absolute inset-0 h-full w-full object-fill'
-              unoptimized
             />
 
             {/* Content */}
@@ -63,7 +62,6 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                 width={500}
                 height={80}
                 className='h-auto w-full max-w-78 sm:max-w-100'
-                unoptimized
               />
 
               {/* Form */}

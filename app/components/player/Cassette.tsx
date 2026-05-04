@@ -26,7 +26,6 @@ export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteP
           alt=''
           fill
           className='object-contain'
-          unoptimized
         />
       </div>
 
@@ -37,7 +36,6 @@ export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteP
           alt={`Cassette lado ${side}`}
           fill
           priority
-          unoptimized
         />
       </div>
 

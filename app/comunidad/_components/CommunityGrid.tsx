@@ -23,11 +23,12 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
     }
     const q = searchQuery.toLowerCase()
     if (q) {
-      result = result.filter(p =>
-        p.display_name.toLowerCase().includes(q) ||
-        p.role.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q) ||
-        p.state?.toLowerCase().includes(q)
+      result = result.filter(
+        p =>
+          p.display_name.toLowerCase().includes(q) ||
+          p.role.toLowerCase().includes(q) ||
+          p.city?.toLowerCase().includes(q) ||
+          p.state?.toLowerCase().includes(q)
       )
     }
     return result
@@ -56,7 +57,10 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
       ) : (
         <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-3 xl:grid-cols-4'>
           {filtered.map(profile => (
-            <ProfileCard key={profile.id} profile={profile} />
+            <ProfileCard
+              key={profile.id}
+              profile={profile}
+            />
           ))}
         </div>
       )}
