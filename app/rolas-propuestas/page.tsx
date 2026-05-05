@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -7,11 +8,27 @@ import { InlinePlayer } from './_components/InlinePlayer'
 import { ProposalEmbed } from './_components/ProposalEmbed'
 import { acceptProposal, rejectProposal } from './actions'
 
+export const metadata: Metadata = {
+  title: 'Rolas propuestas',
+  description: 'Revisa el estado de las rolas que has propuesto al cassette semanal.',
+  robots: { index: false, follow: false }
+}
+
 const STATUS_CFG: Record<string, { bg: string; label: string; dot: string; ring: string }> = {
   pending: { bg: 'bg-amber-500/15 text-amber-300', label: 'Pendiente', dot: 'bg-amber-400', ring: 'ring-amber-400/30' },
   in_review: { bg: 'bg-blue-500/15 text-blue-300', label: 'En revisión', dot: 'bg-blue-400', ring: 'ring-blue-400/30' },
-  selected: { bg: 'bg-green-500/15 text-green-300', label: 'Seleccionada', dot: 'bg-green-400', ring: 'ring-green-400/30' },
-  rejected: { bg: 'bg-neutral-500/15 text-neutral-400', label: 'Rechazada', dot: 'bg-neutral-500', ring: 'ring-neutral-500/20' }
+  selected: {
+    bg: 'bg-green-500/15 text-green-300',
+    label: 'Seleccionada',
+    dot: 'bg-green-400',
+    ring: 'ring-green-400/30'
+  },
+  rejected: {
+    bg: 'bg-neutral-500/15 text-neutral-400',
+    label: 'Rechazada',
+    dot: 'bg-neutral-500',
+    ring: 'ring-neutral-500/20'
+  }
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -104,7 +121,6 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
               width={380}
               height={183}
               className='mb-4 h-10 w-auto sm:h-12'
-              unoptimized
             />
           </Link>
           <h1 className='font-baby-doll text-3xl font-bold tracking-wider text-white uppercase sm:text-4xl'>
@@ -159,7 +175,7 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                 role?: string
                 contact?: string
               } | null
-              const roleLabel = proposer?.role ? ROLE_LABEL[proposer.role] ?? proposer.role : null
+              const roleLabel = proposer?.role ? (ROLE_LABEL[proposer.role] ?? proposer.role) : null
               const contact = proposer?.contact?.trim() || null
               const contactIsEmail = contact ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) : false
               const contactHref = contact
@@ -192,7 +208,6 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                           width={36}
                           height={36}
                           className='h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-white/30'
-                          unoptimized
                         />
                       ) : (
                         <div className='font-pt-mono flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/60 ring-2 ring-white/10 group-hover:ring-white/30'>
@@ -211,8 +226,7 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                           )}
                         </div>
                         <div className='font-pt-mono text-[11px] text-white/40'>
-                          propuesta el{' '}
-                          <span title={formatAbsolute(p.created_at)}>{formatRelative(p.created_at)}</span>
+                          propuesta el <span title={formatAbsolute(p.created_at)}>{formatRelative(p.created_at)}</span>
                         </div>
                       </div>
                     </Link>
@@ -290,7 +304,10 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                     <div className='flex flex-wrap items-center gap-3 border-t border-white/5 bg-white/[0.03] px-5 py-3 sm:px-6'>
                       <div className='font-pt-mono min-w-0 flex-1 text-[11px] text-white/40'>
                         <div className='font-bold tracking-wider text-white/30 uppercase'>Contacto del usuario</div>
-                        <div className='mt-0.5 truncate text-white/70' title={contact}>
+                        <div
+                          className='mt-0.5 truncate text-white/70'
+                          title={contact}
+                        >
                           {contact}
                         </div>
                       </div>

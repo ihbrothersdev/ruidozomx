@@ -77,7 +77,7 @@ export function PromotorFields() {
           {/* Tipos de eventos */}
           <div className='space-y-1'>
             <Label className={labelCls}>
-              Tipos de eventos<span className='text-red-600'>*</span>
+              Tipos de eventos<span className='ml-2 text-red-600'>*</span>
             </Label>
             {EVENT_TYPE_OPTIONS.map(event => {
               const isOtro = event === 'Otro'
@@ -128,7 +128,7 @@ export function PromotorFields() {
               htmlFor='review'
               className={labelCls}
             >
-              Reseña<span className='text-red-600'>*</span>
+              Reseña<span className='ml-2 text-red-600'>*</span>
             </Label>
             <Textarea
               id='review'

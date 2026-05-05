@@ -74,7 +74,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                       alt={profile.display_name}
                       fill
                       className='object-cover'
-                      unoptimized
                     />
                   ) : (
                     <div className='flex h-full w-full items-center justify-center'>

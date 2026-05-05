@@ -60,7 +60,6 @@ export function CassettePlayer({
       height={100}
       className='w-full'
       style={{ height: 'auto' }}
-      unoptimized
     />
   )
 

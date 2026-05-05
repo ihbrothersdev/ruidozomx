@@ -41,14 +41,17 @@ export default function BackHomeNav({
 
       {/* Centered logo / home link */}
       {showHome && (
-        <Link href={homeHref} aria-label='Inicio' className='inline-block transition-opacity hover:scale-105'>
+        <Link
+          href={homeHref}
+          aria-label='Inicio'
+          className='inline-block transition-opacity hover:scale-105'
+        >
           <Image
             src='/assets/logo.png'
             alt='Ruidozo'
             width={380}
             height={183}
             className='h-12 w-auto sm:h-14'
-            unoptimized
           />
         </Link>
       )}

@@ -32,7 +32,7 @@ export function FanFields() {
 
       <div className='space-y-1'>
         <Label className={labelCls}>
-          Géneros favoritos<span className='text-red-600'>*</span>
+          Géneros favoritos<span className='ml-2 text-red-600'>*</span>
           <span className='ml-1 text-[9px] font-normal text-red-500 normal-case'>(Mín 1 máx 3)</span>
         </Label>
         <div className='grid grid-cols-2 gap-1.5'>

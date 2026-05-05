@@ -44,12 +44,28 @@ function buildDisplayName(formData: FormData): string {
 
 /**
  * Build social_links JSONB from form link fields.
- * Banda → project_link, all others → web_link
+ *   project_link        → social_links.project   (banda only — main music link)
+ *   web_link            → social_links.web       (manager / promotor / agente / proveedor / venue)
+ *   social_<platform>   → social_links[platform] (banda multi-link selector: web, instagram, ...)
  */
 function buildSocialLinks(formData: FormData): Record<string, string> {
   const links: Record<string, string> = {}
-  const web = getStr(formData, 'web_link') ?? getStr(formData, 'project_link')
+
+  const project = getStr(formData, 'project_link')
+  if (project) links.project = project
+
+  const web = getStr(formData, 'web_link')
   if (web) links.web = web
+
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== 'string') continue
+    if (!key.startsWith('social_')) continue
+    const platform = key.slice('social_'.length)
+    if (!platform) continue
+    const url = value.trim()
+    if (url) links[platform] = url
+  }
+
   return links
 }
 

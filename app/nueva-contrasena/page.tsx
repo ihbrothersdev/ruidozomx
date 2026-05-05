@@ -24,7 +24,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
       </div>
 
@@ -37,7 +36,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
         <div className='relative z-10'>
           <Image
@@ -47,7 +45,6 @@ export default async function NuevaContrasenaPage() {
             height={260}
             className='w-56 lg:w-72'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </div>
       </aside>
@@ -59,7 +56,6 @@ export default async function NuevaContrasenaPage() {
           fill
           className='object-cover'
           priority
-          unoptimized
         />
 
         <div className='relative z-10 flex w-full max-w-lg flex-col items-center'>
@@ -77,7 +73,6 @@ export default async function NuevaContrasenaPage() {
               alt=''
               fill
               className='object-fill'
-              unoptimized
             />
 
             <NewPasswordForm />
@@ -94,7 +89,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
         <div className='relative z-10'>
           <Image
@@ -104,7 +98,6 @@ export default async function NuevaContrasenaPage() {
             height={260}
             className='w-40'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </div>
       </div>

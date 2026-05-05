@@ -1,3 +1,4 @@
+import { createClient } from '@/lib/supabase/server'
 import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
@@ -7,12 +8,16 @@ import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { ExplorarComunidad } from './components/player/ExplorarComunidad'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 
+const isSupabaseConfigured = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+)
+
 export default async function Home() {
   let user = null
   let photoUrl: string | null = null
   let userRole: string | null = null
-  try {
-    const { createClient } = await import('@/lib/supabase/server')
+
+  if (isSupabaseConfigured) {
     const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     user = data.user
@@ -21,11 +26,8 @@ export default async function Home() {
       photoUrl = (profile?.photo_url as string) || null
       userRole = (profile?.role as string) || null
     }
-  } catch {
-    // Supabase not configured — continue without auth
   }
 
-  // Fetch songs from the active cassette in Supabase
   const { songs } = await getActiveCassetteSongs()
 
   return (
@@ -43,7 +45,6 @@ export default async function Home() {
             width={521}
             height={1179}
             className='w-full'
-            unoptimized
           />
           <div className='absolute top-205 left-55 z-0 hidden xl:block'>
             <Image
@@ -51,7 +52,6 @@ export default async function Home() {
               alt='Mientras suena'
               width={230}
               height={159}
-              unoptimized
             />
           </div>
         </div>
@@ -83,7 +83,6 @@ export default async function Home() {
             width={384}
             height={839}
             className='w-full'
-            unoptimized
           />
         </div>
 

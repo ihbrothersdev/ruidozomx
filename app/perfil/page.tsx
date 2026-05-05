@@ -1,8 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Role } from '@/lib/types'
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import ProfileView from './_components/ProfileView'
 import { ROLE_TABLE } from './_components/profile-constants'
+
+export const metadata: Metadata = {
+  title: 'Mi perfil',
+  description: 'Tu perfil en Ruidozo MX.',
+  robots: { index: false, follow: false }
+}
 
 export default async function PerfilPage() {
   const supabase = await createClient()
@@ -54,10 +61,7 @@ export default async function PerfilPage() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase
-      .from('song_proposals')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
   ])
 
   return (
