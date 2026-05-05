@@ -386,6 +386,7 @@ CREATE POLICY "songs_select_public"     ON songs     FOR SELECT USING (TRUE);
 
 -- SONG PROPOSALS
 CREATE POLICY "proposals_select_own"   ON song_proposals FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "proposals_select_public_active" ON song_proposals FOR SELECT USING (status IN ('pending', 'in_review', 'selected'));
 CREATE POLICY "proposals_insert_own"   ON song_proposals FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- USER PROPOSALS
