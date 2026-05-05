@@ -41,15 +41,18 @@ export async function GET(request: NextRequest) {
   const next = safeNextPath(searchParams.get('next'), origin)
 
   if (token_hash && type) {
+    // Recovery flow is handled directly at /nueva-contrasena to avoid creating
+    // a persistent recovery session — the token_hash is verified at submit time.
+    if (type === 'recovery') {
+      return NextResponse.redirect(
+        `${origin}/nueva-contrasena?token_hash=${encodeURIComponent(token_hash)}&type=recovery`
+      )
+    }
+
     const supabase = await createClient()
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
     if (!error) {
-      // Recovery flow: redirect to password reset page
-      if (type === 'recovery') {
-        return NextResponse.redirect(`${origin}/nueva-contrasena`)
-      }
-
       const {
         data: { user }
       } = await supabase.auth.getUser()
