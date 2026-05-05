@@ -35,7 +35,7 @@ function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string
 }
 
 const STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: string }> = {
-  pending: { label: 'En curaduría', cls: 'bg-black/10 text-black/70' },
+  pending: { label: 'Pendiente', cls: 'bg-black/10 text-black/70' },
   accepted: { label: 'Aceptada', cls: 'bg-green-600/15 text-green-700' },
   rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
 }
