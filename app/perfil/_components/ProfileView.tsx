@@ -1,7 +1,7 @@
+import BackHomeNav from '@/app/components/layout/BackHomeNav'
+import type { Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Role } from '@/lib/types'
-import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import ActionButtons from './ActionButtons'
 import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -28,6 +28,7 @@ export interface ProfileViewProps {
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
   events?: EventSummary[]
+  lastActivityAt?: string | null
 }
 
 export default function ProfileView({
@@ -46,7 +47,8 @@ export default function ProfileView({
   alreadySent,
   songProposals,
   songProposalsCount,
-  events
+  events,
+  lastActivityAt
 }: ProfileViewProps) {
   // const logoDecoration = (
   //   <div className='flex items-center justify-center gap-2'>
@@ -147,7 +149,7 @@ export default function ProfileView({
           />
         </>
       }
-      bottomSection={<UltimaActividad />}
+      bottomSection={<UltimaActividad lastActivityAt={lastActivityAt ?? null} />}
     />
   )
 }

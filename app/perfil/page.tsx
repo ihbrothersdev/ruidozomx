@@ -89,6 +89,7 @@ export default async function PerfilPage() {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      lastActivityAt={(profile?.last_activity_at as string | undefined) ?? null}
     />
   )
 }

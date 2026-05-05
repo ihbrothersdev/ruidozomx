@@ -134,6 +134,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      lastActivityAt={(profile.last_activity_at as string | undefined) ?? null}
     />
   )
 }

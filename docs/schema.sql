@@ -60,7 +60,8 @@ CREATE TABLE profiles (
   onboarding_complete  BOOLEAN      NOT NULL DEFAULT FALSE,
   registration_source  TEXT         NOT NULL DEFAULT 'registro',
   created_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  updated_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+  updated_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  last_activity_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_profiles_role   ON profiles(role);
@@ -315,7 +316,8 @@ CREATE TABLE activity_feed (
   created_at   TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_activity_feed_recent ON activity_feed(created_at DESC) WHERE visible = TRUE;
+CREATE INDEX idx_activity_feed_recent      ON activity_feed(created_at DESC) WHERE visible = TRUE;
+CREATE INDEX idx_activity_feed_per_profile ON activity_feed(profile_id, created_at DESC) WHERE visible = TRUE;
 
 -- ============================================================
 -- SYSTEM CONFIG
@@ -498,24 +500,72 @@ BEGIN
     FROM profiles p WHERE p.id = NEW.from_profile_id;
   END IF;
 
-  IF TG_TABLE_NAME = 'events' AND TG_OP = 'INSERT' THEN
-    IF NEW.status = 'published' THEN
-      INSERT INTO activity_feed (type, profile_id, profile_name, profile_role, metadata)
-      SELECT 'event_published', NEW.profile_id, p.display_name, p.role,
-        jsonb_build_object('title', NEW.title, 'event_date', NEW.event_date, 'city', NEW.city)
-      FROM profiles p WHERE p.id = NEW.profile_id;
-    END IF;
+  IF TG_TABLE_NAME = 'events' AND TG_OP = 'INSERT' AND NEW.status = 'published' THEN
+    INSERT INTO activity_feed (type, profile_id, profile_name, profile_role, metadata)
+    SELECT 'event_published', NEW.profile_id, p.display_name, p.role,
+      jsonb_build_object('title', NEW.title, 'event_date', NEW.event_date, 'city', NEW.city)
+    FROM profiles p WHERE p.id = NEW.profile_id;
+  END IF;
+
+  IF TG_TABLE_NAME = 'events' AND TG_OP = 'UPDATE'
+     AND OLD.status IS DISTINCT FROM NEW.status
+     AND NEW.status = 'published' THEN
+    INSERT INTO activity_feed (type, profile_id, profile_name, profile_role, metadata)
+    SELECT 'event_published', NEW.profile_id, p.display_name, p.role,
+      jsonb_build_object('title', NEW.title, 'event_date', NEW.event_date, 'city', NEW.city)
+    FROM profiles p WHERE p.id = NEW.profile_id;
   END IF;
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE TRIGGER profiles_activity       AFTER INSERT ON profiles       FOR EACH ROW EXECUTE FUNCTION log_activity();
-CREATE TRIGGER interests_activity      AFTER INSERT ON interests       FOR EACH ROW EXECUTE FUNCTION log_activity();
-CREATE TRIGGER proposals_activity      AFTER INSERT ON song_proposals  FOR EACH ROW EXECUTE FUNCTION log_activity();
-CREATE TRIGGER user_proposals_activity AFTER INSERT ON user_proposals  FOR EACH ROW EXECUTE FUNCTION log_activity();
-CREATE TRIGGER events_activity         AFTER INSERT ON events          FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER profiles_activity        AFTER INSERT ON profiles        FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER interests_activity       AFTER INSERT ON interests       FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER proposals_activity       AFTER INSERT ON song_proposals  FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER user_proposals_activity  AFTER INSERT ON user_proposals  FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER events_activity          AFTER INSERT ON events          FOR EACH ROW EXECUTE FUNCTION log_activity();
+CREATE TRIGGER events_activity_update   AFTER UPDATE ON events          FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+-- profiles.last_activity_at maintenance.
+-- Self-bump (BEFORE UPDATE on profiles) bumps when the user edits their own profile.
+-- Cross-bump (AFTER on related tables) bumps when the user creates events / proposals / interests.
+CREATE OR REPLACE FUNCTION profiles_self_bump_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW IS DISTINCT FROM OLD THEN
+    NEW.last_activity_at := NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION bump_profile_last_activity()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  IF TG_TABLE_NAME = 'events' THEN
+    v_id := COALESCE(NEW.profile_id, OLD.profile_id);
+  ELSIF TG_TABLE_NAME = 'song_proposals' THEN
+    v_id := COALESCE(NEW.user_id, OLD.user_id);
+  ELSIF TG_TABLE_NAME = 'interests' THEN
+    v_id := COALESCE(NEW.from_profile_id, OLD.from_profile_id);
+  ELSIF TG_TABLE_NAME = 'user_proposals' THEN
+    v_id := COALESCE(NEW.from_profile_id, OLD.from_profile_id);
+  END IF;
+  IF v_id IS NOT NULL THEN
+    UPDATE profiles SET last_activity_at = NOW() WHERE id = v_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER profiles_self_bump_activity   BEFORE UPDATE         ON profiles        FOR EACH ROW EXECUTE FUNCTION profiles_self_bump_activity();
+CREATE TRIGGER events_bump_activity          AFTER INSERT OR UPDATE ON events         FOR EACH ROW EXECUTE FUNCTION bump_profile_last_activity();
+CREATE TRIGGER song_proposals_bump_activity  AFTER INSERT          ON song_proposals  FOR EACH ROW EXECUTE FUNCTION bump_profile_last_activity();
+CREATE TRIGGER interests_bump_activity       AFTER INSERT          ON interests       FOR EACH ROW EXECUTE FUNCTION bump_profile_last_activity();
+CREATE TRIGGER user_proposals_bump_activity  AFTER INSERT          ON user_proposals  FOR EACH ROW EXECUTE FUNCTION bump_profile_last_activity();
 
 -- ============================================================
 -- STORAGE BUCKETS (run in Supabase Dashboard → Storage)
