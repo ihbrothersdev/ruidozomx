@@ -413,7 +413,7 @@ CREATE POLICY "interests_insert_own"
 -- EVENTS
 CREATE POLICY "events_select_published"
   ON events FOR SELECT
-  USING (status = 'published' OR auth.uid() = profile_id);
+  USING (status IN ('published', 'draft') OR auth.uid() = profile_id);
 CREATE POLICY "events_insert_own"  ON events FOR INSERT WITH CHECK (auth.uid() = profile_id);
 CREATE POLICY "events_update_own"  ON events FOR UPDATE USING (auth.uid() = profile_id);
 CREATE POLICY "events_delete_own"  ON events FOR DELETE USING (auth.uid() = profile_id);
