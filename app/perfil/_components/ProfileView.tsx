@@ -3,7 +3,7 @@ import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import ActionButtons from './ActionButtons'
-import DynamicModules, { type SongProposalSummary } from './DynamicModules'
+import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
 import ProfileLayout from './ProfileLayout'
@@ -27,6 +27,7 @@ export interface ProfileViewProps {
   alreadySent?: { proposal: boolean; sendInterest: boolean }
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
+  events?: EventSummary[]
 }
 
 export default function ProfileView({
@@ -44,7 +45,8 @@ export default function ProfileView({
   bio,
   alreadySent,
   songProposals,
-  songProposalsCount
+  songProposalsCount,
+  events
 }: ProfileViewProps) {
   // const logoDecoration = (
   //   <div className='flex items-center justify-center gap-2'>
@@ -122,6 +124,7 @@ export default function ProfileView({
               roleProfile={roleProfile}
               songProposals={songProposals}
               songProposalsCount={songProposalsCount}
+              events={events}
             />
           )}
 

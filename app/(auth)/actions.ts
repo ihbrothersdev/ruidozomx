@@ -60,7 +60,7 @@ export async function resetPassword(formData: FormData) {
   const protocol = host.startsWith('localhost') ? 'http' : 'https'
   const origin = headersList.get('origin') || `${protocol}://${host}`
 
-  const redirectTo = `${origin}/callback`
+  const redirectTo = `${origin}/nueva-contrasena`
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo
@@ -77,6 +77,11 @@ export async function updatePassword(formData: FormData) {
   const supabase = await createClient()
   const password = formData.get('password') as string
   const confirm = formData.get('confirm') as string
+  const token_hash = formData.get('token_hash') as string
+
+  if (!token_hash) {
+    return { error: 'Token de recuperación inválido o expirado.' }
+  }
 
   if (password !== confirm) {
     return { error: 'Las contraseñas no coinciden.' }
@@ -86,14 +91,20 @@ export async function updatePassword(formData: FormData) {
     return { error: 'La contraseña debe tener al menos 6 caracteres.' }
   }
 
-  const { error } = await supabase.auth.updateUser({ password })
-
-  if (error) {
-    return { error: translateAuthError(error.message) }
+  const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash, type: 'recovery' })
+  if (verifyError) {
+    return { error: translateAuthError(verifyError.message) }
   }
 
+  const { error: updateError } = await supabase.auth.updateUser({ password })
+  if (updateError) {
+    await supabase.auth.signOut()
+    return { error: translateAuthError(updateError.message) }
+  }
+
+  await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/perfil')
+  redirect('/iniciar-sesion?message=' + encodeURIComponent('Contraseña actualizada. Inicia sesión.'))
 }
 
 export async function signout() {

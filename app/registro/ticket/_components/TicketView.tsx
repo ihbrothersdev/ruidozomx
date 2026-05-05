@@ -12,17 +12,22 @@ import TicketText from './TicketText'
 interface TicketViewProps {
   /** Whether the visitor already confirmed their email (and has an active session). */
   isLoggedIn?: boolean
+  /** Venues only: did the user opt in to publishing convocatorias on Ruidozo? */
+  venuePublishesCalls?: boolean
 }
 
-export default function TicketView({ isLoggedIn = false }: TicketViewProps) {
+export default function TicketView({ isLoggedIn = false, venuePublishesCalls = false }: TicketViewProps) {
   return (
     <Suspense>
-      <TicketContent isLoggedIn={isLoggedIn} />
+      <TicketContent
+        isLoggedIn={isLoggedIn}
+        venuePublishesCalls={venuePublishesCalls}
+      />
     </Suspense>
   )
 }
 
-function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
+function TicketContent({ isLoggedIn, venuePublishesCalls }: { isLoggedIn: boolean; venuePublishesCalls: boolean }) {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role')
   const role: Role = roleParam && ROLES.includes(roleParam as Role) ? (roleParam as Role) : 'fan'
@@ -85,6 +90,7 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
               role={role}
               displayName={displayName}
               isLoggedIn={isLoggedIn}
+              venuePublishesCalls={venuePublishesCalls}
               className='h-full'
             />
           </div>
@@ -174,6 +180,7 @@ function TicketContent({ isLoggedIn }: { isLoggedIn: boolean }) {
               role={role}
               displayName={displayName}
               isLoggedIn={isLoggedIn}
+              venuePublishesCalls={venuePublishesCalls}
               className='h-full'
             />
           </div>

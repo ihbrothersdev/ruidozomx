@@ -14,7 +14,7 @@ const passwordInputCls =
 const passwordToggleCls =
   'shrink-0 text-red-600/70 transition-colors hover:text-red-700 focus:outline-none disabled:opacity-50'
 
-export function NewPasswordForm() {
+export function NewPasswordForm({ tokenHash }: { tokenHash: string }) {
   const [isPending, startTransition] = useTransition()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -55,6 +55,11 @@ export function NewPasswordForm() {
       action={handleSubmit}
       className='relative z-10 space-y-4 px-8 py-8 sm:px-12 sm:py-10'
     >
+      <input
+        type='hidden'
+        name='token_hash'
+        value={tokenHash}
+      />
       <PasswordInput
         name='password'
         required

@@ -1,16 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import { NewPasswordForm } from './NewPasswordForm'
 
-export default async function NuevaContrasenaPage() {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+export default async function NuevaContrasenaPage({
+  searchParams
+}: {
+  searchParams: Promise<{ token_hash?: string; type?: string; error?: string }>
+}) {
+  const params = await searchParams
+  const token_hash = params.token_hash
+  const type = params.type
 
-  if (!user) {
-    redirect('/iniciar-sesion')
+  if (!token_hash || type !== 'recovery') {
+    redirect(
+      '/iniciar-sesion?error=' +
+        encodeURIComponent('El enlace de recuperación es inválido o expiró. Solicítalo de nuevo.')
+    )
   }
 
   return (
@@ -75,7 +80,7 @@ export default async function NuevaContrasenaPage() {
               className='object-fill'
             />
 
-            <NewPasswordForm />
+            <NewPasswordForm tokenHash={token_hash} />
           </div>
         </div>
       </main>
