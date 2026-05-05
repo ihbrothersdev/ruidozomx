@@ -9,6 +9,16 @@ export interface SongProposalSummary {
   created_at: string
 }
 
+export interface EventSummary {
+  id: string
+  title: string
+  event_date: string
+  event_type: string | null
+  venue_name: string | null
+  city: string | null
+  status: 'draft' | 'published' | 'cancelled'
+}
+
 interface DynamicModulesProps {
   role: Role
   roleProfile?: Record<string, any> | null
@@ -16,6 +26,8 @@ interface DynamicModulesProps {
   songProposals?: SongProposalSummary[]
   /** Total proposals submitted by this user (across all time). */
   songProposalsCount?: number
+  /** Upcoming events for the profile owner. */
+  events?: EventSummary[]
 }
 
 /** Resolve data for a module: returns an array of items to display as a list */
@@ -40,11 +52,23 @@ const STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: 
   rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
 }
 
+type VisibleEntry =
+  | { mod: { title: string; key: string }; kind: 'list'; items: string[] }
+  | { mod: { title: string; key: string }; kind: 'proposals'; proposals: SongProposalSummary[]; total: number }
+  | {
+      mod: { title: string; key: string }
+      kind: 'events'
+      events: EventSummary[]
+      /** When set, render this message instead of the events list (empty / disabled state). */
+      emptyMessage?: string
+    }
+
 export default function DynamicModules({
   role,
   roleProfile,
   songProposals = [],
-  songProposalsCount
+  songProposalsCount,
+  events = []
 }: DynamicModulesProps) {
   const modules = ROLE_DYNAMIC_MODULES[role]
   if (!modules || modules.length === 0) return null
@@ -53,16 +77,56 @@ export default function DynamicModules({
   const proposalsToShow = songProposals.slice(0, 3)
   const proposalsTotal = songProposalsCount ?? songProposals.length
 
+  // Venue-specific: do they accept publishing convocatorias on Ruidozo?
+  const venuePublishesCalls = role === 'venue' ? Boolean(roleProfile?.publish_calls_ruidozo) : null
+
   // Build the visible modules list — drop anything without data.
-  const visible = modules
-    .map(mod => {
+  const visible: VisibleEntry[] = modules
+    .map<VisibleEntry | null>(mod => {
       if (mod.key === 'proposals') {
-        return { mod, kind: 'proposals' as const, proposals: proposalsToShow, total: proposalsTotal }
+        return { mod, kind: 'proposals', proposals: proposalsToShow, total: proposalsTotal }
       }
+
+      if (mod.key === 'events') {
+        // Venues get a special states-machine: opt-out → opt-in-empty → has events.
+        if (role === 'venue') {
+          if (venuePublishesCalls === false) {
+            return {
+              mod: { ...mod, title: 'Convocatorias' },
+              kind: 'events',
+              events: [],
+              emptyMessage: 'Este foro no publica convocatorias.'
+            }
+          }
+          if (events.length === 0) {
+            return {
+              mod,
+              kind: 'events',
+              events: [],
+              emptyMessage: 'Aún no hay convocatorias publicadas.'
+            }
+          }
+          return { mod, kind: 'events', events: events.slice(0, 5) }
+        }
+        // Other roles: just show events if any, hide if none.
+        return { mod, kind: 'events', events: events.slice(0, 5) }
+      }
+
+      // 'calls' for venue is redundant with 'events' — skip silently.
+      if (mod.key === 'calls' && role === 'venue') return null
+
       const items = getModuleItems(mod, roleProfile)
-      return { mod, kind: 'list' as const, items }
+      return { mod, kind: 'list', items }
     })
-    .filter(entry => (entry.kind === 'proposals' ? entry.total > 0 : entry.items.length > 0))
+    .filter((entry): entry is VisibleEntry => {
+      if (!entry) return false
+      if (entry.kind === 'proposals') return entry.total > 0
+      if (entry.kind === 'events') {
+        // Keep when there are events OR there's a forced empty/disabled message.
+        return entry.events.length > 0 || !!entry.emptyMessage
+      }
+      return entry.items.length > 0
+    })
 
   if (visible.length === 0) return null
 
@@ -93,6 +157,39 @@ export default function DynamicModules({
                   {item}
                 </li>
               ))}
+            </ul>
+          )}
+
+          {entry.kind === 'events' && entry.emptyMessage && (
+            <p className='font-pt-mono mt-2 text-sm text-black/60 italic'>{entry.emptyMessage}</p>
+          )}
+
+          {entry.kind === 'events' && entry.events.length > 0 && (
+            <ul className='mt-2 space-y-1.5'>
+              {entry.events.map(ev => {
+                const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                })
+                const place = [ev.venue_name, ev.city].filter(Boolean).join(' · ')
+                return (
+                  <li
+                    key={ev.id}
+                    className='flex items-start gap-2 text-sm'
+                  >
+                    <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+                    <div className='font-pt-mono flex min-w-0 flex-1 flex-col gap-0.5'>
+                      <span className='font-bold text-black'>{ev.title}</span>
+                      <span className='text-xs text-black/60'>
+                        {dateLabel}
+                        {place && ` · ${place}`}
+                        {ev.event_type && ` · ${ev.event_type}`}
+                      </span>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           )}
 

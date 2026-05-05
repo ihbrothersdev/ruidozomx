@@ -14,5 +14,23 @@ export default async function TicketPage() {
     data: { user }
   } = await supabase.auth.getUser()
 
-  return <TicketView isLoggedIn={!!user} />
+  // For venues, fetch the `publish_calls_ruidozo` flag so the ticket can
+  // hide the "publica una tocada / abre fechas" CTA when the venue already
+  // opted in to publishing.
+  let venuePublishesCalls = false
+  if (user) {
+    const { data: venue } = await supabase
+      .from('venue_profiles')
+      .select('publish_calls_ruidozo')
+      .eq('profile_id', user.id)
+      .maybeSingle()
+    venuePublishesCalls = Boolean(venue?.publish_calls_ruidozo)
+  }
+
+  return (
+    <TicketView
+      isLoggedIn={!!user}
+      venuePublishesCalls={venuePublishesCalls}
+    />
+  )
 }

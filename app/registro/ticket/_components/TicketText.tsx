@@ -15,9 +15,18 @@ interface TicketTextProps {
   /** When false, ticket buttons re-trigger the "confirma tu correo" toast
    *  instead of opening modals — the user can't act until their account is active. */
   isLoggedIn?: boolean
+  /** Venues only: when true, the venue already opted in to publishing
+   *  convocatorias — hide the "PUBLICA UNA TOCADA / ABRE FECHAS" CTA. */
+  venuePublishesCalls?: boolean
 }
 
-export default function TicketText({ role, className = '', displayName = '', isLoggedIn = false }: TicketTextProps) {
+export default function TicketText({
+  role,
+  className = '',
+  displayName = '',
+  isLoggedIn = false,
+  venuePublishesCalls = false
+}: TicketTextProps) {
   const [compartirOpen, setCompartirOpen] = useState(false)
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [compartirEventoOpen, setCompartirEventoOpen] = useState(false)
@@ -68,7 +77,7 @@ export default function TicketText({ role, className = '', displayName = '', isL
           onClick={gated(() => setCompartirEventoOpen(true))}
           className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
         >
-          {role === 'venue' && (
+          {role === 'venue' && venuePublishesCalls && (
             <>
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
                 PUBLICA UNA TOCADA O

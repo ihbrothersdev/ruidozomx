@@ -96,14 +96,24 @@ export default async function PublicPerfilPage({ params }: Props) {
   // the badge. RLS only returns rows when the viewer is the proposal owner
   // or an admin — for everyone else both come back empty and the module is
   // auto-hidden by DynamicModules.
-  const [{ data: songProposalsData }, { count: songProposalsCount }] = await Promise.all([
+  const [{ data: songProposalsData }, { count: songProposalsCount }, { data: eventsData }] = await Promise.all([
     supabase
       .from('song_proposals')
       .select('id, title, artist, status, created_at')
       .eq('user_id', profile.id)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', profile.id)
+    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
+    // Upcoming events. RLS lets the public read `published`; the owner also
+    // sees `draft`. Cancelled is hidden either way.
+    supabase
+      .from('events')
+      .select('id, title, event_date, event_type, venue_name, city, status')
+      .eq('profile_id', profile.id)
+      .neq('status', 'cancelled')
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
+      .limit(5)
   ])
 
   return (
@@ -123,6 +133,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       alreadySent={alreadySent}
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
+      events={eventsData ?? []}
     />
   )
 }
