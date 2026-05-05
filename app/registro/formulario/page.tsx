@@ -46,6 +46,17 @@ function FormularioContent() {
     e.preventDefault()
     const form = e.currentTarget
 
+    // Auto-prepend https:// to url inputs that have a value but no protocol,
+    // so users who type "spotify.com/..." don't fail browser URL validation.
+    const urlInputs = form.querySelectorAll<HTMLInputElement>('input[type="url"]')
+    urlInputs.forEach(input => {
+      const v = input.value.trim()
+      if (v && !/^[a-z][a-z0-9+\-.]*:\/\//i.test(v)) {
+        input.value = `https://${v}`
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+    })
+
     if (!form.checkValidity()) {
       const invalid = form.querySelector(':invalid') as HTMLInputElement | null
       if (invalid) {
@@ -56,9 +67,13 @@ function FormularioContent() {
           (invalid.closest('div')?.querySelector('label') as HTMLLabelElement | null)
         const labelText = labelEl?.textContent?.replace(/\*$/, '').trim() || cleanedName || 'campo obligatorio'
 
+        const isFormatError =
+          !invalid.validity.valueMissing && (invalid.validity.typeMismatch || invalid.validity.patternMismatch)
+        const description = isFormatError ? `Revisa el formato de: ${labelText}` : `Por favor completa: ${labelText}`
+
         sileo.error({
           title: 'Falta un dato',
-          description: `Por favor completa: ${labelText}`,
+          description,
           position: 'top-center',
           duration: 4000
         })
