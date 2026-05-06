@@ -3,11 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabaseEnv } from './env'
 
 export async function handleProxyRequest(request: NextRequest) {
-  // Redirect auth codes to the callback route for session exchange
+  // Safety net: if Supabase falls back to Site URL (e.g. an emailRedirectTo
+  // wasn't in the allowlist), the user lands at `/?code=…`. Forward to the
+  // real callback so the session exchange still happens.
   const code = request.nextUrl.searchParams.get('code')
   if (code && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone()
-    url.pathname = '/callback'
+    url.pathname = '/auth/callback'
     return NextResponse.redirect(url)
   }
 
