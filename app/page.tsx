@@ -38,15 +38,15 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 hidden xl:block'>
+        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] 2xl:w-[520px] min-[1728px]:w-[620px] min-[1920px]:w-[700px]'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
             width={521}
             height={1179}
-            className='w-full'
+            className='h-auto w-full'
           />
-          <div className='absolute top-205 left-55 z-0 hidden xl:block'>
+          <div className='absolute top-205 left-55 z-0 max-[1450px]:hidden'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
@@ -76,13 +76,13 @@ export default async function Home() {
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-250 -right-15 z-0 hidden xl:block'>
+        <div className='absolute top-230 -right-15 z-0 hidden xl:block xl:w-[320px] 2xl:w-[400px] min-[1728px]:w-[480px] min-[1920px]:w-[540px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
             width={384}
             height={839}
-            className='w-full'
+            className='h-auto w-full'
           />
         </div>
 
