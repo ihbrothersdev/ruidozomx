@@ -18,13 +18,15 @@ const PLATFORM_OPTIONS = [
 
 type PlatformValue = (typeof PLATFORM_OPTIONS)[number]['value']
 
-const PLATFORM_PLACEHOLDERS: Record<PlatformValue, string> = {
-  web: 'https://tubanda.com',
-  instagram: 'https://instagram.com/tubanda',
-  facebook: 'https://facebook.com/tubanda',
-  tiktok: 'https://tiktok.com/@tubanda',
-  youtube: 'https://youtube.com/@tubanda',
-  twitter: 'https://x.com/tubanda'
+function buildPlaceholders(handle: string): Record<PlatformValue, string> {
+  return {
+    web: `https://${handle}.com`,
+    instagram: `https://instagram.com/${handle}`,
+    facebook: `https://facebook.com/${handle}`,
+    tiktok: `https://tiktok.com/@${handle}`,
+    youtube: `https://youtube.com/@${handle}`,
+    twitter: `https://x.com/${handle}`
+  }
 }
 
 interface Row {
@@ -43,9 +45,15 @@ function uid(): string {
 interface SocialLinksFieldsProps {
   label?: string
   initialPlatform?: PlatformValue
+  handle?: string
 }
 
-export function SocialLinksFields({ label = 'Web y redes sociales', initialPlatform = 'web' }: SocialLinksFieldsProps) {
+export function SocialLinksFields({
+  label = 'Web y redes sociales',
+  initialPlatform = 'web',
+  handle = 'tuproyecto'
+}: SocialLinksFieldsProps) {
+  const placeholders = buildPlaceholders(handle)
   const [rows, setRows] = useState<Row[]>(() => [{ id: uid(), platform: initialPlatform, url: '' }])
 
   const usedPlatforms = new Set(rows.map(r => r.platform))
@@ -108,7 +116,7 @@ export function SocialLinksFields({ label = 'Web y redes sociales', initialPlatf
                 name={`social_${row.platform}`}
                 value={row.url}
                 onChange={e => update(row.id, { url: e.target.value })}
-                placeholder={PLATFORM_PLACEHOLDERS[row.platform]}
+                placeholder={placeholders[row.platform]}
                 className={inputCls}
               />
             </div>
