@@ -1,10 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { sendTransactional } from '@/lib/loops'
+import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { redirect } from 'next/navigation'
-
-const LOOPS_PROPOSAL_SUBMITTED_ID = 'cmotgrx7t00dm0i50rnvg1ild'
 
 export async function submitProposal(formData: FormData) {
   const supabase = await createClient()
@@ -45,7 +43,7 @@ export async function submitProposal(formData: FormData) {
 
   if (user.email) {
     await sendTransactional({
-      transactionalId: LOOPS_PROPOSAL_SUBMITTED_ID,
+      transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
       email: user.email
     })
   }

@@ -1,3 +1,18 @@
+/**
+ * Centralised Loops transactional template IDs.
+ *
+ * Keeping them here means the IDs are referenced from a single place — if
+ * Loops swaps a template, we only update one constant.
+ */
+export const LOOPS_IDS = {
+  /** Sent to the proposer when they submit a song to the cassette queue. */
+  PROPOSAL_SUBMITTED: 'cmotgrx7t00dm0i50rnvg1ild',
+  /** Sent to the proposer when their song gets accepted into a cassette. */
+  PROPOSAL_SELECTED: 'cmo0vgrqu0u480izd8pywerxd',
+  /** Sent to a profile owner when someone sends them an interest/connection. */
+  INTEREST_RECEIVED: 'cmothhpjc0ima0i4kgs8re0ra'
+} as const
+
 type LoopsTransactionalPayload = {
   transactionalId: string
   email: string

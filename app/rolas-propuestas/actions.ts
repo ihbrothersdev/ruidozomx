@@ -2,11 +2,9 @@
 
 import { createServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@/lib/supabase/server'
-import { sendTransactional } from '@/lib/loops'
+import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-const LOOPS_PROPOSAL_SELECTED_ID = 'cmo0vgrqu0u480izd8pywerxd'
 
 /** Guard: ensure current user is admin */
 async function requireAdmin() {
@@ -119,7 +117,7 @@ export async function acceptProposal(formData: FormData) {
 
   if (recipientEmail) {
     await sendTransactional({
-      transactionalId: LOOPS_PROPOSAL_SELECTED_ID,
+      transactionalId: LOOPS_IDS.PROPOSAL_SELECTED,
       email: recipientEmail
     })
   }
