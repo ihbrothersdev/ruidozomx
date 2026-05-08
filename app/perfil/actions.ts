@@ -1,7 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { sendTransactional } from '@/lib/loops'
 import type { UserProposalType } from '@/lib/types'
+
+const LOOPS_INTEREST_RECEIVED_ID = 'cmothhpjc0ima0i4kgs8re0ra'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
 
 interface SendProposalInput {
   toProfileId: string
@@ -79,6 +84,24 @@ export async function sendInterest(input: SendInterestInput) {
     }
     console.error('Error saving interest:', error)
     return { error: 'No se pudo enviar la conexión. Intenta de nuevo.' }
+  }
+
+  const adminClient = createServiceClient()
+  const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
+  const recipientEmail = recipient?.user?.email
+
+  if (recipientEmail) {
+    const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
+
+    const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
+
+    await sendTransactional({
+      transactionalId: LOOPS_INTEREST_RECEIVED_ID,
+      email: recipientEmail,
+      dataVariables: {
+        profile: profileUrl
+      }
+    })
   }
 
   return { success: true }
