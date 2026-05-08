@@ -48,87 +48,62 @@ export default function TicketText({
     }
   }
 
+  // When there's an independent CTA above the headline (different modal),
+  // keep Row 1 separate. Otherwise the "PROPÓN UNA…" lead-in collapses into
+  // the headline button so they share a single hover/click target.
+  const hasBlockAbove =
+    role === 'promotor' || role === 'agente' || role === 'banda' || (role === 'venue' && venuePublishesCalls)
+
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
-      {/* ── Row 1: headline pre-text (role-specific) ── */}
-      <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
-        {role === 'manager' && (
-          <button
-            onClick={gated(() => setProponerRolaOpen(true))}
-            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
-          >
-            <p className='text-3xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-4xl'>
-              PROPÓN UNA
-            </p>
-          </button>
-        )}
-        {(role === 'promotor' || role === 'agente') && (
-          <button
-            onClick={gated(() => setCompartirEventoOpen(true))}
-            className='group pointer-events-auto flex cursor-pointer flex-col items-center'
-          >
-            <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
-              PUBLICA UNA FECHA O UNA
-            </p>
-            <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
-              CONVOCATORIA
-            </p>
-          </button>
-        )}
-        <button
-          onClick={gated(() => setCompartirEventoOpen(true))}
-          className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
-        >
+      {/* ── Row 1: independent CTA above the headline. Empty placeholder
+          for roles without one keeps the headline visually anchored to
+          rows 2-3 instead of stretching to the top of the ticket. ── */}
+      {!hasBlockAbove && <div />}
+      {hasBlockAbove && (
+        <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
+          {(role === 'promotor' ||
+            role === 'agente' ||
+            // role === 'banda' || TODO: Descomentar para cuando se quiera que las bandas puedan compartir eventos
+            (role === 'venue' && venuePublishesCalls)) && (
+            <button
+              onClick={gated(() => setCompartirEventoOpen(true))}
+              className='group pointer-events-auto flex cursor-pointer flex-col items-center'
+            >
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
+                PUBLICA UNA FECHA O UNA
+              </p>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
+                CONVOCATORIA
+              </p>
+            </button>
+          )}
           {role === 'venue' && venuePublishesCalls && (
-            <>
+            <button
+              onClick={gated(() => setCompartirEventoOpen(true))}
+              className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+            >
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
                 PUBLICA UNA TOCADA O
               </p>
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
                 ABRE FECHAS DISPONIBLES
               </p>
-            </>
+            </button>
           )}
-        </button>
-        {role === 'fan' && (
-          <button
-            onClick={gated(() => setProponerRolaOpen(true))}
-            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
-          >
-            <p className='text-3xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
-              PROPÓN UNA
-            </p>
-          </button>
-        )}
-        {role === 'banda' && (
-          <button
-            onClick={gated(() => setProponerRolaOpen(true))}
-            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
-          >
-            <p className='text-xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-3xl xl:text-3xl'>
-              PROPÓN UNA DE TUS
-            </p>
-          </button>
-        )}
-        {/* TODO: Uncomment when publica una fecha modal is done */}
-        {/* {role === 'proveedor' && (
-          <button
-            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
-          >
-            <p className='text-base leading-tight text-black uppercase md:text-xl lg:text-2xl xl:text-4xl'>
-              PUBLICA UNA PROMO
-            </p>
-          </button>
-        )} */}
-      </div>
+        </div>
+      )}
 
-      {/* ── Row 2: big headline + detail (role-specific) — clickable to open proponer rola modal ── */}
+      {/* ── Headline + detail — opens proponer rola modal ── */}
       <button
         onClick={gated(() => setProponerRolaOpen(true))}
         className='group pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
       >
         {role === 'manager' && (
           <>
+            <p className='text-3xl leading-tight font-bold text-red-500 uppercase group-hover:underline md:text-2xl lg:text-4xl'>
+              PROPÓN UNA
+            </p>
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-6xl'>
               ROLA
             </p>
@@ -157,7 +132,7 @@ export default function TicketText({
           </>
         )}
         {role === 'venue' && (
-          <button className='group pointer-events-auto cursor-pointer'>
+          <>
             <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-xl lg:text-2xl'>
               PROPÓN UNA
             </p>
@@ -170,10 +145,13 @@ export default function TicketText({
             <p className='text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
               para nuestro cassete semanal
             </p>
-          </button>
+          </>
         )}
         {role === 'fan' && (
           <>
+            <p className='text-3xl leading-tight font-bold text-red-500 uppercase group-hover:underline md:text-2xl lg:text-5xl xl:text-5xl'>
+              PROPÓN UNA
+            </p>
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline sm:text-7xl md:text-5xl lg:text-6xl'>
               ROLA
             </p>
@@ -187,6 +165,9 @@ export default function TicketText({
         )}
         {role === 'banda' && (
           <>
+            <p className='text-xl leading-tight font-bold text-red-500 uppercase group-hover:underline md:text-2xl lg:text-3xl xl:text-3xl'>
+              PROPÓN UNA DE TUS
+            </p>
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-5xl xl:text-8xl'>
               ROLAS
             </p>
