@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
+import { SocialLinksFields } from './SocialLinksFields'
 import { YesNoField } from './YesNoField'
 import { inputCls, labelCls, selectTriggerCls } from './form-styles'
 
@@ -44,11 +45,7 @@ export function ManagerGroupFormLayout({ initialRole = 'manager' }: { initialRol
             required
             placeholder='Tu nombre completo'
           />
-          <Field
-            label='Link a web o redes'
-            name='web_link'
-            placeholder='https://...'
-          />
+          <SocialLinksFields handle='tunombre' />
 
           {/* Cuál es tu rol — dropdown */}
           <div className='min-w-0 space-y-0.5'>

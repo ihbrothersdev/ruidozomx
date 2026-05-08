@@ -132,8 +132,8 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                 <Image
                   src='/assets/compartir/post.png'
                   alt='Post para compartir'
-                  width={213}
-                  height={273}
+                  width={1080}
+                  height={1350}
                   className='h-auto w-28 sm:w-40 lg:w-52'
                 />
                 <a
@@ -150,8 +150,8 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                 <Image
                   src='/assets/compartir/reel.png'
                   alt='Reel para compartir'
-                  width={252}
-                  height={447}
+                  width={1080}
+                  height={1920}
                   className='h-auto w-28 sm:w-40 lg:w-52'
                 />
                 <a

@@ -67,7 +67,7 @@ export function BandaFormLayout() {
             required
             placeholder='Spotify, Bandcamp, SoundCloud...'
           />
-          <SocialLinksFields />
+          <SocialLinksFields handle='tubanda' />
           <YesNoField
             label='Disponible para tocar en vivo'
             name='available_live'
