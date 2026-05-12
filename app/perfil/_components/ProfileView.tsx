@@ -28,6 +28,7 @@ export interface ProfileViewProps {
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
   events?: EventSummary[]
+  lastActivityAt: string | null
 }
 
 export default function ProfileView({
@@ -46,7 +47,8 @@ export default function ProfileView({
   alreadySent,
   songProposals,
   songProposalsCount,
-  events
+  events,
+  lastActivityAt
 }: ProfileViewProps) {
   // const logoDecoration = (
   //   <div className='flex items-center justify-center gap-2'>
@@ -145,9 +147,11 @@ export default function ProfileView({
             displayName={displayName}
             alreadySent={alreadySent}
           />
+
+          {/* Última actividad — directly under the action buttons */}
+          <UltimaActividad lastActivityAt={lastActivityAt ?? null} />
         </>
       }
-      bottomSection={<UltimaActividad />}
     />
   )
 }
