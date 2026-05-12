@@ -49,6 +49,7 @@ export default async function PerfilPage() {
   }
 
   const contact = (profile?.contact as string) || null
+  const lastActivityAt = profile?.last_activity_at as string | null
 
   // Fetch this user's song proposals (latest 3 for display) + total count
   // for the badge. RLS allows users to read their own; on stranger profiles
@@ -85,6 +86,7 @@ export default async function PerfilPage() {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      lastActivityAt={lastActivityAt}
     />
   )
 }

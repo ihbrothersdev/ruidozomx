@@ -92,14 +92,14 @@ export default function ActionButtons({
           <button
             type='button'
             onClick={() => setProponerRolaOpen(true)}
-            className='block cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
+            className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
           >
             <Image
               src='/assets/proponer-rola-banda.png'
               alt='Proponer rola de esta banda'
               width={600}
               height={120}
-              className='mx-auto h-auto w-full max-w-xs'
+              className='h-auto w-full'
             />
           </button>
           <ProponerRolaBandaModal

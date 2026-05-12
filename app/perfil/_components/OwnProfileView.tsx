@@ -15,6 +15,7 @@ export interface OwnProfileViewProps {
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
   events?: EventSummary[]
+  lastActivityAt: string | null
 }
 
 export default function OwnProfileView({ displayName, photoUrl, role, location }: OwnProfileViewProps) {

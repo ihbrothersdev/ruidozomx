@@ -65,9 +65,10 @@ export default async function PublicPerfilPage({ params }: Props) {
   }
 
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
+  const lastActivityAt = profile.last_activity_at as string | null
 
   // Check if current user already sent a proposal or interest to this profile
-  let alreadySent = {
+  const alreadySent = {
     proposal: false,
     sendInterest: false
   }
@@ -104,8 +105,8 @@ export default async function PublicPerfilPage({ params }: Props) {
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
-    // Upcoming events. RLS lets the public read `published`; the owner also
-    // sees `draft`. Cancelled is hidden either way.
+    // Upcoming events. RLS lets the public read `published` and `draft`; the
+    // owner also sees their own. Cancelled is hidden via the query filter.
     supabase
       .from('events')
       .select('id, title, event_date, event_type, venue_name, city, status')
@@ -134,6 +135,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      lastActivityAt={lastActivityAt}
     />
   )
 }
