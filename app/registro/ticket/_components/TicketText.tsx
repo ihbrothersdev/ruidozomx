@@ -102,12 +102,17 @@ export default function TicketText({
         )}
         {role === 'banda' && (
           <button
-            onClick={gated(() => setProponerRolaOpen(true))}
+            onClick={gated(() => setCompartirEventoOpen(true))}
             className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
-            <p className='text-xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-3xl xl:text-3xl'>
-              PROPÓN UNA DE TUS
-            </p>
+            <>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
+                PUBLICA UNA FECHA O
+              </p>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
+                UNA CONVOCATORIA
+              </p>
+            </>
           </button>
         )}
         {/* TODO: Uncomment when publica una fecha modal is done */}
@@ -186,14 +191,17 @@ export default function TicketText({
           </>
         )}
         {role === 'banda' && (
-          <>
+          <button className='group pointer-events-auto cursor-pointer'>
+            <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-xl lg:text-2xl'>
+              PROPÓN UNA DE TUS
+            </p>
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-5xl xl:text-8xl'>
               ROLAS
             </p>
-            <p className='mt-0.5 text-xs leading-tight text-black uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-xl'>
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-xl'>
               PARA NUESTRO CASSETE SEMANAL
             </p>
-          </>
+          </button>
         )}
         {role === 'proveedor' && (
           <>
