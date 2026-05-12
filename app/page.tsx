@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
+import { IntroRedirect } from './components/IntroRedirect'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
@@ -32,6 +33,7 @@ export default async function Home() {
 
   return (
     <main className='relative min-h-screen'>
+      <IntroRedirect />
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
         style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
