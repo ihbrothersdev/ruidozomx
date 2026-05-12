@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import ProfileView from './_components/ProfileView'
+import OwnProfileView from './_components/OwnProfileView'
 import { ROLE_TABLE } from './_components/profile-constants'
 
 export const metadata: Metadata = {
@@ -49,7 +49,6 @@ export default async function PerfilPage() {
   }
 
   const contact = (profile?.contact as string) || null
-  const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
 
   // Fetch this user's song proposals (latest 3 for display) + total count
   // for the badge. RLS allows users to read their own; on stranger profiles
@@ -74,7 +73,7 @@ export default async function PerfilPage() {
   ])
 
   return (
-    <ProfileView
+    <OwnProfileView
       displayName={displayName}
       role={role}
       location={location}
@@ -83,9 +82,6 @@ export default async function PerfilPage() {
       contact={contact}
       socialLinks={socialLinks}
       roleProfile={roleProfile}
-      isOwnProfile={true}
-      isLoggedIn={true}
-      acceptProposals={acceptProposals}
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
