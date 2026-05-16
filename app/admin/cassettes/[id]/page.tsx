@@ -9,6 +9,7 @@ import { formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ArrowLeft, Music2, Sparkles, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { AddSongModal } from '../_components/AddSongModal'
 import { CassetteSides, type CassetteSong } from '../_components/CassetteSides'
 import { DeleteButton, MarkAsNextButton, MigrateAudioButton, PublishButton } from '../_components/CassetteActions'
 
@@ -124,6 +125,12 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
+          {state !== 'archived' && (
+            <AddSongModal
+              cassetteId={cassette.id}
+              occupied={cassetteSongs.map(s => ({ side: s.side, position: s.position }))}
+            />
+          )}
           {state === 'draft' && <MarkAsNextButton cassetteId={cassette.id} />}
           {(state === 'next' || state === 'draft') && total > 0 && (
             <PublishButton

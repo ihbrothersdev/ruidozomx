@@ -399,6 +399,149 @@ export async function uploadSongAudio(
 }
 
 /**
+ * Search active band profiles by display name for the admin "add song" picker.
+ * Returns up to 8 matches. Used by the autocomplete in AddSongModal so admins
+ * can optionally link a manually uploaded track to a registered band.
+ */
+export async function searchBandasByName(
+  query: string
+): Promise<{ ok: true; results: { id: string; displayName: string; slug: string; photoUrl: string | null }[] }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const trimmed = query.trim()
+  if (trimmed.length < 2) return { ok: true, results: [] }
+
+  // ILIKE pattern: escape % and _ so the user's literal text matches as typed.
+  const escaped = trimmed.replace(/[\\%_]/g, c => `\\${c}`)
+
+  const { data } = await svc
+    .from('profiles')
+    .select('id, display_name, slug, photo_url')
+    .eq('role', 'banda')
+    .eq('active', true)
+    .ilike('display_name', `%${escaped}%`)
+    .order('display_name', { ascending: true })
+    .limit(8)
+
+  return {
+    ok: true,
+    results: (data ?? []).map(p => ({
+      id: p.id,
+      displayName: p.display_name,
+      slug: p.slug,
+      photoUrl: p.photo_url
+    }))
+  }
+}
+
+/**
+ * Manually add a song to a cassette: validates required fields, uploads the
+ * MP3 to the `songs` bucket and inserts the song row. Used by admins to add
+ * tracks that didn't come through the proposal flow (label, curated picks…).
+ */
+export async function addSongToCassette(
+  formData: FormData
+): Promise<{ ok: true; songId: string } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const cassetteId = formData.get('cassette_id') as string
+  const title = ((formData.get('title') as string) ?? '').trim()
+  const artist = ((formData.get('artist') as string) ?? '').trim()
+  const artistProfileIdRaw = ((formData.get('artist_profile_id') as string) ?? '').trim()
+  const artistProfileId = artistProfileIdRaw || null
+  const genre = ((formData.get('genre') as string) ?? '').trim() || null
+  const side = formData.get('side') as 'A' | 'B'
+  const position = Number(formData.get('position'))
+  const durationRaw = formData.get('duration_seconds')
+  const durationSeconds =
+    durationRaw && Number.isFinite(Number(durationRaw)) && Number(durationRaw) > 0
+      ? Math.round(Number(durationRaw))
+      : null
+  const file = formData.get('file') as File | null
+
+  if (!cassetteId || !title || !artist || !side || !position || !file) {
+    return { ok: false, error: 'faltan_datos' }
+  }
+  if (side !== 'A' && side !== 'B') {
+    return { ok: false, error: 'lado_invalido' }
+  }
+  if (!Number.isInteger(position) || position < 1 || position > 13) {
+    return { ok: false, error: 'posicion_invalida' }
+  }
+  if (file.size === 0) {
+    return { ok: false, error: 'archivo_vacio' }
+  }
+  if (file.size > MAX_AUDIO_BYTES) {
+    return { ok: false, error: 'archivo_muy_grande' }
+  }
+  if (file.type && !ALLOWED_AUDIO_MIME.has(file.type)) {
+    return { ok: false, error: 'tipo_no_soportado' }
+  }
+
+  const { data: cassette } = await svc.from('cassettes').select('id').eq('id', cassetteId).maybeSingle()
+  if (!cassette) return { ok: false, error: 'cassette_no_encontrado' }
+
+  if (artistProfileId) {
+    const { data: bandaProfile } = await svc.from('profiles').select('id, role').eq('id', artistProfileId).maybeSingle()
+    if (!bandaProfile || bandaProfile.role !== 'banda') {
+      return { ok: false, error: 'banda_no_encontrada' }
+    }
+  }
+
+  const { data: existing } = await svc
+    .from('songs')
+    .select('id')
+    .eq('cassette_id', cassetteId)
+    .eq('side', side)
+    .eq('position', position)
+    .maybeSingle()
+  if (existing) return { ok: false, error: 'slot_ocupado' }
+
+  const ext = (file.name.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = songStorageKey({ cassetteId, artist, title, ext })
+
+  const { error: uploadError } = await svc.storage.from(SONGS_BUCKET).upload(key, file, {
+    contentType: file.type || 'audio/mpeg',
+    upsert: true,
+    cacheControl: '3600'
+  })
+  if (uploadError) return { ok: false, error: uploadError.message }
+
+  const {
+    data: { publicUrl }
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+
+  const { data: inserted, error: insertError } = await svc
+    .from('songs')
+    .insert({
+      cassette_id: cassetteId,
+      title,
+      artist,
+      artist_profile_id: artistProfileId,
+      genre,
+      side,
+      position,
+      audio_url: publicUrl,
+      duration_seconds: durationSeconds
+    })
+    .select('id')
+    .single()
+
+  if (insertError || !inserted) {
+    // Keep DB and storage in sync if the row failed to insert.
+    await svc.storage.from(SONGS_BUCKET).remove([key])
+    return { ok: false, error: insertError?.message ?? 'insert_failed' }
+  }
+
+  revalidatePath(`/admin/cassettes/${cassetteId}`)
+  revalidatePath('/admin/cassettes')
+  revalidatePath('/')
+  return { ok: true, songId: inserted.id }
+}
+
+/**
  * One-shot migration: move every track of a cassette into the canonical
  * `{cassetteId}/{artist-slug}-{title-slug}.{ext}` layout in the `songs` bucket.
  *
