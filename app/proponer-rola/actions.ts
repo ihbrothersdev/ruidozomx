@@ -34,6 +34,7 @@ export async function submitProposal(formData: FormData) {
     external_link: (formData.get('external_link') as string) || null,
     audio_file_path: (formData.get('audio_file_path') as string) || null,
     comment: (formData.get('comment') as string) || null,
+    rights_accepted: formData.get('rights_accepted') === 'true' ? true : null,
     status: 'pending'
   })
 
