@@ -72,6 +72,7 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated,
               <SongList
                 songs={songs}
                 currentSongId={currentSongId}
+                isPlaying={isPlaying}
                 onSelectSong={playSong}
               />
             </div>

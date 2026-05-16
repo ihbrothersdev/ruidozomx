@@ -87,9 +87,7 @@ export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; da
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  admin: [
-    { title: 'Rolas propuestas al cassete', key: 'proposals' }
-  ]
+  admin: [{ title: 'Rolas propuestas al cassete', key: 'proposals' }]
 }
 
 /** Primary name field per role (for display in identity block) */

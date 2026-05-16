@@ -2,11 +2,13 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { sileo } from 'sileo'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { submitEvent } from '../actions'
 
 interface ComparteTuEventoModalProps {
   open: boolean
@@ -31,6 +33,49 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
   const [fecha, setFecha] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [links, setLinks] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && fecha.trim().length > 0
+
+  function resetForm() {
+    setTipo('')
+    setNombre('')
+    setVenue('')
+    setCiudad('')
+    setDireccion('')
+    setFecha('')
+    setDescripcion('')
+    setLinks('')
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!canSubmit) return
+    setSending(true)
+    const result = await submitEvent({
+      type: tipo,
+      title: nombre,
+      venueName: venue || undefined,
+      city: ciudad || undefined,
+      address: direccion || undefined,
+      date: fecha,
+      description: descripcion || undefined,
+      externalLink: links || undefined
+    })
+    setSending(false)
+    if (result.error) {
+      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+      return
+    }
+    sileo.success({
+      title: '¡Éxito!',
+      description: 'Tu evento ha sido publicado.',
+      position: 'top-center',
+      duration: 4000
+    })
+    resetForm()
+    onOpenChange(false)
+  }
 
   return (
     <Dialog
@@ -45,145 +90,158 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
 
         <div className='relative'>
           <div className='relative min-h-full'>
-            <Image
-              src='/assets/membrete-background.png'
-              alt=''
-              width={600}
-              height={800}
-              className='absolute inset-0 h-full w-full object-fill'
-              unoptimized
-            />
-
-            {/* Content */}
-            <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-              {/* Title image */}
               <Image
-                src='/assets/comparte-evento-title.png'
-                alt='Comparte tu evento con la comunidad RU!DOZO'
-                width={500}
-                height={80}
-                className='h-auto w-full max-w-78 sm:max-w-100'
-                unoptimized
+                src='/assets/membrete-background.png'
+                alt=''
+                width={600}
+                height={800}
+                className='absolute inset-0 h-full w-full object-fill'
               />
 
-              {/* Form */}
-              <div className='mt-5 w-full space-y-4'>
-                {/* Tipo — dropdown */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Tipo</Label>
-                  <Select
-                    value={tipo}
-                    onValueChange={setTipo}
-                  >
-                    <SelectTrigger className='font-pt-mono w-full rounded-none border-2 border-red-600 bg-transparent text-sm text-black shadow-none focus-visible:border-red-800 focus-visible:ring-0'>
-                      <SelectValue placeholder='Selecciona tipo' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIPOS_EVENTO.map(t => (
-                        <SelectItem
-                          key={t}
-                          value={t}
-                        >
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Content */}
+              <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
+                {/* Title image */}
+                <Image
+                  src='/assets/comparte-evento-title.png'
+                  alt='Comparte tu evento con la comunidad RU!DOZO'
+                  width={500}
+                  height={80}
+                  className='h-auto w-full max-w-78 sm:max-w-100'
+                />
 
-                {/* Nombre del evento */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Nombre del evento
-                  </Label>
-                  <Input
-                    value={nombre}
-                    onChange={e => setNombre(e.target.value)}
-                    className={inputCls}
-                  />
-                </div>
+                {/* Form */}
+                <form
+                  onSubmit={handleSubmit}
+                  className='mt-5 w-full space-y-4'
+                >
+                  {/* Tipo — dropdown */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Tipo<span className='text-red-600'>*</span>
+                    </Label>
+                    <Select
+                      value={tipo}
+                      onValueChange={setTipo}
+                    >
+                      <SelectTrigger className='font-pt-mono w-full rounded-none border-2 border-red-600 bg-transparent text-sm text-black shadow-none focus-visible:border-red-800 focus-visible:ring-0'>
+                        <SelectValue placeholder='Selecciona tipo' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_EVENTO.map(t => (
+                          <SelectItem
+                            key={t}
+                            value={t}
+                          >
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Lugar */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Lugar</Label>
-                  <div className='space-y-2'>
-                    <div className='flex gap-2'>
-                      <Input
-                        value={venue}
-                        onChange={e => setVenue(e.target.value)}
-                        placeholder='Nombre del venue'
-                        className={inputCls}
-                      />
-                      <Input
-                        value={ciudad}
-                        onChange={e => setCiudad(e.target.value)}
-                        placeholder='Ciudad'
-                        className={inputCls}
-                      />
-                    </div>
+                  {/* Nombre del evento */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Nombre del evento<span className='text-red-600'>*</span>
+                    </Label>
                     <Input
-                      value={direccion}
-                      onChange={e => setDireccion(e.target.value)}
-                      placeholder='Dirección'
+                      value={nombre}
+                      onChange={e => setNombre(e.target.value)}
+                      required
                       className={inputCls}
                     />
                   </div>
-                </div>
 
-                {/* Fecha */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Fecha</Label>
-                  <Input
-                    type='date'
-                    value={fecha}
-                    onChange={e => setFecha(e.target.value)}
-                    className={inputCls}
-                  />
-                </div>
+                  {/* Lugar */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Lugar</Label>
+                    <div className='space-y-2'>
+                      <div className='flex gap-2'>
+                        <Input
+                          value={venue}
+                          onChange={e => setVenue(e.target.value)}
+                          placeholder='Nombre del venue'
+                          className={inputCls}
+                        />
+                        <Input
+                          value={ciudad}
+                          onChange={e => setCiudad(e.target.value)}
+                          placeholder='Ciudad'
+                          className={inputCls}
+                        />
+                      </div>
+                      <Input
+                        value={direccion}
+                        onChange={e => setDireccion(e.target.value)}
+                        placeholder='Dirección'
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
 
-                {/* Descripción del evento */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Descripción del evento
-                  </Label>
-                  <Textarea
-                    value={descripcion}
-                    onChange={e => {
-                      if (e.target.value.length <= maxDescripcion) setDescripcion(e.target.value)
-                    }}
-                    rows={5}
-                    className={textareaCls}
-                  />
-                  <p className='font-pt-mono text-right text-[10px] tracking-wider text-black/40'>
-                    {descripcion.length}/{maxDescripcion}
-                  </p>
-                </div>
+                  {/* Fecha */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Fecha<span className='text-red-600'>*</span>
+                    </Label>
+                    <Input
+                      type='date'
+                      value={fecha}
+                      onChange={e => setFecha(e.target.value)}
+                      required
+                      className={inputCls}
+                    />
+                  </div>
 
-                {/* Links */}
-                <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Links</Label>
-                  <Input
-                    value={links}
-                    onChange={e => setLinks(e.target.value)}
-                    className={inputCls}
-                  />
-                </div>
-              </div>
+                  {/* Descripción del evento */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Descripción del evento
+                    </Label>
+                    <Textarea
+                      value={descripcion}
+                      onChange={e => {
+                        if (e.target.value.length <= maxDescripcion) setDescripcion(e.target.value)
+                      }}
+                      rows={5}
+                      className={textareaCls}
+                    />
+                    <p className='font-pt-mono text-right text-[10px] tracking-wider text-black/40'>
+                      {descripcion.length}/{maxDescripcion}
+                    </p>
+                  </div>
 
-              {/* Action buttons */}
-              <div className='mt-6 flex justify-end gap-3'>
-                <button className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'>
-                  Enviar
-                </button>
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
-                >
-                  Cancelar
-                </button>
+                  {/* Links */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Links</Label>
+                    <Input
+                      value={links}
+                      onChange={e => setLinks(e.target.value)}
+                      placeholder='Boletos, Instagram, sitio del evento...'
+                      className={inputCls}
+                    />
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className='mt-6 flex justify-end gap-3'>
+                    <button
+                      type='submit'
+                      disabled={!canSubmit || sending}
+                      className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+                    >
+                      {sending ? 'Enviando...' : 'Enviar'}
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => onOpenChange(false)}
+                      className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

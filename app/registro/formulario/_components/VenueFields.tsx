@@ -28,7 +28,7 @@ export function VenueFields() {
           {/* Capacidad */}
           <div className='space-y-1'>
             <Label className={labelCls}>
-              Capacidad<span className='text-red-600'>*</span>
+              Capacidad<span className='ml-2 text-red-600'>*</span>
             </Label>
             {CAPACITY_OPTIONS.map(opt => (
               <div
@@ -92,7 +92,7 @@ export function VenueFields() {
               htmlFor='description'
               className={labelCls}
             >
-              Descripción<span className='text-red-600'>*</span>
+              Descripción<span className='ml-2 text-red-600'>*</span>
             </Label>
             <Textarea
               id='description'

@@ -82,8 +82,7 @@ function Reveal({
   )
 }
 
-const hl = (size: string) =>
-  `font-pt-mono font-black uppercase leading-[0.9] tracking-tight ${size}`
+const hl = (size: string) => `font-pt-mono font-black uppercase leading-[0.9] tracking-tight ${size}`
 
 const body = 'font-pt-mono text-lg sm:text-xl leading-relaxed'
 
@@ -101,20 +100,20 @@ export function Manifesto({ onExit }: ManifestoProps) {
         fill
         className='object-cover opacity-30'
         priority
-        unoptimized
       />
 
       <div className='relative z-10 w-full px-6 py-16 sm:px-12 sm:py-28 lg:px-20 xl:px-32'>
-
         {/* Rayo */}
-        <Reveal direction='left' className='mb-6 flex justify-start'>
+        <Reveal
+          direction='left'
+          className='mb-6 flex justify-start'
+        >
           <Image
             src='/assets/quienes-somos/rayo.png'
             alt=''
             width={80}
             height={120}
             className='h-16 w-auto sm:h-24'
-            unoptimized
           />
         </Reveal>
 
@@ -128,7 +127,11 @@ export function Manifesto({ onExit }: ManifestoProps) {
             RU!DOZO ES UN ERROR
           </h2>
         </Reveal>
-        <Reveal delay={0.15} direction='right' className='pl-[20%]'>
+        <Reveal
+          delay={0.15}
+          direction='right'
+          className='pl-[20%]'
+        >
           <h2
             className={hl('text-[2.5rem] sm:text-[4rem] md:text-[5rem]')}
             style={{ color: C.red }}
@@ -139,7 +142,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
         <GlitchBar delay={0.1} />
 
         {/* RU!DOZO no debería existir */}
-        <Reveal delay={0.05} className='mt-4 pl-4'>
+        <Reveal
+          delay={0.05}
+          className='mt-4 pl-4'
+        >
           <span
             className='font-pt-mono text-2xl font-black uppercase sm:text-3xl'
             style={{ color: C.red }}
@@ -147,7 +153,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
             RU!DOZO
           </span>
         </Reveal>
-        <Reveal delay={0.15} className='pl-12'>
+        <Reveal
+          delay={0.15}
+          className='pl-12'
+        >
           <p
             className={body}
             style={{ color: C.white }}
@@ -157,7 +166,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </Reveal>
         <GlitchBar />
 
-        <Reveal delay={0.1} className='mt-2 pl-4'>
+        <Reveal
+          delay={0.1}
+          className='mt-2 pl-4'
+        >
           <p
             className={body}
             style={{ color: `${C.white}99` }}
@@ -180,7 +192,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </Reveal>
         <GlitchBar delay={0.1} />
 
-        <Reveal delay={0.1} className='mt-3 pl-4'>
+        <Reveal
+          delay={0.1}
+          className='mt-3 pl-4'
+        >
           <p
             className={body}
             style={{ color: C.white }}
@@ -190,7 +205,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
           </p>
         </Reveal>
 
-        <Reveal delay={0.1} className='mt-3 max-w-[60%]'>
+        <Reveal
+          delay={0.1}
+          className='mt-3 max-w-[60%]'
+        >
           <p
             className={body}
             style={{ color: C.white }}
@@ -207,7 +225,11 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </Reveal>
         <GlitchBar />
 
-        <Reveal delay={0.1} direction='right' className='mt-3 pl-[30%]'>
+        <Reveal
+          delay={0.1}
+          direction='right'
+          className='mt-3 pl-[30%]'
+        >
           <p
             className={body}
             style={{ color: `${C.white}99` }}
@@ -238,7 +260,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
           </p>
         </Reveal>
 
-        <Reveal delay={0.1} className='mt-6 pl-[15%]'>
+        <Reveal
+          delay={0.1}
+          className='mt-6 pl-[15%]'
+        >
           <p
             className={body}
             style={{ color: C.white }}
@@ -248,7 +273,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
           </p>
         </Reveal>
 
-        <Reveal delay={0.2} className='mt-3 pl-[25%]'>
+        <Reveal
+          delay={0.2}
+          className='mt-3 pl-[25%]'
+        >
           <p
             className={body}
             style={{ color: `${C.white}99` }}
@@ -281,7 +309,11 @@ export function Manifesto({ onExit }: ManifestoProps) {
           </p>
         </Reveal>
 
-        <Reveal delay={0.25} direction='right' className='mt-2 pl-[35%]'>
+        <Reveal
+          delay={0.25}
+          direction='right'
+          className='mt-2 pl-[35%]'
+        >
           <p
             className={body}
             style={{ color: `${C.white}99` }}
@@ -338,7 +370,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
               números, sino de afinidad, de cercanía, de estar en el lugar correcto con la gente correcta.
             </p>
           </Reveal>
-          <Reveal direction='right' delay={0.15}>
+          <Reveal
+            direction='right'
+            delay={0.15}
+          >
             <p
               className={`${body} sm:mt-8`}
               style={{ color: `${C.white}99` }}
@@ -365,28 +400,40 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </Reveal>
         <GlitchBar delay={0.1} />
 
-        <Reveal delay={0.05} className='pl-4'>
+        <Reveal
+          delay={0.05}
+          className='pl-4'
+        >
           <p
             className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
-            <GT />Que circule.
+            <GT />
+            Que circule.
           </p>
         </Reveal>
-        <Reveal delay={0.15} className='pl-8'>
+        <Reveal
+          delay={0.15}
+          className='pl-8'
+        >
           <p
             className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
-            <GT />Que encuentre.
+            <GT />
+            Que encuentre.
           </p>
         </Reveal>
-        <Reveal delay={0.25} className='pl-12'>
+        <Reveal
+          delay={0.25}
+          className='pl-12'
+        >
           <p
             className='font-pt-mono text-lg sm:text-xl'
             style={{ color: C.white }}
           >
-            <GT />Que suene.
+            <GT />
+            Que suene.
           </p>
         </Reveal>
 
@@ -402,7 +449,10 @@ export function Manifesto({ onExit }: ManifestoProps) {
         </Reveal>
 
         {/* Salir */}
-        <Reveal delay={0.2} className='mt-16 flex justify-start sm:justify-end'>
+        <Reveal
+          delay={0.2}
+          className='mt-16 flex justify-start sm:justify-end'
+        >
           <button
             onClick={onExit}
             className='cursor-pointer transition-transform hover:scale-105 active:scale-95'
@@ -414,7 +464,6 @@ export function Manifesto({ onExit }: ManifestoProps) {
               height={60}
               className='w-32 sm:w-40'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </button>
         </Reveal>

@@ -1,13 +1,15 @@
 import type { PlayerSong } from '@/lib/types'
+import { NowPlayingBars } from './NowPlayingBars'
 
 interface SongRowProps {
   index: number
   sides: Record<'A' | 'B', PlayerSong[]>
   currentSongId: string
+  isPlaying?: boolean
   onSelectSong?: (id: string) => void
 }
 
-export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowProps) {
+export function SongRow({ index, sides, currentSongId, isPlaying = false, onSelectSong }: SongRowProps) {
   return (['A', 'B'] as const).map(side => {
     const song = sides[side][index]
     const isActive = song?.id === currentSongId
@@ -25,7 +27,7 @@ export function SongRow({ index, sides, currentSongId, onSelectSong }: SongRowPr
             style={{ fontSize: 'clamp(9px, 1.4vw, 14px)' }}
             onClick={() => onSelectSong?.(song.id)}
           >
-            {isActive && <span className='mr-0.5 shrink-0'>&#9654;</span>}
+            {isActive && isPlaying && <NowPlayingBars className='h-3' />}
             <span className='font-corose-alt shrink-0 text-[16px] font-bold'>
               {index + 1}. {song.title}
             </span>

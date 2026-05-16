@@ -62,7 +62,6 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
           width={230}
           height={9}
           className='h-full w-full object-cover object-left'
-          unoptimized
           draggable={false}
         />
       </div>
@@ -79,7 +78,6 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
           width={26}
           height={28}
           className='h-5 w-auto'
-          unoptimized
           draggable={false}
         />
       </div>
@@ -92,7 +90,6 @@ export function ProgressBar({ progress, onSeek }: ProgressBarProps) {
           width={424}
           height={9}
           className='h-full w-full object-cover object-right'
-          unoptimized
           draggable={false}
         />
       </div>

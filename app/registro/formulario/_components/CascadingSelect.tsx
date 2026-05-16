@@ -18,12 +18,12 @@ export interface CascadingSelectProps {
 export function CascadingSelect({
   label,
   name,
-  required,
+  required = true,
   options,
   value,
   onChange,
   placeholder,
-  getLabel,
+  getLabel
 }: CascadingSelectProps) {
   return (
     <div className='min-w-0 space-y-0.5'>
@@ -32,7 +32,7 @@ export function CascadingSelect({
         className={labelCls}
       >
         {label}
-        {required && <span className='text-red-600'>*</span>}
+        {required && <span className='ml-2 text-red-600'>*</span>}
       </Label>
       <Select
         name={name}

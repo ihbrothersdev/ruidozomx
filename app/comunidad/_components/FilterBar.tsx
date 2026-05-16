@@ -47,7 +47,6 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
                 width={200}
                 height={80}
                 className='h-7 w-auto sm:h-9 md:h-12'
-                unoptimized
               />
             </button>
           )
@@ -62,7 +61,6 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
             width={600}
             height={100}
             className='h-auto w-full'
-            unoptimized
           />
           <input
             type='text'

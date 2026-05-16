@@ -42,7 +42,6 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
           height={250}
           className='h-10 w-auto md:h-16'
           style={{ height: undefined }}
-          unoptimized
         />
         <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
           {photoUrl ? (
@@ -62,14 +61,13 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
       </button>
 
       {open && (
-        <div className='absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded border-2 border-black/15 bg-[#f5f0e8] shadow-lg'>
+        <div className='absolute left-0 z-50 mt-2 w-48 overflow-hidden rounded border-2 border-black/15 bg-[#f5f0e8] shadow-lg'>
           <div className='absolute inset-0 z-0 opacity-30'>
             <Image
               src='/assets/registro/explicacion-rol/shared/fondo.png'
               alt=''
               fill
               className='object-cover'
-              unoptimized
             />
           </div>
 

@@ -51,7 +51,6 @@ export default function BackButton({
         width={220}
         height={65}
         className={`${sizeCls} w-auto`}
-        unoptimized
       />
     </button>
   )

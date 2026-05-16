@@ -1,16 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import { NewPasswordForm } from './NewPasswordForm'
 
-export default async function NuevaContrasenaPage() {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+export default async function NuevaContrasenaPage({
+  searchParams
+}: {
+  searchParams: Promise<{ token_hash?: string; type?: string; error?: string }>
+}) {
+  const params = await searchParams
+  const token_hash = params.token_hash
+  const type = params.type
 
-  if (!user) {
-    redirect('/iniciar-sesion')
+  if (!token_hash || type !== 'recovery') {
+    redirect(
+      '/iniciar-sesion?error=' +
+        encodeURIComponent('El enlace de recuperación es inválido o expiró. Solicítalo de nuevo.')
+    )
   }
 
   return (
@@ -24,7 +29,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
       </div>
 
@@ -37,7 +41,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
         <div className='relative z-10'>
           <Image
@@ -47,7 +50,6 @@ export default async function NuevaContrasenaPage() {
             height={260}
             className='w-56 lg:w-72'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </div>
       </aside>
@@ -59,7 +61,6 @@ export default async function NuevaContrasenaPage() {
           fill
           className='object-cover'
           priority
-          unoptimized
         />
 
         <div className='relative z-10 flex w-full max-w-lg flex-col items-center'>
@@ -77,10 +78,9 @@ export default async function NuevaContrasenaPage() {
               alt=''
               fill
               className='object-fill'
-              unoptimized
             />
 
-            <NewPasswordForm />
+            <NewPasswordForm tokenHash={token_hash} />
           </div>
         </div>
       </main>
@@ -94,7 +94,6 @@ export default async function NuevaContrasenaPage() {
           alt=''
           fill
           className='object-cover opacity-45 mix-blend-screen'
-          unoptimized
         />
         <div className='relative z-10'>
           <Image
@@ -104,7 +103,6 @@ export default async function NuevaContrasenaPage() {
             height={260}
             className='w-40'
             style={{ height: 'auto' }}
-            unoptimized
           />
         </div>
       </div>

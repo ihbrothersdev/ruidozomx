@@ -51,7 +51,10 @@ export function useAudioPlayer(
   const queueRef = useRef<string[]>([])
   const inFlightRef = useRef<Set<string>>(new Set())
   const wantPlayOnReadyRef = useRef<Set<string>>(new Set())
-
+  // Tracks whether the most recent pause was initiated by the user (UI button
+  // or OS media control). iOS fires a spurious 'pause' on lock-screen even
+  // though audio keeps playing; we use this flag to ignore those.
+  const userPausedRef = useRef(false)
   const [currentSongId, setCurrentSongId] = useState(initialSongId)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(false)
@@ -94,15 +97,20 @@ export function useAudioPlayer(
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
-  /** Get (or lazily create) the pool entry for a song. */
+  /** Get (or lazily create) the pool entry for a song.
+   *  iOS Safari handles background/lock-screen playback better when the
+   *  <audio> element lives in the DOM, so we append a hidden element per song.
+   *  We still control buffering ourselves via fetch+blob (preload='none'). */
   const getEntry = useCallback((song: PlayerSong): PoolEntry => {
     const pool = poolRef.current
     let entry = pool.get(song.id)
     if (!entry) {
-      const audio = new Audio()
-      // We control buffering ourselves via fetch+blob. Tell the browser not to
-      // start its own (often partial / throttled) preload.
+      const audio = document.createElement('audio')
       audio.preload = 'none'
+      audio.setAttribute('playsinline', '')
+      audio.setAttribute('webkit-playsinline', '')
+      audio.style.display = 'none'
+      document.body.appendChild(audio)
       entry = { audio, blobUrl: null, status: 'idle' }
       pool.set(song.id, entry)
     }
@@ -275,9 +283,13 @@ export function useAudioPlayer(
     } else {
       setCurrentSongId(sorted[0].id)
       setIsPlaying(false)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused'
+      }
     }
   }
   function onPlay() {
+    userPausedRef.current = false
     setIsPlaying(true)
     setIsStopped(false)
     // Update OS-level UI immediately — don't wait for React's effect cycle.
@@ -298,6 +310,19 @@ export function useAudioPlayer(
     }
   }
   function onPause() {
+    // iOS Safari/WebKit fires spurious 'pause' events while the screen is
+    // locked even though audio keeps playing. visibilityState is unreliable
+    // on iOS during background audio, so we only honour pauses initiated by
+    // us via the `pause()` callback (UI button or OS media control). All
+    // other pause events are ignored and we re-assert 'playing' so the
+    // lock-screen icon stays correct.
+    if (!userPausedRef.current) {
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
+      return
+    }
+    userPausedRef.current = false
     setIsPlaying(false)
     if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused'
@@ -338,6 +363,7 @@ export function useAudioPlayer(
         entry.audio.removeAttribute('src')
         entry.audio.load()
         if (entry.blobUrl) URL.revokeObjectURL(entry.blobUrl)
+        if (entry.audio.parentNode) entry.audio.parentNode.removeChild(entry.audio)
       })
       pool.clear()
       queueRef.current = []
@@ -347,6 +373,21 @@ export function useAudioPlayer(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Re-sync playbackState from the audio element's actual state ONLY when the
+  // page becomes visible again (user unlocks). Syncing while the page is
+  // hidden would let iOS's spurious 'pause' flip the lock-screen icon.
+  useEffect(() => {
+    if (typeof document === 'undefined' || !('mediaSession' in navigator)) return
+    const sync = () => {
+      if (document.visibilityState !== 'visible') return
+      const audio = activeRef.current
+      if (!audio) return
+      navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing'
+    }
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
   // ── MediaSession: lock screen / notification / car / Bluetooth controls ──
   // Sets the now-playing metadata (title, artist, artwork) and action handlers
   // so the OS-level media controls work and show the Ruidozo branding.
@@ -354,37 +395,31 @@ export function useAudioPlayer(
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
     if (!currentSong) return
 
-    const artworkUrl = `${window.location.origin}/assets/quienes-somos/rayo.png`
+    const artworkUrl = `${window.location.origin}/assets/media-artwork.png?v=2`
     navigator.mediaSession.metadata = new MediaMetadata({
       // Line 1 on the lock screen: "Canción - Autor"
       title: `${currentSong.title} - ${currentSong.artist}`,
       // Line 2 on the lock screen: brand
       artist: 'Ruidozo MX',
       album: 'Cassette semanal',
-      artwork: [
-        { src: artworkUrl, sizes: '96x96', type: 'image/png' },
-        { src: artworkUrl, sizes: '192x192', type: 'image/png' },
-        { src: artworkUrl, sizes: '256x256', type: 'image/png' },
-        { src: artworkUrl, sizes: '384x384', type: 'image/png' },
-        { src: artworkUrl, sizes: '512x512', type: 'image/png' }
-      ]
+      artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }]
     })
   }, [currentSong])
 
-  // Keep MediaSession playback state in sync so the OS shows the correct play/pause icon.
-  // We also push the value directly inside the audio element's onPlay/onPause listeners
-  // (see below) because iOS Safari sometimes reads playbackState faster than React's
-  // state-driven re-render can catch up.
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
-  }, [isPlaying])
+  // NOTE: We intentionally do NOT mirror `isPlaying` -> `mediaSession.playbackState`
+  // in an effect. The audio element's own 'play'/'pause' events drive the
+  // MediaSession state via onPlay/onPause; layering a React-state-driven
+  // sync on top creates races and lets a transient `isPlaying === false`
+  // (e.g. while React processes a song change) flip the lock-screen icon
+  // even though audio is still playing.
 
   const play = useCallback(() => {
+    userPausedRef.current = false
     setIsStopped(false)
     const audio = activeRef.current
     if (!audio) return
     // If the blob isn't ready yet, mark it so the fetch resolver fires play().
+    // The audio element's 'play' event will then set mediaSession to 'playing'.
     const entry = poolRef.current.get(currentSongId)
     if (entry && entry.status !== 'ready') {
       wantPlayOnReadyRef.current.add(currentSongId)
@@ -395,12 +430,19 @@ export function useAudioPlayer(
   }, [currentSongId, prioritize])
 
   const pause = useCallback(() => {
+    userPausedRef.current = true
+    // Don't eagerly set mediaSession='paused' or isPlaying=false here.
+    // On iOS, audio.pause() may fail silently while the page is in the
+    // background; if we eagerly mark paused, the lock-screen icon would
+    // flip to "play" even though audio kept playing. Let the audio's own
+    // 'pause' event drive the state update via onPause.
     activeRef.current?.pause()
   }, [])
 
   const stop = useCallback(() => {
     const audio = activeRef.current
     if (!audio) return
+    userPausedRef.current = true
     audio.pause()
     audio.currentTime = 0
     setElapsedSeconds(0)
@@ -418,8 +460,18 @@ export function useAudioPlayer(
   }, [currentSongId, prioritize])
 
   const prev = useCallback(() => {
+    const audio = activeRef.current
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongId)
+
+    // Standard behaviour: if more than 3 s in, restart current song
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0
+      setElapsedSeconds(0)
+      return
+    }
+
+    // Otherwise go to previous song
     if (idx > 0) {
       const prevId = sorted[idx - 1].id
       setCurrentSongId(prevId)
@@ -456,19 +508,9 @@ export function useAudioPlayer(
       if (!audio || details.seekTime == null) return
       audio.currentTime = details.seekTime
     })
-    setHandler('seekbackward', details => {
-      const audio = activeRef.current
-      if (!audio) return
-      audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 10))
-    })
-    setHandler('seekforward', details => {
-      const audio = activeRef.current
-      if (!audio) return
-      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (details.seekOffset ?? 10))
-    })
 
     return () => {
-      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto', 'seekbackward', 'seekforward'] as MediaSessionAction[]).forEach(a =>
+      ;(['play', 'pause', 'previoustrack', 'nexttrack', 'stop', 'seekto'] as MediaSessionAction[]).forEach(a =>
         setHandler(a, null)
       )
     }
@@ -476,7 +518,12 @@ export function useAudioPlayer(
 
   // Keep MediaSession position state up-to-date so scrubbers in the OS UI work
   useEffect(() => {
-    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return
+    if (
+      typeof window === 'undefined' ||
+      !('mediaSession' in navigator) ||
+      !('setPositionState' in navigator.mediaSession)
+    )
+      return
     if (!duration) return
     try {
       navigator.mediaSession.setPositionState({
@@ -498,6 +545,9 @@ export function useAudioPlayer(
 
       setIsStopped(false)
       setCurrentSongId(id)
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
 
       const entry = poolRef.current.get(id) ?? getEntry(songs.find(s => s.id === id)!)
       // Always start from the beginning when explicitly selecting a song.

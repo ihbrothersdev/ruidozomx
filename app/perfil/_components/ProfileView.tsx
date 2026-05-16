@@ -3,7 +3,7 @@ import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import ActionButtons from './ActionButtons'
-import DynamicModules, { type SongProposalSummary } from './DynamicModules'
+import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
 import ProfileLayout from './ProfileLayout'
@@ -27,6 +27,8 @@ export interface ProfileViewProps {
   alreadySent?: { proposal: boolean; sendInterest: boolean }
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
+  events?: EventSummary[]
+  lastActivityAt: string | null
 }
 
 export default function ProfileView({
@@ -44,7 +46,9 @@ export default function ProfileView({
   bio,
   alreadySent,
   songProposals,
-  songProposalsCount
+  songProposalsCount,
+  events,
+  lastActivityAt
 }: ProfileViewProps) {
   // const logoDecoration = (
   //   <div className='flex items-center justify-center gap-2'>
@@ -103,7 +107,6 @@ export default function ProfileView({
               width={80}
               height={80}
               className='h-17 w-auto'
-              unoptimized
             />
             <Link href='/'>
               <Image
@@ -112,7 +115,6 @@ export default function ProfileView({
                 width={380}
                 height={183}
                 className='h-40 w-auto'
-                unoptimized
               />
             </Link>
           </div> */}
@@ -124,6 +126,7 @@ export default function ProfileView({
               roleProfile={roleProfile}
               songProposals={songProposals}
               songProposalsCount={songProposalsCount}
+              events={events}
             />
           )}
 
@@ -144,9 +147,11 @@ export default function ProfileView({
             displayName={displayName}
             alreadySent={alreadySent}
           />
+
+          {/* Última actividad — directly under the action buttons */}
+          <UltimaActividad lastActivityAt={lastActivityAt ?? null} />
         </>
       }
-      bottomSection={<UltimaActividad />}
     />
   )
 }
