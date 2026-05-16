@@ -263,6 +263,7 @@ User-submitted song suggestions.
 | audio_file_path | text            | yes      |                   | Supabase Storage path                          |
 | contact_email   | varchar(255)    | yes      |                   | Proposer's contact email                       |
 | comment         | text            | yes      |                   |                                                |
+| rights_accepted | boolean         | yes      |                   | `true` cuando una banda confirma derechos; `null` para otros roles |
 | status          | proposal_status | no       | 'pending'         |                                                |
 | cassette_id     | uuid (FK)       | yes      |                   | References `cassettes(id)` — set when selected |
 | created_at      | timestamptz     | no       | now()             |                                                |
