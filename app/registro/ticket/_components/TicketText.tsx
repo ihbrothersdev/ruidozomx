@@ -79,7 +79,7 @@ export default function TicketText({
           onClick={gated(() => setCompartirEventoOpen(true))}
           className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
         >
-          {role === 'venue' && venuePublishesCalls && (
+          {role === 'venue' && !venuePublishesCalls && (
             <>
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
                 PUBLICA UNA TOCADA O
