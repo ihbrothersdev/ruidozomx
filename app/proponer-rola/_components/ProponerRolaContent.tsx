@@ -144,6 +144,11 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                       autorizo su reproducción dentro del cassette de Ru!dozo.
                     </Label>
                   </div>
+                  <input
+                    type='hidden'
+                    name='rights_accepted'
+                    value={accepted ? 'true' : 'false'}
+                  />
                 </>
               )}
 
