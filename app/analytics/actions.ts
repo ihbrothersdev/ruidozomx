@@ -6,7 +6,6 @@ import { createServiceClient } from '@/lib/supabase/service'
 export type SongEventType =
   | 'play_start'
   | 'play_complete'
-  | 'play_progress'
   | 'profile_click'
   | 'interest_click'
   | 'share_click'
@@ -16,7 +15,6 @@ export type SongEventType =
 const VALID_TYPES = new Set<SongEventType>([
   'play_start',
   'play_complete',
-  'play_progress',
   'profile_click',
   'interest_click',
   'share_click',

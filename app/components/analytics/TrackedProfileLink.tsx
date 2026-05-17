@@ -3,12 +3,13 @@
 import { logEvent } from '@/app/analytics/actions'
 import { getAnonSessionId } from '@/lib/analytics/session'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 interface TrackedProfileLinkProps {
   href: string
   children: ReactNode
   className?: string
+  style?: CSSProperties
   /** Profile slug or id we are linking to (for analytics metadata) */
   targetProfileSlug?: string
   targetProfileId?: string
@@ -30,6 +31,7 @@ export function TrackedProfileLink({
   href,
   children,
   className,
+  style,
   targetProfileSlug,
   targetProfileId,
   songId,
@@ -57,6 +59,7 @@ export function TrackedProfileLink({
       href={href}
       onClick={handleClick}
       className={className}
+      style={style}
     >
       {children}
     </Link>

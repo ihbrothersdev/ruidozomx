@@ -1,7 +1,9 @@
 'use client'
 
+import { logEvent } from '@/app/analytics/actions'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { PlatformIcon } from '@/app/components/ui/platform-icon'
+import { getAnonSessionId } from '@/lib/analytics/session'
 import { Copy, Share2 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -9,15 +11,31 @@ import { useState } from 'react'
 interface CompartirModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Optional context — where the share originated (e.g. 'ticket', 'home', 'perfil'). */
+  source?: string
+  /** Optional song/cassette context if the share happens while listening. */
+  songId?: string | null
+  cassetteId?: string | null
 }
 
-export default function CompartirModal({ open, onOpenChange }: CompartirModalProps) {
+export default function CompartirModal({ open, onOpenChange, source, songId, cassetteId }: CompartirModalProps) {
   const [copied, setCopied] = useState(false)
   const shareUrl = 'ruidozo.mx'
   const fullUrl = `https://${shareUrl}`
   const shareText = 'Únete al movimiento. Haz ruido.'
 
+  function trackShare(channel: string) {
+    void logEvent({
+      type: 'share_click',
+      songId: songId ?? null,
+      cassetteId: cassetteId ?? null,
+      sessionId: getAnonSessionId() || null,
+      metadata: { channel, source }
+    }).catch(() => {})
+  }
+
   const handleCopy = async () => {
+    trackShare('copy_link')
     try {
       await navigator.clipboard.writeText(fullUrl)
       setCopied(true)
@@ -32,6 +50,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share(shareData)
+        trackShare('native_share')
         return
       } catch {
         // User cancelled or share failed — fall through to copy
@@ -103,6 +122,7 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                     rel='noopener noreferrer'
                     aria-label={`Compartir en ${p.label}`}
                     title={p.label}
+                    onClick={() => trackShare(p.key)}
                     className='flex h-9 w-9 items-center justify-center rounded-full border-2 border-black text-black transition-colors hover:bg-black hover:text-white'
                   >
                     <PlatformIcon
