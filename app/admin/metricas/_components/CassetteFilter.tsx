@@ -27,7 +27,7 @@ export function CassetteFilter({ options, selected }: { options: CassetteOption[
     if (value === 'all') next.delete('cassette')
     else next.set('cassette', value)
     const qs = next.toString()
-    start(() => router.replace(`/admin/analytics${qs ? `?${qs}` : ''}`, { scroll: false }))
+    start(() => router.replace(`/admin/metricas${qs ? `?${qs}` : ''}`, { scroll: false }))
   }
 
   return (

@@ -9,7 +9,7 @@ import { CassettesTable, type CassetteMetricRow } from './_components/CassettesT
 import { SongsTable, type SongMetricRow } from './_components/SongsTable'
 
 export const metadata = {
-  title: 'Analytics · Admin · Ruidozo MX'
+  title: 'Métricas · Admin · Ruidozo MX'
 }
 
 interface ListenerRow {
@@ -44,7 +44,7 @@ interface ConnectionMetrics {
   unique_proposed_to: number
 }
 
-export default async function AnalyticsPage({
+export default async function MetricasPage({
   searchParams
 }: {
   searchParams: Promise<{ cassette?: string }>
@@ -110,7 +110,7 @@ export default async function AnalyticsPage({
         <div>
           <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Métricas de comunidad</p>
           <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-            Analytics
+            Métricas
           </h1>
           <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
             Cómo está conectando la gente con el contenido. Mide reproducciones, sesiones y participación — tanto de

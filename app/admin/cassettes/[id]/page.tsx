@@ -39,7 +39,7 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
   // `songs.plays` is a stale column that nobody updates anymore; the source of
   // truth for plays lives in `song_events` (same table the analytics page reads).
   // We aggregate `play_start` events per song so the cassette detail matches
-  // what /admin/analytics shows.
+  // what /admin/metricas shows.
   const songIds = (songs ?? []).map(s => s.id)
   const { data: playEvents } = songIds.length
     ? await supabase.from('song_events').select('song_id').eq('type', 'play_start').in('song_id', songIds)
