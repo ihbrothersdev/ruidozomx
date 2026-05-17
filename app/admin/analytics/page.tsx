@@ -1,47 +1,15 @@
 import { Alert, AlertDescription } from '@/app/components/ui/alert'
-import { Badge } from '@/app/components/ui/badge'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Separator } from '@/app/components/ui/separator'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
 import { createServiceClient } from '@/lib/supabase/service'
-import { BarChart3, ExternalLink, Headphones, Heart, Music2, Play, Send, Users } from 'lucide-react'
+import { BarChart3, Headphones, Heart, Music2, Play, Send, Users } from 'lucide-react'
 import Link from 'next/link'
+import { CassetteFilter, type CassetteOption } from './_components/CassetteFilter'
+import { CassettesTable, type CassetteMetricRow } from './_components/CassettesTable'
+import { SongsTable, type SongMetricRow } from './_components/SongsTable'
 
 export const metadata = {
   title: 'Analytics · Admin · Ruidozo MX'
-}
-
-interface SongMetricRow {
-  song_id: string
-  title: string
-  artist: string
-  side: 'A' | 'B'
-  track_position: number
-  cassette_id: string
-  cassette_name: string
-  plays_total: number
-  plays_authenticated: number
-  unique_listeners: number
-  unique_anon_sessions: number
-  completes: number
-  completion_rate: number
-  profile_clicks: number
-  interest_clicks: number
-  share_clicks: number
-}
-
-interface CassetteMetricRow {
-  cassette_id: string
-  cassette_name: string
-  active: boolean
-  archived: boolean
-  is_next: boolean
-  sessions_started: number
-  sessions_finished: number
-  unique_session_users: number
-  unique_anon_sessions: number
-  total_plays: number
-  total_completes: number
 }
 
 interface ListenerRow {
@@ -76,16 +44,31 @@ interface ConnectionMetrics {
   unique_proposed_to: number
 }
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ cassette?: string }>
+}) {
+  const { cassette: cassetteParam } = await searchParams
+  const cassetteFilter = cassetteParam && cassetteParam !== 'all' ? cassetteParam : null
+
   const svc = createServiceClient()
 
-  const [songMetricsRes, cassetteMetricsRes, listenersRes, proposersRes, connectionsRes] = await Promise.all([
-    svc.rpc('song_metrics', { p_cassette_id: null }),
-    svc.rpc('cassette_metrics', { p_cassette_id: null }),
-    svc.rpc('top_listeners', { p_limit: 10 }),
-    svc.rpc('top_proposers', { p_limit: 10 }),
-    svc.rpc('connection_metrics')
-  ])
+  // Cassette list is always unfiltered (used by the selector).
+  const cassetteListPromise = svc
+    .from('cassettes')
+    .select('id, name, active, archived, is_next')
+    .order('start_date', { ascending: false })
+
+  const [songMetricsRes, cassetteMetricsRes, listenersRes, proposersRes, connectionsRes, cassetteListRes] =
+    await Promise.all([
+      svc.rpc('song_metrics', { p_cassette_id: cassetteFilter }),
+      svc.rpc('cassette_metrics', { p_cassette_id: cassetteFilter }),
+      svc.rpc('top_listeners', { p_limit: 10 }),
+      svc.rpc('top_proposers', { p_limit: 10 }),
+      svc.rpc('connection_metrics'),
+      cassetteListPromise
+    ])
 
   const songMetrics = (songMetricsRes.data ?? []) as SongMetricRow[]
   const cassetteMetrics = (cassetteMetricsRes.data ?? []) as CassetteMetricRow[]
@@ -100,6 +83,16 @@ export default async function AnalyticsPage() {
     unique_proposed_to: 0
   }) as ConnectionMetrics
 
+  const cassetteOptions: CassetteOption[] = (cassetteListRes.data ?? []).map(c => ({
+    id: c.id,
+    name: c.name ?? 'Sin nombre',
+    state: c.active ? 'active' : c.is_next ? 'next' : c.archived ? 'archived' : 'draft'
+  }))
+
+  const selectedCassetteName = cassetteFilter
+    ? (cassetteOptions.find(c => c.id === cassetteFilter)?.name ?? 'Cassette seleccionado')
+    : null
+
   const totalPlays = songMetrics.reduce((acc, s) => acc + Number(s.plays_total), 0)
   const totalAuthPlays = songMetrics.reduce((acc, s) => acc + Number(s.plays_authenticated), 0)
   const totalSessionsStarted = cassetteMetrics.reduce((acc, c) => acc + Number(c.sessions_started), 0)
@@ -113,22 +106,35 @@ export default async function AnalyticsPage() {
 
   return (
     <div className='mx-auto w-full max-w-7xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
-      <header>
-        <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Métricas de comunidad</p>
-        <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-          Analytics
-        </h1>
-        <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
-          Cómo está conectando la gente con el contenido. Mide reproducciones, sesiones y participación — tanto de
-          usuarios logueados como de visitantes anónimos.
-        </p>
+      <header className='flex flex-wrap items-end justify-between gap-4'>
+        <div>
+          <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Métricas de comunidad</p>
+          <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
+            Analytics
+          </h1>
+          <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
+            Cómo está conectando la gente con el contenido. Mide reproducciones, sesiones y participación — tanto de
+            usuarios logueados como de visitantes anónimos.
+          </p>
+          {selectedCassetteName && (
+            <p className='font-pt-mono mt-2 text-[11px] text-white/40'>
+              Filtrando por <strong className='text-white'>{selectedCassetteName}</strong>. Las secciones de fans y
+              proponentes son globales.
+            </p>
+          )}
+        </div>
+        <CassetteFilter
+          options={cassetteOptions}
+          selected={cassetteFilter ?? 'all'}
+        />
       </header>
 
       {!hasAnyData && (
         <Alert className='border-amber-400/20 bg-amber-500/5 text-amber-200'>
           <AlertDescription className='font-pt-mono text-amber-200'>
-            Aún no hay eventos registrados. Los plays, sesiones y clicks empezarán a aparecer aquí en cuanto la gente
-            interactúe con el cassette activo.
+            {cassetteFilter
+              ? 'Este cassette no tiene eventos registrados aún.'
+              : 'Aún no hay eventos registrados. Los plays, sesiones y clicks empezarán a aparecer aquí en cuanto la gente interactúe con el cassette activo.'}
           </AlertDescription>
         </Alert>
       )}
@@ -170,141 +176,18 @@ export default async function AnalyticsPage() {
         <SectionHeader
           icon={Headphones}
           title='Sesiones por cassette'
-          description='Cuánta gente arranca el player y cuántas terminan la sesión.'
+          description='Cuánta gente arranca el player y cuántas terminan la sesión. Click en encabezado para ordenar.'
         />
-        {cassetteMetrics.length === 0 ? (
-          <EmptyCard text='No hay cassettes registrados.' />
-        ) : (
-          <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
-            <CardContent className='p-0'>
-              <Table>
-                <TableHeader>
-                  <TableRow className='border-white/5 bg-white/3 hover:bg-white/3'>
-                    <Th>Cassette</Th>
-                    <Th align='right'>Sesiones</Th>
-                    <Th align='right'>Finalizadas</Th>
-                    <Th align='right'>Logueados</Th>
-                    <Th align='right'>Anónimos</Th>
-                    <Th align='right'>Plays</Th>
-                    <Th align='right'>Completes</Th>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {cassetteMetrics.map(c => (
-                    <TableRow
-                      key={c.cassette_id}
-                      className='border-white/5 hover:bg-white/2'
-                    >
-                      <Td>
-                        <Link
-                          href={`/admin/cassettes/${c.cassette_id}`}
-                          className='font-pt-mono inline-flex items-center gap-2 text-xs font-bold text-white hover:text-red-300'
-                        >
-                          {c.cassette_name}
-                          {c.active && <StateBadge color='red'>Activo</StateBadge>}
-                          {c.is_next && <StateBadge color='amber'>Siguiente</StateBadge>}
-                          {c.archived && <StateBadge color='neutral'>Archivado</StateBadge>}
-                        </Link>
-                      </Td>
-                      <Td
-                        align='right'
-                        bold
-                      >
-                        {c.sessions_started.toLocaleString('es-MX')}
-                      </Td>
-                      <Td align='right'>{c.sessions_finished.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{c.unique_session_users.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{c.unique_anon_sessions.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{c.total_plays.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{c.total_completes.toLocaleString('es-MX')}</Td>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+        <CassettesTable rows={cassetteMetrics} />
       </section>
 
       <section>
         <SectionHeader
           icon={Music2}
           title='Top canciones'
-          description='Plays totales, oyentes únicos, % que completan, e interacciones derivadas.'
+          description='Plays totales, oyentes únicos, % que completan, e interacciones derivadas. Filtra por lado o busca por banda/título.'
         />
-        {songMetrics.length === 0 ? (
-          <EmptyCard text='No hay canciones con eventos registrados.' />
-        ) : (
-          <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
-            <CardContent className='p-0'>
-              <Table>
-                <TableHeader>
-                  <TableRow className='border-white/5 bg-white/3 hover:bg-white/3'>
-                    <Th>Canción</Th>
-                    <Th>Cassette</Th>
-                    <Th align='right'>Plays</Th>
-                    <Th align='right'>Logueados</Th>
-                    <Th align='right'>Únicos</Th>
-                    <Th align='right'>Compl.</Th>
-                    <Th align='right'>Perfil</Th>
-                    <Th align='right'>Interés</Th>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {songMetrics.slice(0, 30).map(s => (
-                    <TableRow
-                      key={s.song_id}
-                      className='border-white/5 hover:bg-white/2'
-                    >
-                      <Td>
-                        <div className='flex items-center gap-2'>
-                          <span
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${
-                              s.side === 'A' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
-                            }`}
-                          >
-                            {s.side}
-                          </span>
-                          <div className='min-w-0'>
-                            <p className='truncate font-bold text-white'>{s.artist}</p>
-                            <p className='truncate text-[10px] text-white/40'>{s.title}</p>
-                          </div>
-                        </div>
-                      </Td>
-                      <Td>
-                        <Link
-                          href={`/admin/cassettes/${s.cassette_id}`}
-                          className='inline-flex items-center gap-1 text-white/60 hover:text-white'
-                        >
-                          {s.cassette_name}
-                          <ExternalLink className='h-3 w-3' />
-                        </Link>
-                      </Td>
-                      <Td
-                        align='right'
-                        bold
-                      >
-                        {s.plays_total.toLocaleString('es-MX')}
-                      </Td>
-                      <Td align='right'>{s.plays_authenticated.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{s.unique_listeners.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>
-                        {Number(s.completion_rate)}%<span className='ml-1 text-white/30'>({s.completes})</span>
-                      </Td>
-                      <Td align='right'>{s.profile_clicks.toLocaleString('es-MX')}</Td>
-                      <Td align='right'>{s.interest_clicks.toLocaleString('es-MX')}</Td>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {songMetrics.length > 30 && (
-                <p className='font-pt-mono border-t border-white/5 bg-white/2 px-4 py-2 text-center text-[10px] text-white/30'>
-                  Mostrando 30 de {songMetrics.length} canciones
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <SongsTable rows={songMetrics} />
       </section>
 
       <section className='grid gap-6 lg:grid-cols-2'>
@@ -504,46 +387,6 @@ function SectionHeader({
         <p className='font-pt-mono text-[11px] text-white/40'>{description}</p>
       </div>
     </div>
-  )
-}
-
-function Th({ children, align }: { children: React.ReactNode; align?: 'right' }) {
-  return (
-    <TableHead
-      className={`font-pt-mono text-[10px] tracking-widest text-white/50 uppercase ${
-        align === 'right' ? 'text-right' : 'text-left'
-      }`}
-    >
-      {children}
-    </TableHead>
-  )
-}
-
-function Td({ children, align, bold }: { children: React.ReactNode; align?: 'right'; bold?: boolean }) {
-  return (
-    <TableCell
-      className={`font-pt-mono text-xs text-white/80 ${align === 'right' ? 'text-right' : 'text-left'} ${
-        bold ? 'font-bold text-white' : ''
-      }`}
-    >
-      {children}
-    </TableCell>
-  )
-}
-
-function StateBadge({ children, color }: { children: React.ReactNode; color: 'red' | 'amber' | 'neutral' }) {
-  const cls = {
-    red: 'bg-red-500/20 text-red-300',
-    amber: 'bg-amber-500/20 text-amber-300',
-    neutral: 'bg-white/10 text-white/50'
-  }[color]
-  return (
-    <Badge
-      variant='secondary'
-      className={`font-pt-mono ml-2 text-[9px] font-bold tracking-widest uppercase ${cls}`}
-    >
-      {children}
-    </Badge>
   )
 }
 
