@@ -1,7 +1,15 @@
 'use client'
 
 import { Card, CardContent } from '@/app/components/ui/card'
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig
+} from '@/app/components/ui/chart'
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import type { DailyPoint } from '../_lib/aggregations'
 
 function fmtShort(iso: string): string {
@@ -10,12 +18,33 @@ function fmtShort(iso: string): string {
   return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 }
 
-export function PlaysChart({ data }: { data: DailyPoint[] }) {
-  const totalPlays = data.reduce((acc, p) => acc + p.plays, 0)
-  const totalCompletes = data.reduce((acc, p) => acc + p.completes, 0)
-  const totalSessions = data.reduce((acc, p) => acc + p.sessions, 0)
+const chartConfig = {
+  plays: {
+    label: 'Plays',
+    color: '#f87171'
+  },
+  completes: {
+    label: 'Completes',
+    color: '#34d399'
+  },
+  sessions: {
+    label: 'Sesiones',
+    color: '#60a5fa'
+  }
+} satisfies ChartConfig
 
-  if (totalPlays + totalCompletes + totalSessions === 0) {
+export function PlaysChart({ data }: { data: DailyPoint[] }) {
+  const totals = data.reduce(
+    (acc, p) => {
+      acc.plays += p.plays
+      acc.completes += p.completes
+      acc.sessions += p.sessions
+      return acc
+    },
+    { plays: 0, completes: 0, sessions: 0 }
+  )
+
+  if (totals.plays + totals.completes + totals.sessions === 0) {
     return (
       <Card className='border-dashed border-white/10 bg-transparent py-10'>
         <CardContent className='font-pt-mono text-center text-xs text-white/30'>
@@ -29,152 +58,146 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
     <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
       <CardContent className='p-4'>
         <div className='mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1'>
-          <Legend
-            color='#f87171'
+          <TotalChip
+            color={chartConfig.plays.color}
             label='Plays'
-            value={totalPlays}
+            value={totals.plays}
           />
-          <Legend
-            color='#34d399'
+          <TotalChip
+            color={chartConfig.completes.color}
             label='Completes'
-            value={totalCompletes}
+            value={totals.completes}
           />
-          <Legend
-            color='#60a5fa'
+          <TotalChip
+            color={chartConfig.sessions.color}
             label='Sesiones'
-            value={totalSessions}
+            value={totals.sessions}
           />
         </div>
-        <div className='h-48 w-full'>
-          <ResponsiveContainer
-            width='100%'
-            height='100%'
+
+        <ChartContainer
+          config={chartConfig}
+          className='h-48 w-full'
+        >
+          <AreaChart
+            data={data}
+            margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
           >
-            <AreaChart
-              data={data}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id='plays-grad'
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop
-                    offset='5%'
-                    stopColor='#f87171'
-                    stopOpacity={0.5}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='#f87171'
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-                <linearGradient
-                  id='completes-grad'
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop
-                    offset='5%'
-                    stopColor='#34d399'
-                    stopOpacity={0.4}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='#34d399'
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-                <linearGradient
-                  id='sessions-grad'
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop
-                    offset='5%'
-                    stopColor='#60a5fa'
-                    stopOpacity={0.4}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='#60a5fa'
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray='3 3'
-                stroke='rgba(255,255,255,0.05)'
-                vertical={false}
-              />
-              <XAxis
-                dataKey='date'
-                tickFormatter={fmtShort}
-                stroke='rgba(255,255,255,0.3)'
-                tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                stroke='rgba(255,255,255,0.3)'
-                tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: '#0a0a0a',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 6,
-                  fontFamily: 'var(--font-pt-mono)',
-                  fontSize: 11
-                }}
-                labelStyle={{ color: 'white', marginBottom: 4 }}
-                labelFormatter={iso => fmtShort(String(iso))}
-                cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
-              />
-              <Area
-                type='monotone'
-                dataKey='sessions'
-                stroke='#60a5fa'
-                strokeWidth={1.5}
-                fill='url(#sessions-grad)'
-                name='Sesiones'
-              />
-              <Area
-                type='monotone'
-                dataKey='completes'
-                stroke='#34d399'
-                strokeWidth={1.5}
-                fill='url(#completes-grad)'
-                name='Completes'
-              />
-              <Area
-                type='monotone'
-                dataKey='plays'
-                stroke='#f87171'
-                strokeWidth={2}
-                fill='url(#plays-grad)'
-                name='Plays'
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+            <defs>
+              <linearGradient
+                id='fill-plays'
+                x1='0'
+                y1='0'
+                x2='0'
+                y2='1'
+              >
+                <stop
+                  offset='5%'
+                  stopColor='var(--color-plays)'
+                  stopOpacity={0.5}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--color-plays)'
+                  stopOpacity={0}
+                />
+              </linearGradient>
+              <linearGradient
+                id='fill-completes'
+                x1='0'
+                y1='0'
+                x2='0'
+                y2='1'
+              >
+                <stop
+                  offset='5%'
+                  stopColor='var(--color-completes)'
+                  stopOpacity={0.4}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--color-completes)'
+                  stopOpacity={0}
+                />
+              </linearGradient>
+              <linearGradient
+                id='fill-sessions'
+                x1='0'
+                y1='0'
+                x2='0'
+                y2='1'
+              >
+                <stop
+                  offset='5%'
+                  stopColor='var(--color-sessions)'
+                  stopOpacity={0.4}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--color-sessions)'
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray='3 3'
+              stroke='rgba(255,255,255,0.05)'
+              vertical={false}
+            />
+            <XAxis
+              dataKey='date'
+              tickFormatter={fmtShort}
+              stroke='rgba(255,255,255,0.3)'
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              stroke='rgba(255,255,255,0.3)'
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <ChartTooltip
+              cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+              content={
+                <ChartTooltipContent
+                  indicator='dot'
+                  labelFormatter={iso => fmtShort(String(iso))}
+                />
+              }
+            />
+            <Area
+              dataKey='sessions'
+              type='monotone'
+              stroke='var(--color-sessions)'
+              strokeWidth={1.5}
+              fill='url(#fill-sessions)'
+            />
+            <Area
+              dataKey='completes'
+              type='monotone'
+              stroke='var(--color-completes)'
+              strokeWidth={1.5}
+              fill='url(#fill-completes)'
+            />
+            <Area
+              dataKey='plays'
+              type='monotone'
+              stroke='var(--color-plays)'
+              strokeWidth={2}
+              fill='url(#fill-plays)'
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+          </AreaChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
 }
 
-function Legend({ color, label, value }: { color: string; label: string; value: number }) {
+function TotalChip({ color, label, value }: { color: string; label: string; value: number }) {
   return (
     <div className='flex items-center gap-1.5'>
       <span
