@@ -242,6 +242,14 @@ export async function publishCassette(formData: FormData) {
     )
   }
 
+  // If the cassette was archived (e.g. we're reactivating an old one), unarchive
+  // it first so the RPC can mark it active without violating the single-active
+  // index. Safe even if the RPC also clears `archived` \u2014 UPDATEs are idempotent.
+  const { data: target } = await svc.from('cassettes').select('archived').eq('id', cassetteId).maybeSingle()
+  if (target?.archived) {
+    await svc.from('cassettes').update({ archived: false }).eq('id', cassetteId)
+  }
+
   const { error } = await svc.rpc('publish_cassette', { p_cassette_id: cassetteId })
   if (error) backWithError(`/admin/cassettes/${cassetteId}`, 'generico', error.message)
 

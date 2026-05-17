@@ -47,15 +47,25 @@ export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
 export function PublishButton({
   cassetteId,
   songCount,
-  missingAudio = 0
+  missingAudio = 0,
+  isArchived = false
 }: {
   cassetteId: string
   songCount: number
   missingAudio?: number
+  isArchived?: boolean
 }) {
   const formRef = useRef<HTMLFormElement>(null)
   const lowCount = songCount < 10
   const blocked = missingAudio > 0
+  const label = isArchived ? 'Reactivar' : 'Publicar'
+  const dialogTitle = isArchived ? 'Reactivar cassette' : 'Publicar cassette'
+  const dialogConfirm = isArchived ? 'Sí, reactivar' : 'Sí, publicar'
+  const dialogBody = isArchived
+    ? 'Este cassette está archivado. Al reactivarlo, archivará el cassette activo actual y éste empezará a sonar en la home. ¿Continuar?'
+    : lowCount
+      ? `Este cassette solo tiene ${songCount} canciones. ¿Publicarlo igual? Archivará el activo actual y empezará a sonar en la home.`
+      : `Esto archivará el cassette activo actual y empezará a sonar éste en la home. ¿Continuar?`
 
   if (blocked) {
     return (
@@ -68,12 +78,12 @@ export function PublishButton({
                 className='font-pt-mono cursor-not-allowed bg-red-600/30 text-xs tracking-wide text-white/60 uppercase'
               >
                 <Disc3 className='h-3.5 w-3.5' />
-                Publicar
+                {label}
               </Button>
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            Sube el MP3 de {missingAudio} canción{missingAudio === 1 ? '' : 'es'} antes de publicar
+            Sube el MP3 de {missingAudio} canción{missingAudio === 1 ? '' : 'es'} antes de {label.toLowerCase()}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -85,19 +95,15 @@ export function PublishButton({
       <AlertDialogTrigger asChild>
         <Button className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500'>
           <Disc3 className='h-3.5 w-3.5' />
-          Publicar
+          {label}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className='border-white/10 bg-neutral-900 text-white'>
         <AlertDialogHeader>
           <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>
-            Publicar cassette
+            {dialogTitle}
           </AlertDialogTitle>
-          <AlertDialogDescription className='font-pt-mono text-white/60'>
-            {lowCount
-              ? `Este cassette solo tiene ${songCount} canciones. ¿Publicarlo igual? Archivará el activo actual y empezará a sonar en la home.`
-              : `Esto archivará el cassette activo actual y empezará a sonar éste en la home. ¿Continuar?`}
-          </AlertDialogDescription>
+          <AlertDialogDescription className='font-pt-mono text-white/60'>{dialogBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className='font-pt-mono border-white/10 bg-transparent text-white/70 hover:bg-white/5 hover:text-white'>
@@ -107,7 +113,7 @@ export function PublishButton({
             onClick={() => formRef.current?.requestSubmit()}
             className='font-pt-mono bg-red-600 text-white uppercase hover:bg-red-500'
           >
-            Sí, publicar
+            {dialogConfirm}
           </AlertDialogAction>
         </AlertDialogFooter>
         <form

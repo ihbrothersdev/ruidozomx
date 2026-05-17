@@ -132,11 +132,12 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
             />
           )}
           {state === 'draft' && <MarkAsNextButton cassetteId={cassette.id} />}
-          {(state === 'next' || state === 'draft') && total > 0 && (
+          {(state === 'next' || state === 'draft' || state === 'archived') && total > 0 && (
             <PublishButton
               cassetteId={cassette.id}
               songCount={total}
               missingAudio={missingAudioCount}
+              isArchived={state === 'archived'}
             />
           )}
           {state !== 'active' && (
