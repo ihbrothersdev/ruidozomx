@@ -2,11 +2,23 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Separator } from '@/app/components/ui/separator'
 import { createServiceClient } from '@/lib/supabase/service'
-import { BarChart3, Headphones, Heart, Music2, Play, Send, Users } from 'lucide-react'
+import { BarChart3, Headphones, Heart, LineChart, Music2, Play, Send, Users } from 'lucide-react'
 import Link from 'next/link'
 import { CassetteFilter, type CassetteOption } from './_components/CassetteFilter'
-import { CassettesTable, type CassetteMetricRow } from './_components/CassettesTable'
-import { SongsTable, type SongMetricRow } from './_components/SongsTable'
+import { CassettesTable } from './_components/CassettesTable'
+import { PlaysChart } from './_components/PlaysChart'
+import { SongsTable } from './_components/SongsTable'
+import { TimeFilter, type TimeWindow } from './_components/TimeFilter'
+import {
+  aggregateCassetteMetrics,
+  aggregateSongMetrics,
+  buildDailySeries,
+  windowToDate,
+  type CassetteRow,
+  type SinceWindow,
+  type SongEvent,
+  type SongRow
+} from './_lib/aggregations'
 
 export const metadata = {
   title: 'Métricas · Admin · Ruidozo MX'
@@ -44,34 +56,84 @@ interface ConnectionMetrics {
   unique_proposed_to: number
 }
 
+const WINDOW_LABEL: Record<SinceWindow, string> = {
+  '24h': 'últimas 24 horas',
+  '7d': 'últimos 7 días',
+  '30d': 'últimos 30 días',
+  all: 'todos los tiempos'
+}
+
+function parseWindow(raw: string | undefined): SinceWindow {
+  if (raw === '24h' || raw === '7d' || raw === '30d') return raw
+  return 'all'
+}
+
 export default async function MetricasPage({
   searchParams
 }: {
-  searchParams: Promise<{ cassette?: string }>
+  searchParams: Promise<{ cassette?: string; since?: string }>
 }) {
-  const { cassette: cassetteParam } = await searchParams
-  const cassetteFilter = cassetteParam && cassetteParam !== 'all' ? cassetteParam : null
+  const sp = await searchParams
+  const since = parseWindow(sp.since)
+  const cassetteFilter = sp.cassette && sp.cassette !== 'all' ? sp.cassette : null
+  const sinceDate = windowToDate(since)
 
   const svc = createServiceClient()
 
-  // Cassette list is always unfiltered (used by the selector).
+  // ── Parallel fetches ────────────────────────────────────────────────────
   const cassetteListPromise = svc
     .from('cassettes')
     .select('id, name, active, archived, is_next')
     .order('start_date', { ascending: false })
 
-  const [songMetricsRes, cassetteMetricsRes, listenersRes, proposersRes, connectionsRes, cassetteListRes] =
-    await Promise.all([
-      svc.rpc('song_metrics', { p_cassette_id: cassetteFilter }),
-      svc.rpc('cassette_metrics', { p_cassette_id: cassetteFilter }),
-      svc.rpc('top_listeners', { p_limit: 10 }),
-      svc.rpc('top_proposers', { p_limit: 10 }),
-      svc.rpc('connection_metrics'),
-      cassetteListPromise
-    ])
+  // songs (filtered by cassette if selected) + their cassette name
+  let songsQuery = svc
+    .from('songs')
+    .select('id, title, artist, side, position, cassette_id, cassettes!inner(name)')
+  if (cassetteFilter) songsQuery = songsQuery.eq('cassette_id', cassetteFilter)
+  const songsPromise = songsQuery
 
-  const songMetrics = (songMetricsRes.data ?? []) as SongMetricRow[]
-  const cassetteMetrics = (cassetteMetricsRes.data ?? []) as CassetteMetricRow[]
+  // events within the selected window (and cassette, if any)
+  let eventsQuery = svc
+    .from('song_events')
+    .select('id, type, song_id, cassette_id, user_id, session_id, created_at')
+  if (sinceDate) eventsQuery = eventsQuery.gte('created_at', sinceDate.toISOString())
+  if (cassetteFilter) eventsQuery = eventsQuery.eq('cassette_id', cassetteFilter)
+  const eventsPromise = eventsQuery
+
+  const [cassetteListRes, songsRes, eventsRes, listenersRes, proposersRes, connectionsRes] = await Promise.all([
+    cassetteListPromise,
+    songsPromise,
+    eventsPromise,
+    svc.rpc('top_listeners', { p_limit: 10 }),
+    svc.rpc('top_proposers', { p_limit: 10 }),
+    svc.rpc('connection_metrics')
+  ])
+
+  // ── Normalize ─────────────────────────────────────────────────────────────
+  const cassetteList = (cassetteListRes.data ?? []) as CassetteRow[]
+  const songs: SongRow[] = (songsRes.data ?? []).map(s => ({
+    id: s.id,
+    title: s.title,
+    artist: s.artist,
+    side: s.side as 'A' | 'B',
+    position: s.position,
+    cassette_id: s.cassette_id,
+    cassette_name:
+      (Array.isArray(s.cassettes) ? s.cassettes[0]?.name : (s.cassettes as { name?: string } | null)?.name) ??
+      'Sin nombre'
+  }))
+  const events = (eventsRes.data ?? []) as SongEvent[]
+
+  // ── Aggregate ────────────────────────────────────────────────────────────
+  const songMetrics = aggregateSongMetrics(songs, events)
+  const cassetteMetrics = aggregateCassetteMetrics(
+    cassetteFilter ? cassetteList.filter(c => c.id === cassetteFilter) : cassetteList,
+    events
+  )
+  const daily = buildDailySeries(events, since)
+
+  // RPCs we keep as-is (these don't need the time/cassette window).
   const topListeners = (listenersRes.data ?? []) as ListenerRow[]
   const topProposers = (proposersRes.data ?? []) as ProposerRow[]
   const connections = ((connectionsRes.data ?? [])[0] ?? {
@@ -83,7 +145,7 @@ export default async function MetricasPage({
     unique_proposed_to: 0
   }) as ConnectionMetrics
 
-  const cassetteOptions: CassetteOption[] = (cassetteListRes.data ?? []).map(c => ({
+  const cassetteOptions: CassetteOption[] = cassetteList.map(c => ({
     id: c.id,
     name: c.name ?? 'Sin nombre',
     state: c.active ? 'active' : c.is_next ? 'next' : c.archived ? 'archived' : 'draft'
@@ -93,9 +155,9 @@ export default async function MetricasPage({
     ? (cassetteOptions.find(c => c.id === cassetteFilter)?.name ?? 'Cassette seleccionado')
     : null
 
-  const totalPlays = songMetrics.reduce((acc, s) => acc + Number(s.plays_total), 0)
-  const totalAuthPlays = songMetrics.reduce((acc, s) => acc + Number(s.plays_authenticated), 0)
-  const totalSessionsStarted = cassetteMetrics.reduce((acc, c) => acc + Number(c.sessions_started), 0)
+  const totalPlays = events.filter(e => e.type === 'play_start').length
+  const totalAuthPlays = events.filter(e => e.type === 'play_start' && e.user_id).length
+  const totalSessionsStarted = events.filter(e => e.type === 'cassette_session_start').length
   const totalUniqueListeners = new Set(topListeners.map(l => l.user_id)).size
 
   const hasAnyData =
@@ -113,27 +175,33 @@ export default async function MetricasPage({
             Métricas
           </h1>
           <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
-            Cómo está conectando la gente con el contenido. Mide reproducciones, sesiones y participación — tanto de
-            usuarios logueados como de visitantes anónimos.
+            Cómo está conectando la gente con el contenido durante los <strong>{WINDOW_LABEL[since]}</strong>
+            {selectedCassetteName ? (
+              <>
+                {' '}
+                en <strong className='text-white'>{selectedCassetteName}</strong>
+              </>
+            ) : null}
+            . Click en una canción para ver detalle de oyentes.
           </p>
-          {selectedCassetteName && (
-            <p className='font-pt-mono mt-2 text-[11px] text-white/40'>
-              Filtrando por <strong className='text-white'>{selectedCassetteName}</strong>. Las secciones de fans y
-              proponentes son globales.
-            </p>
-          )}
+          <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
+            Top fans, proponentes y conexiones son globales (no respetan los filtros).
+          </p>
         </div>
-        <CassetteFilter
-          options={cassetteOptions}
-          selected={cassetteFilter ?? 'all'}
-        />
+        <div className='flex flex-wrap items-end gap-3'>
+          <TimeFilter selected={since} />
+          <CassetteFilter
+            options={cassetteOptions}
+            selected={cassetteFilter ?? 'all'}
+          />
+        </div>
       </header>
 
       {!hasAnyData && (
         <Alert className='border-amber-400/20 bg-amber-500/5 text-amber-200'>
           <AlertDescription className='font-pt-mono text-amber-200'>
-            {cassetteFilter
-              ? 'Este cassette no tiene eventos registrados aún.'
+            {cassetteFilter || since !== 'all'
+              ? 'No hay eventos registrados con esos filtros. Prueba ampliando el rango o cambiando el cassette.'
               : 'Aún no hay eventos registrados. Los plays, sesiones y clicks empezarán a aparecer aquí en cuanto la gente interactúe con el cassette activo.'}
           </AlertDescription>
         </Alert>
@@ -170,6 +238,15 @@ export default async function MetricasPage({
         />
       </section>
 
+      <section>
+        <SectionHeader
+          icon={LineChart}
+          title='Evolución temporal'
+          description='Plays, completes y sesiones por día. Cambia el rango arriba.'
+        />
+        <PlaysChart data={daily} />
+      </section>
+
       <Separator className='bg-white/5' />
 
       <section>
@@ -185,9 +262,12 @@ export default async function MetricasPage({
         <SectionHeader
           icon={Music2}
           title='Top canciones'
-          description='Plays totales, oyentes únicos, % que completan, e interacciones derivadas. Filtra por lado o busca por banda/título.'
+          description='Click en una fila para ver oyentes y desglose de eventos. Filtra por lado o busca por banda/título.'
         />
-        <SongsTable rows={songMetrics} />
+        <SongsTable
+          rows={songMetrics}
+          since={since}
+        />
       </section>
 
       <section className='grid gap-6 lg:grid-cols-2'>

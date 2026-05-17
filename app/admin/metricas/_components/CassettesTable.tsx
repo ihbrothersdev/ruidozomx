@@ -7,20 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowDown, ArrowUp, ArrowUpDown, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import type { CassetteMetricRow } from '../_lib/aggregations'
 
-export type CassetteMetricRow = {
-  cassette_id: string
-  cassette_name: string
-  active: boolean
-  archived: boolean
-  is_next: boolean
-  sessions_started: number
-  sessions_finished: number
-  unique_session_users: number
-  unique_anon_sessions: number
-  total_plays: number
-  total_completes: number
-}
+export type { CassetteMetricRow }
 
 type SortKey =
   | 'cassette_name'

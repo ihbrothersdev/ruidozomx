@@ -8,25 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, ExternalLink, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import type { SinceWindow, SongMetricRow } from '../_lib/aggregations'
+import { SongDetailDialog } from './SongDetailDialog'
 
-export type SongMetricRow = {
-  song_id: string
-  title: string
-  artist: string
-  side: 'A' | 'B'
-  track_position: number
-  cassette_id: string
-  cassette_name: string
-  plays_total: number
-  plays_authenticated: number
-  unique_listeners: number
-  unique_anon_sessions: number
-  completes: number
-  completion_rate: number
-  profile_clicks: number
-  interest_clicks: number
-  share_clicks: number
-}
+export type { SongMetricRow }
 
 type SortKey =
   | 'artist'
@@ -42,11 +27,12 @@ type SideFilter = 'all' | 'A' | 'B'
 
 const PAGE_SIZE = 30
 
-export function SongsTable({ rows }: { rows: SongMetricRow[] }) {
+export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: SinceWindow }) {
   const [search, setSearch] = useState('')
   const [side, setSide] = useState<SideFilter>('all')
   const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'plays_total', dir: 'desc' })
   const [showAll, setShowAll] = useState(false)
+  const [detailSongId, setDetailSongId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -247,7 +233,8 @@ export function SongsTable({ rows }: { rows: SongMetricRow[] }) {
                 visible.map(s => (
                   <TableRow
                     key={s.song_id}
-                    className='border-white/5 hover:bg-white/2'
+                    onClick={() => setDetailSongId(s.song_id)}
+                    className='cursor-pointer border-white/5 hover:bg-white/5'
                   >
                     <Td>
                       <div className='flex items-center gap-2'>
@@ -273,6 +260,7 @@ export function SongsTable({ rows }: { rows: SongMetricRow[] }) {
                     <Td>
                       <Link
                         href={`/admin/cassettes/${s.cassette_id}`}
+                        onClick={e => e.stopPropagation()}
                         className='inline-flex items-center gap-1 text-white/60 hover:text-white'
                       >
                         {s.cassette_name}
@@ -309,6 +297,15 @@ export function SongsTable({ rows }: { rows: SongMetricRow[] }) {
           </button>
         )}
       </CardContent>
+
+      <SongDetailDialog
+        songId={detailSongId}
+        since={since}
+        open={detailSongId !== null}
+        onOpenChange={open => {
+          if (!open) setDetailSongId(null)
+        }}
+      />
     </Card>
   )
 }
