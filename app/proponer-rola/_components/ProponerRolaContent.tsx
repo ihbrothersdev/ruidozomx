@@ -122,7 +122,7 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 textarea
               />
 
-              {!isBanda && (
+              {isBanda && (
                 <>
                   {/* Link privado section */}
                   <div className='space-y-1 pt-2'>
