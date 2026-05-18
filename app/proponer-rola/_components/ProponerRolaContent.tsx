@@ -18,7 +18,17 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
   const success = searchParams.get('success') === 'true'
   const limitReached = searchParams.get('limit') === 'true'
   const [accepted, setAccepted] = useState(false)
+  const [audioLink, setAudioLink] = useState('')
   const [showModal, setShowModal] = useState(success)
+
+  // Mirror the rights checkbox to the link state: putting a link in is taken
+  // as implicit confirmation that the user can share the material; clearing
+  // the link removes that confirmation. The user can still toggle the
+  // checkbox manually afterwards.
+  function handleAudioLinkChange(value: string) {
+    setAudioLink(value)
+    setAccepted(value.trim().length > 0)
+  }
 
   const isBanda = role === 'banda'
   const submitDisabled = (isBanda && !accepted) || limitReached
@@ -112,7 +122,7 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 textarea
               />
 
-              {isBanda && (
+              {!isBanda && (
                 <>
                   {/* Link privado section */}
                   <div className='space-y-1 pt-2'>
@@ -124,6 +134,12 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                       name='audio_file_path'
                       type='url'
                       placeholder='Dropbox, Drive, WeTransfer, otro'
+                      value={audioLink}
+                      onChange={e => handleAudioLinkChange(e.target.value)}
+                      // If the user manually opted into the rights confirmation,
+                      // the link becomes obligatory — you can't confirm rights
+                      // for material you haven't actually shared.
+                      required={accepted}
                       className={inputCls}
                     />
                   </div>
