@@ -24,10 +24,15 @@ export function generateSlug(name: string): string {
 }
 
 /**
- * Format the current date for the cassette display.
+ * Format a date for the cassette display. Accepts a Date, an ISO string
+ * (e.g. `'2026-05-18'`), or `undefined` to fall back to today's date.
+ *
+ * The cassette's release date is anchored to `cassettes.start_date` so the
+ * label only changes when a new cassette is published, not every midnight.
+ *
  * Example: "18 MAYO 2026"
  */
-export function formatCassetteDate(): string {
+export function formatCassetteDate(input?: Date | string | null): string {
   const months = [
     'ENERO',
     'FEBRERO',
@@ -42,6 +47,18 @@ export function formatCassetteDate(): string {
     'NOVIEMBRE',
     'DICIEMBRE'
   ]
-  const now = new Date()
-  return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
+  // Postgres returns DATE columns as 'YYYY-MM-DD'. Parsing that as
+  // `new Date('YYYY-MM-DD')` is interpreted as UTC midnight, which can shift
+  // the displayed day by one in negative-offset timezones. Force UTC reads.
+  let d: Date
+  if (input instanceof Date) {
+    d = input
+  } else if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}/.test(input)) {
+    const [y, m, day] = input.slice(0, 10).split('-').map(Number)
+    d = new Date(Date.UTC(y, m - 1, day))
+    return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+  } else {
+    d = new Date()
+  }
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }

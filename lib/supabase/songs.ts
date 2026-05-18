@@ -21,18 +21,27 @@ const FALLBACK_SONGS: PlayerSong[] = [
  * Maps DB `songs` rows → `PlayerSong` for the audio player.
  * Always returns a non-empty `songs` array and a `cassetteName` so callers
  * never have to handle "no data" states.
+ *
+ * `cassetteStartDate` is the publication date of the active cassette
+ * (`cassettes.start_date`). The cassette label uses it so the date only
+ * changes when a new cassette is published, not every day.
  */
 export async function getActiveCassetteSongs(): Promise<{
   songs: PlayerSong[]
   cassetteName: string
+  cassetteStartDate: string | null
 }> {
   const supabase = await createClient()
 
   // 1. Find the active cassette
-  const { data: cassette } = await supabase.from('cassettes').select('id, name').eq('active', true).single()
+  const { data: cassette } = await supabase
+    .from('cassettes')
+    .select('id, name, start_date')
+    .eq('active', true)
+    .single()
 
   if (!cassette) {
-    return { songs: FALLBACK_SONGS, cassetteName: FALLBACK_CASSETTE_NAME }
+    return { songs: FALLBACK_SONGS, cassetteName: FALLBACK_CASSETTE_NAME, cassetteStartDate: null }
   }
 
   // 2. Fetch songs ordered by side + position
@@ -44,7 +53,11 @@ export async function getActiveCassetteSongs(): Promise<{
     .order('position', { ascending: true })
 
   if (!rows || rows.length === 0) {
-    return { songs: FALLBACK_SONGS, cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME }
+    return {
+      songs: FALLBACK_SONGS,
+      cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME,
+      cassetteStartDate: cassette.start_date ?? null
+    }
   }
 
   // 3. Map DB rows → PlayerSong
@@ -58,5 +71,9 @@ export async function getActiveCassetteSongs(): Promise<{
     audioSrc: row.audio_url ?? ''
   }))
 
-  return { songs, cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME }
+  return {
+    songs,
+    cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME,
+    cassetteStartDate: cassette.start_date ?? null
+  }
 }
