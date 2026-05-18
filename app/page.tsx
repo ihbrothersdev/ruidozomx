@@ -29,7 +29,7 @@ export default async function Home() {
     }
   }
 
-  const { songs } = await getActiveCassetteSongs()
+  const { songs, cassetteStartDate } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
@@ -67,7 +67,7 @@ export default async function Home() {
           <HomePlayerSection
             songs={songs}
             initialSongId={songs[0].id}
-            date={formatCassetteDate()}
+            date={formatCassetteDate(cassetteStartDate)}
             isAuthenticated={!!user}
           />
         )}
