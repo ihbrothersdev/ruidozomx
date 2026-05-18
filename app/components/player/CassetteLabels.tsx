@@ -33,13 +33,13 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
           <div className='relative w-full'>
             <TruncatedLabel
               text={songTitle}
-              className='font-corose-alt block w-full truncate text-center text-lg leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
+              className='font-corose-alt block w-full truncate text-center text-md leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
             />
           </div>
           <div className='relative w-3/4'>
             <TruncatedLabel
               text={artist}
-              className='font-corose block w-full truncate text-center text-sm leading-tight text-black uppercase sm:text-xl md:text-2xl'
+              className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
             />
           </div>
         </div>
