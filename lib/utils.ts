@@ -25,7 +25,7 @@ export function generateSlug(name: string): string {
 
 /**
  * Format the current date for the cassette display.
- * Example: "MAYO 2025"
+ * Example: "18 MAYO 2026"
  */
 export function formatCassetteDate(): string {
   const months = [
@@ -43,5 +43,5 @@ export function formatCassetteDate(): string {
     'DICIEMBRE'
   ]
   const now = new Date()
-  return `${months[now.getMonth()]} ${now.getFullYear()}`
+  return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
 }
