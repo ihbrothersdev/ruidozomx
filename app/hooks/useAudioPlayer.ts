@@ -24,8 +24,12 @@ interface AudioPlayerActions {
 }
 
 export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
-  const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
-  const activeRef = useRef<HTMLAudioElement | null>(null)
+  // Single <audio> element shared across all tracks. iOS only grants the
+  // "user-activated" autoplay permission to the specific element the user
+  // gestured on; a pool of one-per-song elements means chained playback from
+  // 'ended' is blocked for every track after the first. Swapping `.src` on a
+  // single element keeps the unlock and avoids that block.
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   // Tracks whether the most recent pause was initiated by the user (UI button
   // or OS media control). iOS fires a spurious 'pause' on lock-screen even
   // though audio keeps playing; we use this flag to ignore those.
@@ -42,79 +46,89 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     return a.position - b.position
   })
 
+  // Mirror currentSongId in a ref so the mount-time listeners (attached once)
+  // always see the latest value without re-attaching.
+  const currentSongIdRef = useRef(currentSongId)
+  useEffect(() => {
+    currentSongIdRef.current = currentSongId
+  }, [currentSongId])
+
   const currentSong = songs.find(s => s.id === currentSongId)
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
-  /** Get or create an Audio element for a song.
-   *  iOS Safari handles background/lock-screen playback far better when the
-   *  <audio> element lives in the DOM — pure `new Audio()` instances kept in
-   *  a JS Map can be paused by the OS or have their playbackState ignored
-   *  when the page is hidden. Append a hidden, muted-attributes-free
-   *  <audio> per song to keep iOS happy. */
-  const getAudio = useCallback((song: PlayerSong): HTMLAudioElement => {
-    const pool = poolRef.current
-    let audio = pool.get(song.id)
-    if (!audio) {
-      audio = document.createElement('audio')
-      audio.preload = 'auto'
-      audio.src = song.audioSrc
-      audio.setAttribute('playsinline', '')
-      audio.setAttribute('webkit-playsinline', '')
-      audio.style.display = 'none'
-      document.body.appendChild(audio)
-      pool.set(song.id, audio)
-    }
-    return audio
-  }, [])
-
-  // Build pool for all songs on mount (staggered, non-blocking)
+  // Create the audio element once and attach all listeners once. Swapping
+  // `.src` later is what advances tracks — the element itself never changes,
+  // so there's no race between React's effect-driven ref swap and the
+  // playback chain triggered from 'ended'.
   useEffect(() => {
-    const sorted = sortedSongsRef.current
-    if (sorted.length === 0) return
+    const audio = document.createElement('audio')
+    audio.preload = 'auto'
+    audio.setAttribute('playsinline', '')
+    audio.setAttribute('webkit-playsinline', '')
+    audio.style.display = 'none'
+    document.body.appendChild(audio)
+    audioRef.current = audio
 
-    let i = 0
-    // Create one Audio element every 200ms to avoid hammering the network
-    const interval = setInterval(() => {
-      if (i >= sorted.length) {
-        clearInterval(interval)
+    const onTimeUpdate = () => setElapsedSeconds(Math.floor(audio.currentTime))
+    const onDurationChange = () => setDuration(Math.floor(audio.duration) || 0)
+    const onEnded = () => {
+      const sorted = sortedSongsRef.current
+      const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
+      if (idx < sorted.length - 1) {
+        const nextSong = sorted[idx + 1]
+        setCurrentSongId(nextSong.id)
+        audio.src = nextSong.audioSrc
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      } else {
+        const first = sorted[0]
+        setCurrentSongId(first.id)
+        audio.src = first.audioSrc
+        audio.currentTime = 0
+        setIsPlaying(false)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused'
+        }
+      }
+    }
+    const onPlay = () => {
+      userPausedRef.current = false
+      setIsPlaying(true)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
+    }
+    const onPause = () => {
+      // iOS Safari/WebKit fires spurious 'pause' events while the screen is
+      // locked even though audio keeps playing. Only honour pauses initiated
+      // by us via the `pause()` callback (UI button or OS media control); all
+      // other pause events are ignored and we re-assert 'playing' so the
+      // lock-screen icon stays correct.
+      if (!userPausedRef.current) {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing'
+        }
         return
       }
-      getAudio(sorted[i])
-      i++
-    }, 200)
-
-    return () => clearInterval(interval)
-  }, [songs, getAudio])
-
-  // Wire up the active audio element when currentSongId changes
-  useEffect(() => {
-    if (!currentSong) return
-
-    // Detach old listeners
-    const prev = activeRef.current
-    if (prev) {
-      prev.pause()
-      prev.removeEventListener('timeupdate', onTimeUpdate)
-      prev.removeEventListener('durationchange', onDurationChange)
-      prev.removeEventListener('ended', onEnded)
-      prev.removeEventListener('play', onPlay)
-      prev.removeEventListener('pause', onPause)
+      userPausedRef.current = false
+      setIsPlaying(false)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused'
+      }
     }
 
-    const audio = getAudio(currentSong)
-    activeRef.current = audio
-
-    // Attach listeners
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
 
-    // Sync state
-    setElapsedSeconds(Math.floor(audio.currentTime))
-    setDuration(Math.floor(audio.duration) || 0)
+    // Preload the initial track so the first play() responds instantly to
+    // the user's gesture (which is also what unlocks autoplay for the rest
+    // of the session on iOS).
+    const initial = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+    if (initial) audio.src = initial.audioSrc
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
@@ -122,69 +136,10 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSongId])
-
-  function onTimeUpdate() {
-    const a = activeRef.current
-    if (a) setElapsedSeconds(Math.floor(a.currentTime))
-  }
-  function onDurationChange() {
-    const a = activeRef.current
-    if (a) setDuration(Math.floor(a.duration) || 0)
-  }
-  function onEnded() {
-    const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
-    if (idx < sorted.length - 1) {
-      setCurrentSongId(sorted[idx + 1].id)
-      setTimeout(() => activeRef.current?.play().catch(() => {}), 0)
-    } else {
-      setCurrentSongId(sorted[0].id)
-      setIsPlaying(false)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused'
-      }
-    }
-  }
-  function onPlay() {
-    userPausedRef.current = false
-    setIsPlaying(true)
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'playing'
-    }
-  }
-  function onPause() {
-    // iOS Safari/WebKit fires spurious 'pause' events while the screen is
-    // locked even though audio keeps playing. visibilityState is unreliable
-    // on iOS during background audio, so we only honour pauses initiated by
-    // us via the `pause()` callback (UI button or OS media control). All
-    // other pause events are ignored and we re-assert 'playing' so the
-    // lock-screen icon stays correct.
-    if (!userPausedRef.current) {
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      return
-    }
-    userPausedRef.current = false
-    setIsPlaying(false)
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'paused'
-    }
-  }
-
-  // Cleanup pool on unmount
-  useEffect(() => {
-    const pool = poolRef.current
-    return () => {
-      pool.forEach(audio => {
-        audio.pause()
-        audio.src = ''
-        if (audio.parentNode) audio.parentNode.removeChild(audio)
-      })
-      pool.clear()
+      audio.pause()
+      audio.src = ''
+      if (audio.parentNode) audio.parentNode.removeChild(audio)
+      audioRef.current = null
     }
   }, [])
 
@@ -195,7 +150,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (typeof document === 'undefined' || !('mediaSession' in navigator)) return
     const sync = () => {
       if (document.visibilityState !== 'visible') return
-      const audio = activeRef.current
+      const audio = audioRef.current
       if (!audio) return
       navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing'
     }
@@ -234,7 +189,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // The audio element's 'play' event will set mediaSession to 'playing'
     // once playback actually starts. Avoid eager updates so we don't desync
     // from the underlying audio state on iOS.
-    activeRef.current?.play().catch(() => {})
+    audioRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
@@ -244,11 +199,11 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // background; if we eagerly mark paused, the lock-screen icon would
     // flip to "play" even though audio kept playing. Let the audio's own
     // 'pause' event drive the state update via onPause.
-    activeRef.current?.pause()
+    audioRef.current?.pause()
   }, [])
 
   const stop = useCallback(() => {
-    const audio = activeRef.current
+    const audio = audioRef.current
     if (!audio) return
     userPausedRef.current = true
     audio.pause()
@@ -258,33 +213,31 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [])
 
   const next = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
     const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
+    const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
     if (idx < sorted.length - 1) {
       const nextSong = sorted[idx + 1]
-      const current = activeRef.current
-      if (current) {
-        current.pause()
-        current.currentTime = 0
-      }
       setIsStopped(false)
       setCurrentSongId(nextSong.id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
       }
-      const audio = getAudio(nextSong)
+      audio.src = nextSong.audioSrc
       audio.currentTime = 0
       audio.play().catch(() => {})
     }
-  }, [currentSongId, getAudio])
+  }, [])
 
   const prev = useCallback(() => {
-    const audio = activeRef.current
+    const audio = audioRef.current
+    if (!audio) return
     const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
+    const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
 
     // Standard behaviour: if more than 3 s in, restart current song
-    if (audio && audio.currentTime > 3) {
+    if (audio.currentTime > 3) {
       audio.currentTime = 0
       setElapsedSeconds(0)
       return
@@ -293,23 +246,19 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // Otherwise go to previous song
     if (idx > 0) {
       const prevSong = sorted[idx - 1]
-      if (audio) {
-        audio.pause()
-        audio.currentTime = 0
-      }
       setIsStopped(false)
       setCurrentSongId(prevSong.id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
       }
-      const prevAudio = getAudio(prevSong)
-      prevAudio.currentTime = 0
-      prevAudio.play().catch(() => {})
+      audio.src = prevSong.audioSrc
+      audio.currentTime = 0
+      audio.play().catch(() => {})
     }
-  }, [currentSongId, getAudio])
+  }, [])
 
   const seek = useCallback((pct: number) => {
-    const audio = activeRef.current
+    const audio = audioRef.current
     if (!audio || !audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
@@ -333,7 +282,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     setHandler('nexttrack', () => next())
     setHandler('stop', () => stop())
     setHandler('seekto', details => {
-      const audio = activeRef.current
+      const audio = audioRef.current
       if (!audio || details.seekTime == null) return
       audio.currentTime = details.seekTime
     })
@@ -358,7 +307,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       navigator.mediaSession.setPositionState({
         duration,
         position: Math.min(elapsedSeconds, duration),
-        playbackRate: activeRef.current?.playbackRate ?? 1
+        playbackRate: audioRef.current?.playbackRate ?? 1
       })
     } catch {
       // Some browsers throw if values are inconsistent — safe to ignore.
@@ -367,28 +316,21 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
   const playSong = useCallback(
     (id: string) => {
-      // Stop current
-      const current = activeRef.current
-      if (current) {
-        current.pause()
-        current.currentTime = 0
-      }
+      const audio = audioRef.current
+      if (!audio) return
+      const song = songs.find(s => s.id === id)
+      if (!song) return
 
       setIsStopped(false)
       setCurrentSongId(id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
       }
-
-      // Play from pool immediately — the Audio element may already be buffered
-      const song = songs.find(s => s.id === id)
-      if (song) {
-        const audio = getAudio(song)
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-      }
+      audio.src = song.audioSrc
+      audio.currentTime = 0
+      audio.play().catch(() => {})
     },
-    [songs, getAudio]
+    [songs]
   )
 
   return {
