@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
+import { IntroRedirect } from './components/IntroRedirect'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
@@ -28,25 +29,26 @@ export default async function Home() {
     }
   }
 
-  const { songs } = await getActiveCassetteSongs()
+  const { songs, cassetteStartDate } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
+      <IntroRedirect />
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
         style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 hidden xl:block'>
+        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] 2xl:w-[520px] min-[1728px]:w-[620px] min-[1920px]:w-[700px]'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
             width={521}
             height={1179}
-            className='w-full'
+            className='h-auto w-full'
           />
-          <div className='absolute top-205 left-55 z-0 hidden xl:block'>
+          <div className='absolute top-205 left-55 z-0 max-[1450px]:hidden'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
@@ -65,7 +67,7 @@ export default async function Home() {
           <HomePlayerSection
             songs={songs}
             initialSongId={songs[0].id}
-            date={formatCassetteDate()}
+            date={formatCassetteDate(cassetteStartDate)}
             isAuthenticated={!!user}
           />
         )}
@@ -76,13 +78,13 @@ export default async function Home() {
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-250 -right-15 z-0 hidden xl:block'>
+        <div className='absolute top-230 -right-15 z-0 hidden xl:block xl:w-[320px] 2xl:w-[400px] min-[1728px]:w-[480px] min-[1920px]:w-[540px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
             width={384}
             height={839}
-            className='w-full'
+            className='h-auto w-full'
           />
         </div>
 

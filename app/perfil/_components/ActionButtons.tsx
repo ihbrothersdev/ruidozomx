@@ -87,28 +87,43 @@ export default function ActionButtons({
       )}
 
       {/* Banda-specific: "Proponer rola de esta banda" */}
-      {role === 'banda' && (
-        <>
+      {role === 'banda' &&
+        (!isOwnProfile ? (
+          <>
+            <button
+              type='button'
+              onClick={() => setProponerRolaOpen(true)}
+              className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
+            >
+              <Image
+                src='/assets/proponer-rola-banda.png'
+                alt='Proponer rola de esta banda'
+                width={600}
+                height={120}
+                className='h-auto w-full'
+              />
+            </button>
+            <ProponerRolaBandaModal
+              open={proponerRolaOpen}
+              onOpenChange={setProponerRolaOpen}
+              bandName={displayName}
+            />
+          </>
+        ) : (
           <button
             type='button'
-            onClick={() => setProponerRolaOpen(true)}
-            className='block cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
+            onClick={() => redirect('/proponer-rola')}
+            className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
           >
             <Image
-              src='/assets/proponer-rola-banda.png'
-              alt='Proponer rola de esta banda'
-              width={600}
-              height={120}
-              className='mx-auto h-auto w-full max-w-xs'
+              src='/assets/proponer-rola-sm.png'
+              alt='Propón una rola'
+              width={315}
+              height={57}
+              className='h-auto w-full max-w-64 sm:max-w-72'
             />
           </button>
-          <ProponerRolaBandaModal
-            open={proponerRolaOpen}
-            onOpenChange={setProponerRolaOpen}
-            bandName={displayName}
-          />
-        </>
-      )}
+        ))}
     </div>
   )
 }

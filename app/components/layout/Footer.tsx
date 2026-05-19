@@ -201,7 +201,7 @@ export function Footer({ user }: FooterProps) {
       {/* Bottom strip */}
       <div className='mx-auto mt-20 flex max-w-5xl flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8'>
         <Link
-          href='mailto:donadiexx@yahoo.com.mx'
+          href='mailto:hola@ruidozo.mx'
           className='flex items-center gap-2'
         >
           <Image
@@ -220,7 +220,7 @@ export function Footer({ user }: FooterProps) {
               className='h-9 w-auto sm:h-12'
             />
             <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-sm text-black sm:text-lg'>
-              donadiexx@yahoo.com.mx
+              hola@ruidozo.mx
             </span>
           </span>
         </Link>

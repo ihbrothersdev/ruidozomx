@@ -2,6 +2,7 @@
 
 import { createServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@/lib/supabase/server'
+import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -109,6 +110,16 @@ export async function acceptProposal(formData: FormData) {
       '/rolas-propuestas?error=' +
         encodeURIComponent('Error al actualizar propuesta (canción revertida): ' + updateError.message)
     )
+  }
+
+  const { data: proposalUser } = await supabase.auth.admin.getUserById(proposal.user_id)
+  const recipientEmail = proposalUser?.user?.email
+
+  if (recipientEmail) {
+    await sendTransactional({
+      transactionalId: LOOPS_IDS.PROPOSAL_SELECTED,
+      email: recipientEmail
+    })
   }
 
   revalidatePath('/rolas-propuestas')

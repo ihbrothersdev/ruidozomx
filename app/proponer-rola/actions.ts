@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { redirect } from 'next/navigation'
 
 export async function submitProposal(formData: FormData) {
@@ -33,11 +34,19 @@ export async function submitProposal(formData: FormData) {
     external_link: (formData.get('external_link') as string) || null,
     audio_file_path: (formData.get('audio_file_path') as string) || null,
     comment: (formData.get('comment') as string) || null,
+    rights_accepted: formData.get('rights_accepted') === 'true' ? true : null,
     status: 'pending'
   })
 
   if (error) {
     redirect('/proponer-rola?error=' + encodeURIComponent('Error al enviar tu propuesta. Intenta de nuevo.'))
+  }
+
+  if (user.email) {
+    await sendTransactional({
+      transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
+      email: user.email
+    })
   }
 
   redirect('/proponer-rola?success=true')

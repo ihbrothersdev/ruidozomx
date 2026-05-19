@@ -1,7 +1,11 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import type { UserProposalType } from '@/lib/types'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
 
 interface SendProposalInput {
   toProfileId: string
@@ -81,6 +85,24 @@ export async function sendInterest(input: SendInterestInput) {
     return { error: 'No se pudo enviar la conexión. Intenta de nuevo.' }
   }
 
+  const adminClient = createServiceClient()
+  const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
+  const recipientEmail = recipient?.user?.email
+
+  if (recipientEmail) {
+    const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
+
+    const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
+
+    await sendTransactional({
+      transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
+      email: recipientEmail,
+      dataVariables: {
+        profile: profileUrl
+      }
+    })
+  }
+
   return { success: true }
 }
 
@@ -145,6 +167,15 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
   if (error) {
     console.error('Error saving song proposal:', error)
     return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
+  }
+
+  // Confirmation email — same template the legacy /proponer-rola form uses.
+  // Fire-and-forget: a Loops outage shouldn't break the proposal flow.
+  if (user.email) {
+    await sendTransactional({
+      transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
+      email: user.email
+    })
   }
 
   return { success: true }

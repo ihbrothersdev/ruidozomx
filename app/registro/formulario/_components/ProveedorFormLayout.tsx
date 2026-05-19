@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
+import { SocialLinksFields } from './SocialLinksFields'
 import { YesNoField } from './YesNoField'
 import { inputCls, labelCls } from './form-styles'
 
@@ -39,11 +40,7 @@ export function ProveedorFormLayout() {
             required
             placeholder='Nombre de tu empresa o marca'
           />
-          <Field
-            label='Link a web o redes (si aplica)'
-            name='web_link'
-            placeholder='https://...'
-          />
+          <SocialLinksFields handle='tumarca' />
 
           {/* Alcance territorial */}
           <div className='space-y-1'>

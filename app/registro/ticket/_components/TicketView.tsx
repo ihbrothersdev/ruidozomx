@@ -70,7 +70,7 @@ function TicketContent({ isLoggedIn, venuePublishesCalls }: { isLoggedIn: boolea
         {/* Logo — top */}
         <div className='w-full px-4 pt-6 pb-2'>
           <img
-            src='/assets/registro/tickets/shared/logo.png'
+            src='/assets/registro/tickets/shared/logo-tachado.png'
             alt='Ruidozo'
             width={400}
             height={200}
@@ -141,7 +141,7 @@ function TicketContent({ isLoggedIn, venuePublishesCalls }: { isLoggedIn: boolea
         <div className='relative flex flex-col items-center justify-start gap-12 px-2 py-4 lg:gap-32 xl:gap-64 xl:py-5'>
           <div className='w-full'>
             <img
-              src='/assets/registro/tickets/shared/logo.png'
+              src='/assets/registro/tickets/shared/logo-tachado.png'
               alt='Ruidozo'
               width={400}
               height={200}

@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import { Field } from './Field'
 import { LocationFields } from './LocationFields'
 import { PhotoUpload } from './PhotoUpload'
+import { SocialLinksFields } from './SocialLinksFields'
 import { YesNoField } from './YesNoField'
 import { inputCls, labelCls } from './form-styles'
 
@@ -30,11 +31,7 @@ export function VenueFormLayout() {
             name='venue_name'
             required
           />
-          <Field
-            label='Link a web o redes'
-            name='web_link'
-            placeholder='https://...'
-          />
+          <SocialLinksFields handle='tuvenue' />
 
           {/* Capacidad — radio single value → VARCHAR(20) in DB */}
           <div className='space-y-1'>

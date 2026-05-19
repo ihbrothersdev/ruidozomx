@@ -62,22 +62,24 @@ export default function TicketText({
             </p>
           </button>
         )}
-        {/* TODO: Uncomment when publica una fecha modal is done */}
-        {/* {(role === 'promotor' || role === 'agente' || role === 'manager') && (
-          <button className='group pointer-events-auto flex cursor-pointer flex-col items-center'>
-            <p className='text-base leading-tight text-black group-hover:underline uppercase md:text-xl lg:text-3xl xl:text-4xl'>
+        {(role === 'promotor' || role === 'agente') && (
+          <button
+            onClick={gated(() => setCompartirEventoOpen(true))}
+            className='group pointer-events-auto flex cursor-pointer flex-col items-center'
+          >
+            <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
               PUBLICA UNA FECHA O UNA
             </p>
-            <p className='text-base leading-tight text-black group-hover:underline uppercase md:text-xl lg:text-3xl xl:text-4xl'>
+            <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
               CONVOCATORIA
             </p>
           </button>
-        )} */}
+        )}
         <button
           onClick={gated(() => setCompartirEventoOpen(true))}
           className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
         >
-          {role === 'venue' && venuePublishesCalls && (
+          {role === 'venue' && !venuePublishesCalls && (
             <>
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-2xl'>
                 PUBLICA UNA TOCADA O
@@ -100,12 +102,17 @@ export default function TicketText({
         )}
         {role === 'banda' && (
           <button
-            onClick={gated(() => setProponerRolaOpen(true))}
+            onClick={gated(() => setCompartirEventoOpen(true))}
             className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
-            <p className='text-xl leading-tight font-bold text-red-500 uppercase hover:underline md:text-2xl lg:text-3xl xl:text-3xl'>
-              PROPÓN UNA DE TUS
-            </p>
+            <>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
+                PUBLICA UNA FECHA O
+              </p>
+              <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
+                UNA CONVOCATORIA
+              </p>
+            </>
           </button>
         )}
         {/* TODO: Uncomment when publica una fecha modal is done */}
@@ -175,23 +182,26 @@ export default function TicketText({
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline sm:text-7xl md:text-5xl lg:text-6xl'>
               ROLA
             </p>
-            <p className='text-xs leading-tight text-red-500 uppercase group-hover:underline sm:text-md md:text-sm lg:text-xl'>
+            <p className='sm:text-md text-xs leading-tight text-red-500 uppercase group-hover:underline md:text-sm lg:text-xl'>
               De tu banda o artista favorito
             </p>
-            <p className='text-xs leading-tight text-black uppercase group-hover:underline sm:text-md md:text-sm lg:text-xl'>
+            <p className='sm:text-md text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
               para nuestro cassete semanal
             </p>
           </>
         )}
         {role === 'banda' && (
-          <>
+          <button className='group pointer-events-auto cursor-pointer'>
+            <p className='text-xl leading-tight text-red-500 uppercase group-hover:underline md:text-xl lg:text-2xl'>
+              PROPÓN UNA DE TUS
+            </p>
             <p className='text-6xl leading-none font-black text-red-500 uppercase group-hover:underline md:text-5xl lg:text-5xl xl:text-8xl'>
               ROLAS
             </p>
-            <p className='text-xs text-black mt-0.5 leading-tight uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-xl'>
+            <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-xl'>
               PARA NUESTRO CASSETE SEMANAL
             </p>
-          </>
+          </button>
         )}
         {role === 'proveedor' && (
           <>

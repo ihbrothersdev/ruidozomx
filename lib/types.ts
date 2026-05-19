@@ -255,6 +255,7 @@ export interface SongProposal {
   external_link: string | null
   audio_file_path: string | null
   comment: string | null
+  rights_accepted: boolean | null
   status: ProposalStatus
   cassette_id: string | null
   created_at: string
