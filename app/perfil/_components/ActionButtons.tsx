@@ -92,7 +92,7 @@ export default function ActionButtons({
           <>
             <button
               type='button'
-              onClick={() => setProponerRolaOpen(true)}
+              onClick={!isLoggedIn ? () => redirect('/registro/elige-rol') : () => setProponerRolaOpen(true)}
               className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
             >
               <Image
