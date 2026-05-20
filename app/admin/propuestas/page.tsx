@@ -195,7 +195,9 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                   <div className='flex items-start justify-between gap-4'>
                     <div className='min-w-0 flex-1'>
                       <div className='flex flex-wrap items-center gap-2'>
-                        <h3 className='font-pt-mono text-base font-bold text-white'>{p.artist}</h3>
+                        <h3 className='font-pt-mono text-base font-bold text-white'>
+                          {p.title || p.artist || <span className='text-white/40 italic'>Sin título</span>}
+                        </h3>
                         <Badge
                           variant='outline'
                           className={`font-pt-mono tracking-widest uppercase ${status.cls}`}
@@ -203,7 +205,6 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                           {status.label}
                         </Badge>
                       </div>
-                      {p.title && <p className='font-pt-mono mt-1 text-sm text-white/40'>{p.title}</p>}
 
                       <div className='mt-3 flex flex-wrap items-center gap-2'>
                         {p.genre && (
@@ -279,7 +280,10 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                       externalLink={p.external_link}
                       audioFilePath={p.audio_file_path}
                     />
-                    <InlinePlayer audioUrl={p.audio_file_path} />
+                    <InlinePlayer
+                      audioUrl={p.audio_file_path}
+                      externalLink={p.external_link}
+                    />
                   </div>
 
                   {p.comment && (

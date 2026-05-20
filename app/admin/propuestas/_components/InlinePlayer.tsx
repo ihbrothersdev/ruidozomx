@@ -5,11 +5,25 @@ import { hasEmbed } from './ProposalEmbed'
 
 type PlayerState = 'idle' | 'loading' | 'ready' | 'playing' | 'error'
 
-export function InlinePlayer({ audioUrl }: { audioUrl?: string | null }) {
+export function InlinePlayer({
+  audioUrl,
+  externalLink
+}: {
+  audioUrl?: string | null
+  externalLink?: string | null
+}) {
   if (!audioUrl) return null
   if (hasEmbed(audioUrl)) return null
+  if (externalLink && hasEmbed(externalLink)) return null
+  if (!isPlayable(audioUrl)) return null
 
   return <PlayerInner url={audioUrl} />
+}
+
+function isPlayable(url: string): boolean {
+  if (/\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url)) return true
+  if (url.includes('dropbox.com')) return true
+  return false
 }
 
 function PlayerInner({ url }: { url: string }) {

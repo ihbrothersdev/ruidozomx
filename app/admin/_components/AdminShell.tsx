@@ -85,7 +85,10 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
             >
               <X className='h-5 w-5' />
             </button>
-            <div onClick={() => setOpen(false)}>
+            <div
+              className='flex min-h-0 flex-1 flex-col'
+              onClick={() => setOpen(false)}
+            >
               <SidebarContent
                 displayName={displayName}
                 photoUrl={photoUrl}
