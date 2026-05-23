@@ -3,6 +3,32 @@
 import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+// iOS Safari/WebKit fires spurious 'pause' events on the lock screen even
+// though audio keeps playing, so we ignore non-user pauses there. On Android
+// Chrome those same pauses are real (buffer underrun in Doze mode, audio
+// focus loss, OEM battery savers, etc.) and we should try to resume.
+const isIOS =
+  typeof navigator !== 'undefined' &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.userAgent.includes('Mac') && typeof document !== 'undefined' && 'ontouchend' in document))
+
+/** Call audio.play(), waiting for canplay if the element isn't buffered yet.
+ *  After swapping `audio.src`, readyState drops to 0 until the network has
+ *  delivered enough bytes. Calling play() immediately works in most browsers
+ *  but on Android in Doze the play promise can reject silently. Waiting for
+ *  canplay gives the network a chance to wake up and serve bytes. */
+function playWhenReady(audio: HTMLAudioElement) {
+  if (audio.readyState >= 2) {
+    audio.play().catch(() => {})
+    return
+  }
+  const onReady = () => {
+    audio.removeEventListener('canplay', onReady)
+    audio.play().catch(() => {})
+  }
+  audio.addEventListener('canplay', onReady, { once: true })
+}
+
 interface AudioPlayerState {
   isPlaying: boolean
   currentSongId: string
@@ -70,6 +96,10 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     document.body.appendChild(audio)
     audioRef.current = audio
 
+    // Throttle the auto-resume so a hard failure (e.g. audio focus lost to
+    // an incoming call) doesn't loop play() forever.
+    let resumeScheduled = false
+
     const onTimeUpdate = () => setElapsedSeconds(Math.floor(audio.currentTime))
     const onDurationChange = () => setDuration(Math.floor(audio.duration) || 0)
     const onEnded = () => {
@@ -80,7 +110,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
         setCurrentSongId(nextSong.id)
         audio.src = nextSong.audioSrc
         audio.currentTime = 0
-        audio.play().catch(() => {})
+        playWhenReady(audio)
       } else {
         const first = sorted[0]
         setCurrentSongId(first.id)
@@ -100,21 +130,54 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
     }
     const onPause = () => {
-      // iOS Safari/WebKit fires spurious 'pause' events while the screen is
-      // locked even though audio keeps playing. Only honour pauses initiated
-      // by us via the `pause()` callback (UI button or OS media control); all
-      // other pause events are ignored and we re-assert 'playing' so the
-      // lock-screen icon stays correct.
-      if (!userPausedRef.current) {
+      if (userPausedRef.current) {
+        // Real user pause (UI button or OS media control).
+        userPausedRef.current = false
+        setIsPlaying(false)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused'
+        }
+        return
+      }
+      if (isIOS) {
+        // iOS lock-screen spurious pause — audio is still playing under the
+        // hood. Keep MediaSession in 'playing' so the lock-screen UI matches.
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = 'playing'
         }
         return
       }
-      userPausedRef.current = false
-      setIsPlaying(false)
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused'
+      // Android (and other non-iOS): the pause is real — buffer underrun in
+      // Doze mode, audio focus loss, OEM battery management, etc. Try to
+      // resume once after a short delay. If the underlying cause persists
+      // (e.g. user is in a phone call), play() will reject and we stop.
+      if (resumeScheduled) return
+      resumeScheduled = true
+      setTimeout(() => {
+        resumeScheduled = false
+        if (audio.paused && !userPausedRef.current && !audio.ended) {
+          playWhenReady(audio)
+        }
+      }, 300)
+    }
+    const onStalled = () => {
+      // Network stalled — usually recovers when bytes arrive. If we've been
+      // paused as a side effect, nudge playback back when ready.
+      if (audio.paused && !userPausedRef.current && !audio.ended) {
+        playWhenReady(audio)
+      }
+    }
+    const onError = () => {
+      // Loading failed (network error, decode failure). Skip to next song to
+      // keep the cassette flowing rather than silently dying.
+      const sorted = sortedSongsRef.current
+      const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
+      if (idx < sorted.length - 1) {
+        const nextSong = sorted[idx + 1]
+        setCurrentSongId(nextSong.id)
+        audio.src = nextSong.audioSrc
+        audio.currentTime = 0
+        playWhenReady(audio)
       }
     }
 
@@ -123,6 +186,8 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+    audio.addEventListener('stalled', onStalled)
+    audio.addEventListener('error', onError)
 
     // Preload the initial track so the first play() responds instantly to
     // the user's gesture (which is also what unlocks autoplay for the rest
@@ -136,6 +201,8 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
+      audio.removeEventListener('stalled', onStalled)
+      audio.removeEventListener('error', onError)
       audio.pause()
       audio.src = ''
       if (audio.parentNode) audio.parentNode.removeChild(audio)
@@ -189,7 +256,8 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // The audio element's 'play' event will set mediaSession to 'playing'
     // once playback actually starts. Avoid eager updates so we don't desync
     // from the underlying audio state on iOS.
-    audioRef.current?.play().catch(() => {})
+    const audio = audioRef.current
+    if (audio) playWhenReady(audio)
   }, [])
 
   const pause = useCallback(() => {
@@ -226,7 +294,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = nextSong.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      playWhenReady(audio)
     }
   }, [])
 
@@ -253,7 +321,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = prevSong.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      playWhenReady(audio)
     }
   }, [])
 
@@ -328,7 +396,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = song.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      playWhenReady(audio)
     },
     [songs]
   )
