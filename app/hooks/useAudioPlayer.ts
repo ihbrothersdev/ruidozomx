@@ -1,5 +1,6 @@
 'use client'
 
+import { logPlayerEvent, snapshotAudio } from '@/lib/player-debug'
 import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -57,6 +58,22 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
+  // Diagnostic logger — no-op unless the user has enabled it via
+  // `?debug=player`. Reads only refs so the identity stays stable across
+  // renders (safe to add to useEffect deps).
+  const log = useCallback((eventType: string, payload?: Record<string, unknown>) => {
+    const audio = audioRef.current
+    const sorted = sortedSongsRef.current
+    const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
+    logPlayerEvent({
+      event_type: eventType,
+      song_id: currentSongIdRef.current ?? null,
+      song_index: idx >= 0 ? idx : null,
+      ...snapshotAudio(audio),
+      payload: payload ?? null
+    })
+  }, [])
+
   // Create the audio element once and attach all listeners once. Swapping
   // `.src` later is what advances tracks — the element itself never changes,
   // so there's no race between React's effect-driven ref swap and the
@@ -73,15 +90,21 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     const onTimeUpdate = () => setElapsedSeconds(Math.floor(audio.currentTime))
     const onDurationChange = () => setDuration(Math.floor(audio.duration) || 0)
     const onEnded = () => {
+      log('event_ended')
       const sorted = sortedSongsRef.current
       const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
       if (idx < sorted.length - 1) {
         const nextSong = sorted[idx + 1]
+        log('advance_next', { to_song_id: nextSong.id, to_song_index: idx + 1 })
         setCurrentSongId(nextSong.id)
         audio.src = nextSong.audioSrc
         audio.currentTime = 0
-        audio.play().catch(() => {})
+        audio
+          .play()
+          .then(() => log('play_resolved', { from: 'ended' }))
+          .catch(err => log('play_rejected', { from: 'ended', error: String(err?.message ?? err) }))
       } else {
+        log('advance_loop_to_start')
         const first = sorted[0]
         setCurrentSongId(first.id)
         audio.src = first.audioSrc
@@ -93,6 +116,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
     }
     const onPlay = () => {
+      log('event_play')
       userPausedRef.current = false
       setIsPlaying(true)
       if ('mediaSession' in navigator) {
@@ -100,6 +124,9 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
     }
     const onPause = () => {
+      // Capture user-initiated flag BEFORE the branch flips it, so the log
+      // reflects what we thought when the event arrived.
+      log('event_pause', { user_initiated: userPausedRef.current })
       // iOS Safari/WebKit fires spurious 'pause' events while the screen is
       // locked even though audio keeps playing. Only honour pauses initiated
       // by us via the `pause()` callback (UI button or OS media control); all
@@ -117,12 +144,27 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
         navigator.mediaSession.playbackState = 'paused'
       }
     }
+    // Diagnostic-only listeners: capture state transitions that often
+    // precede the "no avanza a la siguiente" failure on Android.
+    const onStalled = () => log('event_stalled')
+    const onWaiting = () => log('event_waiting')
+    const onCanPlay = () => log('event_canplay')
+    const onError = () =>
+      log('event_error', {
+        error_code: audio.error?.code ?? null,
+        error_message: audio.error?.message ?? null
+      })
 
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+    audio.addEventListener('stalled', onStalled)
+    audio.addEventListener('waiting', onWaiting)
+    audio.addEventListener('canplay', onCanPlay)
+    audio.addEventListener('error', onError)
+    log('mount')
 
     // Preload the initial track so the first play() responds instantly to
     // the user's gesture (which is also what unlocks autoplay for the rest
@@ -131,17 +173,22 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (initial) audio.src = initial.audioSrc
 
     return () => {
+      log('unmount')
       audio.removeEventListener('timeupdate', onTimeUpdate)
       audio.removeEventListener('durationchange', onDurationChange)
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
+      audio.removeEventListener('stalled', onStalled)
+      audio.removeEventListener('waiting', onWaiting)
+      audio.removeEventListener('canplay', onCanPlay)
+      audio.removeEventListener('error', onError)
       audio.pause()
       audio.src = ''
       if (audio.parentNode) audio.parentNode.removeChild(audio)
       audioRef.current = null
     }
-  }, [])
+  }, [log])
 
   // Re-sync playbackState from the audio element's actual state ONLY when the
   // page becomes visible again (user unlocks). Syncing while the page is
@@ -157,6 +204,34 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     document.addEventListener('visibilitychange', sync)
     return () => document.removeEventListener('visibilitychange', sync)
   }, [])
+
+  // Diagnostic: log page lifecycle so we can correlate audio events with
+  // Chrome's freeze/resume on Android. `pagehide` and `freeze` are the
+  // critical signals — when the tab freezes, our JS stops running until
+  // `resume` / `pageshow`. If the bug reproduces during that gap, the last
+  // event before `freeze` (or the absence of `resume`) tells us why.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const onVis = () => log('visibility_change', { visibility: document.visibilityState })
+    const onHide = (e: PageTransitionEvent) => log('pagehide', { persisted: e.persisted })
+    const onShow = (e: PageTransitionEvent) => log('pageshow', { persisted: e.persisted })
+    const onFreeze = () => log('freeze')
+    const onResume = () => log('resume')
+    document.addEventListener('visibilitychange', onVis)
+    window.addEventListener('pagehide', onHide)
+    window.addEventListener('pageshow', onShow)
+    // `freeze`/`resume` are page-lifecycle API events, Chrome-only. Cast to
+    // any since lib.dom doesn't declare them on Document.
+    ;(document as unknown as EventTarget).addEventListener('freeze', onFreeze)
+    ;(document as unknown as EventTarget).addEventListener('resume', onResume)
+    return () => {
+      document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('pagehide', onHide)
+      window.removeEventListener('pageshow', onShow)
+      ;(document as unknown as EventTarget).removeEventListener('freeze', onFreeze)
+      ;(document as unknown as EventTarget).removeEventListener('resume', onResume)
+    }
+  }, [log])
 
   // ── MediaSession: lock screen / notification / car / Bluetooth controls ──
   // Sets the now-playing metadata (title, artist, artwork) and action handlers
@@ -184,15 +259,20 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   // even though audio is still playing.
 
   const play = useCallback(() => {
+    log('action_play')
     userPausedRef.current = false
     setIsStopped(false)
     // The audio element's 'play' event will set mediaSession to 'playing'
     // once playback actually starts. Avoid eager updates so we don't desync
     // from the underlying audio state on iOS.
-    audioRef.current?.play().catch(() => {})
-  }, [])
+    audioRef.current
+      ?.play()
+      .then(() => log('play_resolved', { from: 'action_play' }))
+      .catch(err => log('play_rejected', { from: 'action_play', error: String(err?.message ?? err) }))
+  }, [log])
 
   const pause = useCallback(() => {
+    log('action_pause')
     userPausedRef.current = true
     // Don't eagerly set mediaSession='paused' or isPlaying=false here.
     // On iOS, audio.pause() may fail silently while the page is in the
@@ -200,9 +280,10 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // flip to "play" even though audio kept playing. Let the audio's own
     // 'pause' event drive the state update via onPause.
     audioRef.current?.pause()
-  }, [])
+  }, [log])
 
   const stop = useCallback(() => {
+    log('action_stop')
     const audio = audioRef.current
     if (!audio) return
     userPausedRef.current = true
@@ -210,9 +291,10 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     audio.currentTime = 0
     setElapsedSeconds(0)
     setIsStopped(true)
-  }, [])
+  }, [log])
 
   const next = useCallback(() => {
+    log('action_next')
     const audio = audioRef.current
     if (!audio) return
     const sorted = sortedSongsRef.current
@@ -226,11 +308,15 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = nextSong.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      audio
+        .play()
+        .then(() => log('play_resolved', { from: 'action_next' }))
+        .catch(err => log('play_rejected', { from: 'action_next', error: String(err?.message ?? err) }))
     }
-  }, [])
+  }, [log])
 
   const prev = useCallback(() => {
+    log('action_prev')
     const audio = audioRef.current
     if (!audio) return
     const sorted = sortedSongsRef.current
@@ -253,9 +339,12 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = prevSong.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      audio
+        .play()
+        .then(() => log('play_resolved', { from: 'action_prev' }))
+        .catch(err => log('play_rejected', { from: 'action_prev', error: String(err?.message ?? err) }))
     }
-  }, [])
+  }, [log])
 
   const seek = useCallback((pct: number) => {
     const audio = audioRef.current
@@ -276,12 +365,33 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
     }
 
-    setHandler('play', () => play())
-    setHandler('pause', () => pause())
-    setHandler('previoustrack', () => prev())
-    setHandler('nexttrack', () => next())
-    setHandler('stop', () => stop())
+    // Wrap each handler so the log records that the OS-level control fired
+    // (vs the UI button). On Android this is critical: when the screen is
+    // locked and the user hits "next" on the lock screen, this is the only
+    // entry point — if we don't see `ms_nexttrack` in the timeline, the OS
+    // never invoked us.
+    setHandler('play', () => {
+      log('ms_play')
+      play()
+    })
+    setHandler('pause', () => {
+      log('ms_pause')
+      pause()
+    })
+    setHandler('previoustrack', () => {
+      log('ms_previoustrack')
+      prev()
+    })
+    setHandler('nexttrack', () => {
+      log('ms_nexttrack')
+      next()
+    })
+    setHandler('stop', () => {
+      log('ms_stop')
+      stop()
+    })
     setHandler('seekto', details => {
+      log('ms_seekto', { seek_time: details.seekTime ?? null })
       const audio = audioRef.current
       if (!audio || details.seekTime == null) return
       audio.currentTime = details.seekTime
@@ -292,7 +402,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
         setHandler(a, null)
       )
     }
-  }, [play, pause, next, prev, stop])
+  }, [play, pause, next, prev, stop, log])
 
   // Keep MediaSession position state up-to-date so scrubbers in the OS UI work
   useEffect(() => {
@@ -316,6 +426,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
   const playSong = useCallback(
     (id: string) => {
+      log('action_play_song', { target_song_id: id })
       const audio = audioRef.current
       if (!audio) return
       const song = songs.find(s => s.id === id)
@@ -328,9 +439,12 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       }
       audio.src = song.audioSrc
       audio.currentTime = 0
-      audio.play().catch(() => {})
+      audio
+        .play()
+        .then(() => log('play_resolved', { from: 'play_song' }))
+        .catch(err => log('play_rejected', { from: 'play_song', error: String(err?.message ?? err) }))
     },
-    [songs]
+    [songs, log]
   )
 
   return {
