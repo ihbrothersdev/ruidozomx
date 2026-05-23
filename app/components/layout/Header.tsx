@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
-import { BuscadorButton } from './BuscadorButton'
+import { Buscador } from './Buscador'
 import { ProfileDropdown } from './ProfileDropdown'
 
 interface HeaderProps {
@@ -57,7 +57,7 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
           </Link>
         )}
 
-        <BuscadorButton />
+        <Buscador />
       </div>
     </header>
   )
