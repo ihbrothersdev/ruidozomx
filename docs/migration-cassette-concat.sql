@@ -42,16 +42,14 @@ COMMENT ON COLUMN cassettes.song_offsets IS
 -- ============================================================
 -- 2. Storage
 -- ============================================================
--- No new bucket / no new policies. We reuse the existing `audio` bucket:
---   - Songs:                 audio/<existing path>
---   - Concatenated cassette: audio/cassettes/<cassette_id>.mp3
+-- No new bucket / no new policies. We reuse the existing `songs` bucket
+-- (the one that already holds individual song MP3s and is configured for
+-- anonymous read):
+--   - Songs:                 songs/<song_id>/<filename>.mp3
+--   - Concatenated cassette: songs/cassettes/<cassette_id>.mp3
 --
--- The current `audio_select` policy already allows anonymous read on the
--- whole bucket (the player loads songs anon), so the concat file is readable
--- with no extra rule.
---
--- The build script writes with the service_role key, which bypasses RLS, so
--- no extra insert policy is needed either.
+-- The build script writes with the service_role key, which bypasses RLS,
+-- so no extra insert policy is needed either.
 
 -- ============================================================
 -- REVERT (run if you need to roll this back)

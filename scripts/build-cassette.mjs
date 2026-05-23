@@ -25,7 +25,7 @@
  *      masquerading with `.mp3` extension) and stream-copy requires
  *      uniform input. Re-encoding takes a few minutes for a ~90 min
  *      cassette but is bulletproof.
- *   5. Uploads the result to `audio/cassettes/<cassette_id>.mp3`.
+ *   5. Uploads the result to `songs/cassettes/<cassette_id>.mp3`.
  *   6. Updates `cassettes.concat_audio_url` + `cassettes.song_offsets`.
  *   7. Cleans up the temp dir.
  *
@@ -69,7 +69,10 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   process.exit(1)
 }
 
-const STORAGE_BUCKET = 'audio'
+// Same bucket the individual song files already live in. Keeps everything
+// under one public bucket so we inherit its existing read policy and don't
+// have to provision a separate bucket / policy just for cassettes.
+const STORAGE_BUCKET = 'songs'
 const STORAGE_PREFIX = 'cassettes'
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
