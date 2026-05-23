@@ -24,7 +24,11 @@ interface AudioPlayerActions {
   playSong: (id: string) => void
 }
 
-export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
+export function useAudioPlayer(
+  songs: PlayerSong[],
+  initialSongId: string,
+  concatAudioUrl?: string | null
+): AudioPlayerState & AudioPlayerActions {
   // Single <audio> element shared across all tracks. iOS only grants the
   // "user-activated" autoplay permission to the specific element the user
   // gestured on; a pool of one-per-song elements means chained playback from
@@ -40,6 +44,20 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
+
+  // Concat mode: when the cassette has been processed by `npm run
+  // build-cassette`, the player streams ONE continuous file and navigates
+  // between songs via `currentTime` instead of swapping `audio.src`. This
+  // survives Android's background tab freeze because the browser doesn't
+  // need JS to advance between songs — they're all the same audio element,
+  // just different timestamps. Requires every song to carry start/end
+  // offsets; otherwise we fall back to the legacy per-song-URL mode.
+  const concatMode =
+    !!concatAudioUrl && songs.length > 0 && songs.every(s => s.startSeconds !== undefined && s.endSeconds !== undefined)
+  const concatModeRef = useRef(concatMode)
+  concatModeRef.current = concatMode
+  const concatAudioUrlRef = useRef<string | null | undefined>(concatAudioUrl)
+  concatAudioUrlRef.current = concatAudioUrl
 
   const sortedSongsRef = useRef<PlayerSong[]>([])
   sortedSongsRef.current = [...songs].sort((a, b) => {
@@ -87,11 +105,51 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     document.body.appendChild(audio)
     audioRef.current = audio
 
-    const onTimeUpdate = () => setElapsedSeconds(Math.floor(audio.currentTime))
-    const onDurationChange = () => setDuration(Math.floor(audio.duration) || 0)
+    const onTimeUpdate = () => {
+      const t = audio.currentTime
+      if (concatModeRef.current) {
+        // CONCAT MODE: audio.currentTime is absolute within the whole cassette.
+        // Derive (a) which song the cursor is in, (b) the per-song elapsed
+        // counter the UI shows. The browser keeps playing across boundaries
+        // by itself — we're just keeping the label in sync.
+        const sorted = sortedSongsRef.current
+        const detected = sorted.find(
+          s => s.startSeconds !== undefined && s.endSeconds !== undefined && t >= s.startSeconds && t < s.endSeconds
+        )
+        const cur = detected ?? sorted.find(s => s.id === currentSongIdRef.current) ?? sorted[0]
+        if (detected && detected.id !== currentSongIdRef.current) {
+          setCurrentSongId(detected.id)
+        }
+        const start = cur?.startSeconds ?? 0
+        setElapsedSeconds(Math.max(0, Math.floor(t - start)))
+      } else {
+        setElapsedSeconds(Math.floor(t))
+      }
+    }
+    const onDurationChange = () => {
+      // In concat mode the audio element's own duration is the whole file,
+      // which is meaningless for the UI; a separate effect sets `duration`
+      // from the current song's offsets. Ignore the event here.
+      if (concatModeRef.current) return
+      setDuration(Math.floor(audio.duration) || 0)
+    }
     const onEnded = () => {
       log('event_ended')
       const sorted = sortedSongsRef.current
+      if (concatModeRef.current) {
+        // In concat mode, the only 'ended' is the end of the whole cassette
+        // (song-to-song transitions are invisible to the browser). Wrap to
+        // the first song and pause — same end-of-cassette UX as legacy.
+        log('advance_loop_to_start', { mode: 'concat' })
+        const first = sorted[0]
+        setCurrentSongId(first.id)
+        if (first.startSeconds !== undefined) audio.currentTime = first.startSeconds
+        setIsPlaying(false)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused'
+        }
+        return
+      }
       const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
       if (idx < sorted.length - 1) {
         const nextSong = sorted[idx + 1]
@@ -170,7 +228,21 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // the user's gesture (which is also what unlocks autoplay for the rest
     // of the session on iOS).
     const initial = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
-    if (initial) audio.src = initial.audioSrc
+    if (concatModeRef.current && concatAudioUrlRef.current) {
+      // Concat mode: one src for the whole cassette; seek to the initial
+      // song's offset. After that, src never changes for this mount.
+      audio.src = concatAudioUrlRef.current
+      if (initial?.startSeconds !== undefined) {
+        // Some browsers ignore currentTime sets before metadata loads; wait
+        // for loadedmetadata then seek. We attach a one-shot listener.
+        const onLoaded = () => {
+          if (initial.startSeconds !== undefined) audio.currentTime = initial.startSeconds
+        }
+        audio.addEventListener('loadedmetadata', onLoaded, { once: true })
+      }
+    } else if (initial) {
+      audio.src = initial.audioSrc
+    }
 
     return () => {
       log('unmount')
@@ -189,6 +261,17 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audioRef.current = null
     }
   }, [log])
+
+  // In concat mode, `durationchange` fires once for the entire cassette
+  // file, which is useless for the per-song UI (the cassette label shows
+  // 03:42 / 03:42, not 03:42 / 47:18). Drive `duration` from the current
+  // song's offsets instead. In legacy mode this effect is a no-op — the
+  // event-driven `setDuration` in onDurationChange owns the value.
+  useEffect(() => {
+    if (!concatMode || !currentSong) return
+    if (currentSong.startSeconds === undefined || currentSong.endSeconds === undefined) return
+    setDuration(Math.max(0, Math.floor(currentSong.endSeconds - currentSong.startSeconds)))
+  }, [concatMode, currentSong])
 
   // Re-sync playbackState from the audio element's actual state ONLY when the
   // page becomes visible again (user unlocks). Syncing while the page is
@@ -299,20 +382,32 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (!audio) return
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
-    if (idx < sorted.length - 1) {
-      const nextSong = sorted[idx + 1]
-      setIsStopped(false)
-      setCurrentSongId(nextSong.id)
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      audio.src = nextSong.audioSrc
-      audio.currentTime = 0
-      audio
-        .play()
-        .then(() => log('play_resolved', { from: 'action_next' }))
-        .catch(err => log('play_rejected', { from: 'action_next', error: String(err?.message ?? err) }))
+    if (idx < 0 || idx >= sorted.length - 1) return
+    const nextSong = sorted[idx + 1]
+    setIsStopped(false)
+    setCurrentSongId(nextSong.id)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
     }
+    if (concatModeRef.current && nextSong.startSeconds !== undefined) {
+      // Concat mode: same audio element, just seek. No src swap, no play()
+      // (we're already playing — or the user pressed next while paused,
+      // in which case the seek alone is enough; play() below handles that).
+      audio.currentTime = nextSong.startSeconds
+      if (audio.paused) {
+        audio
+          .play()
+          .then(() => log('play_resolved', { from: 'action_next' }))
+          .catch(err => log('play_rejected', { from: 'action_next', error: String(err?.message ?? err) }))
+      }
+      return
+    }
+    audio.src = nextSong.audioSrc
+    audio.currentTime = 0
+    audio
+      .play()
+      .then(() => log('play_resolved', { from: 'action_next' }))
+      .catch(err => log('play_rejected', { from: 'action_next', error: String(err?.message ?? err) }))
   }, [log])
 
   const prev = useCallback(() => {
@@ -322,33 +417,64 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
 
-    // Standard behaviour: if more than 3 s in, restart current song
-    if (audio.currentTime > 3) {
-      audio.currentTime = 0
+    // Standard behaviour: if more than 3 s into the current song, restart it.
+    // In concat mode "current time" means time within the song, so compute it
+    // relative to the song's start offset.
+    const cur = idx >= 0 ? sorted[idx] : undefined
+    const intoSong =
+      concatModeRef.current && cur?.startSeconds !== undefined
+        ? audio.currentTime - cur.startSeconds
+        : audio.currentTime
+    if (intoSong > 3) {
+      if (concatModeRef.current && cur?.startSeconds !== undefined) {
+        audio.currentTime = cur.startSeconds
+      } else {
+        audio.currentTime = 0
+      }
       setElapsedSeconds(0)
       return
     }
 
     // Otherwise go to previous song
-    if (idx > 0) {
-      const prevSong = sorted[idx - 1]
-      setIsStopped(false)
-      setCurrentSongId(prevSong.id)
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      audio.src = prevSong.audioSrc
-      audio.currentTime = 0
-      audio
-        .play()
-        .then(() => log('play_resolved', { from: 'action_prev' }))
-        .catch(err => log('play_rejected', { from: 'action_prev', error: String(err?.message ?? err) }))
+    if (idx <= 0) return
+    const prevSong = sorted[idx - 1]
+    setIsStopped(false)
+    setCurrentSongId(prevSong.id)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
     }
+    if (concatModeRef.current && prevSong.startSeconds !== undefined) {
+      audio.currentTime = prevSong.startSeconds
+      if (audio.paused) {
+        audio
+          .play()
+          .then(() => log('play_resolved', { from: 'action_prev' }))
+          .catch(err => log('play_rejected', { from: 'action_prev', error: String(err?.message ?? err) }))
+      }
+      return
+    }
+    audio.src = prevSong.audioSrc
+    audio.currentTime = 0
+    audio
+      .play()
+      .then(() => log('play_resolved', { from: 'action_prev' }))
+      .catch(err => log('play_rejected', { from: 'action_prev', error: String(err?.message ?? err) }))
   }, [log])
 
   const seek = useCallback((pct: number) => {
     const audio = audioRef.current
-    if (!audio || !audio.duration) return
+    if (!audio) return
+    if (concatModeRef.current) {
+      // In concat mode pct is relative to the CURRENT song, not the whole
+      // file. Translate via the current song's offsets.
+      const cur = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+      if (!cur || cur.startSeconds === undefined || cur.endSeconds === undefined) return
+      const songDur = cur.endSeconds - cur.startSeconds
+      if (songDur <= 0) return
+      audio.currentTime = cur.startSeconds + pct * songDur
+      return
+    }
+    if (!audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
 
@@ -394,6 +520,15 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       log('ms_seekto', { seek_time: details.seekTime ?? null })
       const audio = audioRef.current
       if (!audio || details.seekTime == null) return
+      if (concatModeRef.current) {
+        // OS seekbar reports the position relative to the CURRENT song
+        // (we set positionState in song-local units). Translate to absolute
+        // file time by adding the current song's start offset.
+        const cur = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+        const offset = cur?.startSeconds ?? 0
+        audio.currentTime = offset + details.seekTime
+        return
+      }
       audio.currentTime = details.seekTime
     })
 
@@ -436,6 +571,17 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       setCurrentSongId(id)
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
+      }
+      if (concatModeRef.current && song.startSeconds !== undefined) {
+        // Concat mode: same element, just jump. Calling play() is still
+        // needed because the user gesture (the click) is what unlocks
+        // autoplay on first interaction.
+        audio.currentTime = song.startSeconds
+        audio
+          .play()
+          .then(() => log('play_resolved', { from: 'play_song' }))
+          .catch(err => log('play_rejected', { from: 'play_song', error: String(err?.message ?? err) }))
+        return
       }
       audio.src = song.audioSrc
       audio.currentTime = 0
