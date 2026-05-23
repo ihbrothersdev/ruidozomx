@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getActiveCassetteSongs } from '@/lib/supabase/songs'
+import { getActiveCassetteSongs, getCassetteContextForSong } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
 import { IntroRedirect } from './components/IntroRedirect'
@@ -13,7 +13,13 @@ const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 )
 
-export default async function Home() {
+interface HomeProps {
+  searchParams: Promise<{ song?: string; q?: string }>
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const { song: requestedSongId } = await searchParams
+
   let user = null
   let photoUrl: string | null = null
   let userRole: string | null = null
@@ -29,7 +35,28 @@ export default async function Home() {
     }
   }
 
-  const { songs, cassetteStartDate } = await getActiveCassetteSongs()
+  // If the URL points at a specific song, load *that* song's cassette so prev/
+  // next stays coherent. Falls back to the active cassette when the id is
+  // unknown / archived song wasn't found.
+  const requested = requestedSongId ? await getCassetteContextForSong(requestedSongId) : null
+  const { songs, cassetteStartDate, initialSongId, autoPlay, cassetteActive } = requested
+    ? {
+        songs: requested.songs,
+        cassetteStartDate: requested.cassetteStartDate,
+        initialSongId: requested.initialSongId,
+        autoPlay: true,
+        cassetteActive: requested.cassetteActive
+      }
+    : await (async () => {
+        const active = await getActiveCassetteSongs()
+        return {
+          songs: active.songs,
+          cassetteStartDate: active.cassetteStartDate,
+          initialSongId: active.songs[0]?.id ?? '',
+          autoPlay: false,
+          cassetteActive: true
+        }
+      })()
 
   return (
     <main className='relative min-h-screen'>
@@ -40,7 +67,7 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] 2xl:w-[520px] min-[1728px]:w-[620px] min-[1920px]:w-[700px]'>
+        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] min-[1728px]:w-[620px] min-[1920px]:w-[700px] 2xl:w-[520px]'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
@@ -66,9 +93,11 @@ export default async function Home() {
         {songs.length > 0 && (
           <HomePlayerSection
             songs={songs}
-            initialSongId={songs[0].id}
+            initialSongId={initialSongId || songs[0].id}
             date={formatCassetteDate(cassetteStartDate)}
             isAuthenticated={!!user}
+            autoPlay={autoPlay}
+            cassetteActive={cassetteActive}
           />
         )}
 
@@ -78,7 +107,7 @@ export default async function Home() {
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-230 -right-15 z-0 hidden xl:block xl:w-[320px] 2xl:w-[400px] min-[1728px]:w-[480px] min-[1920px]:w-[540px]'>
+        <div className='absolute top-230 -right-15 z-0 hidden min-[1728px]:w-[480px] min-[1920px]:w-[540px] xl:block xl:w-[320px] 2xl:w-[400px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''

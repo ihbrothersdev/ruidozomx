@@ -210,6 +210,31 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     }
   }, [])
 
+  // When the cassette swaps under us (e.g. user clicks "Retomar el de hoy"
+  // while a song from an archived cassette is playing) the `songs[]` array
+  // changes but the audio element survives — so the previous track would
+  // keep playing while `currentSongId` no longer exists in the new list,
+  // leaving the cassette label blank. Detect that mismatch and switch to the
+  // new first song, auto-playing it (the click on the back link counts as the
+  // user gesture autoplay policies require).
+  useEffect(() => {
+    if (songs.length === 0) return
+    if (songs.some(s => s.id === currentSongId)) return
+    const audio = audioRef.current
+    const first = songs[0]
+    userPausedRef.current = false
+    setCurrentSongId(first.id)
+    setIsStopped(false)
+    setElapsedSeconds(0)
+    setDuration(0)
+    if (audio) {
+      audio.pause()
+      audio.src = first.audioSrc
+      audio.currentTime = 0
+      playWhenReady(audio)
+    }
+  }, [songs, currentSongId])
+
   // Re-sync playbackState from the audio element's actual state ONLY when the
   // page becomes visible again (user unlocks). Syncing while the page is
   // hidden would let iOS's spurious 'pause' flip the lock-screen icon.
