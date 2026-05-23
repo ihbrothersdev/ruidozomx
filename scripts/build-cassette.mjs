@@ -18,10 +18,13 @@
  *   1. Fetches the cassette row and its songs (ordered by side, position).
  *   2. Downloads every song's MP3 to a temp directory.
  *   3. Probes each file's duration with ffprobe → builds the offsets table.
- *   4. Concatenates everything with `ffmpeg -f concat -c copy` (no re-encode,
- *      no quality loss; assumes all songs share the same codec / bitrate /
- *      sample rate, which is realistic when they all come from the same
- *      upload pipeline).
+ *   4. Concatenates everything with `ffmpeg -f concat` and re-encodes to
+ *      a single MP3 stream (libmp3lame, 256k CBR, 44.1 kHz, stereo). We
+ *      re-encode instead of stream-copy because in practice the per-song
+ *      uploads turn out to be a mix of formats (some MP3, some WAV
+ *      masquerading with `.mp3` extension) and stream-copy requires
+ *      uniform input. Re-encoding takes a few minutes for a ~90 min
+ *      cassette but is bulletproof.
  *   5. Uploads the result to `audio/cassettes/<cassette_id>.mp3`.
  *   6. Updates `cassettes.concat_audio_url` + `cassettes.song_offsets`.
  *   7. Cleans up the temp dir.
@@ -202,7 +205,7 @@ async function main() {
     await writeFile(listPath, listBody)
 
     const outPath = join(workDir, `cassette-${cassette.id}.mp3`)
-    console.log('▶ Running ffmpeg concat (stream copy, no re-encode)…')
+    console.log('▶ Running ffmpeg concat + re-encode to MP3 256k (this can take a few minutes)…')
     await run('ffmpeg', [
       '-y', // overwrite without prompt
       '-f',
@@ -211,8 +214,16 @@ async function main() {
       '0',
       '-i',
       listPath,
-      '-c',
-      'copy',
+      // Re-encode to a single uniform MP3 stream so we don't depend on the
+      // source files all sharing the same codec / sample rate / channels.
+      '-c:a',
+      'libmp3lame',
+      '-b:a',
+      '256k',
+      '-ar',
+      '44100',
+      '-ac',
+      '2',
       outPath
     ])
     if (!existsSync(outPath)) throw new Error('ffmpeg did not produce the expected output.')
