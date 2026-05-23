@@ -18,13 +18,18 @@
  *   1. Fetches the cassette row and its songs (ordered by side, position).
  *   2. Downloads every song's MP3 to a temp directory.
  *   3. Probes each file's duration with ffprobe → builds the offsets table.
- *   4. Concatenates everything with `ffmpeg -f concat` and re-encodes to
- *      a single MP3 stream (libmp3lame, 256k CBR, 44.1 kHz, stereo). We
- *      re-encode instead of stream-copy because in practice the per-song
- *      uploads turn out to be a mix of formats (some MP3, some WAV
- *      masquerading with `.mp3` extension) and stream-copy requires
- *      uniform input. Re-encoding takes a few minutes for a ~90 min
- *      cassette but is bulletproof.
+ *   4. Concatenates with the ffmpeg `concat` FILTER (not the demuxer) and
+ *      re-encodes to one MP3 stream (libmp3lame, 256k CBR, 44.1 kHz,
+ *      stereo). The filter is required because in practice the per-song
+ *      uploads are a mix of formats (some MP3, some WAV masquerading with
+ *      `.mp3` extension). The concat *demuxer* locks onto the first
+ *      file's stream parameters and reads every subsequent file as if it
+ *      were the same format — for our mixed bag that produces clean audio
+ *      for song 1 and pure static for songs 2..N. The concat *filter*
+ *      decodes each input independently in its native codec, normalises
+ *      to stereo/44.1kHz, and only then glues the PCM streams together,
+ *      so any combination of inputs works. Slower than the demuxer (more
+ *      decoding work) but bulletproof.
  *   5. Uploads the result to `songs/cassettes/<cassette_id>.mp3`.
  *   6. Updates `cassettes.concat_audio_url` + `cassettes.song_offsets`.
  *   7. Cleans up the temp dir.
@@ -200,33 +205,41 @@ async function main() {
     }
     console.log(`▶ Total duration: ${(cursor / 60).toFixed(2)} min`)
 
-    // 6. Build concat list + run ffmpeg ──────────────────────────────────
-    // `concat` demuxer expects a text file with `file '<path>'` per line.
-    // Quote-escape per ffmpeg spec (single quotes wrap, internal ' → '\'').
-    const listPath = join(workDir, 'concat-list.txt')
-    const listBody = localPaths.map(p => `file '${p.replace(/'/g, "'\\''")}'`).join('\n')
-    await writeFile(listPath, listBody)
+    // 6. Build filter_complex + run ffmpeg ───────────────────────────────
+    // Concat *filter* (not demuxer). Each input file is decoded with its own
+    // codec, normalised to stereo/44.1kHz via aformat, then all the PCM
+    // streams are spliced by the concat filter. The encoder writes one
+    // continuous MP3.
+    //
+    //   ffmpeg -i s0 -i s1 ... -filter_complex "
+    //     [0:a]aformat=channel_layouts=stereo:sample_rates=44100[a0];
+    //     [1:a]aformat=channel_layouts=stereo:sample_rates=44100[a1];
+    //     ...
+    //     [a0][a1]...concat=n=N:v=0:a=1[out]
+    //   " -map "[out]" -c:a libmp3lame -b:a 256k out.mp3
+    const N = localPaths.length
+    const aformatChain = localPaths
+      .map((_, i) => `[${i}:a]aformat=channel_layouts=stereo:sample_rates=44100[a${i}]`)
+      .join(';')
+    const concatInputs = localPaths.map((_, i) => `[a${i}]`).join('')
+    const filterComplex = `${aformatChain};${concatInputs}concat=n=${N}:v=0:a=1[out]`
+
+    const inputArgs = []
+    for (const p of localPaths) inputArgs.push('-i', p)
 
     const outPath = join(workDir, `cassette-${cassette.id}.mp3`)
-    console.log('▶ Running ffmpeg concat + re-encode to MP3 256k (this can take a few minutes)…')
+    console.log('▶ Running ffmpeg concat filter + re-encode to MP3 256k (this can take a few minutes)…')
     await run('ffmpeg', [
       '-y', // overwrite without prompt
-      '-f',
-      'concat',
-      '-safe',
-      '0',
-      '-i',
-      listPath,
-      // Re-encode to a single uniform MP3 stream so we don't depend on the
-      // source files all sharing the same codec / sample rate / channels.
+      ...inputArgs,
+      '-filter_complex',
+      filterComplex,
+      '-map',
+      '[out]',
       '-c:a',
       'libmp3lame',
       '-b:a',
       '256k',
-      '-ar',
-      '44100',
-      '-ac',
-      '2',
       outPath
     ])
     if (!existsSync(outPath)) throw new Error('ffmpeg did not produce the expected output.')
