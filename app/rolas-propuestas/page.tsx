@@ -63,6 +63,17 @@ function formatAbsolute(iso: string): string {
   })
 }
 
+function prettyUrl(raw: string): string {
+  try {
+    const u = new URL(raw)
+    const host = u.hostname.replace(/^www\./, '')
+    const path = u.pathname === '/' ? '' : u.pathname
+    return path ? `${host}${path}` : host
+  } catch {
+    return raw
+  }
+}
+
 export default async function RolasPropuestasPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams
   const supabase = await createClient()
@@ -260,25 +271,37 @@ export default async function RolasPropuestasPage({ searchParams }: { searchPara
                         </span>
                       )}
                       {p.external_link && (
-                        <>
-                          <span
-                            className='font-pt-mono inline-flex max-w-[220px] items-center rounded-full border border-red-500/20 bg-red-500/5 px-2.5 py-0.5 text-[11px] font-bold text-red-300 sm:max-w-[360px]'
-                            title={p.external_link}
-                          >
-                            <span className='block truncate'>{p.external_link}</span>
-                          </span>
-                          <CopyLinkButton value={p.external_link} />
-                          <a
-                            href={p.external_link}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='font-pt-mono inline-flex shrink-0 items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-300 transition-colors hover:border-red-500/50 hover:bg-red-500/20'
-                          >
-                            Abrir ↗
-                          </a>
-                        </>
+                        <a
+                          href={p.external_link}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          title={p.external_link}
+                          className='font-pt-mono inline-flex max-w-full items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-0.5 text-[11px] font-bold text-red-300 transition-colors hover:border-red-500/50 hover:bg-red-500/20 sm:max-w-[420px]'
+                        >
+                          <span className='truncate'>{prettyUrl(p.external_link)}</span>
+                          <span className='shrink-0 opacity-70'>↗</span>
+                        </a>
                       )}
                     </div>
+
+                    {/* Private download link (Drive / Dropbox / WeTransfer) */}
+                    {p.audio_file_path && (
+                      <div className='mt-2'>
+                        <a
+                          href={p.audio_file_path}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          title={p.audio_file_path}
+                          className='font-pt-mono inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 py-0.5 pr-3 pl-1 text-[11px] font-bold text-emerald-300 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/20 sm:max-w-[460px]'
+                        >
+                          <span className='rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] tracking-wider uppercase'>
+                            Descarga
+                          </span>
+                          <span className='truncate'>{prettyUrl(p.audio_file_path)}</span>
+                          <span className='shrink-0 opacity-70'>↓</span>
+                        </a>
+                      </div>
+                    )}
 
                     {/* ── Embed or inline player ── */}
                     {/* <div className='mt-4'>
