@@ -13,10 +13,6 @@ interface ReviewSectionProps {
 export default function ReviewSection({ bio, role, editing = false, onBioChange }: ReviewSectionProps) {
   const title = role === 'banda' ? 'Reseña del proyecto' : 'Descripción'
 
-  if (role === 'fan' && !editing) {
-    return null
-  }
-
   return (
     <div>
       <h2 className='font-pt-mono text-lg tracking-wider text-black uppercase'>{title}</h2>

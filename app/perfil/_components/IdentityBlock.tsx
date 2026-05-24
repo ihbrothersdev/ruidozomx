@@ -131,17 +131,20 @@ export default function IdentityBlock({
         </div>
       )}
 
-      {role === 'fan' && editing && (
-        <div className='space-y-1 pt-2'>
-          <p className={labelCls}>Alias público</p>
-          <Input
-            value={alias}
-            onChange={e => onRoleFieldChange?.('alias', e.target.value)}
-            placeholder='Tu alias'
-            className={smallInputCls}
-          />
-        </div>
-      )}
+      {role === 'fan' &&
+        (editing ? (
+          <div className='space-y-1 pt-2'>
+            <p className={labelCls}>Alias público</p>
+            <Input
+              value={alias}
+              onChange={e => onRoleFieldChange?.('alias', e.target.value)}
+              placeholder='Tu alias'
+              className={smallInputCls}
+            />
+          </div>
+        ) : alias ? (
+          <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Alias público: {alias}</p>
+        ) : null)}
 
       {role === 'banda' &&
         (editing ? (
