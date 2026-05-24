@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
 import type { Role } from '@/lib/types'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
+import { useState } from 'react'
 import ConectarModal from './ConectarModal'
 import EnviarPropuestaModal from './EnviarPropuestaModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
@@ -16,6 +16,7 @@ interface ActionButtonsProps {
   acceptProposals: boolean
   displayName?: string
   alreadySent?: { proposal: boolean; sendInterest: boolean }
+  editing?: boolean
 }
 
 export default function ActionButtons({
@@ -25,7 +26,8 @@ export default function ActionButtons({
   role,
   acceptProposals,
   displayName = '',
-  alreadySent
+  alreadySent,
+  editing = false
 }: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
@@ -36,23 +38,9 @@ export default function ActionButtons({
   const isProposalDisabled = alreadySent?.proposal || proposalSent
   const isInterestDisabled = alreadySent?.sendInterest || interestSent
 
-  // TODO: Add functionality later, not part of MVP.
-  // if (isOwnProfile) {
-  //   return (
-  //     <div className='flex flex-wrap gap-3'>
-  //       <Link
-  //         href='/perfil/editar'
-  //         className='font-pt-mono rounded-sm border-2 border-black bg-black px-6 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
-  //       >
-  //         Editar perfil
-  //       </Link>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
-      {role !== 'fan' && !isOwnProfile && (
+      {role !== 'fan' && !isOwnProfile && !editing && (
         <>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
