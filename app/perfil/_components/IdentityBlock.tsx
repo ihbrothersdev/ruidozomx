@@ -79,6 +79,7 @@ export default function IdentityBlock({
             initialState={state}
             initialCity={city}
             required={false}
+            compact
             onChange={next => {
               onCountryChange?.(next.country)
               onStateChange?.(next.state)

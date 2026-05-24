@@ -4,7 +4,7 @@ import { Label } from '@/app/components/ui/label'
 import { COUNTRIES, COUNTRY_FLAGS, getCities, getStates } from '@/lib/mexico-locations'
 import { useEffect, useState } from 'react'
 import { CascadingSelect } from './CascadingSelect'
-import { inputCls, labelCls } from './form-styles'
+import { compactInputCls, compactLabelCls, inputCls, labelCls } from './form-styles'
 
 interface LocationFieldsProps {
   /** Optional initial values — defaults to ('México', '', ''). */
@@ -15,6 +15,8 @@ interface LocationFieldsProps {
   onChange?: (next: { country: string; state: string; city: string }) => void
   /** Whether the underlying selects/inputs should be marked required for form submission. */
   required?: boolean
+  /** Use smaller padding + font + neutral labels (for inline editing). */
+  compact?: boolean
 }
 
 export function LocationFields({
@@ -22,8 +24,11 @@ export function LocationFields({
   initialState = '',
   initialCity = '',
   onChange,
-  required = true
+  required = true,
+  compact = false
 }: LocationFieldsProps = {}) {
+  const activeInputCls = compact ? compactInputCls : inputCls
+  const activeLabelCls = compact ? compactLabelCls : labelCls
   const [country, setCountry] = useState(initialCountry)
   const [state, setState] = useState(initialState)
   const [city, setCity] = useState(initialCity)
@@ -57,6 +62,7 @@ export function LocationFields({
             <span>{v}</span>
           </span>
         )}
+        compact={compact}
       />
 
       {isOther ? (
@@ -64,7 +70,7 @@ export function LocationFields({
           <div className='min-w-0 space-y-0.5'>
             <Label
               htmlFor='state'
-              className={labelCls}
+              className={activeLabelCls}
             >
               Estado/Provincia{required && <span className='ml-2 text-red-600'>*</span>}
             </Label>
@@ -73,7 +79,7 @@ export function LocationFields({
               name='state'
               required={required}
               placeholder='Escribe tu estado o provincia'
-              className={inputCls + ' w-full'}
+              className={activeInputCls + ' w-full'}
               value={state}
               onChange={e => setState(e.target.value)}
             />
@@ -81,7 +87,7 @@ export function LocationFields({
           <div className='min-w-0 space-y-0.5'>
             <Label
               htmlFor='city'
-              className={labelCls}
+              className={activeLabelCls}
             >
               Ciudad{required && <span className='ml-2 text-red-600'>*</span>}
             </Label>
@@ -90,7 +96,7 @@ export function LocationFields({
               name='city'
               required={required}
               placeholder='Escribe tu ciudad'
-              className={inputCls + ' w-full'}
+              className={activeInputCls + ' w-full'}
               value={city}
               onChange={e => setCity(e.target.value)}
             />
@@ -109,6 +115,7 @@ export function LocationFields({
               setCity('')
             }}
             placeholder='Dependiente del país (Drop down)'
+            compact={compact}
           />
           <CascadingSelect
             label='Ciudad'
@@ -118,6 +125,7 @@ export function LocationFields({
             value={city}
             onChange={setCity}
             placeholder='Dependiente del estado (Drop down)'
+            compact={compact}
           />
         </>
       )}
