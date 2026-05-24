@@ -7,7 +7,23 @@ export interface PlayerSong {
   side: 'A' | 'B'
   position: number
   durationSeconds: number
+  /** URL of this song's individual audio file. Always populated. */
   audioSrc: string
+  /**
+   * When the cassette has a concatenated audio file
+   * (`concatAudioUrl` on the player props), these mark where this song
+   * lives within that file. Null/undefined when the cassette is in
+   * legacy N-file mode.
+   */
+  startSeconds?: number
+  endSeconds?: number
+}
+
+/** Per-song offset row inside a concatenated cassette audio file. */
+export interface SongOffset {
+  song_id: string
+  start: number
+  end: number
 }
 
 export interface PlayerState {

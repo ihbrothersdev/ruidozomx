@@ -29,7 +29,7 @@ export default async function Home() {
     }
   }
 
-  const { songs, cassetteStartDate } = await getActiveCassetteSongs()
+  const { songs, cassetteStartDate, concatAudioUrl } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
@@ -40,7 +40,7 @@ export default async function Home() {
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] 2xl:w-[520px] min-[1728px]:w-[620px] min-[1920px]:w-[700px]'>
+        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] min-[1728px]:w-[620px] min-[1920px]:w-[700px] 2xl:w-[520px]'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
@@ -69,6 +69,7 @@ export default async function Home() {
             initialSongId={songs[0].id}
             date={formatCassetteDate(cassetteStartDate)}
             isAuthenticated={!!user}
+            concatAudioUrl={concatAudioUrl}
           />
         )}
 
@@ -78,7 +79,7 @@ export default async function Home() {
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-230 -right-15 z-0 hidden xl:block xl:w-[320px] 2xl:w-[400px] min-[1728px]:w-[480px] min-[1920px]:w-[540px]'>
+        <div className='absolute top-230 -right-15 z-0 hidden min-[1728px]:w-[480px] min-[1920px]:w-[540px] xl:block xl:w-[320px] 2xl:w-[400px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
