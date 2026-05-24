@@ -40,6 +40,16 @@ export default function ActionButtons({
   const isProposalDisabled = alreadySent?.proposal || proposalSent
   const isInterestDisabled = alreadySent?.sendInterest || interestSent
 
+  // Mirrors the render conditions below — if none apply, skip rendering the
+  // wrapper entirely so it doesn't leave a phantom flex child in the right
+  // column (which would steal a slot in `gap` / `justify-between` layouts).
+  const showProposalAndConnect = role !== 'fan' && !isOwnProfile && !editing
+  const showProponerRolaForOther = role === 'banda' && !isOwnProfile
+  const showOwnBandaActions = role === 'banda' && isOwnProfile && !editing
+  if (!showProposalAndConnect && !showProponerRolaForOther && !showOwnBandaActions) {
+    return null
+  }
+
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
       {role !== 'fan' && !isOwnProfile && !editing && (
