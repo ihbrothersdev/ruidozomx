@@ -172,6 +172,8 @@ export default function ProfileView(props: ProfileViewProps) {
   const shownRoleProfile = isEditing ? roleState : props.roleProfile
   const shownRole = isEditing ? activeRole : props.role
 
+  const showAdminActions = Boolean(props.isAdmin) && !props.isOwnProfile && !isEditing && (canEdit || canDelete)
+
   return (
     <ProfileLayout
       floatingNav={<BackHomeNav />}
@@ -239,18 +241,64 @@ export default function ProfileView(props: ProfileViewProps) {
             acceptProposals={props.acceptProposals}
             displayName={shownDisplayName}
             alreadySent={props.alreadySent}
-            onEdit={canEdit ? startEdit : undefined}
-            onDelete={canDelete ? handleDelete : undefined}
-            isAdmin={Boolean(props.isAdmin)}
+            onEdit={props.isOwnProfile ? startEdit : undefined}
             editing={isEditing}
-            isPending={isPending}
-            saveError={error}
-            onSave={handleSave}
-            onCancel={cancelEdit}
           />
-
-          <UltimaActividad lastActivityAt={props.lastActivityAt ?? null} />
         </>
+      }
+      bottomSection={
+        <div className='flex flex-col items-center gap-4'>
+          {isEditing ? (
+            <>
+              <div className='flex w-70 gap-2'>
+                <button
+                  type='button'
+                  onClick={handleSave}
+                  disabled={isPending}
+                  className='font-impact-label flex-1 cursor-pointer border-red-700 bg-red-600 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  {isPending ? 'Guardando…' : 'Guardar'}
+                </button>
+                <button
+                  type='button'
+                  onClick={cancelEdit}
+                  disabled={isPending}
+                  className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  Cancelar
+                </button>
+              </div>
+              {error && (
+                <p className='font-pt-mono w-70 bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
+                  {error}
+                </p>
+              )}
+            </>
+          ) : showAdminActions ? (
+            <div className='flex w-70 gap-2'>
+              {canEdit && (
+                <button
+                  type='button'
+                  onClick={startEdit}
+                  className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+                >
+                  Editar
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type='button'
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  className='font-impact-label flex-1 cursor-pointer border-red-800 bg-red-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                  Eliminar
+                </button>
+              )}
+            </div>
+          ) : null}
+          <UltimaActividad lastActivityAt={props.lastActivityAt ?? null} />
+        </div>
       }
     />
   )
