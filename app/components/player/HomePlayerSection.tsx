@@ -11,9 +11,22 @@ interface HomePlayerSectionProps {
   initialSongId: string
   date: string
   isAuthenticated: boolean
+  /**
+   * URL of the concatenated cassette MP3 (produced by `npm run build-cassette`).
+   * When present (and `songs` carry per-song offsets), the player streams a
+   * single continuous file and navigates via `currentTime`. When null, the
+   * player falls back to the legacy per-song-URL mode. See useAudioPlayer.
+   */
+  concatAudioUrl?: string | null
 }
 
-export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated }: HomePlayerSectionProps) {
+export function HomePlayerSection({
+  songs,
+  initialSongId,
+  date,
+  isAuthenticated,
+  concatAudioUrl
+}: HomePlayerSectionProps) {
   const {
     isPlaying,
     isStopped,
@@ -28,7 +41,7 @@ export function HomePlayerSection({ songs, initialSongId, date, isAuthenticated 
     prev,
     seek,
     playSong
-  } = useAudioPlayer(songs, initialSongId)
+  } = useAudioPlayer(songs, initialSongId, concatAudioUrl)
 
   const currentSong = songs.find(s => s.id === currentSongId)
 
