@@ -107,6 +107,36 @@ export async function sendInterest(input: SendInterestInput) {
   return { success: true }
 }
 
+interface WithdrawInterestInput {
+  toProfileId: string
+}
+
+export async function withdrawInterest(input: WithdrawInterestInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  const { error } = await supabase
+    .from('interests')
+    .delete()
+    .eq('from_profile_id', user.id)
+    .eq('to_profile_id', input.toProfileId)
+
+  if (error) {
+    console.error('Error withdrawing interest:', error)
+    return { error: 'No se pudo retirar la conexión.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
 // ── Song Proposals ──
 
 interface SubmitSongProposalInput {

@@ -23,37 +23,48 @@ export const ROLE_TABLE: Record<Role, string | null> = {
  *  - `dataField`: if set, the module reads this field from roleProfile and displays it.
  *  - If the field is absent or empty, falls back to "Próximamente".
  */
+const CONNECTION_MODULES = [
+  { title: 'Conexiones recibidas', key: 'connections_received' },
+  { title: 'Conexiones enviadas', key: 'connections_sent' }
+] as const
+
 export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
   banda: [
+    ...CONNECTION_MODULES,
     { title: 'Próximas fechas', key: 'dates' },
     { title: 'Convocatorias', key: 'calls' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  fan: [{ title: 'Rolas propuestas al cassete', key: 'proposals' }],
+  fan: [...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }],
   manager: [
+    ...CONNECTION_MODULES,
     { title: 'Artistas representados', key: 'artists', dataField: 'artists_represented' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   agente: [
+    ...CONNECTION_MODULES,
     { title: 'Artistas que representa', key: 'artists' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   promotor: [
+    ...CONNECTION_MODULES,
     { title: 'Convocatoria / Fechas publicadas', key: 'calls' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   proveedor: [
+    ...CONNECTION_MODULES,
     { title: 'Lista de servicios publicados', key: 'services' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   venue: [
+    ...CONNECTION_MODULES,
     { title: 'Convocatorias publicadas', key: 'calls' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  admin: [{ title: 'Rolas propuestas al cassete', key: 'proposals' }]
+  admin: [...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }]
 }
 
 /** Primary name field per role (for display in identity block) */

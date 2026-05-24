@@ -410,6 +410,9 @@ CREATE POLICY "interests_select_own"
 CREATE POLICY "interests_insert_own"
   ON interests FOR INSERT
   WITH CHECK (auth.uid() = from_profile_id);
+CREATE POLICY "interests_delete_sender"
+  ON interests FOR DELETE
+  USING (auth.uid() = from_profile_id);
 
 -- EVENTS
 CREATE POLICY "events_select_published"
