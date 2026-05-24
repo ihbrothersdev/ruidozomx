@@ -91,6 +91,9 @@ export default async function PerfilPage() {
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
       lastActivityAt={lastActivityAt}
+      country={(profile?.country as string | null) ?? null}
+      state={(profile?.state as string | null) ?? null}
+      city={(profile?.city as string | null) ?? null}
     />
   )
 }
