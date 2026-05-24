@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build-cassette": "node --env-file=.env.local scripts/build-cassette.mjs"
+    "build-cassette": "node --env-file=.env scripts/build-cassette.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
