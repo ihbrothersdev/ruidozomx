@@ -329,7 +329,7 @@ export default function ProfileView(props: ProfileViewProps) {
                   type='button'
                   onClick={handleConfirmEmail}
                   disabled={isPending}
-                  className='font-impact-label block w-full cursor-pointer border-2 border-black bg-white px-3 py-1 text-center text-xl font-bold tracking-wider text-black uppercase transition-colors hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-60'
+                  className='font-impact-label block w-full cursor-pointer border-2 border-black bg-white px-3 py-1 text-center text-xl font-bold tracking-wider text-black uppercase transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60'
                 >
                   Confirmar cuenta
                 </button>
