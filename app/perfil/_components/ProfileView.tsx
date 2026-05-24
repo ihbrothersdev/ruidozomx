@@ -13,7 +13,7 @@ import {
 } from '../actions'
 import ActionButtons from './ActionButtons'
 import ConfirmActionModal from './ConfirmActionModal'
-import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
+import DynamicModules, { type EventSummary, type InterestSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
 import { resizeAndEncodePhoto } from './photo-utils'
@@ -41,6 +41,11 @@ export interface ProfileViewProps {
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
   events?: EventSummary[]
+  receivedConnections?: InterestSummary[]
+  receivedConnectionsCount?: number
+  sentConnections?: InterestSummary[]
+  sentConnectionsCount?: number
+  mutualIds?: string[]
   lastActivityAt: string | null
   country?: string | null
   state?: string | null
@@ -353,6 +358,11 @@ export default function ProfileView(props: ProfileViewProps) {
                 songProposals={props.songProposals}
                 songProposalsCount={props.songProposalsCount}
                 events={props.events}
+                receivedConnections={props.receivedConnections}
+                receivedConnectionsCount={props.receivedConnectionsCount}
+                sentConnections={props.sentConnections}
+                sentConnectionsCount={props.sentConnectionsCount}
+                mutualIds={props.mutualIds}
               />
             )}
 

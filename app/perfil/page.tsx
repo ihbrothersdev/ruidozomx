@@ -55,7 +55,19 @@ export default async function PerfilPage() {
   // Fetch this user's song proposals (latest 3 for display) + total count
   // for the badge. RLS allows users to read their own; on stranger profiles
   // RLS returns 0 and the module is auto-hidden by DynamicModules.
-  const [{ data: songProposalsData }, { count: songProposalsCount }, { data: eventsData }] = await Promise.all([
+  const CONNECTIONS_SHOWN = 5
+  const CONNECTION_SELECT =
+    'id, message, created_at, other_profile:profiles!{FK}(id, slug, display_name, role, photo_url)'
+
+  const [
+    { data: songProposalsData },
+    { count: songProposalsCount },
+    { data: eventsData },
+    { data: receivedRaw },
+    { count: receivedCount },
+    { data: sentRaw },
+    { count: sentCount }
+  ] = await Promise.all([
     supabase
       .from('song_proposals')
       .select('id, title, artist, status, created_at')
@@ -71,8 +83,62 @@ export default async function PerfilPage() {
       .neq('status', 'cancelled')
       .gte('event_date', new Date().toISOString())
       .order('event_date', { ascending: true })
-      .limit(5)
+      .limit(5),
+    // Connections received: someone sent the user an interest. Join the
+    // sender profile so we can render avatar + name + link.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'from_profile_id'))
+      .eq('to_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('to_profile_id', user.id),
+    // Connections sent: the user reached out to someone. Join the recipient.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'to_profile_id'))
+      .eq('from_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('from_profile_id', user.id)
   ])
+
+  // Lightweight ID-only queries to compute the mutual set (intersection of
+  // "people who connected with me" and "people I connected with"). Cheap
+  // because we only read a single column per row, with no joins.
+  const [{ data: incomingIds }, { data: outgoingIds }] = await Promise.all([
+    supabase.from('interests').select('from_profile_id').eq('to_profile_id', user.id),
+    supabase.from('interests').select('to_profile_id').eq('from_profile_id', user.id)
+  ])
+  const incomingSet = new Set((incomingIds ?? []).map(r => r.from_profile_id as string))
+  const mutualIds = (outgoingIds ?? [])
+    .map(r => r.to_profile_id as string)
+    .filter(id => incomingSet.has(id))
+
+  // The Supabase typing for the joined relation is loose; the actual shape is
+  // a single profile row (or null). Coerce to the InterestSummary contract.
+  type RawInterest = {
+    id: string
+    message: string | null
+    created_at: string
+    other_profile: {
+      id: string
+      slug: string | null
+      display_name: string | null
+      role: Role | null
+      photo_url: string | null
+    } | null
+  }
+  const normalize = (rows: unknown[] | null) =>
+    (rows as RawInterest[] | null)?.filter(r => r.other_profile).map(r => ({
+      id: r.id,
+      message: r.message,
+      created_at: r.created_at,
+      otherProfile: r.other_profile!
+    })) ?? []
+
+  const receivedConnections = normalize(receivedRaw)
+  const sentConnections = normalize(sentRaw)
 
   return (
     <ProfileView
@@ -90,6 +156,11 @@ export default async function PerfilPage() {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      receivedConnections={receivedConnections}
+      receivedConnectionsCount={receivedCount ?? 0}
+      sentConnections={sentConnections}
+      sentConnectionsCount={sentCount ?? 0}
+      mutualIds={mutualIds}
       lastActivityAt={lastActivityAt}
       country={(profile?.country as string | null) ?? null}
       state={(profile?.state as string | null) ?? null}
