@@ -93,7 +93,7 @@ export default async function PerfilPage() {
     // Upcoming events (cancelled excluded).
     supabase
       .from('events')
-      .select('id, title, event_date, event_type, venue_name, city, address, description, status')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
       .eq('profile_id', user.id)
       .neq('status', 'cancelled')
       .gte('event_date', todayDate)
