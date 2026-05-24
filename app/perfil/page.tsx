@@ -66,6 +66,10 @@ export default async function PerfilPage() {
   const PROPOSAL_SELECT =
     'id, message, status, created_at, responded_at, other_profile:profiles!{FK}(id, slug, display_name, role, photo_url)'
 
+  // `event_date` is a `date` column (no time, no timezone). Compare against
+  // today as a YYYY-MM-DD string so a same-day event stays visible all day.
+  const todayDate = new Date().toISOString().slice(0, 10)
+
   const [
     { data: songProposalsData },
     { count: songProposalsCount },
@@ -92,7 +96,7 @@ export default async function PerfilPage() {
       .select('id, title, event_date, event_type, venue_name, city, address, description, status')
       .eq('profile_id', user.id)
       .neq('status', 'cancelled')
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
       .limit(5),
     // Connections received: someone sent the user an interest. Join the

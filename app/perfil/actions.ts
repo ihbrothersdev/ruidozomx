@@ -367,10 +367,10 @@ export async function submitEvent(input: SubmitEventInput) {
     return { error: 'La fecha del evento es obligatoria.' }
   }
 
-  // Parse the date — `<input type="date">` returns YYYY-MM-DD which JS reads
-  // as midnight UTC. That's fine for now; we keep it as a single timestamp.
-  const eventDate = new Date(input.date)
-  if (Number.isNaN(eventDate.getTime())) {
+  // `<input type="date">` returns YYYY-MM-DD. The column is `date`, so we
+  // store the string as-is — no parsing into a Date (which would shift the
+  // value by the runtime's UTC offset).
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
     return { error: 'La fecha no es válida.' }
   }
 
@@ -378,7 +378,7 @@ export async function submitEvent(input: SubmitEventInput) {
     profile_id: user.id,
     title: input.title.trim(),
     description: input.description?.trim() || null,
-    event_date: eventDate.toISOString(),
+    event_date: input.date,
     venue_name: input.venueName?.trim() || null,
     address: input.address?.trim() || null,
     city: input.city?.trim() || null,

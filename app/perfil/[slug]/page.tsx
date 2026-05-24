@@ -111,6 +111,10 @@ export default async function PublicPerfilPage({ params }: Props) {
     alreadySent.sendInterest = !!interestCheck.data
   }
 
+  // `event_date` is a `date` column (no time, no timezone). Compare against
+  // today as a YYYY-MM-DD string so a same-day event stays visible all day.
+  const todayDate = new Date().toISOString().slice(0, 10)
+
   // Profile owner's song proposals (latest 3 for display) + total count for
   // the badge. RLS only returns rows when the viewer is the proposal owner
   // or an admin — for everyone else both come back empty and the module is
@@ -130,7 +134,7 @@ export default async function PublicPerfilPage({ params }: Props) {
       .select('id, title, event_date, event_type, venue_name, city, address, description, status')
       .eq('profile_id', profile.id)
       .neq('status', 'cancelled')
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
       .limit(5)
   ])

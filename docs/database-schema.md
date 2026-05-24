@@ -229,8 +229,8 @@ Events published by profiles (venues, promoters, bands, etc.). One of the four m
 | profile_id       | uuid (FK)    | no       |                   | References `profiles(id)` ON DELETE CASCADE |
 | title            | varchar(200) | no       |                   |                                             |
 | description      | text         | yes      |                   |                                             |
-| event_date       | timestamptz  | no       |                   |                                             |
-| event_end_date   | timestamptz  | yes      |                   |                                             |
+| event_date       | date         | no       |                   |                                             |
+| event_end_date   | date         | yes      |                   |                                             |
 | venue_name       | varchar(200) | yes      |                   |                                             |
 | venue_profile_id | uuid (FK)    | yes      |                   | References `profiles(id)` — linked venue    |
 | address          | text         | yes      |                   |                                             |

@@ -297,7 +297,11 @@ export default function DynamicModules(props: DynamicModulesProps) {
           {entry.kind === 'events' && entry.events.length > 0 && (
             <ul className='mt-2 space-y-2.5'>
               {entry.events.map(ev => {
-                const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
+                // `event_date` is a plain YYYY-MM-DD (column type `date`).
+                // Append a local-time component so JS interprets it in the
+                // viewer's timezone instead of UTC (which would shift the
+                // displayed day back by the offset for users west of UTC).
+                const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric'
