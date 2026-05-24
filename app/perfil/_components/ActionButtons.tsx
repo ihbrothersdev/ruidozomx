@@ -16,7 +16,6 @@ interface ActionButtonsProps {
   acceptProposals: boolean
   displayName?: string
   alreadySent?: { proposal: boolean; sendInterest: boolean }
-  onEdit?: () => void
   editing?: boolean
 }
 
@@ -28,7 +27,6 @@ export default function ActionButtons({
   acceptProposals,
   displayName = '',
   alreadySent,
-  onEdit,
   editing = false
 }: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
@@ -42,16 +40,6 @@ export default function ActionButtons({
 
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
-      {!editing && isOwnProfile && onEdit && (
-        <button
-          type='button'
-          onClick={onEdit}
-          className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
-        >
-          Editar perfil
-        </button>
-      )}
-
       {role !== 'fan' && !isOwnProfile && !editing && (
         <>
           <button

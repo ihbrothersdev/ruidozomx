@@ -241,7 +241,6 @@ export default function ProfileView(props: ProfileViewProps) {
             acceptProposals={props.acceptProposals}
             displayName={shownDisplayName}
             alreadySent={props.alreadySent}
-            onEdit={props.isOwnProfile ? startEdit : undefined}
             editing={isEditing}
           />
         </>
@@ -296,6 +295,14 @@ export default function ProfileView(props: ProfileViewProps) {
                 </button>
               )}
             </div>
+          ) : props.isOwnProfile ? (
+            <button
+              type='button'
+              onClick={startEdit}
+              className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+            >
+              Editar perfil
+            </button>
           ) : null}
           <UltimaActividad lastActivityAt={props.lastActivityAt ?? null} />
         </div>
