@@ -1,4 +1,12 @@
-import type { Role } from '@/lib/types'
+import {
+  CAPACITY_OPTIONS,
+  EVENT_TYPE_OPTIONS,
+  FAN_GENRE_OPTIONS,
+  SERVICE_TYPE_OPTIONS,
+  TERRITORIAL_REACH_OPTIONS,
+  VENUE_TYPE_OPTIONS,
+  type Role
+} from '@/lib/types'
 
 export const ROLE_TABLE: Record<Role, string | null> = {
   banda: 'band_profiles',
@@ -112,4 +120,61 @@ export const ROLE_LINK_FIELD: Record<Role, string> = {
   proveedor: 'web_link',
   venue: 'web_link',
   admin: ''
+}
+
+export type EditableField =
+  | { key: string; label: string; type: 'boolean' }
+  | { key: string; label: string; type: 'array'; options: readonly string[] }
+  | { key: string; label: string; type: 'choice'; options: readonly string[] }
+
+export const ROLE_EDITABLE_FIELDS: Record<Role, EditableField[]> = {
+  banda: [
+    { key: 'available_live', label: 'Tocar en vivo', type: 'boolean' },
+    { key: 'available_tours', label: 'Giras', type: 'boolean' },
+    { key: 'open_collabs', label: 'Colaboraciones', type: 'boolean' },
+    { key: 'willing_travel', label: 'Salir de su estado/país', type: 'boolean' },
+    { key: 'publish_dates', label: 'Publica fechas en Ru!dozo', type: 'boolean' },
+    { key: 'accept_proposals', label: 'Recibe propuestas', type: 'boolean' }
+  ],
+  fan: [
+    { key: 'favorite_genres', label: 'Géneros favoritos', type: 'array', options: FAN_GENRE_OPTIONS },
+    { key: 'notify_new_bands', label: 'Avisarme de nuevas bandas', type: 'boolean' },
+    { key: 'propose_fav_bands', label: 'Proponer bandas favoritas', type: 'boolean' }
+  ],
+  manager: [
+    { key: 'represents_artists', label: 'Representa artistas', type: 'boolean' },
+    { key: 'seeks_emerging_talent', label: 'Busca talento emergente', type: 'boolean' },
+    { key: 'promote_bands_ruidozo', label: 'Promueve bandas en Ru!dozo', type: 'boolean' },
+    { key: 'accept_proposals', label: 'Recibe propuestas', type: 'boolean' }
+  ],
+  promotor: [
+    { key: 'organizes_events', label: 'Organiza eventos', type: 'boolean' },
+    { key: 'provide_events_ruidozo', label: 'Publica eventos en Ru!dozo', type: 'boolean' },
+    { key: 'seeks_talent', label: 'Busca talento', type: 'boolean' },
+    { key: 'event_types', label: 'Tipos de eventos', type: 'array', options: EVENT_TYPE_OPTIONS },
+    { key: 'territorial_reach', label: 'Alcance territorial', type: 'array', options: TERRITORIAL_REACH_OPTIONS },
+    { key: 'accept_proposals', label: 'Recibe propuestas', type: 'boolean' }
+  ],
+  agente: [
+    { key: 'represents_artists_live', label: 'Representa artistas para tocadas', type: 'boolean' },
+    { key: 'seeks_new_projects', label: 'Busca nuevos proyectos', type: 'boolean' },
+    { key: 'territorial_reach', label: 'Alcance territorial', type: 'array', options: TERRITORIAL_REACH_OPTIONS },
+    { key: 'accept_proposals', label: 'Recibe propuestas', type: 'boolean' }
+  ],
+  proveedor: [
+    { key: 'service_types', label: 'Tipo de servicio', type: 'array', options: SERVICE_TYPE_OPTIONS },
+    { key: 'territorial_reach', label: 'Alcance territorial', type: 'array', options: TERRITORIAL_REACH_OPTIONS },
+    { key: 'works_emerging_projects', label: 'Trabaja con proyectos emergentes', type: 'boolean' },
+    { key: 'publish_services', label: 'Publica servicios en Ru!dozo', type: 'boolean' },
+    { key: 'accept_proposals', label: 'Recibe propuestas', type: 'boolean' }
+  ],
+  venue: [
+    { key: 'capacity', label: 'Capacidad', type: 'choice', options: CAPACITY_OPTIONS },
+    { key: 'venue_type', label: 'Tipo', type: 'array', options: VENUE_TYPE_OPTIONS },
+    { key: 'has_audio', label: 'Audio propio', type: 'boolean' },
+    { key: 'has_lighting', label: 'Iluminación', type: 'boolean' },
+    { key: 'accepts_indie_proposals', label: 'Acepta propuestas indie', type: 'boolean' },
+    { key: 'publish_calls_ruidozo', label: 'Publica convocatorias en Ru!dozo', type: 'boolean' }
+  ],
+  admin: []
 }

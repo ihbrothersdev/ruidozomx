@@ -16,6 +16,12 @@ interface ActionButtonsProps {
   acceptProposals: boolean
   displayName?: string
   alreadySent?: { proposal: boolean; sendInterest: boolean }
+  onEdit?: () => void
+  editing?: boolean
+  isPending?: boolean
+  saveError?: string | null
+  onSave?: () => void
+  onCancel?: () => void
 }
 
 export default function ActionButtons({
@@ -25,7 +31,13 @@ export default function ActionButtons({
   role,
   acceptProposals,
   displayName = '',
-  alreadySent
+  alreadySent,
+  onEdit,
+  editing = false,
+  isPending = false,
+  saveError = null,
+  onSave,
+  onCancel
 }: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
@@ -36,22 +48,44 @@ export default function ActionButtons({
   const isProposalDisabled = alreadySent?.proposal || proposalSent
   const isInterestDisabled = alreadySent?.sendInterest || interestSent
 
-  // TODO: Add functionality later, not part of MVP.
-  // if (isOwnProfile) {
-  //   return (
-  //     <div className='flex flex-wrap gap-3'>
-  //       <Link
-  //         href='/perfil/editar'
-  //         className='font-pt-mono rounded-sm border-2 border-black bg-black px-6 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
-  //       >
-  //         Editar perfil
-  //       </Link>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
+      {isOwnProfile && editing ? (
+        <>
+          <button
+            type='button'
+            onClick={onSave}
+            disabled={isPending}
+            className='font-impact-label block w-70 cursor-pointer border-red-700 bg-red-600 px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            {isPending ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+          <button
+            type='button'
+            onClick={onCancel}
+            disabled={isPending}
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            Cancelar
+          </button>
+          {saveError && (
+            <p className='font-pt-mono w-70 bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
+              {saveError}
+            </p>
+          )}
+        </>
+      ) : (
+        isOwnProfile &&
+        onEdit && (
+          <button
+            type='button'
+            onClick={onEdit}
+            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+          >
+            Editar perfil
+          </button>
+        )
+      )}
       {role !== 'fan' && !isOwnProfile && (
         <>
           <button
