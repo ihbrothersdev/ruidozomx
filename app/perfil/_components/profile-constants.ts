@@ -28,42 +28,53 @@ const CONNECTION_MODULES = [
   { title: 'Conexiones enviadas', key: 'connections_sent' }
 ] as const
 
+const PROPOSAL_MODULES = [
+  { title: 'Propuestas recibidas', key: 'user_proposals_received' },
+  { title: 'Propuestas enviadas', key: 'user_proposals_sent' }
+] as const
+
 export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
   banda: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Fechas y convocatorias', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  fan: [...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }],
+  fan: [...PROPOSAL_MODULES, ...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }],
   manager: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Artistas representados', key: 'artists', dataField: 'artists_represented' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   agente: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Artistas que representa', key: 'artists' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   promotor: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Convocatoria / Fechas publicadas', key: 'calls' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   proveedor: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Lista de servicios publicados', key: 'services' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   venue: [
+    ...PROPOSAL_MODULES,
     ...CONNECTION_MODULES,
     { title: 'Convocatorias publicadas', key: 'calls' },
     { title: 'Próximos eventos', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
-  admin: [...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }]
+  admin: [...PROPOSAL_MODULES, ...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }]
 }
 
 /** Primary name field per role (for display in identity block) */

@@ -32,6 +32,22 @@ export async function sendProposal(input: SendProposalInput) {
     return { error: 'El mensaje no puede estar vacío.' }
   }
 
+  // Block if there's already a pending proposal from this sender to this
+  // receiver — keeps the inbox honest and avoids spam. Resolved proposals
+  // (accepted/rejected/withdrawn) don't block a follow-up.
+  const { data: existing } = await supabase
+    .from('user_proposals')
+    .select('id')
+    .eq('from_profile_id', user.id)
+    .eq('to_profile_id', input.toProfileId)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: 'Ya tienes una propuesta pendiente con este perfil. Espera respuesta o retírala.' }
+  }
+
   const { error } = await supabase.from('user_proposals').insert({
     from_profile_id: user.id,
     to_profile_id: input.toProfileId,
@@ -45,7 +61,110 @@ export async function sendProposal(input: SendProposalInput) {
     return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
   }
 
+  // Notify the recipient. Reuses the INTEREST_RECEIVED Loops template for
+  // now — its `profile` variable still points at the sender's URL.
+  const adminClient = createServiceClient()
+  const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
+  const recipientEmail = recipient?.user?.email
+
+  if (recipientEmail) {
+    const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
+    const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
+
+    await sendTransactional({
+      transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
+      email: recipientEmail,
+      dataVariables: {
+        profile: profileUrl
+      }
+    })
+  }
+
   return { success: true }
+}
+
+interface RespondToProposalInput {
+  proposalId: string
+  status: 'accepted' | 'rejected'
+}
+
+export async function respondToProposal(input: RespondToProposalInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  const { error } = await supabase
+    .from('user_proposals')
+    .update({
+      status: input.status,
+      responded_at: new Date().toISOString()
+    })
+    .eq('id', input.proposalId)
+    .eq('to_profile_id', user.id) // belt-and-suspenders; RLS also enforces this
+    .eq('status', 'pending')
+
+  if (error) {
+    console.error('Error responding to proposal:', error)
+    return { error: 'No se pudo guardar la respuesta.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
+interface WithdrawProposalInput {
+  proposalId: string
+}
+
+export async function withdrawProposal(input: WithdrawProposalInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  // Only allow deletion while still pending — once responded, the sender
+  // can't erase the record on the receiver's side.
+  const { error } = await supabase
+    .from('user_proposals')
+    .delete()
+    .eq('id', input.proposalId)
+    .eq('from_profile_id', user.id)
+    .eq('status', 'pending')
+
+  if (error) {
+    console.error('Error withdrawing proposal:', error)
+    return { error: 'No se pudo retirar la propuesta.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
+export async function markReceivedProposalsAsSeen() {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) return
+
+  await supabase
+    .from('user_proposals')
+    .update({ seen_at: new Date().toISOString() })
+    .eq('to_profile_id', user.id)
+    .is('seen_at', null)
 }
 
 interface SendInterestInput {

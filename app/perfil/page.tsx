@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { markReceivedProposalsAsSeen } from './actions'
 import ProfileView from './_components/ProfileView'
 import { ROLE_TABLE } from './_components/profile-constants'
 
@@ -52,12 +53,18 @@ export default async function PerfilPage() {
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
   const lastActivityAt = profile?.last_activity_at as string | null
 
+  // Mark inbound proposals as seen before reading them. Tracked for future
+  // unread-state UX; doesn't gate rendering today.
+  await markReceivedProposalsAsSeen()
+
   // Fetch this user's song proposals (latest 3 for display) + total count
   // for the badge. RLS allows users to read their own; on stranger profiles
   // RLS returns 0 and the module is auto-hidden by DynamicModules.
   const CONNECTIONS_SHOWN = 5
   const CONNECTION_SELECT =
     'id, message, created_at, other_profile:profiles!{FK}(id, slug, display_name, role, photo_url)'
+  const PROPOSAL_SELECT =
+    'id, message, status, created_at, responded_at, other_profile:profiles!{FK}(id, slug, display_name, role, photo_url)'
 
   const [
     { data: songProposalsData },
@@ -66,7 +73,11 @@ export default async function PerfilPage() {
     { data: receivedRaw },
     { count: receivedCount },
     { data: sentRaw },
-    { count: sentCount }
+    { count: sentCount },
+    { data: receivedProposalsRaw },
+    { count: receivedProposalsCount },
+    { data: sentProposalsRaw },
+    { count: sentProposalsCount }
   ] = await Promise.all([
     supabase
       .from('song_proposals')
@@ -100,7 +111,29 @@ export default async function PerfilPage() {
       .eq('from_profile_id', user.id)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('from_profile_id', user.id)
+    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('from_profile_id', user.id),
+    // User proposals received (someone proposed to the user). Join the sender.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'from_profile_id'))
+      .eq('to_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    supabase
+      .from('user_proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('to_profile_id', user.id),
+    // User proposals sent. Join the recipient.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'to_profile_id'))
+      .eq('from_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    supabase
+      .from('user_proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('from_profile_id', user.id)
   ])
 
   // Lightweight ID-only queries to compute the mutual set (intersection of
@@ -140,6 +173,33 @@ export default async function PerfilPage() {
   const receivedConnections = normalize(receivedRaw)
   const sentConnections = normalize(sentRaw)
 
+  type RawProposal = {
+    id: string
+    message: string
+    status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+    created_at: string
+    responded_at: string | null
+    other_profile: {
+      id: string
+      slug: string | null
+      display_name: string | null
+      role: Role | null
+      photo_url: string | null
+    } | null
+  }
+  const normalizeProposals = (rows: unknown[] | null) =>
+    (rows as RawProposal[] | null)?.filter(r => r.other_profile).map(r => ({
+      id: r.id,
+      message: r.message,
+      status: r.status,
+      created_at: r.created_at,
+      responded_at: r.responded_at,
+      otherProfile: r.other_profile!
+    })) ?? []
+
+  const receivedProposals = normalizeProposals(receivedProposalsRaw)
+  const sentProposals = normalizeProposals(sentProposalsRaw)
+
   return (
     <ProfileView
       displayName={displayName}
@@ -161,6 +221,10 @@ export default async function PerfilPage() {
       sentConnections={sentConnections}
       sentConnectionsCount={sentCount ?? 0}
       mutualIds={mutualIds}
+      receivedProposals={receivedProposals}
+      receivedProposalsCount={receivedProposalsCount ?? 0}
+      sentProposals={sentProposals}
+      sentProposalsCount={sentProposalsCount ?? 0}
       lastActivityAt={lastActivityAt}
       country={(profile?.country as string | null) ?? null}
       state={(profile?.state as string | null) ?? null}

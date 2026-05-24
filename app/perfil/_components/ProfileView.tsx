@@ -13,7 +13,12 @@ import {
 } from '../actions'
 import ActionButtons from './ActionButtons'
 import ConfirmActionModal from './ConfirmActionModal'
-import DynamicModules, { type EventSummary, type InterestSummary, type SongProposalSummary } from './DynamicModules'
+import DynamicModules, {
+  type EventSummary,
+  type InterestSummary,
+  type SongProposalSummary,
+  type UserProposalSummary
+} from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
 import { resizeAndEncodePhoto } from './photo-utils'
@@ -46,6 +51,10 @@ export interface ProfileViewProps {
   sentConnections?: InterestSummary[]
   sentConnectionsCount?: number
   mutualIds?: string[]
+  receivedProposals?: UserProposalSummary[]
+  receivedProposalsCount?: number
+  sentProposals?: UserProposalSummary[]
+  sentProposalsCount?: number
   lastActivityAt: string | null
   country?: string | null
   state?: string | null
@@ -363,6 +372,10 @@ export default function ProfileView(props: ProfileViewProps) {
                 sentConnections={props.sentConnections}
                 sentConnectionsCount={props.sentConnectionsCount}
                 mutualIds={props.mutualIds}
+                receivedProposals={props.receivedProposals}
+                receivedProposalsCount={props.receivedProposalsCount}
+                sentProposals={props.sentProposals}
+                sentProposalsCount={props.sentProposalsCount}
               />
             )}
 

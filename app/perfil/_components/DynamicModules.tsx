@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Role } from '@/lib/types'
 import ConnectionActions from './ConnectionActions'
+import ProposalActions from './ProposalActions'
 import { ROLE_DYNAMIC_MODULES } from './profile-constants'
 
 export interface SongProposalSummary {
@@ -36,6 +37,23 @@ export interface InterestSummary {
   }
 }
 
+export type UserProposalStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+
+export interface UserProposalSummary {
+  id: string
+  message: string
+  status: UserProposalStatus
+  created_at: string
+  responded_at: string | null
+  otherProfile: {
+    id: string
+    slug: string | null
+    display_name: string | null
+    role: Role | null
+    photo_url: string | null
+  }
+}
+
 interface DynamicModulesProps {
   role: Role
   roleProfile?: Record<string, any> | null
@@ -53,6 +71,12 @@ interface DynamicModulesProps {
   sentConnectionsCount?: number
   /** IDs of profiles with whom the user has a mutual interest (both directions exist). */
   mutualIds?: string[]
+  /** Latest user proposals received (cap to 5 from the page). */
+  receivedProposals?: UserProposalSummary[]
+  receivedProposalsCount?: number
+  /** Latest user proposals sent (cap to 5 from the page). */
+  sentProposals?: UserProposalSummary[]
+  sentProposalsCount?: number
 }
 
 /** Resolve data for a module: returns an array of items to display as a list */
@@ -77,6 +101,13 @@ const STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: 
   rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
 }
 
+const PROPOSAL_STATUS_LABEL: Record<UserProposalStatus, { label: string; cls: string }> = {
+  pending: { label: 'Pendiente', cls: 'bg-yellow-400/30 text-yellow-800' },
+  accepted: { label: 'Aceptada', cls: 'bg-green-600 text-white' },
+  rejected: { label: 'Rechazada', cls: 'bg-red-600 text-white' },
+  withdrawn: { label: 'Retirada', cls: 'bg-black/20 text-black/60' }
+}
+
 type VisibleEntry =
   | { mod: { title: string; key: string }; kind: 'list'; items: string[] }
   | { mod: { title: string; key: string }; kind: 'proposals'; proposals: SongProposalSummary[]; total: number }
@@ -94,6 +125,13 @@ type VisibleEntry =
       connections: InterestSummary[]
       total: number
     }
+  | {
+      mod: { title: string; key: string }
+      kind: 'user_proposals'
+      direction: 'received' | 'sent'
+      proposals: UserProposalSummary[]
+      total: number
+    }
 
 export default function DynamicModules({
   role,
@@ -105,7 +143,11 @@ export default function DynamicModules({
   receivedConnectionsCount,
   sentConnections = [],
   sentConnectionsCount,
-  mutualIds = []
+  mutualIds = [],
+  receivedProposals = [],
+  receivedProposalsCount,
+  sentProposals = [],
+  sentProposalsCount
 }: DynamicModulesProps) {
   const modules = ROLE_DYNAMIC_MODULES[role]
   if (!modules || modules.length === 0) return null
@@ -117,6 +159,8 @@ export default function DynamicModules({
   const receivedTotal = receivedConnectionsCount ?? receivedConnections.length
   const sentTotal = sentConnectionsCount ?? sentConnections.length
   const mutualSet = new Set(mutualIds)
+  const receivedProposalsTotal = receivedProposalsCount ?? receivedProposals.length
+  const sentProposalsTotal = sentProposalsCount ?? sentProposals.length
 
   // Venue-specific: do they accept publishing convocatorias on Ruidozo?
   const venuePublishesCalls = role === 'venue' ? Boolean(roleProfile?.publish_calls_ruidozo) : null
@@ -134,6 +178,26 @@ export default function DynamicModules({
 
       if (mod.key === 'connections_sent') {
         return { mod, kind: 'connections', direction: 'sent', connections: sentConnections, total: sentTotal }
+      }
+
+      if (mod.key === 'user_proposals_received') {
+        return {
+          mod,
+          kind: 'user_proposals',
+          direction: 'received',
+          proposals: receivedProposals,
+          total: receivedProposalsTotal
+        }
+      }
+
+      if (mod.key === 'user_proposals_sent') {
+        return {
+          mod,
+          kind: 'user_proposals',
+          direction: 'sent',
+          proposals: sentProposals,
+          total: sentProposalsTotal
+        }
       }
 
       if (mod.key === 'events') {
@@ -171,6 +235,7 @@ export default function DynamicModules({
       if (!entry) return false
       if (entry.kind === 'proposals') return entry.total > 0
       if (entry.kind === 'connections') return entry.total > 0
+      if (entry.kind === 'user_proposals') return entry.total > 0
       if (entry.kind === 'events') {
         // Keep when there are events OR there's a forced empty/disabled message.
         return entry.events.length > 0 || !!entry.emptyMessage
@@ -195,6 +260,11 @@ export default function DynamicModules({
               </span>
             )}
             {entry.kind === 'connections' && (
+              <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
+                {entry.total}
+              </span>
+            )}
+            {entry.kind === 'user_proposals' && (
               <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
                 {entry.total}
               </span>
@@ -344,6 +414,82 @@ export default function DynamicModules({
                       displayName={name}
                       direction={entry.direction}
                       isMutual={isMutual}
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+
+          {entry.kind === 'user_proposals' && (
+            <ul className='mt-2 space-y-3'>
+              {entry.proposals.map(p => {
+                const other = p.otherProfile
+                const name = other.display_name || 'Perfil'
+                const initial = name.trim().charAt(0).toUpperCase() || '?'
+                const statusInfo = PROPOSAL_STATUS_LABEL[p.status]
+                const dateLabel = new Date(p.created_at).toLocaleDateString('es-MX', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                })
+                const Avatar = other.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={other.photo_url}
+                    alt={name}
+                    className='h-8 w-8 shrink-0 rounded-full object-cover'
+                  />
+                ) : (
+                  <span className='font-pt-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-bold text-black/70'>
+                    {initial}
+                  </span>
+                )
+                const Identity = (
+                  <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+                    <div className='flex flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+                      <span className='font-pt-mono font-bold text-black'>{name}</span>
+                      {other.role && (
+                        <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
+                          {other.role}
+                        </span>
+                      )}
+                      <span
+                        className={`font-pt-mono rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${statusInfo.cls}`}
+                      >
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                    <p className='font-pt-mono line-clamp-3 text-xs text-black/70'>{p.message}</p>
+                    <span className='font-pt-mono text-[11px] text-black/50'>{dateLabel}</span>
+                  </div>
+                )
+                return (
+                  <li
+                    key={p.id}
+                    className='flex flex-col gap-1.5 text-sm'
+                  >
+                    <div className='flex items-start gap-3'>
+                      {other.slug ? (
+                        <Link
+                          href={`/perfil/${other.slug}`}
+                          className='flex min-w-0 flex-1 items-start gap-3 hover:opacity-80'
+                        >
+                          {Avatar}
+                          {Identity}
+                        </Link>
+                      ) : (
+                        <>
+                          {Avatar}
+                          {Identity}
+                        </>
+                      )}
+                    </div>
+                    <ProposalActions
+                      proposalId={p.id}
+                      displayName={name}
+                      direction={entry.direction}
+                      status={p.status}
                     />
                   </li>
                 )
