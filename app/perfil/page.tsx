@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { markReceivedProposalsAsSeen } from './actions'
 import ProfileView from './_components/ProfileView'
 import { ROLE_TABLE } from './_components/profile-constants'
 
@@ -52,10 +53,36 @@ export default async function PerfilPage() {
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
   const lastActivityAt = profile?.last_activity_at as string | null
 
+  // Mark inbound proposals as seen before reading them. Tracked for future
+  // unread-state UX; doesn't gate rendering today.
+  await markReceivedProposalsAsSeen()
+
   // Fetch this user's song proposals (latest 3 for display) + total count
   // for the badge. RLS allows users to read their own; on stranger profiles
   // RLS returns 0 and the module is auto-hidden by DynamicModules.
-  const [{ data: songProposalsData }, { count: songProposalsCount }, { data: eventsData }] = await Promise.all([
+  const CONNECTIONS_SHOWN = 5
+  // `!inner` makes the join an INNER JOIN at the PostgREST layer, so rows
+  // pointing to soft-deleted (or otherwise RLS-hidden) profiles drop out of
+  // both the data and the `count`. Without this, the count badge would show
+  // (N) while the rendered list came back empty.
+  const CONNECTION_SELECT =
+    'id, message, created_at, other_profile:profiles!{FK}!inner(id, slug, display_name, role, photo_url)'
+  const PROPOSAL_SELECT =
+    'id, message, status, created_at, responded_at, other_profile:profiles!{FK}!inner(id, slug, display_name, role, photo_url)'
+
+  // `event_date` is a `date` column (no time, no timezone). Compare against
+  // today as a YYYY-MM-DD string so a same-day event stays visible all day.
+  const todayDate = new Date().toISOString().slice(0, 10)
+
+  const [
+    { data: songProposalsData },
+    { count: songProposalsCount },
+    { data: eventsData },
+    { data: receivedRaw, count: receivedCount },
+    { data: sentRaw, count: sentCount },
+    { data: receivedProposalsRaw, count: receivedProposalsCount },
+    { data: sentProposalsRaw, count: sentProposalsCount }
+  ] = await Promise.all([
     supabase
       .from('song_proposals')
       .select('id, title, artist, status, created_at')
@@ -63,16 +90,120 @@ export default async function PerfilPage() {
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-    // Upcoming events (own profile sees drafts too via RLS; cancelled excluded).
+    // Upcoming events (cancelled excluded).
     supabase
       .from('events')
-      .select('id, title, event_date, event_type, venue_name, city, status')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
       .eq('profile_id', user.id)
       .neq('status', 'cancelled')
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
-      .limit(5)
+      .limit(5),
+    // Connections received: someone sent the user an interest. Inner-join the
+    // sender so we can render avatar + name + link and so the count stays in
+    // sync when the sender's profile is gone.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
+      .eq('to_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // Connections sent: the user reached out to someone. Inner-join recipient.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
+      .eq('from_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // User proposals received (someone proposed to the user). Inner-join sender.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
+      .eq('to_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // User proposals sent. Inner-join recipient.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
+      .eq('from_profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN)
   ])
+
+  // Lightweight ID-only queries to compute the mutual set (intersection of
+  // "people who connected with me" and "people I connected with"). Inner-join
+  // profiles so IDs pointing to inactive accounts don't enter the set (which
+  // would otherwise tag invisible counterparts as "mutual" if they ever came
+  // back).
+  const [{ data: incomingIds }, { data: outgoingIds }] = await Promise.all([
+    supabase
+      .from('interests')
+      .select('from_profile_id, profile:profiles!from_profile_id!inner(id)')
+      .eq('to_profile_id', user.id),
+    supabase
+      .from('interests')
+      .select('to_profile_id, profile:profiles!to_profile_id!inner(id)')
+      .eq('from_profile_id', user.id)
+  ])
+  const incomingSet = new Set((incomingIds ?? []).map(r => r.from_profile_id as string))
+  const mutualIds = (outgoingIds ?? []).map(r => r.to_profile_id as string).filter(id => incomingSet.has(id))
+
+  // The Supabase typing for the joined relation is loose; the actual shape is
+  // a single profile row (or null). Coerce to the InterestSummary contract.
+  type RawInterest = {
+    id: string
+    message: string | null
+    created_at: string
+    other_profile: {
+      id: string
+      slug: string | null
+      display_name: string | null
+      role: Role | null
+      photo_url: string | null
+    } | null
+  }
+  const normalize = (rows: unknown[] | null) =>
+    (rows as RawInterest[] | null)
+      ?.filter(r => r.other_profile)
+      .map(r => ({
+        id: r.id,
+        message: r.message,
+        created_at: r.created_at,
+        otherProfile: r.other_profile!
+      })) ?? []
+
+  const receivedConnections = normalize(receivedRaw)
+  const sentConnections = normalize(sentRaw)
+
+  type RawProposal = {
+    id: string
+    message: string
+    status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+    created_at: string
+    responded_at: string | null
+    other_profile: {
+      id: string
+      slug: string | null
+      display_name: string | null
+      role: Role | null
+      photo_url: string | null
+    } | null
+  }
+  const normalizeProposals = (rows: unknown[] | null) =>
+    (rows as RawProposal[] | null)
+      ?.filter(r => r.other_profile)
+      .map(r => ({
+        id: r.id,
+        message: r.message,
+        status: r.status,
+        created_at: r.created_at,
+        responded_at: r.responded_at,
+        otherProfile: r.other_profile!
+      })) ?? []
+
+  const receivedProposals = normalizeProposals(receivedProposalsRaw)
+  const sentProposals = normalizeProposals(sentProposalsRaw)
 
   return (
     <ProfileView
@@ -90,7 +221,19 @@ export default async function PerfilPage() {
       songProposals={songProposalsData ?? []}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
+      receivedConnections={receivedConnections}
+      receivedConnectionsCount={receivedCount ?? 0}
+      sentConnections={sentConnections}
+      sentConnectionsCount={sentCount ?? 0}
+      mutualIds={mutualIds}
+      receivedProposals={receivedProposals}
+      receivedProposalsCount={receivedProposalsCount ?? 0}
+      sentProposals={sentProposals}
+      sentProposalsCount={sentProposalsCount ?? 0}
       lastActivityAt={lastActivityAt}
+      country={(profile?.country as string | null) ?? null}
+      state={(profile?.state as string | null) ?? null}
+      city={(profile?.city as string | null) ?? null}
     />
   )
 }
