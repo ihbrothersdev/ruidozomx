@@ -235,7 +235,7 @@ export interface Song {
 
 // === Events ===
 
-export type EventStatus = 'draft' | 'published' | 'cancelled'
+export type EventStatus = 'published' | 'cancelled'
 
 export interface Event {
   id: string

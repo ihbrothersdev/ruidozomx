@@ -30,7 +30,7 @@ CREATE TYPE activity_type AS ENUM (
   'event_published', 'user_proposal'
 );
 
-CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
+CREATE TYPE event_status AS ENUM ('published', 'cancelled');
 
 -- ============================================================
 -- PROFILES (universal identity — always filled at registration)
@@ -243,7 +243,7 @@ CREATE TABLE events (
   event_type       VARCHAR(100),
   external_link    TEXT,
   cover_image_url  TEXT,
-  status           event_status NOT NULL DEFAULT 'draft',
+  status           event_status NOT NULL DEFAULT 'published',
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

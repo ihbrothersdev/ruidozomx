@@ -86,7 +86,7 @@ export default async function PerfilPage() {
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-    // Upcoming events (own profile sees drafts too via RLS; cancelled excluded).
+    // Upcoming events (cancelled excluded).
     supabase
       .from('events')
       .select('id, title, event_date, event_type, venue_name, city, address, description, status')

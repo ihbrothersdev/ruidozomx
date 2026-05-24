@@ -13,7 +13,7 @@
 | `proposal_status` | `pending`, `in_review`, `selected`, `rejected`                             |
 | `cassette_side`   | `A`, `B`                                                                   |
 | `activity_type`   | `registration`, `interest`, `proposal`, `song_selected`, `event_published` |
-| `event_status`    | `draft`, `published`, `cancelled`                                          |
+| `event_status`    | `published`, `cancelled`                                                   |
 
 > Role enum values (`banda`, `agente`, `promotor`, `proveedor`) are kept as identifiers
 > used across routing and component mapping. All other schema elements are in English.
@@ -240,7 +240,7 @@ Events published by profiles (venues, promoters, bands, etc.). One of the four m
 | event_type       | varchar(100) | yes      |                   | e.g. Concierto, Festival, etc.              |
 | external_link    | text         | yes      |                   |                                             |
 | cover_image_url  | text         | yes      |                   | Supabase Storage URL                        |
-| status           | event_status | no       | 'draft'           |                                             |
+| status           | event_status | no       | 'published'       |                                             |
 | created_at       | timestamptz  | no       | now()             |                                             |
 | updated_at       | timestamptz  | no       | now()             |                                             |
 

@@ -21,7 +21,7 @@ export interface EventSummary {
   city: string | null
   address: string | null
   description: string | null
-  status: 'draft' | 'published' | 'cancelled'
+  status: 'published' | 'cancelled'
 }
 
 export interface InterestSummary {
