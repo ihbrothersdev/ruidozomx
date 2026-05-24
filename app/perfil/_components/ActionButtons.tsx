@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
 import type { Role } from '@/lib/types'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
+import { useState } from 'react'
 import ConectarModal from './ConectarModal'
 import EnviarPropuestaModal from './EnviarPropuestaModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
@@ -22,6 +22,8 @@ interface ActionButtonsProps {
   saveError?: string | null
   onSave?: () => void
   onCancel?: () => void
+  onDelete?: () => void
+  isAdmin?: boolean
 }
 
 export default function ActionButtons({
@@ -37,7 +39,9 @@ export default function ActionButtons({
   isPending = false,
   saveError = null,
   onSave,
-  onCancel
+  onCancel,
+  onDelete,
+  isAdmin = false
 }: ActionButtonsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
@@ -50,7 +54,7 @@ export default function ActionButtons({
 
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
-      {isOwnProfile && editing ? (
+      {editing && (
         <>
           <button
             type='button'
@@ -74,19 +78,43 @@ export default function ActionButtons({
             </p>
           )}
         </>
-      ) : (
-        isOwnProfile &&
-        onEdit && (
-          <button
-            type='button'
-            onClick={onEdit}
-            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
-          >
-            Editar perfil
-          </button>
-        )
       )}
-      {role !== 'fan' && !isOwnProfile && (
+
+      {!editing && isOwnProfile && onEdit && (
+        <button
+          type='button'
+          onClick={onEdit}
+          className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+        >
+          Editar perfil
+        </button>
+      )}
+
+      {!editing && isAdmin && !isOwnProfile && (onEdit || onDelete) && (
+        <div className='flex w-70 gap-2'>
+          {onEdit && (
+            <button
+              type='button'
+              onClick={onEdit}
+              className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+            >
+              Editar
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type='button'
+              onClick={onDelete}
+              disabled={isPending}
+              className='font-impact-label flex-1 cursor-pointer border-red-800 bg-red-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              Eliminar
+            </button>
+          )}
+        </div>
+      )}
+
+      {role !== 'fan' && !isOwnProfile && !editing && (
         <>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}

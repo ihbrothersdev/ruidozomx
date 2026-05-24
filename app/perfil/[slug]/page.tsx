@@ -53,6 +53,13 @@ export default async function PublicPerfilPage({ params }: Props) {
     redirect('/perfil')
   }
 
+  // Admin check — admins can edit and (soft-)delete other profiles.
+  let isAdmin = false
+  if (user) {
+    const { data: viewerProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    isAdmin = viewerProfile?.role === 'admin'
+  }
+
   // Fetch role-specific profile
   let roleProfile: Record<string, unknown> | null = null
   if (role && ROLE_TABLE[role]) {
@@ -136,6 +143,10 @@ export default async function PublicPerfilPage({ params }: Props) {
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
       lastActivityAt={lastActivityAt}
+      isAdmin={isAdmin}
+      country={(profile.country as string | null) ?? null}
+      state={(profile.state as string | null) ?? null}
+      city={(profile.city as string | null) ?? null}
     />
   )
 }

@@ -4,7 +4,7 @@ import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import type { Role } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { updateOwnProfile } from '../actions'
+import { deleteProfileAsAdmin, updateOwnProfile, updateProfileAsAdmin } from '../actions'
 import ActionButtons from './ActionButtons'
 import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -34,10 +34,10 @@ export interface ProfileViewProps {
   songProposalsCount?: number
   events?: EventSummary[]
   lastActivityAt: string | null
-  /** Editable raw bits — required when isOwnProfile is true. */
   country?: string | null
   state?: string | null
   city?: string | null
+  isAdmin?: boolean
 }
 
 const INDUSTRY_ROLES: Role[] = ['manager', 'promotor', 'agente']
@@ -48,7 +48,6 @@ export default function ProfileView(props: ProfileViewProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  // ── Editable state, initialised from props ─────────────────────────────
   const [displayName, setDisplayName] = useState(props.displayName)
   const [bio, setBio] = useState(props.bio ?? '')
   const [contact, setContact] = useState(props.contact ?? '')
@@ -115,12 +114,10 @@ export default function ProfileView(props: ProfileViewProps) {
       if (url.trim()) fd.set(`social_${platform}`, url)
     }
 
-    // Industry sub-role (only if the original role is an industry role).
     if (props.role && INDUSTRY_ROLES.includes(props.role) && activeRole) {
       fd.set('role_type', activeRole)
     }
 
-    // Role-specific fields. Booleans → 'true' / ''; arrays → repeated fields.
     for (const [key, value] of Object.entries(roleState)) {
       if (Array.isArray(value)) {
         for (const item of value) {
@@ -134,18 +131,39 @@ export default function ProfileView(props: ProfileViewProps) {
     }
 
     startTransition(async () => {
-      const result = await updateOwnProfile(fd)
+      const result =
+        props.isOwnProfile || !props.profileId
+          ? await updateOwnProfile(fd)
+          : await updateProfileAsAdmin(props.profileId, fd)
       if (result?.error) {
         setError(result.error)
       } else {
         setIsEditing(false)
-        // RSC refresh picks up updated props next render.
         router.refresh()
       }
     })
   }
 
-  // Display-mode values come from props; edit-mode values come from local state.
+  function handleDelete() {
+    if (!props.profileId) return
+    const ok = window.confirm(
+      `¿Eliminar el perfil de "${props.displayName}"? Se marcará como inactivo (no se borran datos).`
+    )
+    if (!ok) return
+    setError(null)
+    startTransition(async () => {
+      const result = await deleteProfileAsAdmin(props.profileId!)
+      if (result?.error) {
+        setError(result.error)
+      } else {
+        router.push('/comunidad')
+      }
+    })
+  }
+
+  const canEdit = props.isOwnProfile || Boolean(props.isAdmin && props.profileId)
+  const canDelete = Boolean(props.isAdmin && !props.isOwnProfile && props.profileId)
+
   const shownPhoto = isEditing ? photoPreview : props.photoUrl
   const shownDisplayName = isEditing ? displayName : props.displayName
   const shownBio = isEditing ? bio : props.bio
@@ -159,7 +177,6 @@ export default function ProfileView(props: ProfileViewProps) {
       floatingNav={<BackHomeNav />}
       leftColumn={
         <>
-          {/* Photo + Identity */}
           <div className={'flex gap-5 ' + (isEditing ? 'items-start' : 'items-center')}>
             <ProfilePhoto
               photoUrl={shownPhoto}
@@ -185,7 +202,6 @@ export default function ProfileView(props: ProfileViewProps) {
             />
           </div>
 
-          {/* Review / Description */}
           <ReviewSection
             bio={shownBio}
             role={shownRole}
@@ -196,8 +212,6 @@ export default function ProfileView(props: ProfileViewProps) {
       }
       rightColumn={
         <>
-          {/* Dynamic modules — always read from the persisted props so they
-              don't fluctuate while the user is editing chips. */}
           {props.role && (
             <DynamicModules
               role={props.role}
@@ -208,7 +222,6 @@ export default function ProfileView(props: ProfileViewProps) {
             />
           )}
 
-          {/* Links */}
           <LinksSection
             socialLinks={shownSocialLinks}
             contact={shownContact}
@@ -218,7 +231,6 @@ export default function ProfileView(props: ProfileViewProps) {
             onContactChange={setContact}
           />
 
-          {/* Action buttons / Save+Cancel */}
           <ActionButtons
             profileId={props.profileId}
             isOwnProfile={props.isOwnProfile}
@@ -227,7 +239,9 @@ export default function ProfileView(props: ProfileViewProps) {
             acceptProposals={props.acceptProposals}
             displayName={shownDisplayName}
             alreadySent={props.alreadySent}
-            onEdit={props.isOwnProfile ? startEdit : undefined}
+            onEdit={canEdit ? startEdit : undefined}
+            onDelete={canDelete ? handleDelete : undefined}
+            isAdmin={Boolean(props.isAdmin)}
             editing={isEditing}
             isPending={isPending}
             saveError={error}

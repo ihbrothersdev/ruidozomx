@@ -292,7 +292,7 @@ function buildSocialLinks(formData: FormData): Record<string, string> {
 }
 
 async function uploadPhotoBase64(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createServiceClient>,
   userId: string,
   photoData: string
 ): Promise<string | null> {
@@ -464,4 +464,135 @@ function buildRoleDetailPayload(role: Role, userId: string, formData: FormData):
     case 'admin':
       return null
   }
+}
+
+// ── Admin moderation actions ───────────────────────────────────────────────────
+//
+// Admins can edit and (soft-)delete any profile. The viewer's role is checked
+// via the authenticated client (RLS-scoped) and writes go through the service
+// client so they're not blocked by `*_update_own` policies.
+
+async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  return data?.role === 'admin' ? user : null
+}
+
+export async function updateProfileAsAdmin(targetProfileId: string, formData: FormData) {
+  const supabase = await createClient()
+  const adminUser = await getAdminUser(supabase)
+  if (!adminUser) {
+    return { error: 'No tienes permisos para esta acción.' }
+  }
+
+  const serviceClient = createServiceClient()
+  const { data: existing } = await serviceClient
+    .from('profiles')
+    .select('role, slug, photo_url')
+    .eq('id', targetProfileId)
+    .single()
+
+  if (!existing) {
+    return { error: 'Perfil no encontrado.' }
+  }
+
+  const currentRole = existing.role as Role
+  let nextRole = currentRole
+  if (INDUSTRY_ROLES.includes(currentRole)) {
+    const roleType = (getStr(formData, 'role_type') ?? currentRole) as Role
+    if (INDUSTRY_ROLES.includes(roleType)) nextRole = roleType
+  }
+
+  const displayName = getStr(formData, 'display_name')
+  if (!displayName) {
+    return { error: 'El nombre no puede estar vacío.' }
+  }
+
+  const photoData = getStr(formData, 'photo_data')
+  let photoUrl: string | null = (existing.photo_url as string | null) ?? null
+  if (photoData) {
+    const uploaded = await uploadPhotoBase64(serviceClient, targetProfileId, photoData)
+    if (uploaded) photoUrl = uploaded
+  }
+
+  const { error: profileError } = await serviceClient
+    .from('profiles')
+    .update({
+      role: nextRole,
+      display_name: displayName,
+      photo_url: photoUrl,
+      bio: getStr(formData, 'bio'),
+      country: getStr(formData, 'country'),
+      state: getStr(formData, 'state'),
+      city: getStr(formData, 'city'),
+      social_links: buildSocialLinks(formData),
+      contact: getStr(formData, 'contact'),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', targetProfileId)
+
+  if (profileError) {
+    console.error('[updateProfileAsAdmin] profile update error:', profileError)
+    return { error: 'No se pudo guardar el perfil. Intenta de nuevo.' }
+  }
+
+  const detailTable = ROLE_DETAIL_TABLE[nextRole]
+  if (detailTable) {
+    const payload = buildRoleDetailPayload(nextRole, targetProfileId, formData)
+    if (payload) {
+      const { error: detailError } = await serviceClient.from(detailTable).upsert(payload)
+      if (detailError) {
+        console.error('[updateProfileAsAdmin] role detail upsert error:', detailError)
+        return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
+      }
+    }
+  }
+
+  if (existing.slug) {
+    revalidatePath(`/perfil/${existing.slug}`)
+  }
+  revalidatePath('/comunidad')
+
+  return { success: true }
+}
+
+export async function deleteProfileAsAdmin(targetProfileId: string) {
+  const supabase = await createClient()
+  const adminUser = await getAdminUser(supabase)
+  if (!adminUser) {
+    return { error: 'No tienes permisos para esta acción.' }
+  }
+
+  if (adminUser.id === targetProfileId) {
+    return { error: 'No puedes eliminar tu propio perfil desde aquí.' }
+  }
+
+  const serviceClient = createServiceClient()
+  const { data: existing } = await serviceClient.from('profiles').select('slug').eq('id', targetProfileId).single()
+
+  if (!existing) {
+    return { error: 'Perfil no encontrado.' }
+  }
+
+  // Soft delete — `active = false` removes the profile from public listings
+  // (via the RLS `profiles_select_active` policy) without losing data.
+  const { error } = await serviceClient
+    .from('profiles')
+    .update({ active: false, updated_at: new Date().toISOString() })
+    .eq('id', targetProfileId)
+
+  if (error) {
+    console.error('[deleteProfileAsAdmin]', error)
+    return { error: 'No se pudo eliminar el perfil.' }
+  }
+
+  if (existing.slug) {
+    revalidatePath(`/perfil/${existing.slug}`)
+  }
+  revalidatePath('/comunidad')
+
+  return { success: true }
 }
