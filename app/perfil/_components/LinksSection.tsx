@@ -158,7 +158,7 @@ function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChang
             key={platform}
             className='flex items-stretch gap-2'
           >
-            <div className='w-36 shrink-0'>
+            <div className='w-44 shrink-0'>
               <Select
                 value={platform}
                 onValueChange={v => updatePlatform(platform, v)}
