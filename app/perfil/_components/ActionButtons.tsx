@@ -52,7 +52,7 @@ export default function ActionButtons({
 
   return (
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
-      {role !== 'fan' && !isOwnProfile && !editing && (
+      {showProposalAndConnect && (
         <>
           <button
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
