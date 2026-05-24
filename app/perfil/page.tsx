@@ -78,7 +78,7 @@ export default async function PerfilPage() {
     // Upcoming events (own profile sees drafts too via RLS; cancelled excluded).
     supabase
       .from('events')
-      .select('id, title, event_date, event_type, venue_name, city, status')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, status')
       .eq('profile_id', user.id)
       .neq('status', 'cancelled')
       .gte('event_date', new Date().toISOString())

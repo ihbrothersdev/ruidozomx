@@ -127,7 +127,7 @@ export default async function PublicPerfilPage({ params }: Props) {
     // owner also sees their own. Cancelled is hidden via the query filter.
     supabase
       .from('events')
-      .select('id, title, event_date, event_type, venue_name, city, status')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, status')
       .eq('profile_id', profile.id)
       .neq('status', 'cancelled')
       .gte('event_date', new Date().toISOString())

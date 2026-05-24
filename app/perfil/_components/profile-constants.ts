@@ -31,8 +31,7 @@ const CONNECTION_MODULES = [
 export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
   banda: [
     ...CONNECTION_MODULES,
-    { title: 'Próximas fechas', key: 'dates' },
-    { title: 'Convocatorias', key: 'calls' },
+    { title: 'Fechas y convocatorias', key: 'events' },
     { title: 'Rolas propuestas al cassete', key: 'proposals' }
   ],
   fan: [...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }],
