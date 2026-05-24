@@ -133,7 +133,10 @@ type VisibleEntry =
       total: number
     }
 
-export default function DynamicModules({
+/** Build the list of entries that DynamicModules would render. Exported so
+ *  callers (e.g. ProfileView) can know whether any content will show without
+ *  having to duplicate the per-module visibility logic. */
+export function computeVisibleDynamicEntries({
   role,
   roleProfile,
   songProposals = [],
@@ -143,14 +146,13 @@ export default function DynamicModules({
   receivedConnectionsCount,
   sentConnections = [],
   sentConnectionsCount,
-  mutualIds = [],
   receivedProposals = [],
   receivedProposalsCount,
   sentProposals = [],
   sentProposalsCount
-}: DynamicModulesProps) {
+}: DynamicModulesProps): VisibleEntry[] {
   const modules = ROLE_DYNAMIC_MODULES[role]
-  if (!modules || modules.length === 0) return null
+  if (!modules || modules.length === 0) return []
 
   // Always show the latest 3 in the list, regardless of how many came in.
   const proposalsToShow = songProposals.slice(0, 3)
@@ -158,15 +160,13 @@ export default function DynamicModules({
 
   const receivedTotal = receivedConnectionsCount ?? receivedConnections.length
   const sentTotal = sentConnectionsCount ?? sentConnections.length
-  const mutualSet = new Set(mutualIds)
   const receivedProposalsTotal = receivedProposalsCount ?? receivedProposals.length
   const sentProposalsTotal = sentProposalsCount ?? sentProposals.length
 
   // Venue-specific: do they accept publishing convocatorias on Ruidozo?
   const venuePublishesCalls = role === 'venue' ? Boolean(roleProfile?.publish_calls_ruidozo) : null
 
-  // Build the visible modules list — drop anything without data.
-  const visible: VisibleEntry[] = modules
+  return modules
     .map<VisibleEntry | null>(mod => {
       if (mod.key === 'proposals') {
         return { mod, kind: 'proposals', proposals: proposalsToShow, total: proposalsTotal }
@@ -242,8 +242,13 @@ export default function DynamicModules({
       }
       return entry.items.length > 0
     })
+}
 
+export default function DynamicModules(props: DynamicModulesProps) {
+  const visible = computeVisibleDynamicEntries(props)
   if (visible.length === 0) return null
+
+  const mutualSet = new Set(props.mutualIds ?? [])
 
   return (
     <div className='space-y-4'>

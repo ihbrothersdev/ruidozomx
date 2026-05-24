@@ -41,7 +41,7 @@ export default function ProfileLayout({
         ) : (
           <div className='grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]'>
             <div className='flex h-full flex-col gap-6'>{leftColumn}</div>
-            <div className='flex h-full flex-col justify-between gap-6'>{rightColumn}</div>
+            <div className='flex h-full flex-col gap-6'>{rightColumn}</div>
           </div>
         )}
 
