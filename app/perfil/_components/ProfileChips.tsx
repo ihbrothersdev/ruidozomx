@@ -3,7 +3,7 @@
 import type { Role } from '@/lib/types'
 import EditableChip from './EditableChip'
 import EditableMultiSelect from './EditableMultiSelect'
-import { ROLE_CHIP_CONFIG, ROLE_EDITABLE_FIELDS } from './profile-constants'
+import { ROLE_EDITABLE_FIELDS } from './profile-constants'
 
 interface ProfileChipsProps {
   role: Role
@@ -23,23 +23,22 @@ export default function ProfileChips({ role, roleProfile, editing = false, onFie
     )
   }
 
-  // ── View mode (unchanged) ───────────────────────────────────────────
-  const chipConfig = ROLE_CHIP_CONFIG[role]
-  if (!chipConfig) return null
+  const fields = ROLE_EDITABLE_FIELDS[role]
+  if (!fields || fields.length === 0) return null
 
   const chips: string[] = []
 
-  for (const cfg of chipConfig) {
-    const value = roleProfile[cfg.key]
+  for (const field of fields) {
+    const value = roleProfile[field.key]
 
-    if (cfg.type === 'boolean' && value === true) {
-      chips.push(cfg.label)
-    } else if (cfg.type === 'array' && Array.isArray(value)) {
+    if (field.type === 'boolean' && value === true) {
+      chips.push(field.label)
+    } else if (field.type === 'array' && Array.isArray(value)) {
       for (const item of value) {
         chips.push(String(item))
       }
-    } else if (cfg.type === 'text' && value) {
-      chips.push(`${cfg.label}: ${String(value)}`)
+    } else if (field.type === 'choice' && typeof value === 'string' && value.trim()) {
+      chips.push(`${field.label}: ${value}`)
     }
   }
 
