@@ -21,7 +21,8 @@ export interface EventSummary {
   city: string | null
   address: string | null
   description: string | null
-  status: 'draft' | 'published' | 'cancelled'
+  external_link: string | null
+  status: 'published' | 'cancelled'
 }
 
 export interface InterestSummary {
@@ -297,12 +298,33 @@ export default function DynamicModules(props: DynamicModulesProps) {
           {entry.kind === 'events' && entry.events.length > 0 && (
             <ul className='mt-2 space-y-2.5'>
               {entry.events.map(ev => {
-                const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
+                // `event_date` is a plain YYYY-MM-DD (column type `date`).
+                // Append a local-time component so JS interprets it in the
+                // viewer's timezone instead of UTC (which would shift the
+                // displayed day back by the offset for users west of UTC).
+                const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric'
                 })
                 const place = [ev.venue_name, ev.city].filter(Boolean).join(' · ')
+                // Only render as a clickable anchor when `external_link` is a
+                // real http(s) URL. Anything else (free-form text, addresses,
+                // phone numbers, etc.) falls back to plain text so users don't
+                // try to open a non-link.
+                let externalHref: string | null = null
+                let externalHost: string | null = null
+                if (ev.external_link) {
+                  try {
+                    const parsed = new URL(ev.external_link)
+                    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                      externalHref = parsed.toString()
+                      externalHost = parsed.host.replace(/^www\./, '')
+                    }
+                  } catch {
+                    externalHref = null
+                  }
+                }
                 return (
                   <li
                     key={ev.id}
@@ -318,6 +340,21 @@ export default function DynamicModules(props: DynamicModulesProps) {
                       </span>
                       {ev.address && <span className='text-xs text-black/60'>{ev.address}</span>}
                       {ev.description && <span className='text-xs text-black/70'>{ev.description}</span>}
+                      {ev.external_link &&
+                        (externalHref ? (
+                          <a
+                            href={externalHref}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='mt-0.5 inline-block w-fit max-w-full truncate text-xs font-bold tracking-wider text-red-600 uppercase underline underline-offset-2 hover:text-red-700'
+                          >
+                            Más info ↗{externalHost ? ` · ${externalHost}` : ''}
+                          </a>
+                        ) : (
+                          <span className='mt-0.5 text-xs text-black/70'>
+                            <span className='font-bold tracking-wider uppercase'>Más info:</span> {ev.external_link}
+                          </span>
+                        ))}
                     </div>
                   </li>
                 )
