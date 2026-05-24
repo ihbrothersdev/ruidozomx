@@ -4,7 +4,7 @@ import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import type { Role } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { deleteProfileAsAdmin, updateOwnProfile, updateProfileAsAdmin } from '../actions'
+import { confirmUserEmailAsAdmin, deleteProfileAsAdmin, updateOwnProfile, updateProfileAsAdmin } from '../actions'
 import ActionButtons from './ActionButtons'
 import DynamicModules, { type EventSummary, type SongProposalSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -38,6 +38,9 @@ export interface ProfileViewProps {
   state?: string | null
   city?: string | null
   isAdmin?: boolean
+  /** Has the profile owner confirmed their email? Drives the admin
+   *  "Confirmar cuenta" affordance — visible only when false. */
+  isUserConfirmed?: boolean
 }
 
 const INDUSTRY_ROLES: Role[] = ['manager', 'promotor', 'agente']
@@ -161,8 +164,26 @@ export default function ProfileView(props: ProfileViewProps) {
     })
   }
 
+  function handleConfirmEmail() {
+    if (!props.profileId) return
+    const ok = window.confirm(`¿Confirmar la cuenta de "${props.displayName}"?`)
+    if (!ok) return
+    setError(null)
+    startTransition(async () => {
+      const result = await confirmUserEmailAsAdmin(props.profileId!)
+      if (result?.error) {
+        setError(result.error)
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
   const canEdit = props.isOwnProfile || Boolean(props.isAdmin && props.profileId)
   const canDelete = Boolean(props.isAdmin && !props.isOwnProfile && props.profileId)
+  const canConfirm = Boolean(
+    props.isAdmin && !props.isOwnProfile && props.profileId && props.isUserConfirmed === false
+  )
 
   const shownPhoto = isEditing ? photoPreview : props.photoUrl
   const shownDisplayName = isEditing ? displayName : props.displayName
@@ -172,14 +193,21 @@ export default function ProfileView(props: ProfileViewProps) {
   const shownRoleProfile = isEditing ? roleState : props.roleProfile
   const shownRole = isEditing ? activeRole : props.role
 
-  const showAdminActions = Boolean(props.isAdmin) && !props.isOwnProfile && !isEditing && (canEdit || canDelete)
+  const showAdminActions =
+    Boolean(props.isAdmin) && !props.isOwnProfile && !isEditing && (canEdit || canDelete || canConfirm)
 
   return (
     <ProfileLayout
       floatingNav={<BackHomeNav />}
       leftColumn={
         <>
-          <div className={'flex gap-5 ' + (isEditing ? 'items-start' : 'items-center')}>
+          <div
+            className={
+              isEditing
+                ? 'flex flex-col items-center gap-5 sm:flex-row sm:items-start'
+                : 'flex items-center gap-5'
+            }
+          >
             <ProfilePhoto
               photoUrl={shownPhoto}
               displayName={shownDisplayName}
@@ -274,25 +302,42 @@ export default function ProfileView(props: ProfileViewProps) {
               )}
             </>
           ) : showAdminActions ? (
-            <div className='flex w-70 gap-2'>
-              {canEdit && (
+            <div className='flex w-70 flex-col gap-2'>
+              <div className='flex gap-2'>
+                {canEdit && (
+                  <button
+                    type='button'
+                    onClick={startEdit}
+                    className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+                  >
+                    Editar
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    type='button'
+                    onClick={handleDelete}
+                    disabled={isPending}
+                    className='font-impact-label flex-1 cursor-pointer border-red-800 bg-red-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+              {canConfirm && (
                 <button
                   type='button'
-                  onClick={startEdit}
-                  className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+                  onClick={handleConfirmEmail}
+                  disabled={isPending}
+                  className='font-impact-label block w-full cursor-pointer border-green-800 bg-green-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60'
                 >
-                  Editar
+                  Confirmar cuenta
                 </button>
               )}
-              {canDelete && (
-                <button
-                  type='button'
-                  onClick={handleDelete}
-                  disabled={isPending}
-                  className='font-impact-label flex-1 cursor-pointer border-red-800 bg-red-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                  Eliminar
-                </button>
+              {error && (
+                <p className='font-pt-mono bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
+                  {error}
+                </p>
               )}
             </div>
           ) : props.isOwnProfile ? (
