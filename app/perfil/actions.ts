@@ -596,3 +596,61 @@ export async function deleteProfileAsAdmin(targetProfileId: string) {
 
   return { success: true }
 }
+
+export async function confirmUserEmailAsAdmin(targetProfileId: string) {
+  const supabase = await createClient()
+  const adminUser = await getAdminUser(supabase)
+  if (!adminUser) {
+    return { error: 'No tienes permisos para esta acción.' }
+  }
+
+  const serviceClient = createServiceClient()
+
+  // Verify the target exists and grab the slug for revalidation.
+  const { data: existing } = await serviceClient.from('profiles').select('slug').eq('id', targetProfileId).single()
+  if (!existing) {
+    return { error: 'Perfil no encontrado.' }
+  }
+
+  const { error } = await serviceClient.auth.admin.updateUserById(targetProfileId, { email_confirm: true })
+  if (error) {
+    console.error('[confirmUserEmailAsAdmin]', error)
+    return { error: 'No se pudo confirmar la cuenta.' }
+  }
+
+  if (existing.slug) {
+    revalidatePath(`/perfil/${existing.slug}`)
+  }
+
+  return { success: true }
+}
+
+export async function resendConfirmationEmailAsAdmin(targetProfileId: string) {
+  const supabase = await createClient()
+  const adminUser = await getAdminUser(supabase)
+  if (!adminUser) {
+    return { error: 'No tienes permisos para esta acción.' }
+  }
+
+  const serviceClient = createServiceClient()
+  const { data: targetAuth } = await serviceClient.auth.admin.getUserById(targetProfileId)
+  const email = targetAuth?.user?.email
+  if (!email) {
+    return { error: 'No se encontró el email del usuario.' }
+  }
+
+  if (targetAuth.user?.email_confirmed_at) {
+    return { error: 'La cuenta ya está confirmada.' }
+  }
+
+  // Trigger Supabase's signup confirmation email again via the public resend
+  // endpoint. Uses the configured signup template — no app-level template
+  // dependency.
+  const { error } = await serviceClient.auth.resend({ type: 'signup', email })
+  if (error) {
+    console.error('[resendConfirmationEmailAsAdmin]', error)
+    return { error: 'No se pudo reenviar el correo.' }
+  }
+
+  return { success: true }
+}

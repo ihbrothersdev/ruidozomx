@@ -156,9 +156,9 @@ function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChang
         {rows.map(([platform, url]) => (
           <div
             key={platform}
-            className='flex items-stretch gap-2'
+            className='flex flex-col gap-2 sm:flex-row sm:items-stretch'
           >
-            <div className='w-44 shrink-0'>
+            <div className='w-full sm:w-44 sm:shrink-0'>
               <Select
                 value={platform}
                 onValueChange={v => updatePlatform(platform, v)}
@@ -184,24 +184,26 @@ function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChang
               </Select>
             </div>
 
-            <div className='min-w-0 flex-1'>
-              <Input
-                type='url'
-                value={url}
-                onChange={e => updateUrl(platform, e.target.value)}
-                placeholder='https://…'
-                className={inputCls}
-              />
-            </div>
+            <div className='flex items-stretch gap-2 sm:flex-1'>
+              <div className='min-w-0 flex-1'>
+                <Input
+                  type='url'
+                  value={url}
+                  onChange={e => updateUrl(platform, e.target.value)}
+                  placeholder='https://…'
+                  className={inputCls}
+                />
+              </div>
 
-            <button
-              type='button'
-              onClick={() => remove(platform)}
-              aria-label='Quitar enlace'
-              className='font-pt-mono shrink-0 cursor-pointer px-2 text-lg leading-none text-red-700 transition-colors hover:text-red-900'
-            >
-              ×
-            </button>
+              <button
+                type='button'
+                onClick={() => remove(platform)}
+                aria-label='Quitar enlace'
+                className='font-pt-mono shrink-0 cursor-pointer px-2 text-lg leading-none text-red-700 transition-colors hover:text-red-900'
+              >
+                ×
+              </button>
+            </div>
           </div>
         ))}
       </div>

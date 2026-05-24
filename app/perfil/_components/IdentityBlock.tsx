@@ -2,6 +2,7 @@
 
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
+import { LocationFields } from '@/app/registro/formulario/_components/LocationFields'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import ProfileChips from './ProfileChips'
 import { ROLE_EDITABLE_FIELDS } from './profile-constants'
@@ -72,24 +73,18 @@ export default function IdentityBlock({
       )}
 
       {editing ? (
-        <div className='space-y-1 pt-1'>
-          <Input
-            value={country}
-            onChange={e => onCountryChange?.(e.target.value)}
-            placeholder='País'
-            className={smallInputCls}
-          />
-          <Input
-            value={state}
-            onChange={e => onStateChange?.(e.target.value)}
-            placeholder='Estado'
-            className={smallInputCls}
-          />
-          <Input
-            value={city}
-            onChange={e => onCityChange?.(e.target.value)}
-            placeholder='Ciudad'
-            className={smallInputCls}
+        <div className='space-y-2 pt-2'>
+          <LocationFields
+            initialCountry={country || 'México'}
+            initialState={state}
+            initialCity={city}
+            required={false}
+            compact
+            onChange={next => {
+              onCountryChange?.(next.country)
+              onStateChange?.(next.state)
+              onCityChange?.(next.city)
+            }}
           />
         </div>
       ) : (
