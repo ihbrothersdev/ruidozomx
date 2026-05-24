@@ -4,6 +4,7 @@ import type { Role } from '@/lib/types'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { useState } from 'react'
+import ComparteTuEventoModal from './ComparteTuEventoModal'
 import ConectarModal from './ConectarModal'
 import EnviarPropuestaModal from './EnviarPropuestaModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
@@ -32,6 +33,7 @@ export default function ActionButtons({
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [enviarPropuestaOpen, setEnviarPropuestaOpen] = useState(false)
   const [conectarOpen, setConectarOpen] = useState(false)
+  const [compartirEventoOpen, setCompartirEventoOpen] = useState(false)
   const [proposalSent, setProposalSent] = useState(false)
   const [interestSent, setInterestSent] = useState(false)
 
@@ -98,19 +100,34 @@ export default function ActionButtons({
             />
           </>
         ) : (
-          <button
-            type='button'
-            onClick={() => redirect('/proponer-rola')}
-            className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
-          >
-            <Image
-              src='/assets/proponer-rola-sm.png'
-              alt='Propón una rola'
-              width={315}
-              height={57}
-              className='h-auto w-full max-w-64 sm:max-w-72'
-            />
-          </button>
+          !editing && (
+            <>
+              <button
+                type='button'
+                onClick={() => redirect('/proponer-rola')}
+                className='block w-70 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95'
+              >
+                <Image
+                  src='/assets/proponer-rola-sm.png'
+                  alt='Propón una rola'
+                  width={315}
+                  height={57}
+                  className='h-auto w-full max-w-64 sm:max-w-72'
+                />
+              </button>
+              <button
+                type='button'
+                onClick={() => setCompartirEventoOpen(true)}
+                className='font-impact-label block w-fit cursor-pointer border-black bg-black px-4 py-2 text-left text-xl font-bold tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-black/80'
+              >
+                Publicar fecha o convocatoria
+              </button>
+              <ComparteTuEventoModal
+                open={compartirEventoOpen}
+                onOpenChange={setCompartirEventoOpen}
+              />
+            </>
+          )
         ))}
     </div>
   )

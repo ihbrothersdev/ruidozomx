@@ -265,7 +265,7 @@ export async function submitEvent(input: SubmitEventInput) {
     city: input.city?.trim() || null,
     event_type: input.type.trim(),
     external_link: input.externalLink?.trim() || null,
-    status: 'draft' // starts as draft until reviewed/published
+    status: 'published'
   })
 
   if (error) {
@@ -273,6 +273,7 @@ export async function submitEvent(input: SubmitEventInput) {
     return { error: 'No se pudo enviar el evento. Intenta de nuevo.' }
   }
 
+  revalidatePath('/perfil')
   return { success: true }
 }
 

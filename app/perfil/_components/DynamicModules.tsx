@@ -18,6 +18,8 @@ export interface EventSummary {
   event_type: string | null
   venue_name: string | null
   city: string | null
+  address: string | null
+  description: string | null
   status: 'draft' | 'published' | 'cancelled'
 }
 
@@ -218,7 +220,7 @@ export default function DynamicModules({
           )}
 
           {entry.kind === 'events' && entry.events.length > 0 && (
-            <ul className='mt-2 space-y-1.5'>
+            <ul className='mt-2 space-y-2.5'>
               {entry.events.map(ev => {
                 const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
                   day: '2-digit',
@@ -239,6 +241,8 @@ export default function DynamicModules({
                         {place && ` · ${place}`}
                         {ev.event_type && ` · ${ev.event_type}`}
                       </span>
+                      {ev.address && <span className='text-xs text-black/60'>{ev.address}</span>}
+                      {ev.description && <span className='text-xs text-black/70'>{ev.description}</span>}
                     </div>
                   </li>
                 )

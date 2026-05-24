@@ -103,7 +103,7 @@ export default function TicketText({
         {role === 'banda' && (
           <button
             onClick={gated(() => setCompartirEventoOpen(true))}
-            className='pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
+            className='group pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
           >
             <>
               <p className='text-base leading-tight text-black uppercase group-hover:underline md:text-xl lg:text-3xl'>
