@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { ROLE_LABELS, type Role } from '@/lib/types'
-import type { EventSummary, SongProposalSummary } from './DynamicModules'
+import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import OwnProfileActions from './OwnProfileActions'
 
 export interface OwnProfileViewProps {
@@ -10,12 +10,29 @@ export interface OwnProfileViewProps {
   photoUrl: string | null
   contact: string | null
   socialLinks: Record<string, string> | null
-  roleProfile: Record<string, any> | null
+  roleProfile: Record<string, unknown> | null
   bio?: string
   songProposals?: SongProposalSummary[]
   songProposalsCount?: number
   events?: EventSummary[]
   lastActivityAt: string | null
+  // Accepted but not yet rendered — the inbox section is still TODO. These
+  // come pre-fetched from the page so they don't duplicate queries once the
+  // inbox lands. Keeping them optional + permissive avoids a prop-drilling
+  // refactor when the section finally ships.
+  receivedConnections?: InterestSummary[]
+  receivedConnectionsCount?: number
+  sentConnections?: InterestSummary[]
+  sentConnectionsCount?: number
+  mutualIds?: string[]
+  receivedProposals?: UserProposalSummary[]
+  receivedProposalsCount?: number
+  sentProposals?: UserProposalSummary[]
+  sentProposalsCount?: number
+  /** Raw location pieces — kept for future editable form; not yet rendered. */
+  country?: string | null
+  state?: string | null
+  city?: string | null
 }
 
 export default function OwnProfileView({ displayName, photoUrl, role, location }: OwnProfileViewProps) {
@@ -140,8 +157,6 @@ function DataFields({ displayName, location, role }: DataFieldsProps) {
     </div>
   )
 }
-
-
 
 interface PolaroidCardProps {
   photoUrl: string | null

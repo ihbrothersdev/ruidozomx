@@ -84,9 +84,7 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
 
   return (
     <div className='space-y-3'>
-      <p className='font-pt-mono text-[10px] tracking-wider text-black/40 uppercase'>
-        Toca para activar o desactivar
-      </p>
+      <p className='font-pt-mono text-[10px] tracking-wider text-black/40 uppercase'>Toca para activar o desactivar</p>
       {booleans.length > 0 && (
         <div className='flex flex-wrap gap-2'>
           {booleans.map(field => (
