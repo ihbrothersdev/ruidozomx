@@ -16,7 +16,7 @@ export default function OwnProfileActions() {
   const [publicarEventoOpen, setPublicarEventoOpen] = useState(false)
 
   const buttonCls =
-    'font-pt-mono block w-85 cursor-pointer bg-black px-3 py-1 text-right text-lg font-bold tracking-wider text-red-700 uppercase transition-opacity hover:opacity-80 active:scale-[0.98] sm:text-lg md:text-xl'
+    'font-pt-mono block w-68 cursor-pointer bg-black px-3 py-1 text-right text-lg font-bold tracking-wider text-red-700 uppercase transition-opacity hover:opacity-80 active:scale-[0.98] sm:text-lg md:text-xl'
 
   return (
     <div className='space-y-1'>
