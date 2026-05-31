@@ -102,6 +102,9 @@ function SideCard({
 }) {
   const sideCls = side === 'A' ? 'border-red-500/20 bg-red-500/[0.03]' : 'border-blue-500/20 bg-blue-500/[0.03]'
   const badgeCls = side === 'A' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
+  // Sides normally cap at 13, but one may hold more (e.g. Cassette 3 has 14 on A).
+  // Render as many slots as the highest occupied position so nothing is hidden.
+  const count = songs.reduce((m, s) => Math.max(m, s.position), SIZE)
 
   return (
     <Card className={`gap-4 border py-5 ${sideCls}`}>
@@ -111,12 +114,12 @@ function SideCard({
             {side}
           </div>
           <p className='font-pt-mono text-[11px] font-bold tracking-widest text-white/60 uppercase'>
-            Lado {side} · {songs.length}/13
+            Lado {side} · {songs.length}/{count}
           </p>
         </div>
 
         <ol className='space-y-1'>
-          {Array.from({ length: SIZE }, (_, i) => i + 1).map(pos => {
+          {Array.from({ length: count }, (_, i) => i + 1).map(pos => {
             const song = songs.find(s => s.position === pos)
             if (!song) {
               return (

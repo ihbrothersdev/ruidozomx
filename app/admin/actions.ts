@@ -110,7 +110,7 @@ export async function acceptProposal(formData: FormData) {
   await svc
     .from('song_proposals')
     .update({
-      status: 'selected',
+      status: 'accepted',
       cassette_id: target!.id,
       reviewed_at: new Date().toISOString(),
       reviewed_by: user.id
@@ -134,7 +134,7 @@ export async function rejectProposal(formData: FormData) {
   const { data: existing } = await svc.from('song_proposals').select('status').eq('id', proposalId).single()
   if (!existing) backWithError('/admin/propuestas', 'generico', 'Propuesta no encontrada.')
 
-  if (existing!.status === 'selected') {
+  if (existing!.status === 'accepted') {
     await svc.from('songs').delete().eq('proposal_id', proposalId)
   }
 
@@ -242,10 +242,29 @@ export async function publishCassette(formData: FormData) {
     )
   }
 
+  // The player streams a single concatenated file (built by `npm run build-cassette`).
+  // Require it to exist and cover every song before publishing, so a cassette never
+  // goes active without its audio (or with a stale offsets table that misses a song).
+  const { data: target } = await svc
+    .from('cassettes')
+    .select('archived, concat_audio_url, song_offsets')
+    .eq('id', cassetteId)
+    .maybeSingle()
+
+  const offsets = (target?.song_offsets as { song_id: string }[] | null) ?? []
+  const offsetIds = new Set(offsets.map(o => o.song_id))
+  const concatReady = Boolean(target?.concat_audio_url) && tracks!.every(t => offsetIds.has(t.id))
+  if (!concatReady) {
+    backWithError(
+      `/admin/cassettes/${cassetteId}`,
+      'audio_concat_faltante',
+      `Falta generar el audio del cassette (o est\u00e1 desfasado). Corre: npm run build-cassette ${cassetteId}`
+    )
+  }
+
   // If the cassette was archived (e.g. we're reactivating an old one), unarchive
   // it first so the RPC can mark it active without violating the single-active
   // index. Safe even if the RPC also clears `archived` \u2014 UPDATEs are idempotent.
-  const { data: target } = await svc.from('cassettes').select('archived').eq('id', cassetteId).maybeSingle()
   if (target?.archived) {
     await svc.from('cassettes').update({ archived: false }).eq('id', cassetteId)
   }
@@ -475,7 +494,7 @@ export async function addSongToCassette(
   if (side !== 'A' && side !== 'B') {
     return { ok: false, error: 'lado_invalido' }
   }
-  if (!Number.isInteger(position) || position < 1 || position > 13) {
+  if (!Number.isInteger(position) || position < 1 || position > 14) {
     return { ok: false, error: 'posicion_invalida' }
   }
   if (file.size === 0) {

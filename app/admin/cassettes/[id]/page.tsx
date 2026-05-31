@@ -64,6 +64,14 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
   const missingAudio = cassetteSongs.filter(s => !isPlayableAudio(s.audioUrl))
   const missingAudioCount = missingAudio.length
 
+  // The single concatenated audio (`npm run build-cassette`) must exist and cover
+  // every song before the cassette can be published. Gates the Publicar button.
+  const concatOffsetIds = new Set(((cassette.song_offsets as { song_id: string }[] | null) ?? []).map(o => o.song_id))
+  const concatReady =
+    Boolean(cassette.concat_audio_url) &&
+    cassetteSongs.length > 0 &&
+    cassetteSongs.every(s => concatOffsetIds.has(s.id))
+
   const unorganizedAudioCount = cassetteSongs.filter(s => {
     const key = extractStorageKey(s.audioUrl, SONGS_BUCKET)
     return key !== null && !key.startsWith(`${cassette.id}/`)
@@ -115,7 +123,7 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
           <div className='font-pt-mono mt-3 flex flex-wrap items-center gap-3 text-xs text-white/50'>
             <Badge className={`tracking-widest ${stateBadge.cls}`}>{stateBadge.label}</Badge>
             <span>
-              <strong className='text-white'>{total}</strong>/26 slots
+              <strong className='text-white'>{total}</strong>/{Math.max(26, total)} slots
             </span>
             {cassette.curator_name && <span>Curador: {cassette.curator_name}</span>}
             <span>
@@ -137,6 +145,7 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
               cassetteId={cassette.id}
               songCount={total}
               missingAudio={missingAudioCount}
+              concatReady={concatReady}
               isArchived={state === 'archived'}
             />
           )}

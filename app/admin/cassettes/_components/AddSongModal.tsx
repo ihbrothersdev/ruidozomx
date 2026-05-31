@@ -21,7 +21,7 @@ import { sileo } from 'sileo'
 const ERROR_LABELS: Record<string, string> = {
   faltan_datos: 'Completa los campos requeridos.',
   lado_invalido: 'Lado inválido.',
-  posicion_invalida: 'La posición debe estar entre 1 y 13.',
+  posicion_invalida: 'La posición debe estar entre 1 y 14.',
   archivo_vacio: 'El archivo está vacío.',
   archivo_muy_grande: 'El archivo supera el límite de 30 MB.',
   tipo_no_soportado: 'Formato no soportado. Usa MP3, WAV o M4A.',
@@ -74,7 +74,7 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
 
   const availablePositions = useMemo(() => {
     const taken = new Set(occupied.filter(s => s.side === side).map(s => s.position))
-    return Array.from({ length: 13 }, (_, i) => i + 1).filter(p => !taken.has(p))
+    return Array.from({ length: 14 }, (_, i) => i + 1).filter(p => !taken.has(p))
   }, [occupied, side])
 
   // Default the position to the first free slot whenever the side changes or
@@ -82,7 +82,7 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
   function resetForSide(nextSide: Side) {
     setSide(nextSide)
     const taken = new Set(occupied.filter(s => s.side === nextSide).map(s => s.position))
-    const firstFree = Array.from({ length: 13 }, (_, i) => i + 1).find(p => !taken.has(p))
+    const firstFree = Array.from({ length: 14 }, (_, i) => i + 1).find(p => !taken.has(p))
     setPosition(firstFree ? String(firstFree) : '')
   }
 
@@ -156,8 +156,8 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
   }
 
   const noFreeSlots = availablePositions.length === 0
-  const sideAFree = occupied.filter(s => s.side === 'A').length < 13
-  const sideBFree = occupied.filter(s => s.side === 'B').length < 13
+  const sideAFree = occupied.filter(s => s.side === 'A').length < 14
+  const sideBFree = occupied.filter(s => s.side === 'B').length < 14
   const cassetteFull = !sideAFree && !sideBFree
 
   return (

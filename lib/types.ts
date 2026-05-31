@@ -7,6 +7,9 @@ export interface PlayerSong {
   side: 'A' | 'B'
   position: number
   durationSeconds: number
+  /** Slug of the artist's band profile, when one exists — makes the artist
+   *  clickable on the home cassette (→ /perfil/[slug]). Undefined = free-text artist. */
+  artistSlug?: string
   /** URL of this song's individual audio file. Always populated. */
   audioSrc: string
   /**
@@ -270,7 +273,7 @@ export interface Event {
 
 // === Song Proposals ===
 
-export type ProposalStatus = 'pending' | 'in_review' | 'selected' | 'rejected'
+export type ProposalStatus = 'pending' | 'in_review' | 'accepted' | 'rejected'
 
 export interface SongProposal {
   id: string

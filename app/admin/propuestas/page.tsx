@@ -16,7 +16,7 @@ import { ProposalEmbed } from './_components/ProposalEmbed'
 import { SearchAndDateFilters } from './_components/SearchAndDateFilters'
 import type { OccupiedSlot } from './_components/SlotPicker'
 
-const FILTERS = ['pending', 'selected', 'rejected', 'all'] as const
+const FILTERS = ['pending', 'accepted', 'rejected', 'all'] as const
 type Filter = (typeof FILTERS)[number]
 
 interface SearchParams {
@@ -29,7 +29,7 @@ interface SearchParams {
 const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
   pending: { label: 'Pendiente', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
   in_review: { label: 'En revisión', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
-  selected: { label: 'Aceptada', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
+  accepted: { label: 'Aceptada', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
   rejected: { label: 'Rechazada', cls: 'bg-white/10 text-white/50 border-white/15' }
 }
 
@@ -68,10 +68,10 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
   }))
 
   const { data: countsRows } = await supabase.from('song_proposals').select('status')
-  const counts: Record<Filter, number> = { pending: 0, selected: 0, rejected: 0, all: countsRows?.length ?? 0 }
+  const counts: Record<Filter, number> = { pending: 0, accepted: 0, rejected: 0, all: countsRows?.length ?? 0 }
   for (const r of countsRows ?? []) {
     const s = r.status as ProposalStatus
-    if (s === 'pending' || s === 'selected' || s === 'rejected') counts[s]++
+    if (s === 'pending' || s === 'accepted' || s === 'rejected') counts[s]++
   }
 
   let query = supabase
@@ -118,7 +118,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                 </Badge>
               </p>
               <p className='font-pt-mono mt-2 text-xs text-white/50'>
-                <strong className='text-white'>{occupied.length}</strong>/26 slots ocupados
+                <strong className='text-white'>{occupied.length}</strong>/{Math.max(26, occupied.length)} slots ocupados
               </p>
             </div>
 
@@ -172,7 +172,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
           <CardContent className='font-pt-mono text-center text-white/30'>
             {filter === 'pending'
               ? 'No hay propuestas pendientes. ✓'
-              : filter === 'selected'
+              : filter === 'accepted'
                 ? 'Aún no hay propuestas aceptadas.'
                 : filter === 'rejected'
                   ? 'Aún no hay propuestas rechazadas.'

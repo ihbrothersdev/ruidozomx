@@ -12,6 +12,7 @@ import { TransportControls } from './TransportControls'
 interface CassettePlayerProps {
   songTitle: string
   artist: string
+  artistSlug?: string
   date: string
   side: 'A' | 'B'
   isPlaying: boolean
@@ -30,6 +31,7 @@ interface CassettePlayerProps {
 export function CassettePlayer({
   songTitle,
   artist,
+  artistSlug,
   date,
   side,
   isPlaying,
@@ -73,6 +75,7 @@ export function CassettePlayer({
         <Cassette
           songTitle={songTitle}
           artist={artist}
+          artistSlug={artistSlug}
           date={date}
           side={side}
           isPlaying={isPlaying}

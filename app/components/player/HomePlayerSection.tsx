@@ -57,6 +57,7 @@ export function HomePlayerSection({
             <CassettePlayer
               songTitle={currentSong?.title ?? ''}
               artist={currentSong?.artist ?? ''}
+              artistSlug={currentSong?.artistSlug}
               date={date}
               side={currentSide}
               isPlaying={isPlaying}

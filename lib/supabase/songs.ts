@@ -66,7 +66,7 @@ export async function getActiveCassetteSongs(): Promise<{
   // 2. Fetch songs ordered by side + position
   const { data: rows } = await supabase
     .from('songs')
-    .select('id, title, artist, duration_seconds, side, position, audio_url')
+    .select('id, title, artist, duration_seconds, side, position, audio_url, artist_profile_id')
     .eq('cassette_id', cassette.id)
     .order('side', { ascending: true })
     .order('position', { ascending: true })
@@ -79,6 +79,15 @@ export async function getActiveCassetteSongs(): Promise<{
       cassetteStartDate: cassette.start_date ?? null,
       concatAudioUrl: null
     }
+  }
+
+  // 2b. Resolve band-profile slugs so the player can link each artist to their
+  //     profile (/perfil/[slug]). Only artists with an artist_profile_id get one.
+  const profileIds = [...new Set(rows.map(r => r.artist_profile_id).filter((v): v is string => Boolean(v)))]
+  const slugByProfileId = new Map<string, string>()
+  if (profileIds.length > 0) {
+    const { data: profs } = await supabase.from('profiles').select('id, slug').in('id', profileIds)
+    for (const p of profs ?? []) if (p.slug) slugByProfileId.set(p.id, p.slug)
   }
 
   // 3. If the cassette was processed, index offsets by song_id for cheap lookup.
@@ -101,6 +110,7 @@ export async function getActiveCassetteSongs(): Promise<{
       id: row.id,
       title: row.title,
       artist: row.artist,
+      artistSlug: row.artist_profile_id ? slugByProfileId.get(row.artist_profile_id) : undefined,
       side: row.side as 'A' | 'B',
       position: row.position,
       durationSeconds: row.duration_seconds ?? (off ? Math.round(off.end - off.start) : 0),

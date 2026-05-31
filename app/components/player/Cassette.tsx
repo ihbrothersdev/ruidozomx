@@ -5,12 +5,13 @@ import { CassetteLabels } from './CassetteLabels'
 interface CassetteProps {
   songTitle: string
   artist: string
+  artistSlug?: string
   date: string
   side: 'A' | 'B'
   isPlaying?: boolean
 }
 
-export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteProps) {
+export function Cassette({ songTitle, artist, artistSlug, date, side, isPlaying }: CassetteProps) {
   return (
     <div
       className='relative mx-auto w-full'
@@ -46,6 +47,7 @@ export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteP
       <CassetteLabels
         songTitle={songTitle}
         artist={artist}
+        artistSlug={artistSlug}
         date={date}
       />
     </div>

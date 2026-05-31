@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
 
-type Filter = 'all' | 'pending' | 'selected' | 'rejected'
+type Filter = 'all' | 'pending' | 'accepted' | 'rejected'
 
 interface FilterTabsProps {
   counts: Record<Filter, number>
@@ -30,7 +30,7 @@ const TABS: {
     badgeIdle: 'bg-amber-500/15 text-amber-300/80'
   },
   {
-    id: 'selected',
+    id: 'accepted',
     label: 'Aceptadas',
     triggerCls:
       'bg-emerald-500/5 text-emerald-300/80 hover:bg-emerald-500/10 hover:text-emerald-200 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-100 data-[state=active]:shadow-[inset_0_-2px_0_0] data-[state=active]:shadow-emerald-400',

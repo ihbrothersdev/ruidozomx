@@ -34,6 +34,7 @@ export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
       />
       <Button
         type='submit'
+        size='lg'
         variant='outline'
         className='font-pt-mono border-amber-400/40 bg-amber-500/10 text-xs tracking-wide text-amber-200 uppercase hover:bg-amber-500/20 hover:text-amber-100'
       >
@@ -48,17 +49,23 @@ export function PublishButton({
   cassetteId,
   songCount,
   missingAudio = 0,
+  concatReady = true,
   isArchived = false
 }: {
   cassetteId: string
   songCount: number
   missingAudio?: number
+  concatReady?: boolean
   isArchived?: boolean
 }) {
   const formRef = useRef<HTMLFormElement>(null)
   const lowCount = songCount < 10
-  const blocked = missingAudio > 0
   const label = isArchived ? 'Reactivar' : 'Publicar'
+  const blocked = missingAudio > 0 || !concatReady
+  const blockMsg =
+    missingAudio > 0
+      ? `Sube el MP3 de ${missingAudio} canción${missingAudio === 1 ? '' : 'es'} antes de ${label.toLowerCase()}`
+      : `Genera el audio del cassette primero: corre "npm run build-cassette" y recarga`
   const dialogTitle = isArchived ? 'Reactivar cassette' : 'Publicar cassette'
   const dialogConfirm = isArchived ? 'Sí, reactivar' : 'Sí, publicar'
   const dialogBody = isArchived
@@ -75,6 +82,7 @@ export function PublishButton({
             <span tabIndex={0}>
               <Button
                 disabled
+                size='lg'
                 className='font-pt-mono cursor-not-allowed bg-red-600/30 text-xs tracking-wide text-white/60 uppercase'
               >
                 <Disc3 className='h-3.5 w-3.5' />
@@ -82,9 +90,7 @@ export function PublishButton({
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent>
-            Sube el MP3 de {missingAudio} canción{missingAudio === 1 ? '' : 'es'} antes de {label.toLowerCase()}
-          </TooltipContent>
+          <TooltipContent>{blockMsg}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )
@@ -93,16 +99,17 @@ export function PublishButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500'>
+        <Button
+          size='lg'
+          className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500'
+        >
           <Disc3 className='h-3.5 w-3.5' />
           {label}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className='border-white/10 bg-neutral-900 text-white'>
         <AlertDialogHeader>
-          <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>
-            {dialogTitle}
-          </AlertDialogTitle>
+          <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>{dialogTitle}</AlertDialogTitle>
           <AlertDialogDescription className='font-pt-mono text-white/60'>{dialogBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -139,6 +146,7 @@ export function DeleteButton({ cassetteId, hasSongs }: { cassetteId: string; has
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
+          size='lg'
           variant='outline'
           className='font-pt-mono border-white/10 bg-transparent text-xs tracking-wide text-white/50 uppercase hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300'
         >
