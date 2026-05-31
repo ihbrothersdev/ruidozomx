@@ -30,7 +30,7 @@ CREATE TYPE activity_type AS ENUM (
   'event_published', 'user_proposal'
 );
 
-CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
+CREATE TYPE event_status AS ENUM ('published', 'cancelled');
 
 -- ============================================================
 -- PROFILES (universal identity — always filled at registration)
@@ -183,19 +183,20 @@ CREATE INDEX idx_cassettes_archived ON cassettes(archived, start_date DESC);
 -- ============================================================
 
 CREATE TABLE song_proposals (
-  id            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID           NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  title         VARCHAR(200)   NOT NULL,
-  artist        VARCHAR(200)   NOT NULL,
-  genre         VARCHAR(100),
-  external_link TEXT,
+  id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID            NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title           VARCHAR(200)    NOT NULL,
+  artist          VARCHAR(200)    NOT NULL,
+  genre           VARCHAR(100),
+  external_link   TEXT,
   audio_file_path TEXT,
-  comment       TEXT,
-  status        proposal_status NOT NULL DEFAULT 'pending',
-  cassette_id   UUID           REFERENCES cassettes(id),
-  created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-  reviewed_at   TIMESTAMPTZ,
-  reviewed_by   UUID           REFERENCES profiles(id)
+  comment         TEXT,
+  rights_accepted BOOLEAN,
+  status          proposal_status NOT NULL DEFAULT 'pending',
+  cassette_id     UUID            REFERENCES cassettes(id),
+  created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  reviewed_at     TIMESTAMPTZ,
+  reviewed_by     UUID            REFERENCES profiles(id)
 );
 
 CREATE INDEX idx_proposals_user   ON song_proposals(user_id, created_at DESC);
@@ -231,8 +232,8 @@ CREATE TABLE events (
   profile_id       UUID         NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   title            VARCHAR(200) NOT NULL,
   description      TEXT,
-  event_date       TIMESTAMPTZ  NOT NULL,
-  event_end_date   TIMESTAMPTZ,
+  event_date       DATE         NOT NULL,
+  event_end_date   DATE,
   venue_name       VARCHAR(200),
   venue_profile_id UUID         REFERENCES profiles(id),
   address          TEXT,
@@ -242,7 +243,7 @@ CREATE TABLE events (
   event_type       VARCHAR(100),
   external_link    TEXT,
   cover_image_url  TEXT,
-  status           event_status NOT NULL DEFAULT 'draft',
+  status           event_status NOT NULL DEFAULT 'published',
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -409,6 +410,9 @@ CREATE POLICY "interests_select_own"
 CREATE POLICY "interests_insert_own"
   ON interests FOR INSERT
   WITH CHECK (auth.uid() = from_profile_id);
+CREATE POLICY "interests_delete_sender"
+  ON interests FOR DELETE
+  USING (auth.uid() = from_profile_id);
 
 -- EVENTS
 CREATE POLICY "events_select_published"

@@ -12,12 +12,18 @@ interface SongListProps {
   onSelectSong?: (id: string) => void
 }
 
+// Fixed row count matching the printed lines on `lista-canciones.png` and
+// `lista-canciones-mobile.png`. Keeping this constant means the grid always
+// distributes the same vertical space regardless of how many songs each
+// side has — extra rows fall on the asset's empty bullet positions.
+const ROWS_PER_SIDE_MOBILE = 15
+const ROWS_PER_SIDE = 14
+
 export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong }: SongListProps) {
   const sides = {
     A: songs.filter(s => s.side === 'A'),
     B: songs.filter(s => s.side === 'B')
   }
-  const rows = Math.max(sides.A.length, sides.B.length, 1)
 
   return (
     <>
@@ -48,10 +54,10 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
         </div>
 
         <div
-          className='absolute top-[16%] right-[1.5%] bottom-[17.5%] left-[1.5%] z-[2] grid grid-cols-2 gap-x-[3%]'
-          style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}
+          className='absolute top-[16%] right-[1.5%] bottom-[12%] left-[1.5%] z-[2] grid grid-cols-2 gap-x-[3%]'
+          style={{ gridTemplateRows: `repeat(${ROWS_PER_SIDE}, 1fr)` }}
         >
-          {Array.from({ length: rows }, (_, i) => (
+          {Array.from({ length: ROWS_PER_SIDE }, (_, i) => (
             <SongRow
               key={i}
               index={i}
@@ -81,7 +87,7 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
         {/* Side A — top half */}
         <div
           className='absolute top-[9%] right-[4%] bottom-[53%] left-[4%] z-[2] grid grid-cols-1'
-          style={{ gridTemplateRows: `repeat(15, 1fr)` }}
+          style={{ gridTemplateRows: `repeat(${ROWS_PER_SIDE_MOBILE}, 1fr)` }}
         >
           {sides.A.map((song, i) => {
             const isActive = song.id === currentSongId
@@ -112,7 +118,7 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
         {/* Side B — bottom half */}
         <div
           className='absolute top-[58%] right-[4%] bottom-[4%] left-[4%] z-[2] grid grid-cols-1'
-          style={{ gridTemplateRows: `repeat(15, 1fr)` }}
+          style={{ gridTemplateRows: `repeat(${ROWS_PER_SIDE_MOBILE}, 1fr)` }}
         >
           {sides.B.map((song, i) => {
             const isActive = song.id === currentSongId

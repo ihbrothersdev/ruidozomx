@@ -23,9 +23,17 @@ interface AudioPlayerActions {
   playSong: (id: string) => void
 }
 
-export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): AudioPlayerState & AudioPlayerActions {
-  const poolRef = useRef<Map<string, HTMLAudioElement>>(new Map())
-  const activeRef = useRef<HTMLAudioElement | null>(null)
+export function useAudioPlayer(
+  songs: PlayerSong[],
+  initialSongId: string,
+  concatAudioUrl?: string | null
+): AudioPlayerState & AudioPlayerActions {
+  // Single <audio> element shared across all tracks. iOS only grants the
+  // "user-activated" autoplay permission to the specific element the user
+  // gestured on; a pool of one-per-song elements means chained playback from
+  // 'ended' is blocked for every track after the first. Swapping `.src` on a
+  // single element keeps the unlock and avoids that block.
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   // Tracks whether the most recent pause was initiated by the user (UI button
   // or OS media control). iOS fires a spurious 'pause' on lock-screen even
   // though audio keeps playing; we use this flag to ignore those.
@@ -36,85 +44,162 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
 
+  // Concat mode: when the cassette has been processed by `npm run
+  // build-cassette`, the player streams ONE continuous file and navigates
+  // between songs via `currentTime` instead of swapping `audio.src`. This
+  // survives Android's background tab freeze because the browser doesn't
+  // need JS to advance between songs — they're all the same audio element,
+  // just different timestamps. Requires every song to carry start/end
+  // offsets; otherwise we fall back to the legacy per-song-URL mode.
+  const concatMode =
+    !!concatAudioUrl && songs.length > 0 && songs.every(s => s.startSeconds !== undefined && s.endSeconds !== undefined)
+  const concatModeRef = useRef(concatMode)
+  concatModeRef.current = concatMode
+  const concatAudioUrlRef = useRef<string | null | undefined>(concatAudioUrl)
+  concatAudioUrlRef.current = concatAudioUrl
+
   const sortedSongsRef = useRef<PlayerSong[]>([])
   sortedSongsRef.current = [...songs].sort((a, b) => {
     if (a.side !== b.side) return a.side === 'A' ? -1 : 1
     return a.position - b.position
   })
 
+  // Mirror currentSongId in a ref so the mount-time listeners (attached once)
+  // always see the latest value without re-attaching.
+  const currentSongIdRef = useRef(currentSongId)
+  useEffect(() => {
+    currentSongIdRef.current = currentSongId
+  }, [currentSongId])
+
   const currentSong = songs.find(s => s.id === currentSongId)
   const currentSide = currentSong?.side ?? 'A'
   const progress = duration > 0 ? elapsedSeconds / duration : 0
 
-  /** Get or create an Audio element for a song.
-   *  iOS Safari handles background/lock-screen playback far better when the
-   *  <audio> element lives in the DOM — pure `new Audio()` instances kept in
-   *  a JS Map can be paused by the OS or have their playbackState ignored
-   *  when the page is hidden. Append a hidden, muted-attributes-free
-   *  <audio> per song to keep iOS happy. */
-  const getAudio = useCallback((song: PlayerSong): HTMLAudioElement => {
-    const pool = poolRef.current
-    let audio = pool.get(song.id)
-    if (!audio) {
-      audio = document.createElement('audio')
-      audio.preload = 'auto'
-      audio.src = song.audioSrc
-      audio.setAttribute('playsinline', '')
-      audio.setAttribute('webkit-playsinline', '')
-      audio.style.display = 'none'
-      document.body.appendChild(audio)
-      pool.set(song.id, audio)
-    }
-    return audio
-  }, [])
-
-  // Build pool for all songs on mount (staggered, non-blocking)
+  // Create the audio element once and attach all listeners once. Swapping
+  // `.src` later is what advances tracks — the element itself never changes,
+  // so there's no race between React's effect-driven ref swap and the
+  // playback chain triggered from 'ended'.
   useEffect(() => {
-    const sorted = sortedSongsRef.current
-    if (sorted.length === 0) return
+    const audio = document.createElement('audio')
+    audio.preload = 'auto'
+    audio.setAttribute('playsinline', '')
+    audio.setAttribute('webkit-playsinline', '')
+    audio.style.display = 'none'
+    document.body.appendChild(audio)
+    audioRef.current = audio
 
-    let i = 0
-    // Create one Audio element every 200ms to avoid hammering the network
-    const interval = setInterval(() => {
-      if (i >= sorted.length) {
-        clearInterval(interval)
+    const onTimeUpdate = () => {
+      const t = audio.currentTime
+      if (concatModeRef.current) {
+        // CONCAT MODE: audio.currentTime is absolute within the whole cassette.
+        // Derive (a) which song the cursor is in, (b) the per-song elapsed
+        // counter the UI shows. The browser keeps playing across boundaries
+        // by itself — we're just keeping the label in sync.
+        const sorted = sortedSongsRef.current
+        const detected = sorted.find(
+          s => s.startSeconds !== undefined && s.endSeconds !== undefined && t >= s.startSeconds && t < s.endSeconds
+        )
+        const cur = detected ?? sorted.find(s => s.id === currentSongIdRef.current) ?? sorted[0]
+        if (detected && detected.id !== currentSongIdRef.current) {
+          setCurrentSongId(detected.id)
+        }
+        const start = cur?.startSeconds ?? 0
+        setElapsedSeconds(Math.max(0, Math.floor(t - start)))
+      } else {
+        setElapsedSeconds(Math.floor(t))
+      }
+    }
+    const onDurationChange = () => {
+      // In concat mode the audio element's own duration is the whole file,
+      // which is meaningless for the UI; a separate effect sets `duration`
+      // from the current song's offsets. Ignore the event here.
+      if (concatModeRef.current) return
+      setDuration(Math.floor(audio.duration) || 0)
+    }
+    const onEnded = () => {
+      const sorted = sortedSongsRef.current
+      if (concatModeRef.current) {
+        // In concat mode, the only 'ended' is the end of the whole cassette
+        // (song-to-song transitions are invisible to the browser). Wrap to
+        // the first song and pause — same end-of-cassette UX as legacy.
+        const first = sorted[0]
+        setCurrentSongId(first.id)
+        if (first.startSeconds !== undefined) audio.currentTime = first.startSeconds
+        setIsPlaying(false)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused'
+        }
         return
       }
-      getAudio(sorted[i])
-      i++
-    }, 200)
-
-    return () => clearInterval(interval)
-  }, [songs, getAudio])
-
-  // Wire up the active audio element when currentSongId changes
-  useEffect(() => {
-    if (!currentSong) return
-
-    // Detach old listeners
-    const prev = activeRef.current
-    if (prev) {
-      prev.pause()
-      prev.removeEventListener('timeupdate', onTimeUpdate)
-      prev.removeEventListener('durationchange', onDurationChange)
-      prev.removeEventListener('ended', onEnded)
-      prev.removeEventListener('play', onPlay)
-      prev.removeEventListener('pause', onPause)
+      const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
+      if (idx < sorted.length - 1) {
+        const nextSong = sorted[idx + 1]
+        setCurrentSongId(nextSong.id)
+        audio.src = nextSong.audioSrc
+        audio.currentTime = 0
+        audio.play().catch(() => {})
+      } else {
+        const first = sorted[0]
+        setCurrentSongId(first.id)
+        audio.src = first.audioSrc
+        audio.currentTime = 0
+        setIsPlaying(false)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused'
+        }
+      }
+    }
+    const onPlay = () => {
+      userPausedRef.current = false
+      setIsPlaying(true)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'
+      }
+    }
+    const onPause = () => {
+      // iOS Safari/WebKit fires spurious 'pause' events while the screen is
+      // locked even though audio keeps playing. Only honour pauses initiated
+      // by us via the `pause()` callback (UI button or OS media control); all
+      // other pause events are ignored and we re-assert 'playing' so the
+      // lock-screen icon stays correct.
+      if (!userPausedRef.current) {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing'
+        }
+        return
+      }
+      userPausedRef.current = false
+      setIsPlaying(false)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused'
+      }
     }
 
-    const audio = getAudio(currentSong)
-    activeRef.current = audio
-
-    // Attach listeners
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
 
-    // Sync state
-    setElapsedSeconds(Math.floor(audio.currentTime))
-    setDuration(Math.floor(audio.duration) || 0)
+    // Preload the initial track so the first play() responds instantly to
+    // the user's gesture (which is also what unlocks autoplay for the rest
+    // of the session on iOS).
+    const initial = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+    if (concatModeRef.current && concatAudioUrlRef.current) {
+      // Concat mode: one src for the whole cassette; seek to the initial
+      // song's offset. After that, src never changes for this mount.
+      audio.src = concatAudioUrlRef.current
+      if (initial?.startSeconds !== undefined) {
+        // Some browsers ignore currentTime sets before metadata loads; wait
+        // for loadedmetadata then seek. We attach a one-shot listener.
+        const onLoaded = () => {
+          if (initial.startSeconds !== undefined) audio.currentTime = initial.startSeconds
+        }
+        audio.addEventListener('loadedmetadata', onLoaded, { once: true })
+      }
+    } else if (initial) {
+      audio.src = initial.audioSrc
+    }
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
@@ -122,71 +207,23 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSongId])
-
-  function onTimeUpdate() {
-    const a = activeRef.current
-    if (a) setElapsedSeconds(Math.floor(a.currentTime))
-  }
-  function onDurationChange() {
-    const a = activeRef.current
-    if (a) setDuration(Math.floor(a.duration) || 0)
-  }
-  function onEnded() {
-    const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
-    if (idx < sorted.length - 1) {
-      setCurrentSongId(sorted[idx + 1].id)
-      setTimeout(() => activeRef.current?.play().catch(() => {}), 0)
-    } else {
-      setCurrentSongId(sorted[0].id)
-      setIsPlaying(false)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused'
-      }
-    }
-  }
-  function onPlay() {
-    userPausedRef.current = false
-    setIsPlaying(true)
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'playing'
-    }
-  }
-  function onPause() {
-    // iOS Safari/WebKit fires spurious 'pause' events while the screen is
-    // locked even though audio keeps playing. visibilityState is unreliable
-    // on iOS during background audio, so we only honour pauses initiated by
-    // us via the `pause()` callback (UI button or OS media control). All
-    // other pause events are ignored and we re-assert 'playing' so the
-    // lock-screen icon stays correct.
-    if (!userPausedRef.current) {
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      return
-    }
-    userPausedRef.current = false
-    setIsPlaying(false)
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'paused'
-    }
-  }
-
-  // Cleanup pool on unmount
-  useEffect(() => {
-    const pool = poolRef.current
-    return () => {
-      pool.forEach(audio => {
-        audio.pause()
-        audio.src = ''
-        if (audio.parentNode) audio.parentNode.removeChild(audio)
-      })
-      pool.clear()
+      audio.pause()
+      audio.src = ''
+      if (audio.parentNode) audio.parentNode.removeChild(audio)
+      audioRef.current = null
     }
   }, [])
+
+  // In concat mode, `durationchange` fires once for the entire cassette
+  // file, which is useless for the per-song UI (the cassette label shows
+  // 03:42 / 03:42, not 03:42 / 47:18). Drive `duration` from the current
+  // song's offsets instead. In legacy mode this effect is a no-op — the
+  // event-driven `setDuration` in onDurationChange owns the value.
+  useEffect(() => {
+    if (!concatMode || !currentSong) return
+    if (currentSong.startSeconds === undefined || currentSong.endSeconds === undefined) return
+    setDuration(Math.max(0, Math.floor(currentSong.endSeconds - currentSong.startSeconds)))
+  }, [concatMode, currentSong])
 
   // Re-sync playbackState from the audio element's actual state ONLY when the
   // page becomes visible again (user unlocks). Syncing while the page is
@@ -195,7 +232,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     if (typeof document === 'undefined' || !('mediaSession' in navigator)) return
     const sync = () => {
       if (document.visibilityState !== 'visible') return
-      const audio = activeRef.current
+      const audio = audioRef.current
       if (!audio) return
       navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing'
     }
@@ -234,7 +271,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // The audio element's 'play' event will set mediaSession to 'playing'
     // once playback actually starts. Avoid eager updates so we don't desync
     // from the underlying audio state on iOS.
-    activeRef.current?.play().catch(() => {})
+    audioRef.current?.play().catch(() => {})
   }, [])
 
   const pause = useCallback(() => {
@@ -244,11 +281,11 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     // background; if we eagerly mark paused, the lock-screen icon would
     // flip to "play" even though audio kept playing. Let the audio's own
     // 'pause' event drive the state update via onPause.
-    activeRef.current?.pause()
+    audioRef.current?.pause()
   }, [])
 
   const stop = useCallback(() => {
-    const audio = activeRef.current
+    const audio = audioRef.current
     if (!audio) return
     userPausedRef.current = true
     audio.pause()
@@ -258,59 +295,90 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
   }, [])
 
   const next = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
     const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
-    if (idx < sorted.length - 1) {
-      const nextSong = sorted[idx + 1]
-      const current = activeRef.current
-      if (current) {
-        current.pause()
-        current.currentTime = 0
-      }
-      setIsStopped(false)
-      setCurrentSongId(nextSong.id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      const audio = getAudio(nextSong)
-      audio.currentTime = 0
-      audio.play().catch(() => {})
+    const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
+    if (idx < 0 || idx >= sorted.length - 1) return
+    const nextSong = sorted[idx + 1]
+    setIsStopped(false)
+    setCurrentSongId(nextSong.id)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
     }
-  }, [currentSongId, getAudio])
+    if (concatModeRef.current && nextSong.startSeconds !== undefined) {
+      // Concat mode: same audio element, just seek. No src swap, no play()
+      // (we're already playing — or the user pressed next while paused,
+      // in which case the seek alone is enough; play() below handles that).
+      audio.currentTime = nextSong.startSeconds
+      if (audio.paused) {
+        audio.play().catch(() => {})
+      }
+      return
+    }
+    audio.src = nextSong.audioSrc
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+  }, [])
 
   const prev = useCallback(() => {
-    const audio = activeRef.current
+    const audio = audioRef.current
+    if (!audio) return
     const sorted = sortedSongsRef.current
-    const idx = sorted.findIndex(s => s.id === currentSongId)
+    const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
 
-    // Standard behaviour: if more than 3 s in, restart current song
-    if (audio && audio.currentTime > 3) {
-      audio.currentTime = 0
+    // Standard behaviour: if more than 3 s into the current song, restart it.
+    // In concat mode "current time" means time within the song, so compute it
+    // relative to the song's start offset.
+    const cur = idx >= 0 ? sorted[idx] : undefined
+    const intoSong =
+      concatModeRef.current && cur?.startSeconds !== undefined
+        ? audio.currentTime - cur.startSeconds
+        : audio.currentTime
+    if (intoSong > 3) {
+      if (concatModeRef.current && cur?.startSeconds !== undefined) {
+        audio.currentTime = cur.startSeconds
+      } else {
+        audio.currentTime = 0
+      }
       setElapsedSeconds(0)
       return
     }
 
     // Otherwise go to previous song
-    if (idx > 0) {
-      const prevSong = sorted[idx - 1]
-      if (audio) {
-        audio.pause()
-        audio.currentTime = 0
-      }
-      setIsStopped(false)
-      setCurrentSongId(prevSong.id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'
-      }
-      const prevAudio = getAudio(prevSong)
-      prevAudio.currentTime = 0
-      prevAudio.play().catch(() => {})
+    if (idx <= 0) return
+    const prevSong = sorted[idx - 1]
+    setIsStopped(false)
+    setCurrentSongId(prevSong.id)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
     }
-  }, [currentSongId, getAudio])
+    if (concatModeRef.current && prevSong.startSeconds !== undefined) {
+      audio.currentTime = prevSong.startSeconds
+      if (audio.paused) {
+        audio.play().catch(() => {})
+      }
+      return
+    }
+    audio.src = prevSong.audioSrc
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+  }, [])
 
   const seek = useCallback((pct: number) => {
-    const audio = activeRef.current
-    if (!audio || !audio.duration) return
+    const audio = audioRef.current
+    if (!audio) return
+    if (concatModeRef.current) {
+      // In concat mode pct is relative to the CURRENT song, not the whole
+      // file. Translate via the current song's offsets.
+      const cur = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+      if (!cur || cur.startSeconds === undefined || cur.endSeconds === undefined) return
+      const songDur = cur.endSeconds - cur.startSeconds
+      if (songDur <= 0) return
+      audio.currentTime = cur.startSeconds + pct * songDur
+      return
+    }
+    if (!audio.duration) return
     audio.currentTime = pct * audio.duration
   }, [])
 
@@ -333,8 +401,17 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
     setHandler('nexttrack', () => next())
     setHandler('stop', () => stop())
     setHandler('seekto', details => {
-      const audio = activeRef.current
+      const audio = audioRef.current
       if (!audio || details.seekTime == null) return
+      if (concatModeRef.current) {
+        // OS seekbar reports the position relative to the CURRENT song
+        // (we set positionState in song-local units). Translate to absolute
+        // file time by adding the current song's start offset.
+        const cur = sortedSongsRef.current.find(s => s.id === currentSongIdRef.current)
+        const offset = cur?.startSeconds ?? 0
+        audio.currentTime = offset + details.seekTime
+        return
+      }
       audio.currentTime = details.seekTime
     })
 
@@ -358,7 +435,7 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
       navigator.mediaSession.setPositionState({
         duration,
         position: Math.min(elapsedSeconds, duration),
-        playbackRate: activeRef.current?.playbackRate ?? 1
+        playbackRate: audioRef.current?.playbackRate ?? 1
       })
     } catch {
       // Some browsers throw if values are inconsistent — safe to ignore.
@@ -367,28 +444,29 @@ export function useAudioPlayer(songs: PlayerSong[], initialSongId: string): Audi
 
   const playSong = useCallback(
     (id: string) => {
-      // Stop current
-      const current = activeRef.current
-      if (current) {
-        current.pause()
-        current.currentTime = 0
-      }
+      const audio = audioRef.current
+      if (!audio) return
+      const song = songs.find(s => s.id === id)
+      if (!song) return
 
       setIsStopped(false)
       setCurrentSongId(id)
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
       }
-
-      // Play from pool immediately — the Audio element may already be buffered
-      const song = songs.find(s => s.id === id)
-      if (song) {
-        const audio = getAudio(song)
-        audio.currentTime = 0
+      if (concatModeRef.current && song.startSeconds !== undefined) {
+        // Concat mode: same element, just jump. Calling play() is still
+        // needed because the user gesture (the click) is what unlocks
+        // autoplay on first interaction.
+        audio.currentTime = song.startSeconds
         audio.play().catch(() => {})
+        return
       }
+      audio.src = song.audioSrc
+      audio.currentTime = 0
+      audio.play().catch(() => {})
     },
-    [songs, getAudio]
+    [songs]
   )
 
   return {

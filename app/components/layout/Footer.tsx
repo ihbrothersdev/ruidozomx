@@ -112,7 +112,7 @@ export function Footer({ user }: FooterProps) {
           <ul className='space-y-1.5 text-xl'>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=banda'
                 className='transition-colors hover:text-gray-200'
               >
                 Bandas
@@ -120,7 +120,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=fan'
                 className='transition-colors hover:text-gray-200'
               >
                 Fans
@@ -128,7 +128,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=manager'
                 className='transition-colors hover:text-gray-200'
               >
                 Managers
@@ -136,7 +136,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=venue'
                 className='transition-colors hover:text-gray-200'
               >
                 Venues
@@ -144,7 +144,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=proveedor'
                 className='transition-colors hover:text-gray-200'
               >
                 Proveedores

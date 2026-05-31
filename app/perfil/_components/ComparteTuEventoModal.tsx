@@ -1,12 +1,17 @@
 'use client'
 
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { CalendarIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { sileo } from 'sileo'
+import { Calendar } from '@/app/components/ui/calendar'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { submitEvent } from '../actions'
 
@@ -30,12 +35,13 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
   const [venue, setVenue] = useState('')
   const [ciudad, setCiudad] = useState('')
   const [direccion, setDireccion] = useState('')
-  const [fecha, setFecha] = useState('')
+  const [fecha, setFecha] = useState<Date | undefined>(undefined)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [descripcion, setDescripcion] = useState('')
   const [links, setLinks] = useState('')
   const [sending, setSending] = useState(false)
 
-  const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && fecha.trim().length > 0
+  const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && !!fecha
 
   function resetForm() {
     setTipo('')
@@ -43,14 +49,14 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
     setVenue('')
     setCiudad('')
     setDireccion('')
-    setFecha('')
+    setFecha(undefined)
     setDescripcion('')
     setLinks('')
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || !fecha) return
     setSending(true)
     const result = await submitEvent({
       type: tipo,
@@ -58,7 +64,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
       venueName: venue || undefined,
       city: ciudad || undefined,
       address: direccion || undefined,
-      date: fecha,
+      date: format(fecha, 'yyyy-MM-dd'),
       description: descripcion || undefined,
       externalLink: links || undefined
     })
@@ -184,13 +190,38 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                     <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
                       Fecha<span className='text-red-600'>*</span>
                     </Label>
-                    <Input
-                      type='date'
-                      value={fecha}
-                      onChange={e => setFecha(e.target.value)}
-                      required
-                      className={inputCls}
-                    />
+                    <Popover
+                      open={calendarOpen}
+                      onOpenChange={setCalendarOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          type='button'
+                          className={`${inputCls} flex items-center justify-between text-left ${
+                            fecha ? 'text-black' : 'text-black/30'
+                          }`}
+                        >
+                          {fecha ? format(fecha, "d 'de' MMMM 'de' yyyy", { locale: es }) : 'Selecciona una fecha'}
+                          <CalendarIcon className='ml-2 size-4 shrink-0 text-red-600' />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className='w-auto p-0'
+                        align='start'
+                      >
+                        <Calendar
+                          mode='single'
+                          selected={fecha}
+                          onSelect={next => {
+                            setFecha(next)
+                            setCalendarOpen(false)
+                          }}
+                          locale={es}
+                          captionLayout='dropdown'
+                          defaultMonth={fecha ?? new Date()}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Descripción del evento */}
