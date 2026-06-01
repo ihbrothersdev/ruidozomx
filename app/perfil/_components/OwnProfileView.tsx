@@ -33,6 +33,8 @@ export interface OwnProfileViewProps {
   country?: string | null
   state?: string | null
   city?: string | null
+  /** Fan only: upcoming events near the fan's city. */
+  nearbyEvents?: EventSummary[]
 }
 
 export default function OwnProfileView({
@@ -41,11 +43,13 @@ export default function OwnProfileView({
   role,
   location,
   roleProfile,
+  songProposals = [],
   receivedProposalsCount = 0,
   events = [],
   receivedConnectionsCount = 0,
   songProposalsCount = 0,
-  receivedProposals = []
+  receivedProposals = [],
+  nearbyEvents = []
 }: OwnProfileViewProps) {
   return (
     <div className='relative min-h-screen overflow-hidden'>
@@ -123,16 +127,36 @@ export default function OwnProfileView({
                   role={role}
                   events={events}
                 />
+
+                <ServicesSection
+                  role={role}
+                  roleProfile={roleProfile ?? null}
+                />
+
+                <FanProposedSongs
+                  role={role}
+                  songs={songProposals}
+                />
               </div>
 
               {/* Right column */}
               <div className='flex flex-col items-end space-y-6'>
-                <OwnProfileActions />
+                <OwnProfileActions role={role} />
 
                 <RoleModules
                   role={role}
                   roleProfile={roleProfile ?? null}
                 />
+
+                <FanFavorites
+                  role={role}
+                  roleProfile={roleProfile ?? null}
+                />
+
+                {/* <FanNearbyEvents
+                  role={role}
+                  events={nearbyEvents}
+                /> */}
 
                 <ReceivedProposals proposals={receivedProposals} />
               </div>
@@ -176,12 +200,8 @@ function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Re
     if (venueLines.length > 0) modules.push({ title: 'Datos del venue', values: venueLines })
   }
 
-  // Proveedor — service types
-  if (role === 'proveedor' && roleProfile.service_types) {
-    const raw = roleProfile.service_types
-    const list = Array.isArray(raw) ? (raw as string[]).filter(Boolean) : []
-    if (list.length > 0) modules.push({ title: 'Servicios', values: list })
-  }
+  // Note: proveedor's services live in the LEFT column (ServicesSection),
+  // matching the mockup — not here.
 
   if (modules.length === 0) return null
 
@@ -270,6 +290,110 @@ function EventsSection({ role, events }: EventsSectionProps) {
   )
 }
 
+/**
+ * Proveedor-only: their published services catalog (driven by `service_types`).
+ * Lives in the left column — the analogue of EventsSection for other roles.
+ */
+function ServicesSection({ role, roleProfile }: { role: Role | null; roleProfile: Record<string, unknown> | null }) {
+  if (role !== 'proveedor') return null
+
+  const raw = roleProfile?.service_types
+  const services = Array.isArray(raw) ? (raw as string[]).filter(Boolean) : []
+
+  return (
+    <div className='space-y-2'>
+      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
+        Servicios publicados
+      </p>
+
+      {services.length === 0 ? (
+        <div className='font-pt-mono border-2 border-red-700 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
+          Este perfil no publica servicios aún
+        </div>
+      ) : (
+        <div className='border-2 border-red-700 px-3 py-2 space-y-1'>
+          {services.map((s, i) => (
+            <div key={i} className='font-pt-mono text-sm text-black uppercase'>
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Fan-only sections ────────────────────────────────────────────────────────
+
+/** Fan (left): their proposed songs shown as a box, empty box if none. */
+function FanProposedSongs({ role, songs }: { role: Role | null; songs: SongProposalSummary[] }) {
+  if (role !== 'fan') return null
+
+  return (
+    <div className='space-y-2'>
+      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
+        Rolas propuestas al cassete
+      </p>
+      <div className='min-h-24 border-2 border-red-700 px-3 py-2 space-y-1'>
+        {songs.length === 0 ? null : (
+          songs.map(s => (
+            <div key={s.id} className='font-pt-mono text-xs text-black uppercase'>
+              <span className='font-bold'>{s.title}</span>
+              <span className='text-black/60'> · {s.artist}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Fan (right): favorite genres / bands they like. */
+function FanFavorites({ role, roleProfile }: { role: Role | null; roleProfile: Record<string, unknown> | null }) {
+  if (role !== 'fan') return null
+
+  const raw = roleProfile?.favorite_genres
+  const list = Array.isArray(raw) ? (raw as string[]).filter(Boolean) : []
+
+  return (
+    <div className='w-full space-y-1'>
+      <p className={MODULE_LABEL}>Bandas o proyectos que le gustan</p>
+      <div className={MODULE_BOX + ' min-h-24 space-y-1'}>
+        {list.map((g, i) => (
+          <div key={i}>{g}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Fan (right): upcoming events near the fan's city. */
+// TODO: Hide for now
+// function FanNearbyEvents({ role, events }: { role: Role | null; events: EventSummary[] }) {
+//   if (role !== 'fan') return null
+
+//   return (
+//     <div className='w-full space-y-1'>
+//       <p className={MODULE_LABEL}>Eventos cerca</p>
+//       <div className={MODULE_BOX + ' min-h-24 space-y-1'}>
+//         {events.map(ev => {
+//           const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
+//             day: '2-digit',
+//             month: 'short'
+//           })
+//           return (
+//             <div key={ev.id} className='leading-tight'>
+//               <span className='font-bold'>{ev.title}</span>
+//               <span className='text-black/60'> · {dateLabel}</span>
+//               {ev.city && <span className='text-black/60'> · {ev.city}</span>}
+//             </div>
+//           )
+//         })}
+//       </div>
+//     </div>
+//   )
+// }
+
 interface ActivityInboxProps {
   role: Role | null
   receivedProposalsCount: number
@@ -300,9 +424,12 @@ function ActivityInbox({
   const INBOX_ROLES: Role[] = ['agente', 'manager', 'banda', 'promotor', 'proveedor', 'venue']
   if (!role || !INBOX_ROLES.includes(role)) return null
 
+  // Proveedor publishes "ofertas" instead of "eventos"
+  const publishLabel = role === 'proveedor' ? 'Publicaste una oferta' : 'Publicaste un evento'
+
   const items = [
     { label: 'Recibiste una propuesta', href: '#propuestas', count: receivedProposalsCount },
-    { label: 'Publicaste un evento', href: '#eventos', count: eventsCount },
+    { label: publishLabel, href: '#eventos', count: eventsCount },
     { label: 'Alguien quiere conectar contigo', href: '#conexiones', count: receivedConnectionsCount },
     { label: 'Rolas propuestas al casete', href: '#rolas', count: songProposalsCount }
   ].filter(i => i.count > 0)
