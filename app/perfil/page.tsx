@@ -115,7 +115,46 @@ export default async function PerfilPage({
       .eq('user_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId)
+    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId),
+    // Upcoming events (cancelled excluded).
+    supabase
+      .from('events')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
+      .eq('profile_id', resolvedProfileId)
+      .neq('status', 'cancelled')
+      .gte('event_date', todayDate)
+      .order('event_date', { ascending: true })
+      .limit(5),
+    // Connections received: someone sent the user an interest. Inner-join the
+    // sender so we can render avatar + name + link and so the count stays in
+    // sync when the sender's profile is gone.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
+      .eq('to_profile_id', resolvedProfileId)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // Connections sent: the user reached out to someone. Inner-join recipient.
+    supabase
+      .from('interests')
+      .select(CONNECTION_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
+      .eq('from_profile_id', resolvedProfileId)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // User proposals received (someone proposed to the user). Inner-join sender.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
+      .eq('to_profile_id', resolvedProfileId)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN),
+    // User proposals sent. Inner-join recipient.
+    supabase
+      .from('user_proposals')
+      .select(PROPOSAL_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
+      .eq('from_profile_id', resolvedProfileId)
+      .order('created_at', { ascending: false })
+      .limit(CONNECTIONS_SHOWN)
   ])
 
   // Lightweight ID-only queries to compute the mutual set (intersection of
@@ -127,11 +166,11 @@ export default async function PerfilPage({
     supabase
       .from('interests')
       .select('from_profile_id, profile:profiles!from_profile_id!inner(id)')
-      .eq('to_profile_id', user.id),
+      .eq('to_profile_id', resolvedProfileId),
     supabase
       .from('interests')
       .select('to_profile_id, profile:profiles!to_profile_id!inner(id)')
-      .eq('from_profile_id', user.id)
+      .eq('from_profile_id', resolvedProfileId)
   ])
   const incomingSet = new Set((incomingIds ?? []).map(r => r.from_profile_id as string))
   const mutualIds = (outgoingIds ?? []).map(r => r.to_profile_id as string).filter(id => incomingSet.has(id))
