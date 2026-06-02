@@ -11,6 +11,8 @@ interface HomePlayerSectionProps {
   initialSongId: string
   date: string
   isAuthenticated: boolean
+  /** Active cassette's UUID — scope for analytics `cassette_session_*` events. */
+  cassetteId: string | null
   /**
    * URL of the concatenated cassette MP3 (produced by `npm run build-cassette`).
    * When present (and `songs` carry per-song offsets), the player streams a
@@ -25,6 +27,7 @@ export function HomePlayerSection({
   initialSongId,
   date,
   isAuthenticated,
+  cassetteId,
   concatAudioUrl
 }: HomePlayerSectionProps) {
   const {
@@ -41,7 +44,7 @@ export function HomePlayerSection({
     prev,
     seek,
     playSong
-  } = useAudioPlayer(songs, initialSongId, concatAudioUrl)
+  } = useAudioPlayer(songs, initialSongId, cassetteId, concatAudioUrl)
 
   const currentSong = songs.find(s => s.id === currentSongId)
 
@@ -54,6 +57,7 @@ export function HomePlayerSection({
             <CassettePlayer
               songTitle={currentSong?.title ?? ''}
               artist={currentSong?.artist ?? ''}
+              artistSlug={currentSong?.artistSlug}
               date={date}
               side={currentSide}
               isPlaying={isPlaying}

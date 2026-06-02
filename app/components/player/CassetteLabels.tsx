@@ -1,6 +1,11 @@
+import Link from 'next/link'
+
 interface CassetteLabelsProps {
   songTitle: string
   artist: string
+  /** When the current song's artist has a band profile, its slug — makes the
+   *  artist label a link to /perfil/[slug]. Undefined = plain text (no profile). */
+  artistSlug?: string
   date: string
 }
 
@@ -22,7 +27,7 @@ function TruncatedLabel({ text, className }: { text: string; className: string }
   )
 }
 
-export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps) {
+export function CassetteLabels({ songTitle, artist, artistSlug, date }: CassetteLabelsProps) {
   return (
     <>
       <div
@@ -37,10 +42,23 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
             />
           </div>
           <div className='relative w-3/4'>
-            <TruncatedLabel
-              text={artist}
-              className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
-            />
+            {artistSlug ? (
+              <Link
+                href={`/perfil/${artistSlug}`}
+                title={`Ver perfil de ${artist}`}
+                className='block transition-opacity hover:opacity-70'
+              >
+                <TruncatedLabel
+                  text={artist}
+                  className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase underline decoration-black/30 underline-offset-2 sm:text-xl md:text-2xl'
+                />
+              </Link>
+            ) : (
+              <TruncatedLabel
+                text={artist}
+                className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
+              />
+            )}
           </div>
         </div>
       </div>
