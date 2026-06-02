@@ -10,14 +10,14 @@ export interface YesNoFieldProps {
   required?: boolean
 }
 
-export function YesNoField({ label, name, required }: YesNoFieldProps) {
+export function YesNoField({ label, name, required = true }: YesNoFieldProps) {
   const [value, setValue] = useState<string | null>(null)
 
   return (
     <div className='space-y-0.5'>
       <Label className={labelCls}>
         {label}
-        {required && <span className='text-red-600'>*</span>}
+        {required && <span className='ml-2 text-red-600'>*</span>}
       </Label>
       {/* Hidden input to submit the value */}
       {value !== null && (

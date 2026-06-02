@@ -16,10 +16,9 @@ function HalfCard({ bgSrc, digitValue, position }: { bgSrc: string; digitValue: 
         alt=''
         width={CARD_W}
         height={HALF_H}
-        unoptimized
       />
       <div
-        className='absolute inset-x-0 flex items-center justify-center font-thanjhirs text-[48px] leading-none font-bold text-gray-200'
+        className='font-thanjhirs absolute inset-x-0 flex items-center justify-center text-[48px] leading-none font-bold text-gray-200'
         style={isTop ? { top: 0, height: CARD_H } : { bottom: 0, height: CARD_H }}
       >
         {digitValue}
@@ -139,7 +138,6 @@ export function TimeCounter({ seconds }: { seconds: number }) {
         width={5}
         height={17}
         className='mx-px self-center'
-        unoptimized
       />
       <FlipDigit
         topSrc='/assets/controles/sec-left-top.png'

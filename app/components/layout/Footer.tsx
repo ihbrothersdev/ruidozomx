@@ -112,7 +112,7 @@ export function Footer({ user }: FooterProps) {
           <ul className='space-y-1.5 text-xl'>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=banda'
                 className='transition-colors hover:text-gray-200'
               >
                 Bandas
@@ -120,7 +120,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=fan'
                 className='transition-colors hover:text-gray-200'
               >
                 Fans
@@ -128,7 +128,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=manager'
                 className='transition-colors hover:text-gray-200'
               >
                 Managers
@@ -136,7 +136,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=venue'
                 className='transition-colors hover:text-gray-200'
               >
                 Venues
@@ -144,7 +144,7 @@ export function Footer({ user }: FooterProps) {
             </li>
             <li>
               <Link
-                href='/comunidad'
+                href='/comunidad?role=proveedor'
                 className='transition-colors hover:text-gray-200'
               >
                 Proveedores
@@ -161,7 +161,6 @@ export function Footer({ user }: FooterProps) {
             width={1024}
             height={1536}
             className='w-full max-w-[500px]'
-            unoptimized
           />
         </div>
       </div>
@@ -181,7 +180,6 @@ export function Footer({ user }: FooterProps) {
               width={120}
               height={219}
               className='h-20 w-auto'
-              unoptimized
             />
           </Link>
           <Link
@@ -195,26 +193,35 @@ export function Footer({ user }: FooterProps) {
               width={210}
               height={212}
               className='h-20 w-auto'
-              unoptimized
             />
           </Link>
         </div>
       </div>
 
       {/* Bottom strip */}
-      <div className='mx-auto mt-20 flex max-w-5xl items-center justify-center gap-4 sm:gap-8 flex-col sm:flex-row'>
-        <Link href='mailto:donadiexx@yahoo.com.mx' className='flex items-center gap-2'>
+      <div className='mx-auto mt-20 flex max-w-5xl flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8'>
+        <Link
+          href='mailto:hola@ruidozo.mx'
+          className='flex items-center gap-2'
+        >
           <Image
             src='/assets/body3/correo.png'
             alt=''
             width={379}
             height={63}
-            className='h-6 sm:h-8 w-auto'
-            unoptimized
+            className='h-6 w-auto sm:h-8'
           />
           <span className='relative inline-block'>
-            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-9 sm:h-12 w-auto' unoptimized />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-sm sm:text-lg text-black'>donadiexx@yahoo.com.mx</span>
+            <Image
+              src='/assets/body3/cuadro-datos.png'
+              alt=''
+              width={200}
+              height={40}
+              className='h-9 w-auto sm:h-12'
+            />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-sm text-black sm:text-lg'>
+              hola@ruidozo.mx
+            </span>
           </span>
         </Link>
         <Link
@@ -227,12 +234,19 @@ export function Footer({ user }: FooterProps) {
             alt=''
             width={379}
             height={63}
-            className='h-6 sm:h-8 w-auto'
-            unoptimized
+            className='h-6 w-auto sm:h-8'
           />
           <span className='relative inline-block'>
-            <Image src='/assets/body3/cuadro-datos.png' alt='' width={200} height={40} className='h-9 sm:h-12 w-auto' unoptimized />
-            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-base sm:text-xl text-black'>+52 56 1191 2788</span>
+            <Image
+              src='/assets/body3/cuadro-datos.png'
+              alt=''
+              width={200}
+              height={40}
+              className='h-9 w-auto sm:h-12'
+            />
+            <span className='font-baby-doll absolute inset-0 flex items-center justify-center text-base text-black sm:text-xl'>
+              +52 56 1191 2788
+            </span>
           </span>
         </Link>
       </div>

@@ -2,7 +2,7 @@
 
 import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { labelCls, selectTriggerCls } from './form-styles'
+import { compactLabelCls, compactSelectTriggerCls, labelCls, selectTriggerCls } from './form-styles'
 
 export interface CascadingSelectProps {
   label: string
@@ -13,26 +13,29 @@ export interface CascadingSelectProps {
   onChange: (v: string) => void
   placeholder?: string
   getLabel?: (value: string) => React.ReactNode
+  /** Use smaller padding + font + neutral label color (for inline editing). */
+  compact?: boolean
 }
 
 export function CascadingSelect({
   label,
   name,
-  required,
+  required = true,
   options,
   value,
   onChange,
   placeholder,
   getLabel,
+  compact = false
 }: CascadingSelectProps) {
   return (
     <div className='min-w-0 space-y-0.5'>
       <Label
         htmlFor={name}
-        className={labelCls}
+        className={compact ? compactLabelCls : labelCls}
       >
         {label}
-        {required && <span className='text-red-600'>*</span>}
+        {required && <span className='ml-2 text-red-600'>*</span>}
       </Label>
       <Select
         name={name}
@@ -40,7 +43,7 @@ export function CascadingSelect({
         value={value}
         onValueChange={onChange}
       >
-        <SelectTrigger className={selectTriggerCls}>
+        <SelectTrigger className={compact ? compactSelectTriggerCls : selectTriggerCls}>
           <SelectValue placeholder={placeholder ?? 'Selecciona...'} />
         </SelectTrigger>
         <SelectContent className='max-h-56 overflow-y-auto'>

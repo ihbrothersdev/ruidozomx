@@ -2,14 +2,41 @@
 
 import { Label } from '@/app/components/ui/label'
 import { COUNTRIES, COUNTRY_FLAGS, getCities, getStates } from '@/lib/mexico-locations'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CascadingSelect } from './CascadingSelect'
-import { inputCls, labelCls } from './form-styles'
+import { compactInputCls, compactLabelCls, inputCls, labelCls } from './form-styles'
 
-export function LocationFields() {
-  const [country, setCountry] = useState('México')
-  const [state, setState] = useState('')
-  const [city, setCity] = useState('')
+interface LocationFieldsProps {
+  /** Optional initial values — defaults to ('México', '', ''). */
+  initialCountry?: string
+  initialState?: string
+  initialCity?: string
+  /** When provided, the parent owns the values and is notified of every change. */
+  onChange?: (next: { country: string; state: string; city: string }) => void
+  /** Whether the underlying selects/inputs should be marked required for form submission. */
+  required?: boolean
+  /** Use smaller padding + font + neutral labels (for inline editing). */
+  compact?: boolean
+}
+
+export function LocationFields({
+  initialCountry = 'México',
+  initialState = '',
+  initialCity = '',
+  onChange,
+  required = true,
+  compact = false
+}: LocationFieldsProps = {}) {
+  const activeInputCls = compact ? compactInputCls : inputCls
+  const activeLabelCls = compact ? compactLabelCls : labelCls
+  const [country, setCountry] = useState(initialCountry)
+  const [state, setState] = useState(initialState)
+  const [city, setCity] = useState(initialCity)
+
+  useEffect(() => {
+    onChange?.({ country, state, city })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country, state, city])
 
   const isOther = country === 'Otro'
   const states = getStates(country)
@@ -20,7 +47,7 @@ export function LocationFields() {
       <CascadingSelect
         label='País'
         name='country'
-        required
+        required={required}
         options={[...COUNTRIES]}
         value={country}
         onChange={v => {
@@ -35,6 +62,7 @@ export function LocationFields() {
             <span>{v}</span>
           </span>
         )}
+        compact={compact}
       />
 
       {isOther ? (
@@ -42,16 +70,16 @@ export function LocationFields() {
           <div className='min-w-0 space-y-0.5'>
             <Label
               htmlFor='state'
-              className={labelCls}
+              className={activeLabelCls}
             >
-              Estado/Provincia<span className='text-red-600'>*</span>
+              Estado/Provincia{required && <span className='ml-2 text-red-600'>*</span>}
             </Label>
             <input
               id='state'
               name='state'
-              required
+              required={required}
               placeholder='Escribe tu estado o provincia'
-              className={inputCls + ' w-full'}
+              className={activeInputCls + ' w-full'}
               value={state}
               onChange={e => setState(e.target.value)}
             />
@@ -59,16 +87,16 @@ export function LocationFields() {
           <div className='min-w-0 space-y-0.5'>
             <Label
               htmlFor='city'
-              className={labelCls}
+              className={activeLabelCls}
             >
-              Ciudad<span className='text-red-600'>*</span>
+              Ciudad{required && <span className='ml-2 text-red-600'>*</span>}
             </Label>
             <input
               id='city'
               name='city'
-              required
+              required={required}
               placeholder='Escribe tu ciudad'
-              className={inputCls + ' w-full'}
+              className={activeInputCls + ' w-full'}
               value={city}
               onChange={e => setCity(e.target.value)}
             />
@@ -79,7 +107,7 @@ export function LocationFields() {
           <CascadingSelect
             label='Estado/Provincia'
             name='state'
-            required
+            required={required}
             options={states}
             value={state}
             onChange={v => {
@@ -87,15 +115,17 @@ export function LocationFields() {
               setCity('')
             }}
             placeholder='Dependiente del país (Drop down)'
+            compact={compact}
           />
           <CascadingSelect
             label='Ciudad'
             name='city'
-            required
+            required={required}
             options={cities}
             value={city}
             onChange={setCity}
             placeholder='Dependiente del estado (Drop down)'
+            compact={compact}
           />
         </>
       )}

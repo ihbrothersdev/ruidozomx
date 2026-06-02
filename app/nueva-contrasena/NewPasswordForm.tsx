@@ -1,30 +1,40 @@
 'use client'
 
-import { useState, useTransition } from 'react'
 import { updatePassword } from '@/app/(auth)/actions'
+import { PasswordInput } from '@/app/components/ui/password-input'
+import { useState, useTransition } from 'react'
 import { sileo } from 'sileo'
 
-const inputCls =
-  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold focus:border-red-700 focus:outline-none'
+const passwordWrapperCls =
+  'font-pt-mono w-full border-2 border-red-600 bg-transparent px-4 py-3 text-sm text-black focus-within:border-red-700'
 
-export function NewPasswordForm() {
+const passwordInputCls =
+  'placeholder:text-red-600/50 placeholder:uppercase placeholder:tracking-wider placeholder:font-bold'
+
+const passwordToggleCls =
+  'shrink-0 text-red-600/70 transition-colors hover:text-red-700 focus:outline-none disabled:opacity-50'
+
+export function NewPasswordForm({ tokenHash }: { tokenHash: string }) {
   const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  // Only show the mismatch hint after the user has attempted to submit at least once,
+  // and clear it automatically as soon as the values match.
+  const mismatch = submitted && password !== '' && confirm !== '' && password !== confirm
+  const tooShort = submitted && password !== '' && password.length < 6
+  const error = mismatch
+    ? 'Las contraseñas no coinciden.'
+    : tooShort
+      ? 'La contraseña debe tener al menos 6 caracteres.'
+      : ''
 
   function handleSubmit(formData: FormData) {
-    setError('')
-    const password = formData.get('password') as string
-    const confirm = formData.get('confirm') as string
+    setSubmitted(true)
 
-    if (password !== confirm) {
-      setError('Las contraseñas no coinciden.')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
-      return
-    }
+    if (password !== confirm) return
+    if (password.length < 6) return
 
     startTransition(async () => {
       const result = await updatePassword(formData)
@@ -46,23 +56,34 @@ export function NewPasswordForm() {
       className='relative z-10 space-y-4 px-8 py-8 sm:px-12 sm:py-10'
     >
       <input
+        type='hidden'
+        name='token_hash'
+        value={tokenHash}
+      />
+      <PasswordInput
         name='password'
-        type='password'
         required
         minLength={6}
         placeholder='NUEVA CONTRASEÑA'
-        className={inputCls}
+        className={passwordWrapperCls}
+        inputClassName={passwordInputCls}
+        toggleClassName={passwordToggleCls}
         disabled={isPending}
+        value={password}
+        onChange={e => setPassword(e.target.value)}
       />
 
-      <input
+      <PasswordInput
         name='confirm'
-        type='password'
         required
         minLength={6}
         placeholder='CONFIRMAR CONTRASEÑA'
-        className={inputCls}
+        className={passwordWrapperCls}
+        inputClassName={passwordInputCls}
+        toggleClassName={passwordToggleCls}
         disabled={isPending}
+        value={confirm}
+        onChange={e => setConfirm(e.target.value)}
       />
 
       {error && <p className='font-pt-mono text-xs font-bold text-red-600'>{error}</p>}

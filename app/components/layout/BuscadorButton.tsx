@@ -20,7 +20,6 @@ export function BuscadorButton() {
         width={200}
         height={200}
         className='h-9 w-auto sm:h-10 md:h-15'
-        unoptimized
       />
     </Link>
   )

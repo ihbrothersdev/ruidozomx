@@ -42,7 +42,6 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
           height={250}
           className='h-10 w-auto md:h-16'
           style={{ height: undefined }}
-          unoptimized
         />
         <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
           {photoUrl ? (
@@ -69,7 +68,6 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
               alt=''
               fill
               className='object-cover'
-              unoptimized
             />
           </div>
 

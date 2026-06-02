@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Manifesto } from './_components/Manifesto'
 
 type Phase = 'waiting' | 'video' | 'transition' | 'manifesto'
@@ -55,9 +55,29 @@ export default function QuienesSomosPage() {
       })
   }, [getActiveVideo])
 
-  const handleCanPlay = useCallback(() => {
-    if (!needsTap) startVideo()
-  }, [needsTap, startVideo])
+  // Filter by active video to avoid the hidden desktop element triggering
+  // playback before the mobile video is ready.
+  const handleCanPlay = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement>) => {
+      const active = getActiveVideo()
+      if (!active || e.currentTarget !== active) return
+      if (!needsTap) startVideo()
+    },
+    [getActiveVideo, needsTap, startVideo]
+  )
+
+  // Call video.load() on mount so mobile browsers (which ignore preload="auto")
+  // start buffering and fire onCanPlay.
+  useEffect(() => {
+    const video = getActiveVideo()
+    if (!video || startedRef.current) return
+
+    if (video.readyState >= 3) {
+      startVideo()
+    } else {
+      video.load()
+    }
+  }, [getActiveVideo, startVideo])
 
   const handleTap = useCallback(() => {
     const video = getActiveVideo()
@@ -110,7 +130,6 @@ export default function QuienesSomosPage() {
               width={380}
               height={183}
               className='h-8 w-auto opacity-40 invert sm:h-10'
-              unoptimized
             />
           </div>
 
@@ -150,7 +169,6 @@ export default function QuienesSomosPage() {
                 width={380}
                 height={183}
                 className='relative z-10 h-12 w-auto invert'
-                unoptimized
               />
               <div className='relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-600 bg-red-600/20 transition-transform hover:scale-110'>
                 <svg
@@ -178,7 +196,7 @@ export default function QuienesSomosPage() {
               className='hidden h-screen w-screen object-contain md:block'
               playsInline
               preload='auto'
-              onCanPlayThrough={handleCanPlay}
+              onCanPlay={handleCanPlay}
               onEnded={handleEnded}
               onError={handleVideoError}
             >
@@ -192,7 +210,7 @@ export default function QuienesSomosPage() {
               className='block h-screen w-screen object-contain md:hidden'
               playsInline
               preload='auto'
-              onCanPlayThrough={handleCanPlay}
+              onCanPlay={handleCanPlay}
               onEnded={handleEnded}
               onError={handleVideoError}
             >

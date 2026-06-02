@@ -1,6 +1,12 @@
 import { Header } from '@/app/components/layout/Header'
+import type { Metadata } from 'next'
 import { CommunityGrid } from './_components/CommunityGrid'
 import type { CommunityProfile } from './types'
+
+export const metadata: Metadata = {
+  title: 'Comunidad',
+  description: 'Explora y conecta con artistas, bandas, venues, managers y promotores de la escena mexicana.'
+}
 
 export default async function ComunidadPage() {
   let user = null
@@ -38,7 +44,7 @@ export default async function ComunidadPage() {
         state: p.state,
         country: p.country ?? 'México',
         bio: p.bio,
-        activity_highlight: getActivityHighlight(p.role),
+        activity_highlight: getActivityHighlight(p.role)
       }))
     }
   } catch {
@@ -53,7 +59,10 @@ export default async function ComunidadPage() {
       />
 
       <div className='relative z-10'>
-        <Header user={user} photoUrl={photoUrl} />
+        <Header
+          user={user}
+          photoUrl={photoUrl}
+        />
 
         <div className='mx-auto max-w-7xl px-4 pt-4 pb-12 md:px-8'>
           <CommunityGrid profiles={profiles} />

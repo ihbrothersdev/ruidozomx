@@ -16,7 +16,16 @@ export interface FieldProps {
   rows?: number
 }
 
-export function Field({ label, name, type = 'text', required, placeholder, textarea, maxLength, rows }: FieldProps) {
+export function Field({
+  label,
+  name,
+  type = 'text',
+  required = true,
+  placeholder,
+  textarea,
+  maxLength,
+  rows
+}: FieldProps) {
   return (
     <div className='min-w-0 space-y-0.5'>
       <Label
@@ -24,7 +33,7 @@ export function Field({ label, name, type = 'text', required, placeholder, texta
         className={labelCls}
       >
         {label}
-        {required && <span className='text-red-600'>*</span>}
+        {required && <span className='ml-2 text-red-600'>*</span>}
       </Label>
       {textarea ? (
         <Textarea

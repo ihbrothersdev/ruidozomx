@@ -72,7 +72,7 @@ export function AgenteFields() {
               htmlFor='review'
               className={labelCls}
             >
-              Reseña<span className='text-red-600'>*</span>
+              Reseña<span className='ml-2 text-red-600'>*</span>
             </Label>
             <Textarea
               id='review'

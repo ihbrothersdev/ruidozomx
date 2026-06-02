@@ -4,6 +4,7 @@ import { type RegistrationSource, type Role } from '@/lib/types'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { sileo } from 'sileo'
 import { BandaFormLayout } from './_components/BandaFormLayout'
 import { FanFormLayout } from './_components/FanFormLayout'
 import { ManagerGroupFormLayout } from './_components/ManagerGroupFormLayout'
@@ -44,6 +45,46 @@ function FormularioContent() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
+
+    // Auto-prepend https:// to url inputs that have a value but no protocol,
+    // so users who type "spotify.com/..." don't fail browser URL validation.
+    const urlInputs = form.querySelectorAll<HTMLInputElement>('input[type="url"]')
+    urlInputs.forEach(input => {
+      const v = input.value.trim()
+      if (v && !/^[a-z][a-z0-9+\-.]*:\/\//i.test(v)) {
+        input.value = `https://${v}`
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+    })
+
+    if (!form.checkValidity()) {
+      const invalid = form.querySelector(':invalid') as HTMLInputElement | null
+      if (invalid) {
+        const id = invalid.id || invalid.name || ''
+        const cleanedName = id.replace(/^_/, '').replace(/_required$/, '')
+        const labelEl =
+          (id && (form.querySelector(`label[for="${id}"]`) as HTMLLabelElement | null)) ||
+          (invalid.closest('div')?.querySelector('label') as HTMLLabelElement | null)
+        const labelText = labelEl?.textContent?.replace(/\*$/, '').trim() || cleanedName || 'campo obligatorio'
+
+        const isFormatError =
+          !invalid.validity.valueMissing && (invalid.validity.typeMismatch || invalid.validity.patternMismatch)
+        const description = isFormatError ? `Revisa el formato de: ${labelText}` : `Por favor completa: ${labelText}`
+
+        sileo.error({
+          title: 'Falta un dato',
+          description,
+          position: 'top-center',
+          duration: 4000
+        })
+
+        const focusTarget = invalid.type === 'hidden' ? (invalid.closest('div') as HTMLElement | null) : invalid
+        focusTarget?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        if (invalid.type !== 'hidden') invalid.focus()
+      }
+      return
+    }
+
     const formData = new FormData(form)
 
     const data: Record<string, string | string[]> = {}
@@ -70,7 +111,6 @@ function FormularioContent() {
         fill
         className='object-cover'
         priority
-        unoptimized
       />
 
       <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 py-6 sm:px-6'>
@@ -82,7 +122,6 @@ function FormularioContent() {
             alt=''
             fill
             className='object-cover lg:hidden'
-            unoptimized
           />
           {/* Desktop: folder with tab cut */}
           <Image
@@ -90,7 +129,6 @@ function FormularioContent() {
             alt=''
             fill
             className='hidden object-fill lg:block'
-            unoptimized
           />
           <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-4 lg:pb-12'>
             {/* Role etiqueta */}
@@ -101,8 +139,7 @@ function FormularioContent() {
                 alt=''
                 width={60}
                 height={80}
-                className='absolute right-0 top-0 h-8 w-auto lg:hidden'
-                unoptimized
+                className='absolute top-0 right-0 h-8 w-auto max-[400px]:hidden lg:hidden'
               />
               {etiquetaSrc && (
                 <Image
@@ -112,7 +149,6 @@ function FormularioContent() {
                   height={80}
                   className='w-56 -rotate-2 sm:w-72 lg:w-[350px]'
                   style={{ height: 'auto' }}
-                  unoptimized
                 />
               )}
             </div>
@@ -124,6 +160,7 @@ function FormularioContent() {
             )}
 
             <form
+              noValidate
               onSubmit={handleSubmit}
               className='space-y-3'
             >

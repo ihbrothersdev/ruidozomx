@@ -44,12 +44,28 @@ function buildDisplayName(formData: FormData): string {
 
 /**
  * Build social_links JSONB from form link fields.
- * Banda → project_link, all others → web_link
+ *   project_link        → social_links.project   (banda only — main music link)
+ *   web_link            → social_links.web       (manager / promotor / agente / proveedor / venue)
+ *   social_<platform>   → social_links[platform] (banda multi-link selector: web, instagram, ...)
  */
 function buildSocialLinks(formData: FormData): Record<string, string> {
   const links: Record<string, string> = {}
-  const web = getStr(formData, 'web_link') ?? getStr(formData, 'project_link')
+
+  const project = getStr(formData, 'project_link')
+  if (project) links.project = project
+
+  const web = getStr(formData, 'web_link')
   if (web) links.web = web
+
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== 'string') continue
+    if (!key.startsWith('social_')) continue
+    const platform = key.slice('social_'.length)
+    if (!platform) continue
+    const url = value.trim()
+    if (url) links[platform] = url
+  }
+
   return links
 }
 
@@ -207,11 +223,25 @@ export async function registroSignup(formData: FormData) {
   const contact = getStr(formData, 'contact')
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+  // After email confirmation we want the user to land on their onboarding
+  // ticket — not /perfil — so they don't miss it.
+  //
+  // The email-confirmation flow is PKCE: Supabase appends `?code=<pkce>` to
+  // `emailRedirectTo` and the app must call `exchangeCodeForSession(code)`
+  // to create the session cookies. We can't do that exchange on the ticket
+  // page itself, so we point Supabase to /auth/callback (which does the
+  // exchange) and let the callback forward to the ticket via `next`.
+  //
+  // NOTE: `${SITE_URL}/auth/callback` (and ideally `${SITE_URL}/registro/ticket*`)
+  // must be present in "Redirect URLs" in the Supabase auth settings.
+  const ticketPath = `/registro/ticket?role=${actualRole}&name=${encodeURIComponent(displayName)}`
+  const callbackUrl = `${siteUrl}/auth/callback?next=${encodeURIComponent(ticketPath)}`
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      emailRedirectTo: callbackUrl,
       data: { display_name: displayName, role: actualRole, registration_source: source }
     }
   })

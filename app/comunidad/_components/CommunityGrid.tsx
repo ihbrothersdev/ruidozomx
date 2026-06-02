@@ -1,7 +1,8 @@
 'use client'
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import type { CommunityProfile, RoleFilter } from '../types'
+import { ROLE_FILTER_LABELS, type CommunityProfile, type RoleFilter } from '../types'
 import { FilterBar } from './FilterBar'
 import { ProfileCard } from './ProfileCard'
 import { ProfileCardSkeleton } from './ProfileCardSkeleton'
@@ -11,22 +12,41 @@ interface CommunityGridProps {
   loading?: boolean
 }
 
+function parseRoleFilter(value: string | null): RoleFilter | null {
+  if (!value) return null
+  return value in ROLE_FILTER_LABELS ? (value as RoleFilter) : null
+}
+
 export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
-  const [activeFilter, setActiveFilter] = useState<RoleFilter>('todos')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [activeFilter, setActiveFilter] = useState<RoleFilter | null>(() => parseRoleFilter(searchParams.get('role')))
   const [searchQuery, setSearchQuery] = useState('')
 
+  function handleFilterChange(next: RoleFilter | null) {
+    setActiveFilter(next)
+    const params = new URLSearchParams(searchParams.toString())
+    if (next) params.set('role', next)
+    else params.delete('role')
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
   const filtered = useMemo(() => {
-    let result = profiles
-    if (activeFilter !== 'todos') {
+    // Hide admin accounts from the public community grid.
+    let result = profiles.filter(p => p.role !== 'admin')
+    if (activeFilter) {
       result = result.filter(p => p.role === activeFilter)
     }
     const q = searchQuery.toLowerCase()
     if (q) {
-      result = result.filter(p =>
-        p.display_name.toLowerCase().includes(q) ||
-        p.role.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q) ||
-        p.state?.toLowerCase().includes(q)
+      result = result.filter(
+        p =>
+          p.display_name.toLowerCase().includes(q) ||
+          p.role.toLowerCase().includes(q) ||
+          p.city?.toLowerCase().includes(q) ||
+          p.state?.toLowerCase().includes(q)
       )
     }
     return result
@@ -36,7 +56,7 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
     <div className='flex flex-col gap-8'>
       <FilterBar
         activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
+        onFilterChange={handleFilterChange}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -55,7 +75,10 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
       ) : (
         <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-3 xl:grid-cols-4'>
           {filtered.map(profile => (
-            <ProfileCard key={profile.id} profile={profile} />
+            <ProfileCard
+              key={profile.id}
+              profile={profile}
+            />
           ))}
         </div>
       )}
