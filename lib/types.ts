@@ -7,7 +7,26 @@ export interface PlayerSong {
   side: 'A' | 'B'
   position: number
   durationSeconds: number
+  /** Slug of the artist's band profile, when one exists — makes the artist
+   *  clickable on the home cassette (→ /perfil/[slug]). Undefined = free-text artist. */
+  artistSlug?: string
+  /** URL of this song's individual audio file. Always populated. */
   audioSrc: string
+  /**
+   * When the cassette has a concatenated audio file
+   * (`concatAudioUrl` on the player props), these mark where this song
+   * lives within that file. Null/undefined when the cassette is in
+   * legacy N-file mode.
+   */
+  startSeconds?: number
+  endSeconds?: number
+}
+
+/** Per-song offset row inside a concatenated cassette audio file. */
+export interface SongOffset {
+  song_id: string
+  start: number
+  end: number
 }
 
 export interface PlayerState {
@@ -197,9 +216,19 @@ export interface Cassette {
   cover_image_url: string | null
   active: boolean
   archived: boolean
+  is_next: boolean
   total_plays: number
   created_at: string
   updated_at: string
+}
+
+export type CassetteState = 'active' | 'next' | 'draft' | 'archived'
+
+export function getCassetteState(c: Pick<Cassette, 'active' | 'archived' | 'is_next'>): CassetteState {
+  if (c.active) return 'active'
+  if (c.archived) return 'archived'
+  if (c.is_next) return 'next'
+  return 'draft'
 }
 
 export interface Song {
@@ -219,7 +248,7 @@ export interface Song {
 
 // === Events ===
 
-export type EventStatus = 'draft' | 'published' | 'cancelled'
+export type EventStatus = 'published' | 'cancelled'
 
 export interface Event {
   id: string
@@ -244,7 +273,7 @@ export interface Event {
 
 // === Song Proposals ===
 
-export type ProposalStatus = 'pending' | 'in_review' | 'selected' | 'rejected'
+export type ProposalStatus = 'pending' | 'in_review' | 'accepted' | 'rejected'
 
 export interface SongProposal {
   id: string
@@ -255,6 +284,7 @@ export interface SongProposal {
   external_link: string | null
   audio_file_path: string | null
   comment: string | null
+  rights_accepted: boolean | null
   status: ProposalStatus
   cassette_id: string | null
   created_at: string

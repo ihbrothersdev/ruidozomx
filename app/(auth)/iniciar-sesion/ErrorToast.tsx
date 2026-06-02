@@ -5,17 +5,9 @@ import { useEffect } from 'react'
 import { sileo } from 'sileo'
 
 const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
-  link_expirado: {
-    title: 'Link inválido',
-    description: 'El link de confirmación expiró o ya fue usado. Intenta iniciar sesión directamente.'
-  },
   no_autorizado: {
     title: 'No autorizado',
-    description: 'Tu sesión expiró. Inicia sesión de nuevo.'
-  },
-  credenciales: {
-    title: 'Credenciales incorrectas',
-    description: 'Email o contraseña incorrectos.'
+    description: 'Inicia sesión con una cuenta admin para acceder a esa sección.'
   }
 }
 
@@ -23,16 +15,28 @@ export function ErrorToast() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const code = searchParams.get('e')
+  const customMessage = searchParams.get('m')
+  const errorMessage = searchParams.get('error')
 
   useEffect(() => {
-    if (!code) return
-    const msg = ERROR_MESSAGES[code]
-    if (msg) {
-      sileo.error({ title: msg.title, description: msg.description, position: 'top-center', duration: 5000 })
+    if (!code && !errorMessage) return
+
+    if (code) {
+      const mapped = ERROR_MESSAGES[code]
+      const title = mapped?.title ?? 'Error'
+      const description = mapped?.description ?? customMessage ?? 'Ocurrió un error inesperado. Intenta de nuevo.'
+      sileo.error({ title, description, position: 'top-center', duration: 5000 })
+    } else if (errorMessage) {
+      sileo.error({
+        title: 'Error',
+        description: errorMessage,
+        position: 'top-center',
+        duration: 5000
+      })
     }
-    // Limpia la URL sin recargar
+
     router.replace('/iniciar-sesion')
-  }, [code, router])
+  }, [code, customMessage, errorMessage, router])
 
   return null
 }

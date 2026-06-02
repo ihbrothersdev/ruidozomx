@@ -24,7 +24,7 @@ export const COUNTRIES = [
   'República Dominicana',
   'Uruguay',
   'Venezuela',
-  'Otro',
+  'Otro'
 ] as const
 
 export type Country = (typeof COUNTRIES)[number]
@@ -40,8 +40,16 @@ const MEXICO: Record<string, string[]> = {
   Chiapas: ['Tuxtla Gutiérrez', 'San Cristóbal de las Casas', 'Tapachula'],
   Chihuahua: ['Chihuahua', 'Ciudad Juárez', 'Delicias'],
   'Ciudad de México': [
-    'Álvaro Obregón', 'Azcapotzalco', 'Benito Juárez', 'Coyoacán', 'Cuauhtémoc',
-    'Gustavo A. Madero', 'Iztapalapa', 'Miguel Hidalgo', 'Tlalpan', 'Xochimilco',
+    'Álvaro Obregón',
+    'Azcapotzalco',
+    'Benito Juárez',
+    'Coyoacán',
+    'Cuauhtémoc',
+    'Gustavo A. Madero',
+    'Iztapalapa',
+    'Miguel Hidalgo',
+    'Tlalpan',
+    'Xochimilco'
   ],
   Coahuila: ['Saltillo', 'Torreón', 'Monclova'],
   Colima: ['Colima', 'Manzanillo'],
@@ -67,7 +75,7 @@ const MEXICO: Record<string, string[]> = {
   Tlaxcala: ['Tlaxcala', 'Apizaco'],
   Veracruz: ['Veracruz', 'Xalapa', 'Coatzacoalcos', 'Córdoba', 'Orizaba'],
   Yucatán: ['Mérida', 'Progreso', 'Valladolid'],
-  Zacatecas: ['Zacatecas', 'Fresnillo'],
+  Zacatecas: ['Zacatecas', 'Fresnillo']
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +95,7 @@ const ARGENTINA: Record<string, string[]> = {
   Jujuy: ['San Salvador de Jujuy'],
   Chubut: ['Comodoro Rivadavia', 'Puerto Madryn'],
   'Río Negro': ['Bariloche', 'Viedma'],
-  'Tierra del Fuego': ['Ushuaia'],
+  'Tierra del Fuego': ['Ushuaia']
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +109,7 @@ const BOLIVIA: Record<string, string[]> = {
   Oruro: ['Oruro'],
   Chuquisaca: ['Sucre'],
   Tarija: ['Tarija', 'Yacuiba'],
-  Beni: ['Trinidad'],
+  Beni: ['Trinidad']
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +125,7 @@ const CHILE: Record<string, string[]> = {
   'Los Lagos': ['Puerto Montt', 'Osorno', 'Castro'],
   Maule: ['Talca', 'Curicó'],
   Tarapacá: ['Iquique'],
-  Magallanes: ['Punta Arenas'],
+  Magallanes: ['Punta Arenas']
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +147,7 @@ const COLOMBIA: Record<string, string[]> = {
   Cauca: ['Popayán'],
   Huila: ['Neiva'],
   Meta: ['Villavicencio'],
-  Tolima: ['Ibagué'],
+  Tolima: ['Ibagué']
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +160,7 @@ const COSTA_RICA: Record<string, string[]> = {
   Heredia: ['Heredia', 'San Pablo'],
   Guanacaste: ['Liberia', 'Nicoya'],
   Puntarenas: ['Puntarenas', 'Quepos'],
-  Limón: ['Limón'],
+  Limón: ['Limón']
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +174,7 @@ const CUBA: Record<string, string[]> = {
   'Villa Clara': ['Santa Clara'],
   Matanzas: ['Matanzas', 'Varadero'],
   Pinar: ['Pinar del Río'],
-  Granma: ['Bayamo', 'Manzanillo'],
+  Granma: ['Bayamo', 'Manzanillo']
 }
 
 // ---------------------------------------------------------------------------
@@ -182,7 +190,7 @@ const ECUADOR: Record<string, string[]> = {
   Tungurahua: ['Ambato'],
   Loja: ['Loja'],
   'Santo Domingo': ['Santo Domingo'],
-  'Santa Elena': ['Salinas'],
+  'Santa Elena': ['Salinas']
 }
 
 // ---------------------------------------------------------------------------
@@ -196,7 +204,7 @@ const EL_SALVADOR: Record<string, string[]> = {
   Sonsonate: ['Sonsonate'],
   Usulután: ['Usulután'],
   Cuscatlán: ['Cojutepeque'],
-  'La Paz': ['Zacatecoluca'],
+  'La Paz': ['Zacatecoluca']
 }
 
 // ---------------------------------------------------------------------------
@@ -219,7 +227,7 @@ const ESPANA: Record<string, string[]> = {
   Baleares: ['Palma', 'Ibiza'],
   Extremadura: ['Badajoz', 'Cáceres'],
   Cantabria: ['Santander'],
-  'La Rioja': ['Logroño'],
+  'La Rioja': ['Logroño']
 }
 
 // ---------------------------------------------------------------------------
@@ -245,7 +253,7 @@ const USA: Record<string, string[]> = {
   Pennsylvania: ['Philadelphia', 'Pittsburgh'],
   Michigan: ['Detroit', 'Grand Rapids'],
   Minnesota: ['Minneapolis', 'Saint Paul'],
-  Missouri: ['Kansas City', 'Saint Louis'],
+  Missouri: ['Kansas City', 'Saint Louis']
 }
 
 // ---------------------------------------------------------------------------
@@ -260,7 +268,7 @@ const GUATEMALA: Record<string, string[]> = {
   Izabal: ['Puerto Barrios', 'Livingston'],
   Huehuetenango: ['Huehuetenango'],
   Petén: ['Flores', 'Santa Elena'],
-  'San Marcos': ['San Marcos', 'Malacatán'],
+  'San Marcos': ['San Marcos', 'Malacatán']
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +283,7 @@ const HONDURAS: Record<string, string[]> = {
   Copán: ['Santa Rosa de Copán'],
   Olancho: ['Juticalpa'],
   Yoro: ['El Progreso'],
-  'Islas de la Bahía': ['Roatán', 'Utila'],
+  'Islas de la Bahía': ['Roatán', 'Utila']
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +298,7 @@ const NICARAGUA: Record<string, string[]> = {
   Granada: ['Granada'],
   Estelí: ['Estelí'],
   Rivas: ['Rivas', 'San Juan del Sur'],
-  Jinotega: ['Jinotega'],
+  Jinotega: ['Jinotega']
 }
 
 // ---------------------------------------------------------------------------
@@ -304,7 +312,7 @@ const PANAMA: Record<string, string[]> = {
   Coclé: ['Penonomé', 'Aguadulce'],
   Veraguas: ['Santiago'],
   Herrera: ['Chitré'],
-  'Bocas del Toro': ['Bocas del Toro', 'Changuinola'],
+  'Bocas del Toro': ['Bocas del Toro', 'Changuinola']
 }
 
 // ---------------------------------------------------------------------------
@@ -318,7 +326,7 @@ const PARAGUAY: Record<string, string[]> = {
   Concepción: ['Concepción'],
   Amambay: ['Pedro Juan Caballero'],
   Guairá: ['Villarrica'],
-  Misiones: ['San Ignacio'],
+  Misiones: ['San Ignacio']
 }
 
 // ---------------------------------------------------------------------------
@@ -335,7 +343,7 @@ const PERU: Record<string, string[]> = {
   Iquitos: ['Iquitos'],
   Huancayo: ['Huancayo'],
   Puno: ['Puno', 'Juliaca'],
-  Tacna: ['Tacna'],
+  Tacna: ['Tacna']
 }
 
 // ---------------------------------------------------------------------------
@@ -346,7 +354,7 @@ const PUERTO_RICO: Record<string, string[]> = {
   'Zona Sur': ['Ponce', 'Juana Díaz'],
   'Zona Norte': ['Arecibo', 'Manatí'],
   'Zona Oeste': ['Mayagüez', 'Aguadilla'],
-  'Zona Este': ['Humacao', 'Fajardo'],
+  'Zona Este': ['Humacao', 'Fajardo']
 }
 
 // ---------------------------------------------------------------------------
@@ -361,7 +369,7 @@ const REP_DOMINICANA: Record<string, string[]> = {
   'Puerto Plata': ['Puerto Plata', 'Sosúa'],
   Duarte: ['San Francisco de Macorís'],
   Samaná: ['Las Terrenas'],
-  'La Vega': ['La Vega', 'Jarabacoa'],
+  'La Vega': ['La Vega', 'Jarabacoa']
 }
 
 // ---------------------------------------------------------------------------
@@ -375,7 +383,7 @@ const URUGUAY: Record<string, string[]> = {
   Paysandú: ['Paysandú'],
   Rivera: ['Rivera'],
   Colonia: ['Colonia del Sacramento'],
-  'San José': ['San José de Mayo'],
+  'San José': ['San José de Mayo']
 }
 
 // ---------------------------------------------------------------------------
@@ -394,7 +402,7 @@ const VENEZUELA: Record<string, string[]> = {
   Mérida: ['Mérida'],
   Monagas: ['Maturín'],
   Sucre: ['Cumaná'],
-  Falcón: ['Coro', 'Punto Fijo'],
+  Falcón: ['Coro', 'Punto Fijo']
 }
 
 // ---------------------------------------------------------------------------
@@ -421,7 +429,7 @@ const LOCATION_DATA: Partial<Record<string, Record<string, string[]>>> = {
   'Puerto Rico': PUERTO_RICO,
   'República Dominicana': REP_DOMINICANA,
   Uruguay: URUGUAY,
-  Venezuela: VENEZUELA,
+  Venezuela: VENEZUELA
 }
 
 // ---------------------------------------------------------------------------
@@ -449,7 +457,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   'República Dominicana': '🇩🇴',
   Uruguay: '🇺🇾',
   Venezuela: '🇻🇪',
-  Otro: '🌍',
+  Otro: '🌍'
 }
 
 /** Keep backward compat */

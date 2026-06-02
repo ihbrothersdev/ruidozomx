@@ -1,7 +1,12 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Toaster } from 'sileo'
 import './globals.css'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
+const SITE_NAME = 'Ruidozo MX'
+const SITE_DESCRIPTION =
+  'Cassette semanal de música mexicana independiente. Descubre, propón y comparte rolas de la escena underground.'
 
 const corose = localFont({
   src: '../public/assets/fonts/Corose.otf',
@@ -46,7 +51,56 @@ const akzidenzGrotesk = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Ruidozo MX'
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s — ${SITE_NAME}`
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ['música mexicana', 'indie', 'underground', 'cassette', 'mixtape', 'México', 'escena independiente'],
+  authors: [{ name: 'Ruidozo MX' }],
+  creator: 'Ruidozo MX',
+  publisher: 'Ruidozo MX',
+  formatDetection: { telephone: false, email: false, address: false },
+  openGraph: {
+    type: 'website',
+    locale: 'es_MX',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: '/assets/media-artwork.png',
+        width: 512,
+        height: 512,
+        alt: SITE_NAME
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ['/assets/media-artwork.png']
+  },
+  icons: {
+    icon: '/favicon.ico'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true }
+  }
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5
 }
 
 export default function RootLayout({

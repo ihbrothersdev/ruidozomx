@@ -1,21 +1,43 @@
 'use client'
 
+import { logEvent } from '@/app/analytics/actions'
+import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
+import { PlatformIcon } from '@/app/components/ui/platform-icon'
+import { getAnonSessionId } from '@/lib/analytics/session'
+import { Copy, Share2 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 
 interface CompartirModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Optional context — where the share originated (e.g. 'ticket', 'home', 'perfil'). */
+  source?: string
+  /** Optional song/cassette context if the share happens while listening. */
+  songId?: string | null
+  cassetteId?: string | null
 }
 
-export default function CompartirModal({ open, onOpenChange }: CompartirModalProps) {
+export default function CompartirModal({ open, onOpenChange, source, songId, cassetteId }: CompartirModalProps) {
   const [copied, setCopied] = useState(false)
-  const shareUrl = 'ruidozo.com.mx'
+  const shareUrl = 'ruidozo.mx'
+  const fullUrl = `https://${shareUrl}`
+  const shareText = 'Únete al movimiento. Haz ruido.'
+
+  function trackShare(channel: string) {
+    void logEvent({
+      type: 'share_click',
+      songId: songId ?? null,
+      cassetteId: cassetteId ?? null,
+      sessionId: getAnonSessionId() || null,
+      metadata: { channel, source }
+    }).catch(() => {})
+  }
 
   const handleCopy = async () => {
+    trackShare('copy_link')
     try {
-      await navigator.clipboard.writeText(`https://${shareUrl}`)
+      await navigator.clipboard.writeText(fullUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -23,8 +45,37 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
     }
   }
 
+  const handleShare = async () => {
+    const shareData = { title: 'Ruidozo', text: shareText, url: fullUrl }
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share(shareData)
+        trackShare('native_share')
+        return
+      } catch {
+        // User cancelled or share failed — fall through to copy
+      }
+    }
+    handleCopy()
+  }
+
+  const encodedUrl = encodeURIComponent(fullUrl)
+  const encodedText = encodeURIComponent(shareText)
+  const platforms = [
+    { key: 'whatsapp', label: 'WhatsApp', href: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
+    { key: 'facebook', label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    {
+      key: 'mail',
+      label: 'Email',
+      href: `mailto:?subject=${encodeURIComponent('Ruidozo')}&body=${encodedText}%20${encodedUrl}`
+    }
+  ] as const
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent
         className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-4xl'
         showCloseButton={false}
@@ -39,7 +90,6 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
             width={600}
             height={500}
             className='absolute inset-0 h-full w-full object-fill'
-            unoptimized
           />
 
           {/* Content */}
@@ -51,18 +101,48 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
               width={428}
               height={54}
               className='h-auto w-full max-w-72'
-              unoptimized
             />
 
-            {/* Copy link section */}
-            <div className='mt-4 text-center'>
-              <button
-                onClick={handleCopy}
-                className='font-pt-mono cursor-pointer text-xs font-bold tracking-wider text-black uppercase transition-opacity hover:opacity-70'
-              >
-                {copied ? 'Copiado!' : 'Copiar link'}
-              </button>
-              <p className='font-pt-mono text-xs tracking-wider text-black/70'>{shareUrl}</p>
+            {/* Share icons row + URL */}
+            <div className='mt-4 flex flex-col items-center gap-2 text-center'>
+              <div className='flex items-center gap-3'>
+                <button
+                  onClick={handleShare}
+                  aria-label='Compartir'
+                  title='Compartir'
+                  className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-red-600 text-red-600 transition-colors hover:bg-red-600 hover:text-white'
+                >
+                  <Share2 className='h-4 w-4' />
+                </button>
+                {platforms.map(p => (
+                  <a
+                    key={p.key}
+                    href={p.href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    aria-label={`Compartir en ${p.label}`}
+                    title={p.label}
+                    onClick={() => trackShare(p.key)}
+                    className='flex h-9 w-9 items-center justify-center rounded-full border-2 border-black text-black transition-colors hover:bg-black hover:text-white'
+                  >
+                    <PlatformIcon
+                      platform={p.key}
+                      className='h-4 w-4'
+                    />
+                  </a>
+                ))}
+                <button
+                  onClick={handleCopy}
+                  aria-label={copied ? 'Copiado' : 'Copiar link'}
+                  title={copied ? 'Copiado' : 'Copiar link'}
+                  className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-black text-black transition-colors hover:bg-black hover:text-white'
+                >
+                  <Copy className='h-4 w-4' />
+                </button>
+              </div>
+              <p className='font-pt-mono text-xs tracking-wider text-black/70'>
+                {copied ? '¡Link copiado!' : shareUrl}
+              </p>
             </div>
 
             {/* Images section */}
@@ -72,14 +152,17 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                 <Image
                   src='/assets/compartir/post.png'
                   alt='Post para compartir'
-                  width={213}
-                  height={273}
+                  width={1080}
+                  height={1350}
                   className='h-auto w-28 sm:w-40 lg:w-52'
-                  unoptimized
                 />
-                <span className='font-pt-mono text-[10px] font-bold tracking-wider text-black uppercase'>
-                  Post
-                </span>
+                <a
+                  href='/assets/compartir/post.png'
+                  download='ruidozo-post.png'
+                  className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-black uppercase underline-offset-2 transition-opacity hover:underline'
+                >
+                  Descargar Post
+                </a>
               </div>
 
               {/* Reel / Stories */}
@@ -87,14 +170,17 @@ export default function CompartirModal({ open, onOpenChange }: CompartirModalPro
                 <Image
                   src='/assets/compartir/reel.png'
                   alt='Reel para compartir'
-                  width={252}
-                  height={447}
+                  width={1080}
+                  height={1920}
                   className='h-auto w-28 sm:w-40 lg:w-52'
-                  unoptimized
                 />
-                <span className='font-pt-mono text-[10px] font-bold tracking-wider text-black uppercase'>
-                  Reel/Stories
-                </span>
+                <a
+                  href='/assets/compartir/reel.png'
+                  download='ruidozo-reel.png'
+                  className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-black uppercase underline-offset-2 transition-opacity hover:underline'
+                >
+                  Descargar Reel/Stories
+                </a>
               </div>
             </div>
 

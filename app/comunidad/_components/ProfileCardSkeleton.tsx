@@ -13,7 +13,6 @@ export function ProfileCardSkeleton() {
         alt=''
         fill
         className='object-cover opacity-50'
-        unoptimized
       />
 
       {/* Marco de foto skeleton */}
@@ -30,7 +29,6 @@ export function ProfileCardSkeleton() {
         alt=''
         fill
         className='object-cover opacity-50'
-        unoptimized
       />
 
       {/* Text skeletons */}
@@ -38,9 +36,18 @@ export function ProfileCardSkeleton() {
         className='absolute inset-x-0 flex flex-col items-center gap-[2%] px-[10%]'
         style={{ top: '56%' }}
       >
-        <Skeleton className='h-[3%] w-3/4 bg-black/15' style={{ minHeight: 10 }} />
-        <Skeleton className='h-[2.5%] w-1/2 bg-black/10' style={{ minHeight: 8 }} />
-        <Skeleton className='h-[2.5%] w-2/3 bg-black/10' style={{ minHeight: 8 }} />
+        <Skeleton
+          className='h-[3%] w-3/4 bg-black/15'
+          style={{ minHeight: 10 }}
+        />
+        <Skeleton
+          className='h-[2.5%] w-1/2 bg-black/10'
+          style={{ minHeight: 8 }}
+        />
+        <Skeleton
+          className='h-[2.5%] w-2/3 bg-black/10'
+          style={{ minHeight: 8 }}
+        />
       </div>
 
       {/* Button skeleton */}
@@ -48,7 +55,10 @@ export function ProfileCardSkeleton() {
         className='absolute inset-x-0 flex justify-center'
         style={{ bottom: '5%' }}
       >
-        <Skeleton className='w-[37.3%] bg-red-600/30' style={{ height: 14 }} />
+        <Skeleton
+          className='w-[37.3%] bg-red-600/30'
+          style={{ height: 14 }}
+        />
       </div>
     </div>
   )

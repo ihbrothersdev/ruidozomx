@@ -1,8 +1,8 @@
 'use client'
 
 /* eslint-disable @next/next/no-img-element */
+import { TrackedProfileLink } from '@/app/components/analytics/TrackedProfileLink'
 import Image from 'next/image'
-import Link from 'next/link'
 import type { CommunityProfile } from '../types'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -23,8 +23,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const location = [profile.city, profile.country].filter(Boolean).join(', ')
 
   return (
-    <Link
+    <TrackedProfileLink
       href={`/perfil/${profile.slug}`}
+      targetProfileSlug={profile.slug}
+      targetProfileId={profile.id}
+      source='comunidad'
       className='group relative block w-full'
       style={{ aspectRatio: '3 / 4' }}
     >
@@ -34,7 +37,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         alt=''
         fill
         className='object-cover'
-        unoptimized
       />
 
       {/* ── Layer 2: Marco de foto + photo inside ── */}
@@ -47,7 +49,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           alt=''
           fill
           className='object-fill'
-          unoptimized
         />
         {/* Photo area — inside the red bars (22px each = 5.5% card, 1.17% sides) */}
         <div
@@ -76,7 +77,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         alt=''
         fill
         className='object-cover'
-        unoptimized
       />
 
       {/* ── Layer 4: Text (above pinza overlay) ── */}
@@ -84,13 +84,13 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         className='absolute inset-x-0 flex flex-col items-center gap-0.5 px-[8%] text-center'
         style={{ top: '56%' }}
       >
-        <p className='font-baby-doll w-full truncate font-bold leading-tight text-black uppercase [font-size:3.2vw] sm:[font-size:2vw] lg:[font-size:1.4vw]'>
+        <p className='font-baby-doll w-full truncate [font-size:3.2vw] leading-tight font-bold text-black uppercase sm:[font-size:2vw] lg:[font-size:1.4vw]'>
           {profile.display_name}
         </p>
-        <p className='font-pt-mono w-full leading-tight text-black/60 uppercase [font-size:2.4vw] sm:[font-size:1.5vw] lg:[font-size:1.1vw]'>
+        <p className='font-pt-mono w-full [font-size:2.4vw] leading-tight text-black/60 uppercase sm:[font-size:1.5vw] lg:[font-size:1.1vw]'>
           {location}
         </p>
-        <p className='font-pt-mono w-full font-bold leading-tight text-black/80 uppercase [font-size:2.4vw] sm:[font-size:1.5vw] lg:[font-size:1.1vw]'>
+        <p className='font-pt-mono w-full [font-size:2.4vw] leading-tight font-bold text-black/80 uppercase sm:[font-size:1.5vw] lg:[font-size:1.1vw]'>
           Rol: {ROLE_LABELS[profile.role] ?? profile.role}
         </p>
 
@@ -120,9 +120,8 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           height={19}
           className='w-[37.3%]'
           style={{ height: 'auto' }}
-          unoptimized
         />
       </div>
-    </Link>
+    </TrackedProfileLink>
   )
 }

@@ -43,7 +43,6 @@ export function TransportControls({
         height={171}
         className='absolute top-2 left-1/2 -z-10 -translate-x-1/2'
         style={{ width: '78%', height: 'auto' }}
-        unoptimized
       />
 
       <div
@@ -56,7 +55,6 @@ export function TransportControls({
             alt=''
             width={570}
             height={123}
-            unoptimized
           />
 
           {/* Content overlaid on carcasa */}

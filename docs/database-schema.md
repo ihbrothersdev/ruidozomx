@@ -13,7 +13,7 @@
 | `proposal_status` | `pending`, `in_review`, `selected`, `rejected`                             |
 | `cassette_side`   | `A`, `B`                                                                   |
 | `activity_type`   | `registration`, `interest`, `proposal`, `song_selected`, `event_published` |
-| `event_status`    | `draft`, `published`, `cancelled`                                          |
+| `event_status`    | `published`, `cancelled`                                                   |
 
 > Role enum values (`banda`, `agente`, `promotor`, `proveedor`) are kept as identifiers
 > used across routing and component mapping. All other schema elements are in English.
@@ -229,8 +229,8 @@ Events published by profiles (venues, promoters, bands, etc.). One of the four m
 | profile_id       | uuid (FK)    | no       |                   | References `profiles(id)` ON DELETE CASCADE |
 | title            | varchar(200) | no       |                   |                                             |
 | description      | text         | yes      |                   |                                             |
-| event_date       | timestamptz  | no       |                   |                                             |
-| event_end_date   | timestamptz  | yes      |                   |                                             |
+| event_date       | date         | no       |                   |                                             |
+| event_end_date   | date         | yes      |                   |                                             |
 | venue_name       | varchar(200) | yes      |                   |                                             |
 | venue_profile_id | uuid (FK)    | yes      |                   | References `profiles(id)` — linked venue    |
 | address          | text         | yes      |                   |                                             |
@@ -240,7 +240,7 @@ Events published by profiles (venues, promoters, bands, etc.). One of the four m
 | event_type       | varchar(100) | yes      |                   | e.g. Concierto, Festival, etc.              |
 | external_link    | text         | yes      |                   |                                             |
 | cover_image_url  | text         | yes      |                   | Supabase Storage URL                        |
-| status           | event_status | no       | 'draft'           |                                             |
+| status           | event_status | no       | 'published'       |                                             |
 | created_at       | timestamptz  | no       | now()             |                                             |
 | updated_at       | timestamptz  | no       | now()             |                                             |
 
@@ -263,6 +263,7 @@ User-submitted song suggestions.
 | audio_file_path | text            | yes      |                   | Supabase Storage path                          |
 | contact_email   | varchar(255)    | yes      |                   | Proposer's contact email                       |
 | comment         | text            | yes      |                   |                                                |
+| rights_accepted | boolean         | yes      |                   | `true` cuando una banda confirma derechos; `null` para otros roles |
 | status          | proposal_status | no       | 'pending'         |                                                |
 | cassette_id     | uuid (FK)       | yes      |                   | References `cassettes(id)` — set when selected |
 | created_at      | timestamptz     | no       | now()             |                                                |

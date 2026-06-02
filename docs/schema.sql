@@ -30,7 +30,7 @@ CREATE TYPE activity_type AS ENUM (
   'event_published', 'user_proposal'
 );
 
-CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
+CREATE TYPE event_status AS ENUM ('published', 'cancelled');
 
 -- ============================================================
 -- PROFILES (universal identity — always filled at registration)
@@ -38,7 +38,8 @@ CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled');
 -- Mapping from forms → profiles:
 --   band_name / full_name / alias / venue_name / brand_name → display_name (via buildDisplayName)
 --   review / description                                    → bio
---   web_link / project_link                                 → social_links.web
+--   web_link                                                → social_links.web
+--   project_link (banda)                                    → social_links.project
 --   contact                                                 → contact
 -- ============================================================
 
@@ -182,19 +183,20 @@ CREATE INDEX idx_cassettes_archived ON cassettes(archived, start_date DESC);
 -- ============================================================
 
 CREATE TABLE song_proposals (
-  id            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID           NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  title         VARCHAR(200)   NOT NULL,
-  artist        VARCHAR(200)   NOT NULL,
-  genre         VARCHAR(100),
-  external_link TEXT,
+  id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID            NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title           VARCHAR(200)    NOT NULL,
+  artist          VARCHAR(200)    NOT NULL,
+  genre           VARCHAR(100),
+  external_link   TEXT,
   audio_file_path TEXT,
-  comment       TEXT,
-  status        proposal_status NOT NULL DEFAULT 'pending',
-  cassette_id   UUID           REFERENCES cassettes(id),
-  created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-  reviewed_at   TIMESTAMPTZ,
-  reviewed_by   UUID           REFERENCES profiles(id)
+  comment         TEXT,
+  rights_accepted BOOLEAN,
+  status          proposal_status NOT NULL DEFAULT 'pending',
+  cassette_id     UUID            REFERENCES cassettes(id),
+  created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  reviewed_at     TIMESTAMPTZ,
+  reviewed_by     UUID            REFERENCES profiles(id)
 );
 
 CREATE INDEX idx_proposals_user   ON song_proposals(user_id, created_at DESC);
@@ -205,21 +207,23 @@ CREATE INDEX idx_proposals_status ON song_proposals(status);
 -- ============================================================
 
 CREATE TABLE songs (
-  id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  cassette_id      UUID         NOT NULL REFERENCES cassettes(id) ON DELETE CASCADE,
-  title            VARCHAR(200) NOT NULL,
-  artist           VARCHAR(200) NOT NULL,
-  genre            VARCHAR(100),
-  duration_seconds INTEGER,
-  side             cassette_side NOT NULL,
-  position         INTEGER      NOT NULL,
-  audio_url        TEXT,
-  proposal_id      UUID         REFERENCES song_proposals(id),
-  plays            INTEGER      NOT NULL DEFAULT 0,
-  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+  id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  cassette_id        UUID         NOT NULL REFERENCES cassettes(id) ON DELETE CASCADE,
+  title              VARCHAR(200) NOT NULL,
+  artist             VARCHAR(200) NOT NULL,                 -- display name (works for bands without a profile)
+  artist_profile_id  UUID         REFERENCES profiles(id) ON DELETE SET NULL,
+  genre              VARCHAR(100),
+  duration_seconds   INTEGER,
+  side               cassette_side NOT NULL,
+  position           INTEGER      NOT NULL,
+  audio_url          TEXT,
+  proposal_id        UUID         REFERENCES song_proposals(id),
+  plays              INTEGER      NOT NULL DEFAULT 0,
+  created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_songs_cassette ON songs(cassette_id, side, position);
+CREATE INDEX idx_songs_cassette       ON songs(cassette_id, side, position);
+CREATE INDEX idx_songs_artist_profile ON songs(artist_profile_id) WHERE artist_profile_id IS NOT NULL;
 
 -- ============================================================
 -- EVENTS
@@ -230,8 +234,8 @@ CREATE TABLE events (
   profile_id       UUID         NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   title            VARCHAR(200) NOT NULL,
   description      TEXT,
-  event_date       TIMESTAMPTZ  NOT NULL,
-  event_end_date   TIMESTAMPTZ,
+  event_date       DATE         NOT NULL,
+  event_end_date   DATE,
   venue_name       VARCHAR(200),
   venue_profile_id UUID         REFERENCES profiles(id),
   address          TEXT,
@@ -241,7 +245,7 @@ CREATE TABLE events (
   event_type       VARCHAR(100),
   external_link    TEXT,
   cover_image_url  TEXT,
-  status           event_status NOT NULL DEFAULT 'draft',
+  status           event_status NOT NULL DEFAULT 'published',
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -408,6 +412,9 @@ CREATE POLICY "interests_select_own"
 CREATE POLICY "interests_insert_own"
   ON interests FOR INSERT
   WITH CHECK (auth.uid() = from_profile_id);
+CREATE POLICY "interests_delete_sender"
+  ON interests FOR DELETE
+  USING (auth.uid() = from_profile_id);
 
 -- EVENTS
 CREATE POLICY "events_select_published"
@@ -549,5 +556,5 @@ CREATE TRIGGER events_activity         AFTER INSERT ON events          FOR EACH 
 -- * Registration action (registroSignup) uses service_role client to bypass RLS
 -- * For manager/promotor/agente: actions.ts reads role_type from form dropdown
 --   and updates profiles.role after the initial insert
--- * social_links JSONB keys: {web, instagram, spotify, soundcloud, bandcamp, maps}
+-- * social_links JSONB keys: {web, project, instagram, spotify, soundcloud, bandcamp, maps}
 -- * contact is free text: could be email, phone, IG handle, etc.

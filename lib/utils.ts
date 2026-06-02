@@ -24,10 +24,15 @@ export function generateSlug(name: string): string {
 }
 
 /**
- * Format the current date for the cassette display.
- * Example: "MAYO 2025"
+ * Format a date for the cassette display. Accepts a Date, an ISO string
+ * (e.g. `'2026-05-18'`), or `undefined` to fall back to today's date.
+ *
+ * The cassette's release date is anchored to `cassettes.start_date` so the
+ * label only changes when a new cassette is published, not every midnight.
+ *
+ * Example: "18 MAYO 2026"
  */
-export function formatCassetteDate(): string {
+export function formatCassetteDate(input?: Date | string | null): string {
   const months = [
     'ENERO',
     'FEBRERO',
@@ -42,6 +47,42 @@ export function formatCassetteDate(): string {
     'NOVIEMBRE',
     'DICIEMBRE'
   ]
-  const now = new Date()
-  return `${months[now.getMonth()]} ${now.getFullYear()}`
+  // Postgres returns DATE columns as 'YYYY-MM-DD'. Parsing that as
+  // `new Date('YYYY-MM-DD')` is interpreted as UTC midnight, which can shift
+  // the displayed day by one in negative-offset timezones. Force UTC reads.
+  let d: Date
+  if (input instanceof Date) {
+    d = input
+  } else if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}/.test(input)) {
+    const [y, m, day] = input.slice(0, 10).split('-').map(Number)
+    d = new Date(Date.UTC(y, m - 1, day))
+    return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+  } else {
+    d = new Date()
+  }
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+}
+
+const SHORT_MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/**
+ * Deterministic short date formatter ("1 abr") that produces identical output
+ * on Node.js (server) and any browser (client). We avoid `Intl.DateTimeFormat`
+ * because Node's ICU emits "1 de abr." while browsers render "1 abr",
+ * triggering React hydration mismatches when the same date is rendered on
+ * both sides.
+ *
+ * Uses UTC to stay independent of server/client timezones.
+ */
+export function formatShortDateMX(input: string | Date): string {
+  const d = input instanceof Date ? input : new Date(input)
+  return `${d.getUTCDate()} ${SHORT_MONTHS_ES[d.getUTCMonth()]}`
+}
+
+/**
+ * Deterministic long date formatter ("1 abr 2026") for cards / lists.
+ */
+export function formatLongDateMX(input: string | Date): string {
+  const d = input instanceof Date ? input : new Date(input)
+  return `${d.getUTCDate()} ${SHORT_MONTHS_ES[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }

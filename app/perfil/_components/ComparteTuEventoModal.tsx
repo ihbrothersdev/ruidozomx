@@ -1,12 +1,19 @@
 'use client'
 
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { CalendarIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { sileo } from 'sileo'
+import { Calendar } from '@/app/components/ui/calendar'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { submitEvent } from '../actions'
 
 interface ComparteTuEventoModalProps {
   open: boolean
@@ -28,9 +35,53 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
   const [venue, setVenue] = useState('')
   const [ciudad, setCiudad] = useState('')
   const [direccion, setDireccion] = useState('')
-  const [fecha, setFecha] = useState('')
+  const [fecha, setFecha] = useState<Date | undefined>(undefined)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [descripcion, setDescripcion] = useState('')
   const [links, setLinks] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && !!fecha
+
+  function resetForm() {
+    setTipo('')
+    setNombre('')
+    setVenue('')
+    setCiudad('')
+    setDireccion('')
+    setFecha(undefined)
+    setDescripcion('')
+    setLinks('')
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!canSubmit || !fecha) return
+    setSending(true)
+    const result = await submitEvent({
+      type: tipo,
+      title: nombre,
+      venueName: venue || undefined,
+      city: ciudad || undefined,
+      address: direccion || undefined,
+      date: format(fecha, 'yyyy-MM-dd'),
+      description: descripcion || undefined,
+      externalLink: links || undefined
+    })
+    setSending(false)
+    if (result.error) {
+      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+      return
+    }
+    sileo.success({
+      title: '¡Éxito!',
+      description: 'Tu evento ha sido publicado.',
+      position: 'top-center',
+      duration: 4000
+    })
+    resetForm()
+    onOpenChange(false)
+  }
 
   return (
     <Dialog
@@ -51,7 +102,6 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
               width={600}
               height={800}
               className='absolute inset-0 h-full w-full object-fill'
-              unoptimized
             />
 
             {/* Content */}
@@ -63,14 +113,18 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                 width={500}
                 height={80}
                 className='h-auto w-full max-w-78 sm:max-w-100'
-                unoptimized
               />
 
               {/* Form */}
-              <div className='mt-5 w-full space-y-4'>
+              <form
+                onSubmit={handleSubmit}
+                className='mt-5 w-full space-y-4'
+              >
                 {/* Tipo — dropdown */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Tipo</Label>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                    Tipo<span className='text-red-600'>*</span>
+                  </Label>
                   <Select
                     value={tipo}
                     onValueChange={setTipo}
@@ -94,11 +148,12 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                 {/* Nombre del evento */}
                 <div className='space-y-1'>
                   <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Nombre del evento
+                    Nombre del evento<span className='text-red-600'>*</span>
                   </Label>
                   <Input
                     value={nombre}
                     onChange={e => setNombre(e.target.value)}
+                    required
                     className={inputCls}
                   />
                 </div>
@@ -132,13 +187,41 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
 
                 {/* Fecha */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Fecha</Label>
-                  <Input
-                    type='date'
-                    value={fecha}
-                    onChange={e => setFecha(e.target.value)}
-                    className={inputCls}
-                  />
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                    Fecha<span className='text-red-600'>*</span>
+                  </Label>
+                  <Popover
+                    open={calendarOpen}
+                    onOpenChange={setCalendarOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <button
+                        type='button'
+                        className={`${inputCls} flex items-center justify-between text-left ${
+                          fecha ? 'text-black' : 'text-black/30'
+                        }`}
+                      >
+                        {fecha ? format(fecha, "d 'de' MMMM 'de' yyyy", { locale: es }) : 'Selecciona una fecha'}
+                        <CalendarIcon className='ml-2 size-4 shrink-0 text-red-600' />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className='w-auto p-0'
+                      align='start'
+                    >
+                      <Calendar
+                        mode='single'
+                        selected={fecha}
+                        onSelect={next => {
+                          setFecha(next)
+                          setCalendarOpen(false)
+                        }}
+                        locale={es}
+                        captionLayout='dropdown'
+                        defaultMonth={fecha ?? new Date()}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Descripción del evento */}
@@ -165,23 +248,29 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                   <Input
                     value={links}
                     onChange={e => setLinks(e.target.value)}
+                    placeholder='Boletos, Instagram, sitio del evento...'
                     className={inputCls}
                   />
                 </div>
-              </div>
 
-              {/* Action buttons */}
-              <div className='mt-6 flex justify-end gap-3'>
-                <button className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'>
-                  Enviar
-                </button>
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
-                >
-                  Cancelar
-                </button>
-              </div>
+                {/* Action buttons */}
+                <div className='mt-6 flex justify-end gap-3'>
+                  <button
+                    type='submit'
+                    disabled={!canSubmit || sending}
+                    className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+                  >
+                    {sending ? 'Enviando...' : 'Enviar'}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => onOpenChange(false)}
+                    className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

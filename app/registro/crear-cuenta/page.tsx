@@ -2,6 +2,7 @@
 
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
+import { PasswordInput } from '@/app/components/ui/password-input'
 import type { RegistrationSource, Role } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/types'
 import Image from 'next/image'
@@ -101,17 +102,21 @@ function CrearCuentaContent() {
   const serverError = searchParams.get('error')
   const message = searchParams.get('message')
 
-  const [profileData] = useState<Record<string, string | string[]>>(() => {
+  const [profileData, setProfileData] = useState<Record<string, string | string[]> | null>(null)
+
+  // Load profile from sessionStorage after mount to avoid SSR/CSR hydration mismatch
+  useEffect(() => {
     try {
-      const stored = typeof window !== 'undefined' ? sessionStorage.getItem('ruidozo_profile') : null
-      return stored ? JSON.parse(stored) : {}
+      const stored = sessionStorage.getItem('ruidozo_profile')
+      setProfileData(stored ? JSON.parse(stored) : {})
     } catch {
-      return {}
+      setProfileData({})
     }
-  })
+  }, [])
 
   // Guard: if the role-specific required field is missing, the user skipped the form
   useEffect(() => {
+    if (profileData === null) return
     const requiredField = REQUIRED_FIELD_BY_ROLE[role]
     const value = profileData[requiredField]
     if (!value || (typeof value === 'string' && !value.trim())) {
@@ -126,30 +131,60 @@ function CrearCuentaContent() {
     }
   }, [serverError])
 
-  const [clientError, setClientError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const error = clientError
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const form = e.currentTarget
+
+    if (!form.checkValidity()) {
+      e.preventDefault()
+      const invalid = form.querySelector(':invalid') as HTMLInputElement | null
+      if (invalid) {
+        const id = invalid.id || invalid.name || ''
+        const labelEl =
+          (id && (form.querySelector(`label[for="${id}"]`) as HTMLLabelElement | null)) ||
+          (invalid.closest('div')?.querySelector('label') as HTMLLabelElement | null)
+        const labelText = labelEl?.textContent?.replace(/\*$/, '').trim() || id || 'campo obligatorio'
+
+        sileo.error({
+          title: 'Falta un dato',
+          description: `Por favor completa: ${labelText}`,
+          position: 'top-center',
+          duration: 4000
+        })
+
+        invalid.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        invalid.focus()
+      }
+      return
+    }
+
     const password = (form.elements.namedItem('password') as HTMLInputElement)?.value
     const confirm = (form.elements.namedItem('confirm_password') as HTMLInputElement)?.value
 
     if (password !== confirm) {
       e.preventDefault()
-      setClientError('Las contraseñas no coinciden.')
+      sileo.error({
+        title: 'Error',
+        description: 'Las contraseñas no coinciden.',
+        position: 'top-center',
+        duration: 4000
+      })
       return
     }
 
     if (password.length < 6) {
       e.preventDefault()
-      setClientError('La contraseña debe tener al menos 6 caracteres.')
+      sileo.error({
+        title: 'Error',
+        description: 'La contraseña debe tener al menos 6 caracteres.',
+        position: 'top-center',
+        duration: 4000
+      })
       return
     }
 
-    setClientError(null)
     setIsSubmitting(true)
   }
 
@@ -161,7 +196,6 @@ function CrearCuentaContent() {
         fill
         className='object-cover'
         priority
-        unoptimized
       />
 
       <section className='relative z-10 flex w-full max-w-4xl rounded-sm shadow-2xl'>
@@ -171,7 +205,6 @@ function CrearCuentaContent() {
             alt=''
             fill
             className='object-cover'
-            unoptimized
           />
           <div className='relative z-10 p-8'>
             <Image
@@ -181,7 +214,6 @@ function CrearCuentaContent() {
               height={200}
               className='w-48'
               style={{ height: 'auto' }}
-              unoptimized
             />
           </div>
         </aside>
@@ -192,7 +224,6 @@ function CrearCuentaContent() {
             alt=''
             fill
             className='object-cover'
-            unoptimized
           />
 
           <div className='relative z-10 p-6 sm:p-8'>
@@ -203,13 +234,11 @@ function CrearCuentaContent() {
               height={50}
               className='mb-2 w-56 sm:w-64'
               style={{ height: 'auto' }}
-              unoptimized
             />
             <p className='font-pt-mono mb-6 text-xs text-black/60'>
               Registrándote como: <strong>{ROLE_LABELS[role]}</strong>
             </p>
 
-            {error && <Alert variant='error'>{error}</Alert>}
             {message && <Alert variant='success'>{message}</Alert>}
 
             <div className='relative overflow-visible'>
@@ -218,10 +247,10 @@ function CrearCuentaContent() {
                 alt=''
                 fill
                 className='object-fill'
-                unoptimized
               />
               <form
                 ref={formRef}
+                noValidate
                 action={registroSignup}
                 onSubmit={handleSubmit}
                 className='relative z-10 space-y-3 p-4 sm:p-6'
@@ -236,7 +265,7 @@ function CrearCuentaContent() {
                   name='source'
                   value={source}
                 />
-                <HiddenProfileInputs data={profileData} />
+                <HiddenProfileInputs data={profileData ?? {}} />
 
                 {FORM_FIELDS.map(field => (
                   <div
@@ -249,15 +278,28 @@ function CrearCuentaContent() {
                     >
                       {field.label}
                     </Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type={field.type}
-                      required
-                      placeholder={field.placeholder}
-                      minLength={field.minLength}
-                      className={inputCls}
-                    />
+                    {field.type === 'password' ? (
+                      <PasswordInput
+                        id={field.name}
+                        name={field.name}
+                        required
+                        placeholder={field.placeholder}
+                        minLength={field.minLength}
+                        className={`${inputCls} focus-within:border-red-800`}
+                        inputClassName='placeholder:text-black/30'
+                        toggleClassName='shrink-0 text-red-600/70 transition-colors hover:text-red-800 focus:outline-none disabled:opacity-50'
+                      />
+                    ) : (
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type={field.type}
+                        required
+                        placeholder={field.placeholder}
+                        minLength={field.minLength}
+                        className={inputCls}
+                      />
+                    )}
                   </div>
                 ))}
 
@@ -279,7 +321,6 @@ function CrearCuentaContent() {
                         height={45}
                         className='w-24 transition-opacity hover:opacity-80 sm:w-28'
                         style={{ height: 'auto' }}
-                        unoptimized
                       />
                     )}
                   </button>

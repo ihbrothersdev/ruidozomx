@@ -1,18 +1,24 @@
+import { createClient } from '@/lib/supabase/server'
 import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
+import { IntroRedirect } from './components/IntroRedirect'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { ExplorarComunidad } from './components/player/ExplorarComunidad'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
 
+const isSupabaseConfigured = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+)
+
 export default async function Home() {
   let user = null
   let photoUrl: string | null = null
   let userRole: string | null = null
-  try {
-    const { createClient } = await import('@/lib/supabase/server')
+
+  if (isSupabaseConfigured) {
     const supabase = await createClient()
     const { data } = await supabase.auth.getUser()
     user = data.user
@@ -21,37 +27,33 @@ export default async function Home() {
       photoUrl = (profile?.photo_url as string) || null
       userRole = (profile?.role as string) || null
     }
-  } catch {
-    // Supabase not configured — continue without auth
   }
 
-  // Fetch songs from the active cassette in Supabase
-  const { songs } = await getActiveCassetteSongs()
+  const { songs, cassetteId, cassetteStartDate, concatAudioUrl } = await getActiveCassetteSongs()
 
   return (
     <main className='relative min-h-screen'>
+      <IntroRedirect />
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
         style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
       />
 
       <div className='relative z-10 overflow-x-hidden'>
-        <div className='absolute top-0 left-2 z-0 hidden xl:block'>
+        <div className='absolute top-0 left-2 z-0 max-[1450px]:hidden min-[1450px]:w-[420px] min-[1728px]:w-[620px] min-[1920px]:w-[700px] 2xl:w-[520px]'>
           <Image
             src='/assets/decorativos/pedazo-de-papel.png'
             alt=''
             width={521}
             height={1179}
-            className='w-full'
-            unoptimized
+            className='h-auto w-full'
           />
-          <div className='absolute top-205 left-55 z-0 hidden xl:block'>
+          <div className='absolute top-205 left-55 z-0 max-[1450px]:hidden'>
             <Image
               src='/assets/body1/mientras-suena.png'
               alt='Mientras suena'
               width={230}
               height={159}
-              unoptimized
             />
           </div>
         </div>
@@ -65,8 +67,10 @@ export default async function Home() {
           <HomePlayerSection
             songs={songs}
             initialSongId={songs[0].id}
-            date={formatCassetteDate()}
+            date={formatCassetteDate(cassetteStartDate)}
             isAuthenticated={!!user}
+            cassetteId={cassetteId}
+            concatAudioUrl={concatAudioUrl}
           />
         )}
 
@@ -76,14 +80,13 @@ export default async function Home() {
         </div>
 
         {/* Rocket man - right side */}
-        <div className='absolute top-250 -right-15 z-0 hidden xl:block'>
+        <div className='absolute top-230 -right-15 z-0 hidden min-[1728px]:w-[480px] min-[1920px]:w-[540px] xl:block xl:w-[320px] 2xl:w-[400px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
             width={384}
             height={839}
-            className='w-full'
-            unoptimized
+            className='h-auto w-full'
           />
         </div>
 

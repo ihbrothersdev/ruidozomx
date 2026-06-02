@@ -21,7 +21,6 @@ export default function NotFound() {
             width={380}
             height={183}
             className='h-20 w-auto md:h-28'
-            unoptimized
             priority
           />
         </Link>

@@ -42,7 +42,6 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
           height={250}
           className='h-10 w-auto md:h-16'
           style={{ height: undefined }}
-          unoptimized
         />
         <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
           {photoUrl ? (
@@ -69,7 +68,6 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
               alt=''
               fill
               className='object-cover'
-              unoptimized
             />
           </div>
 
@@ -85,11 +83,11 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
               <>
                 <div className='mx-3 border-t border-black/10' />
                 <Link
-                  href='/rolas-propuestas'
+                  href='/admin'
                   onClick={() => setOpen(false)}
                   className='font-pt-mono px-4 py-2.5 text-sm font-bold tracking-wider text-black uppercase transition-colors hover:bg-black/10'
                 >
-                  Rolas propuestas
+                  Panel admin
                 </Link>
               </>
             )}

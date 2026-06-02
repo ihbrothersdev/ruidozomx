@@ -37,7 +37,7 @@ export function ProveedorFields() {
           {/* Alcance territorial */}
           <div className='space-y-1'>
             <Label className={labelCls}>
-              Alcance territorial<span className='text-red-600'>*</span>
+              Alcance territorial<span className='ml-2 text-red-600'>*</span>
             </Label>
             {TERRITORIAL_REACH_OPTIONS.map(opt => (
               <div
@@ -63,7 +63,7 @@ export function ProveedorFields() {
           {/* Tipo de servicio */}
           <div className='space-y-1'>
             <Label className={labelCls}>
-              Tipo de servicio<span className='text-red-600'>*</span>
+              Tipo de servicio<span className='ml-2 text-red-600'>*</span>
               <span className='ml-1 text-[9px] font-normal text-red-500 normal-case'>(Mínimo uno)</span>
             </Label>
             <div className='space-y-1'>
@@ -124,7 +124,7 @@ export function ProveedorFields() {
               htmlFor='description'
               className={labelCls}
             >
-              Descripción<span className='text-red-600'>*</span>
+              Descripción<span className='ml-2 text-red-600'>*</span>
             </Label>
             <Textarea
               id='description'

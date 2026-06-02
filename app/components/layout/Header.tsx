@@ -23,7 +23,6 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
           width={380}
           height={183}
           className='h-12 w-auto md:h-24'
-          unoptimized
           priority
         />
       </Link>
@@ -37,7 +36,6 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
             width={1383}
             height={455}
             className='h-9 w-auto sm:h-10 md:h-18'
-            unoptimized
           />
         </Link>
 
@@ -55,7 +53,6 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
               width={1383}
               height={455}
               className='h-9 w-auto sm:h-10 md:h-18'
-              unoptimized
             />
           </Link>
         )}

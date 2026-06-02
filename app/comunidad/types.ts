@@ -13,10 +13,9 @@ export interface CommunityProfile {
   activity_highlight: string
 }
 
-export type RoleFilter = 'todos' | 'banda' | 'fan' | 'venue' | 'promotor' | 'manager' | 'agente' | 'proveedor'
+export type RoleFilter = 'banda' | 'fan' | 'venue' | 'promotor' | 'manager' | 'agente' | 'proveedor'
 
 export const ROLE_FILTER_LABELS: Record<RoleFilter, string> = {
-  todos: 'Todos',
   banda: 'Bandas',
   venue: 'Foros/Venues',
   promotor: 'Promotores',
