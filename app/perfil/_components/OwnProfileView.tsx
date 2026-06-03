@@ -1,7 +1,11 @@
+'use client'
+
 import Image from 'next/image'
+import { useState } from 'react'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import OwnProfileActions from './OwnProfileActions'
+import OwnProfileEditForm from './OwnProfileEditForm'
 
 export interface OwnProfileViewProps {
   displayName: string
@@ -43,6 +47,12 @@ export default function OwnProfileView({
   role,
   location,
   roleProfile,
+  bio,
+  contact,
+  socialLinks,
+  country,
+  state,
+  city,
   songProposals = [],
   receivedProposalsCount = 0,
   events = [],
@@ -51,6 +61,29 @@ export default function OwnProfileView({
   receivedProposals = [],
   nearbyEvents = []
 }: OwnProfileViewProps) {
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Inline edit: clicking "Editar perfil" swaps the read-only dashboard for an
+  // editable form that keeps the same red-folder design. No route, no URL param.
+  if (isEditing) {
+    return (
+      <OwnProfileEditForm
+        displayName={displayName}
+        role={role}
+        location={location}
+        photoUrl={photoUrl}
+        bio={bio}
+        contact={contact}
+        socialLinks={socialLinks}
+        roleProfile={roleProfile}
+        country={country ?? ''}
+        state={state ?? ''}
+        city={city ?? ''}
+        onExitEdit={() => setIsEditing(false)}
+      />
+    )
+  }
+
   return (
     <div className='relative min-h-screen overflow-hidden'>
       {/* Full-screen red background — same asset as the registration form. */}
@@ -141,7 +174,10 @@ export default function OwnProfileView({
 
               {/* Right column */}
               <div className='flex flex-col items-end space-y-6'>
-                <OwnProfileActions role={role} />
+                <OwnProfileActions
+                  role={role}
+                  onEdit={() => setIsEditing(true)}
+                />
 
                 <RoleModules
                   role={role}
@@ -467,8 +503,8 @@ interface DataFieldsProps {
 /**
  * Read-only "form-style" block showing the user's base data:
  * Nombre/Alias, Ciudad/País, Rol. Each field is a label + a red-bordered
- * box containing the value. Display only — actual editing happens in
- * `/perfil/editar` (TODO).
+ * box containing the value. Display only — actual editing happens inline when
+ * the user clicks "Editar perfil", which swaps in OwnProfileEditForm.
  */
 function DataFields({ displayName, location, role }: DataFieldsProps) {
   const fields: { label: string; value: string }[] = [

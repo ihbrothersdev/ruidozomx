@@ -6,6 +6,12 @@ import type { Role } from '@/lib/types'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 
+interface OwnProfileActionsProps {
+  role: Role | null
+  /** Switches the dashboard into inline edit mode (ProfileView form). */
+  onEdit: () => void
+}
+
 /**
  * The right-column action panel on the private profile dashboard.
  * Two of the buttons navigate (Explorar comunidad, Editar perfil) and the
@@ -14,7 +20,7 @@ import ProponerRolaBandaModal from './ProponerRolaBandaModal'
  *
  * Fans can't publish events, so the "Publicar evento" button is hidden for them.
  */
-export default function OwnProfileActions({ role }: { role: Role | null }) {
+export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [publicarEventoOpen, setPublicarEventoOpen] = useState(false)
 
@@ -50,12 +56,13 @@ export default function OwnProfileActions({ role }: { role: Role | null }) {
         </button>
       )}
 
-      <Link
-        href='/perfil/editar'
+      <button
+        type='button'
+        onClick={onEdit}
         className={buttonCls}
       >
         Editar perfil
-      </Link>
+      </button>
 
       {/* Modals */}
       <ProponerRolaBandaModal
