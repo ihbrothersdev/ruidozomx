@@ -41,9 +41,10 @@ export default async function Home({ searchParams }: HomeProps) {
   // legacy per-song mode (no concat URL); only the active cassette streams the
   // concatenated file.
   const requested = requestedSongId ? await getCassetteContextForSong(requestedSongId) : null
-  const { songs, cassetteStartDate, initialSongId, autoPlay, cassetteActive, concatAudioUrl } = requested
+  const { songs, cassetteId, cassetteStartDate, initialSongId, autoPlay, cassetteActive, concatAudioUrl } = requested
     ? {
         songs: requested.songs,
+        cassetteId: null as string | null,
         cassetteStartDate: requested.cassetteStartDate,
         initialSongId: requested.initialSongId,
         autoPlay: true,
@@ -54,6 +55,7 @@ export default async function Home({ searchParams }: HomeProps) {
         const active = await getActiveCassetteSongs()
         return {
           songs: active.songs,
+          cassetteId: active.cassetteId,
           cassetteStartDate: active.cassetteStartDate,
           initialSongId: active.songs[0]?.id ?? '',
           autoPlay: false,
@@ -102,6 +104,7 @@ export default async function Home({ searchParams }: HomeProps) {
             isAuthenticated={!!user}
             autoPlay={autoPlay}
             cassetteActive={cassetteActive}
+            cassetteId={cassetteId}
             concatAudioUrl={concatAudioUrl}
           />
         )}

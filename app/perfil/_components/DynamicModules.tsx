@@ -57,7 +57,7 @@ export interface UserProposalSummary {
 
 interface DynamicModulesProps {
   role: Role
-  roleProfile?: Record<string, any> | null
+  roleProfile?: Record<string, unknown> | null
   /** Latest proposals to display (cap to 3 from the page). */
   songProposals?: SongProposalSummary[]
   /** Total proposals submitted by this user (across all time). */
@@ -81,11 +81,11 @@ interface DynamicModulesProps {
 }
 
 /** Resolve data for a module: returns an array of items to display as a list */
-function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string, any> | null): string[] {
+function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string, unknown> | null): string[] {
   if (!mod.dataField || !roleProfile) return []
   const value = roleProfile[mod.dataField]
   if (!value) return []
-  if (Array.isArray(value)) return value.filter(Boolean)
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
   if (typeof value === 'string' && value.trim()) {
     return value
       .split(',')
@@ -172,7 +172,13 @@ export function computeVisibleDynamicEntries({
       }
 
       if (mod.key === 'connections_received') {
-        return { mod, kind: 'connections', direction: 'received', connections: receivedConnections, total: receivedTotal }
+        return {
+          mod,
+          kind: 'connections',
+          direction: 'received',
+          connections: receivedConnections,
+          total: receivedTotal
+        }
       }
 
       if (mod.key === 'connections_sent') {

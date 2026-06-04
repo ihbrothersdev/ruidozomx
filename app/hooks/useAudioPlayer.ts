@@ -1,5 +1,7 @@
 'use client'
 
+import { logEvent, type SongEventType } from '@/app/analytics/actions'
+import { getAnonSessionId } from '@/lib/analytics/session'
 import type { PlayerSong } from '@/lib/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -26,6 +28,7 @@ interface AudioPlayerActions {
 export function useAudioPlayer(
   songs: PlayerSong[],
   initialSongId: string,
+  cassetteId: string | null = null,
   concatAudioUrl?: string | null
 ): AudioPlayerState & AudioPlayerActions {
   // Single <audio> element shared across all tracks. iOS only grants the
@@ -43,6 +46,34 @@ export function useAudioPlayer(
   const [isStopped, setIsStopped] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [duration, setDuration] = useState(0)
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Analytics tracking
+  // ──────────────────────────────────────────────────────────────────────────
+  // `cassetteId` is mirrored in a ref so the mount-time listeners (attached
+  // once) emit events with the latest value if it ever changes.
+  const cassetteIdRef = useRef<string | null>(cassetteId)
+  cassetteIdRef.current = cassetteId
+  const sessionIdRef = useRef<string>('')
+  const sessionStartedRef = useRef(false)
+  const playStartLoggedForRef = useRef<string | null>(null)
+  const completedSongsRef = useRef<Set<string>>(new Set())
+
+  const emit = useCallback((type: SongEventType, songId: string | null, metadata?: Record<string, unknown>) => {
+    const cid = cassetteIdRef.current
+    if (!cid && !songId) return
+    void logEvent({
+      type,
+      songId,
+      cassetteId: cid,
+      sessionId: sessionIdRef.current || null,
+      metadata
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    sessionIdRef.current = getAnonSessionId()
+  }, [])
 
   // Concat mode: when the cassette has been processed by `npm run
   // build-cassette`, the player streams ONE continuous file and navigates
@@ -69,6 +100,13 @@ export function useAudioPlayer(
   const currentSongIdRef = useRef(currentSongId)
   useEffect(() => {
     currentSongIdRef.current = currentSongId
+  }, [currentSongId])
+
+  // Reset the play_start dedup flag when the active song changes, so the next
+  // time playback enters this song (via play(), next(), playSong(), or a
+  // concat-mode boundary crossing) we log a fresh `play_start` event.
+  useEffect(() => {
+    playStartLoggedForRef.current = null
   }, [currentSongId])
 
   const currentSong = songs.find(s => s.id === currentSongId)
@@ -101,6 +139,19 @@ export function useAudioPlayer(
         )
         const cur = detected ?? sorted.find(s => s.id === currentSongIdRef.current) ?? sorted[0]
         if (detected && detected.id !== currentSongIdRef.current) {
+          // Song boundary crossed organically (no JS-driven transition). Emit
+          // `play_complete` for the song we just left so analytics still see
+          // per-song completions in concat mode.
+          const prevId = currentSongIdRef.current
+          if (prevId && !completedSongsRef.current.has(prevId)) {
+            completedSongsRef.current.add(prevId)
+            const prevSong = sorted.find(s => s.id === prevId)
+            const durListened =
+              prevSong && prevSong.startSeconds !== undefined && prevSong.endSeconds !== undefined
+                ? Math.round(prevSong.endSeconds - prevSong.startSeconds)
+                : Math.round(audio.duration ?? 0)
+            emit('play_complete', prevId, { duration_listened: durListened })
+          }
           setCurrentSongId(detected.id)
         }
         const start = cur?.startSeconds ?? 0
@@ -118,6 +169,16 @@ export function useAudioPlayer(
     }
     const onEnded = () => {
       const sorted = sortedSongsRef.current
+      // Legacy mode: 'ended' marks the end of one song. In concat mode 'ended'
+      // marks the end of the entire cassette, so emit completion for the
+      // current song too.
+      const endedId = currentSongIdRef.current
+      if (endedId && !completedSongsRef.current.has(endedId)) {
+        completedSongsRef.current.add(endedId)
+        emit('play_complete', endedId, {
+          duration_listened: Math.round(audio.duration ?? 0)
+        })
+      }
       if (concatModeRef.current) {
         // In concat mode, the only 'ended' is the end of the whole cassette
         // (song-to-song transitions are invisible to the browser). Wrap to
@@ -155,6 +216,16 @@ export function useAudioPlayer(
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing'
       }
+      if (!sessionStartedRef.current) {
+        sessionStartedRef.current = true
+        emit('cassette_session_start', null, { initial_song_id: currentSongIdRef.current })
+      }
+      const sid = currentSongIdRef.current
+      if (sid && playStartLoggedForRef.current !== sid) {
+        playStartLoggedForRef.current = sid
+        const song = sortedSongsRef.current.find(s => s.id === sid)
+        emit('play_start', sid, { side: song?.side, position: song?.position })
+      }
     }
     const onPause = () => {
       // iOS Safari/WebKit fires spurious 'pause' events while the screen is
@@ -180,6 +251,17 @@ export function useAudioPlayer(
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
+
+    const onBeforeUnload = () => {
+      if (sessionStartedRef.current) {
+        emit('cassette_session_end', null, {
+          last_song_id: currentSongIdRef.current,
+          elapsed_seconds: Math.round(audio.currentTime ?? 0)
+        })
+        sessionStartedRef.current = false
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
 
     // Preload the initial track so the first play() responds instantly to
     // the user's gesture (which is also what unlocks autoplay for the rest
@@ -207,11 +289,20 @@ export function useAudioPlayer(
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('play', onPlay)
       audio.removeEventListener('pause', onPause)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      if (sessionStartedRef.current) {
+        emit('cassette_session_end', null, {
+          last_song_id: currentSongIdRef.current,
+          elapsed_seconds: Math.round(audio.currentTime ?? 0)
+        })
+        sessionStartedRef.current = false
+      }
       audio.pause()
       audio.src = ''
       if (audio.parentNode) audio.parentNode.removeChild(audio)
       audioRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // When the cassette swaps under us (e.g. user clicks "Retomar el de hoy"

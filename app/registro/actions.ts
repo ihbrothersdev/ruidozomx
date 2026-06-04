@@ -202,6 +202,12 @@ export async function registroSignup(formData: FormData) {
   const password = formData.get('password') as string
   const source = (formData.get('source') as RegistrationSource) || 'registro'
 
+  // On local dev and Vercel *preview* deployments we skip the email-confirmation
+  // step entirely: after creating the account we auto-confirm it (admin) and
+  // sign the tester straight in. NEVER active on production (ruidozo.mx).
+  const skipEmailConfirmation =
+    process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
+
   // role from URL may be 'manager' for all industry sub-roles.
   // role_type from the dropdown is the real subrole.
   const urlRole = formData.get('role') as Role
@@ -312,6 +318,13 @@ export async function registroSignup(formData: FormData) {
         `/registro/crear-cuenta?role=${urlRole}&source=${source}&error=` +
           encodeURIComponent('Error al guardar datos del rol: ' + roleResult.error.message)
       )
+    }
+
+    // Dev / preview: confirm the email via admin + sign in so the tester
+    // lands on the ticket already authenticated, skipping the email step.
+    if (skipEmailConfirmation) {
+      await serviceClient.auth.admin.updateUserById(userId, { email_confirm: true })
+      await supabase.auth.signInWithPassword({ email, password })
     }
   } catch (err) {
     if (err && typeof err === 'object' && 'digest' in err) throw err
