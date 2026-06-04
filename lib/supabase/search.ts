@@ -99,9 +99,12 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .or(`title.ilike.${term},artist.ilike.${term},genre.ilike.${term}`)
       .limit(PER_CATEGORY_LIMIT),
 
+    // Only past cassettes — the active one is still being filled (often empty)
+    // and is already reachable from the home page.
     supabase
       .from('cassettes')
       .select('id, name, curator_name, start_date, active, cover_image_url')
+      .eq('active', false)
       .or(`name.ilike.${term},curator_name.ilike.${term}`)
       .order('start_date', { ascending: false })
       .limit(PER_CATEGORY_LIMIT),

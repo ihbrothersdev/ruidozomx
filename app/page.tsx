@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getActiveCassetteSongs, getCassetteContextForSong } from '@/lib/supabase/songs'
+import { getActiveCassetteSongs, getCassetteContextById, getCassetteContextForSong } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
 import Image from 'next/image'
 import { IntroRedirect } from './components/IntroRedirect'
@@ -14,11 +14,11 @@ const isSupabaseConfigured = Boolean(
 )
 
 interface HomeProps {
-  searchParams: Promise<{ song?: string; q?: string }>
+  searchParams: Promise<{ song?: string; cassette?: string; q?: string }>
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const { song: requestedSongId } = await searchParams
+  const { song: requestedSongId, cassette: requestedCassetteId } = await searchParams
 
   let user = null
   let photoUrl: string | null = null
@@ -35,12 +35,16 @@ export default async function Home({ searchParams }: HomeProps) {
     }
   }
 
-  // If the URL points at a specific song, load *that* song's cassette so prev/
-  // next stays coherent. Falls back to the active cassette when the id is
-  // unknown / archived song wasn't found. Searched/archived cassettes play in
-  // legacy per-song mode (no concat URL); only the active cassette streams the
-  // concatenated file.
-  const requested = requestedSongId ? await getCassetteContextForSong(requestedSongId) : null
+  // If the URL points at a specific song or cassette (search dropdown), load
+  // *that* cassette so prev/next stays coherent — a song opens on its track, a
+  // cassette opens on its first. Falls back to the active cassette when the id
+  // is unknown. Searched/archived cassettes play in legacy per-song mode (no
+  // concat URL); only the active cassette streams the concatenated file.
+  const requested = requestedSongId
+    ? await getCassetteContextForSong(requestedSongId)
+    : requestedCassetteId
+      ? await getCassetteContextById(requestedCassetteId)
+      : null
   const { songs, cassetteId, cassetteStartDate, initialSongId, autoPlay, cassetteActive, concatAudioUrl } = requested
     ? {
         songs: requested.songs,

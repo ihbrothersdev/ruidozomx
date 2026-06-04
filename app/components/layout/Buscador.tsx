@@ -344,7 +344,7 @@ function ResultsPanel({
           {results.cassettes.slice(0, limit).map(c => (
             <ResultItem
               key={c.id}
-              href={`/?q=${encodeURIComponent(results.query)}`}
+              href={`/?cassette=${c.id}`}
               onNavigate={onNavigate}
               avatar={
                 <CoverThumb

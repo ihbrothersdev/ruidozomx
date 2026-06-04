@@ -60,6 +60,18 @@ export function HomePlayerSection({
     playSong(initialSongId)
   }, [autoPlay, initialSongId, playSong])
 
+  // On archived cassettes, mirror the playing song into the URL so a refresh or
+  // shared link resumes on it. replaceState (not a Next navigation) avoids
+  // remounting this server-component tree, which would interrupt playback. The
+  // active cassette keeps its clean `/` URL.
+  useEffect(() => {
+    if (cassetteActive || !currentSongId) return
+    const params = new URLSearchParams(window.location.search)
+    params.set('song', currentSongId)
+    params.delete('cassette')
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}`)
+  }, [cassetteActive, currentSongId])
+
   const currentSong = songs.find(s => s.id === currentSongId)
 
   return (

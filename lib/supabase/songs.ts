@@ -125,31 +125,30 @@ export async function getActiveCassetteSongs(): Promise<{
   }
 }
 
-/**
- * Resolve the playback context for a specific song. Used when a user clicks a
- * song in the search dropdown — we need every sibling track on the same
- * cassette (so prev/next still work) plus enough metadata to label the player.
- *
- * Returns null when the songId is unknown or the cassette has no rows.
- */
-export async function getCassetteContextForSong(songId: string): Promise<{
+export interface CassetteContext {
   songs: PlayerSong[]
   cassetteName: string
   cassetteStartDate: string | null
   cassetteActive: boolean
   initialSongId: string
-} | null> {
+}
+
+/**
+ * Resolve the playback context for a whole cassette by id. Used when a user
+ * clicks a cassette in the search dropdown — loads every track so the player
+ * runs the full mixtape, opening on the first song.
+ *
+ * Returns null when the cassette is unknown or has no rows.
+ */
+export async function getCassetteContextById(cassetteId: string): Promise<CassetteContext | null> {
   const supabase = await createClient()
 
-  const { data: song } = await supabase.from('songs').select('cassette_id').eq('id', songId).single()
-  if (!song?.cassette_id) return null
-
   const [{ data: cassette }, { data: rows }] = await Promise.all([
-    supabase.from('cassettes').select('id, name, start_date, active').eq('id', song.cassette_id).single(),
+    supabase.from('cassettes').select('id, name, start_date, active').eq('id', cassetteId).single(),
     supabase
       .from('songs')
       .select('id, title, artist, duration_seconds, side, position, audio_url')
-      .eq('cassette_id', song.cassette_id)
+      .eq('cassette_id', cassetteId)
       .order('side', { ascending: true })
       .order('position', { ascending: true })
   ])
@@ -171,6 +170,23 @@ export async function getCassetteContextForSong(songId: string): Promise<{
     cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME,
     cassetteStartDate: cassette.start_date ?? null,
     cassetteActive: cassette.active === true,
-    initialSongId: songId
+    initialSongId: songs[0].id
   }
+}
+
+/**
+ * Same as getCassetteContextById but the player opens on a specific song
+ * instead of the first. Used when a user clicks a song in the search dropdown.
+ *
+ * Returns null when the songId is unknown or the cassette has no rows.
+ */
+export async function getCassetteContextForSong(songId: string): Promise<CassetteContext | null> {
+  const supabase = await createClient()
+
+  const { data: song } = await supabase.from('songs').select('cassette_id').eq('id', songId).single()
+  if (!song?.cassette_id) return null
+
+  const ctx = await getCassetteContextById(song.cassette_id)
+  if (!ctx) return null
+  return { ...ctx, initialSongId: songId }
 }
