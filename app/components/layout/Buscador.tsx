@@ -135,7 +135,9 @@ export function Buscador() {
     }
   }
 
-  const showDropdown = dropdownOpen && query.trim().length >= MIN_QUERY_LEN
+  // Open on focus even with no query so the "Explorar comunidad" shortcut is
+  // always reachable from the search bar.
+  const showDropdown = dropdownOpen
 
   return (
     <div
@@ -166,9 +168,7 @@ export function Buscador() {
             setQuery(e.target.value)
             setDropdownOpen(true)
           }}
-          onFocus={() => {
-            if (query.trim().length >= MIN_QUERY_LEN) setDropdownOpen(true)
-          }}
+          onFocus={() => setDropdownOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder='Buscar…'
           aria-label='Buscar bandas, rolas, eventos'
@@ -219,6 +219,14 @@ export function Buscador() {
                 onToggleExpand={() => setExpanded(v => !v)}
                 onNavigate={clearQuery}
               />
+              <Link
+                href='/comunidad'
+                onClick={clearQuery}
+                className='font-pt-mono flex items-center justify-center gap-2 border-t-2 border-dashed border-black/20 px-4 py-3 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-black/5'
+              >
+                <span aria-hidden='true'>↗</span>
+                Explorar comunidad
+              </Link>
             </div>
           </div>
         </div>
@@ -321,7 +329,7 @@ function ResultsPanel({
           {results.events.slice(0, limit).map(ev => (
             <ResultItem
               key={ev.id}
-              href={`/?q=${encodeURIComponent(results.query)}`}
+              href={ev.proposer_slug ? `/perfil/${ev.proposer_slug}` : `/?q=${encodeURIComponent(results.query)}`}
               onNavigate={onNavigate}
               avatar={
                 <CoverThumb

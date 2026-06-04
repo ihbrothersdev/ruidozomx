@@ -46,12 +46,18 @@ export function CassetteLabels({ songTitle, artist, artistSlug, date }: Cassette
               <Link
                 href={`/perfil/${artistSlug}`}
                 title={`Ver perfil de ${artist}`}
-                className='block transition-opacity hover:opacity-70'
+                className='flex items-center justify-center gap-1 text-black transition-colors hover:text-red-700'
               >
                 <TruncatedLabel
                   text={artist}
-                  className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase underline decoration-black/30 underline-offset-2 sm:text-xl md:text-2xl'
+                  className='font-corose min-w-0 truncate text-center text-xs leading-tight uppercase underline decoration-black/40 decoration-dotted underline-offset-2 sm:text-xl md:text-2xl'
                 />
+                <span
+                  aria-hidden='true'
+                  className='shrink-0 text-[0.65em] opacity-70'
+                >
+                  ↗
+                </span>
               </Link>
             ) : (
               <TruncatedLabel
