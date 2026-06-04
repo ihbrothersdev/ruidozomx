@@ -121,7 +121,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
         priority
       />
 
-      <div className='relative z-10 mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6'>
+      <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6'>
         {/* Grey folder card (matches the formulario shell). */}
         <div className='relative w-full overflow-hidden'>
           {/* Mobile: simple rectangular background */}
@@ -154,14 +154,6 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
               <h1 className='font-pt-mono text-xl font-bold tracking-wider text-red-700 uppercase sm:text-2xl'>
                 Editar perfil
               </h1>
-              <Image
-                src='/assets/logo.png'
-                alt='Ruidozo'
-                width={380}
-                height={183}
-                className='h-10 w-auto sm:h-12'
-                priority
-              />
             </div>
 
             <div className='space-y-6'>
