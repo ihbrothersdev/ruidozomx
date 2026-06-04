@@ -55,21 +55,18 @@ export function CassetteLabels({ songTitle, artist, artistSlug, date }: Cassette
                   text={artist}
                   className='font-corose min-w-0 truncate text-center text-xs leading-tight uppercase underline decoration-red-700/60 underline-offset-2 sm:text-xl md:text-2xl'
                 />
-                <span className='inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-700 text-yellow-50 shadow-sm sm:h-5 sm:w-5'>
-                  <svg
-                    viewBox='0 0 24 24'
-                    fill='currentColor'
-                    aria-hidden='true'
-                    className='h-2.5 w-2.5 sm:h-3 sm:w-3'
-                  >
-                    <circle
-                      cx='12'
-                      cy='8'
-                      r='4.5'
-                    />
-                    <path d='M3.5 21a8.5 8.5 0 0 1 17 0Z' />
-                  </svg>
-                </span>
+                <svg
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='3'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  aria-hidden='true'
+                  className='h-3 w-3 shrink-0 sm:h-4 sm:w-4'
+                >
+                  <path d='m9 18 6-6-6-6' />
+                </svg>
               </div>
             </Link>
           ) : (
