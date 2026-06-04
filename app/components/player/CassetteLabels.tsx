@@ -35,31 +35,56 @@ export function CassetteLabels({ songTitle, artist, artistSlug, date }: Cassette
         style={{ left: '15%', top: '10%', width: '70%', height: '22%' }}
       >
         <div className='absolute inset-0 flex flex-col items-center justify-center px-4'>
-          <div className='relative w-full'>
-            <TruncatedLabel
-              text={songTitle}
-              className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
-            />
-          </div>
-          <div className='relative w-3/4'>
-            {artistSlug ? (
-              <Link
-                href={`/perfil/${artistSlug}`}
-                title={`Ver perfil de ${artist}`}
-                className='block transition-opacity hover:opacity-70'
-              >
+          {artistSlug ? (
+            // Both the song title and the band name link to the band profile.
+            // Persistent cue (mobile has no hover): brand-red band name +
+            // underline + an avatar-style profile badge.
+            <Link
+              href={`/perfil/${artistSlug}`}
+              title={`Ver perfil de ${artist}`}
+              className='flex w-full flex-col items-center transition-opacity hover:opacity-75'
+            >
+              <div className='relative w-full'>
+                <TruncatedLabel
+                  text={songTitle}
+                  className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
+                />
+              </div>
+              <div className='relative flex w-3/4 items-center justify-center gap-1.5 text-red-700'>
                 <TruncatedLabel
                   text={artist}
-                  className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase underline decoration-black/30 underline-offset-2 sm:text-xl md:text-2xl'
+                  className='font-corose min-w-0 truncate text-center text-xs leading-tight uppercase underline decoration-red-700/60 underline-offset-2 sm:text-xl md:text-2xl'
                 />
-              </Link>
-            ) : (
-              <TruncatedLabel
-                text={artist}
-                className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
-              />
-            )}
-          </div>
+                <svg
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='3'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  aria-hidden='true'
+                  className='h-3 w-3 shrink-0 sm:h-4 sm:w-4'
+                >
+                  <path d='m9 18 6-6-6-6' />
+                </svg>
+              </div>
+            </Link>
+          ) : (
+            <>
+              <div className='relative w-full'>
+                <TruncatedLabel
+                  text={songTitle}
+                  className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
+                />
+              </div>
+              <div className='relative w-3/4'>
+                <TruncatedLabel
+                  text={artist}
+                  className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

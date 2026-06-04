@@ -45,6 +45,9 @@ export interface SearchEventResult {
   city: string | null
   state: string | null
   cover_image_url: string | null
+  /** Slug of the band that proposed the event (events.profile_id), for linking
+   *  the result to /perfil/[slug]. Null when that profile has no public slug. */
+  proposer_slug: string | null
 }
 
 export interface SearchResults {
@@ -123,7 +126,11 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
 
     supabase
       .from('events')
-      .select('id, title, description, event_date, venue_name, city, state, cover_image_url')
+      // `proposer` disambiguates the FK: events has two profile refs
+      // (profile_id = proposing band, venue_profile_id = venue).
+      .select(
+        'id, title, description, event_date, venue_name, city, state, cover_image_url, proposer:profiles!profile_id(slug)'
+      )
       .eq('status', 'published')
       .or(
         `title.ilike.${term},description.ilike.${term},venue_name.ilike.${term},city.ilike.${term},state.ilike.${term}`
@@ -139,7 +146,14 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
   ]).slice(0, PER_CATEGORY_LIMIT)
   const rawSongs = (songsRes.data ?? []) as SearchSongResult[]
   const cassettes = (cassettesRes.data ?? []) as SearchCassetteResult[]
-  const events = (eventsRes.data ?? []) as SearchEventResult[]
+  // supabase-js can't infer the disambiguated FK embed, so type the row by hand.
+  type EventRow = Omit<SearchEventResult, 'proposer_slug'> & {
+    proposer: { slug: string | null } | { slug: string | null }[] | null
+  }
+  const events = ((eventsRes.data ?? []) as unknown as EventRow[]).map(({ proposer, ...e }) => ({
+    ...e,
+    proposer_slug: (Array.isArray(proposer) ? proposer[0]?.slug : proposer?.slug) ?? null
+  })) as SearchEventResult[]
 
   // Same track can appear in multiple cassettes (re-runs / compilations) and
   // each row is a separate `songs` record. Collapse by (title, artist) so the
