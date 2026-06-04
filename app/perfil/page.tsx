@@ -34,10 +34,13 @@ export default async function PerfilPage({
     // profiles table may not exist yet
   }
 
-  // Dev-only: pass ?debug_uid=<uuid> to impersonate another profile for testing.
-  // Ignored entirely in production.
+  // Debug helper: pass ?debug_uid=<slug-or-uuid> to impersonate another profile
+  // for testing. Allowed on local dev and Vercel *preview* deployments, but
+  // NEVER on production (ruidozo.mx). Vercel sets VERCEL_ENV per deployment.
+  const debugAllowed =
+    process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
   const { debug_uid } = await searchParams
-  const isDebug = process.env.NODE_ENV === 'development' && !!debug_uid
+  const isDebug = debugAllowed && !!debug_uid
   const profileId = isDebug ? debug_uid! : (profile?.id as string ?? user.id)
 
   // If debugging a different profile, re-fetch by slug (falls back to id lookup)
