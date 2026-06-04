@@ -92,7 +92,15 @@ export function HomePlayerSection({
             <div className='mt-6 flex justify-center'>
               <Link
                 href='/'
-                onClick={() => stop()}
+                onClick={e => {
+                  // Hard reload: the player's <audio> element survives a soft
+                  // navigation, so going back to the active cassette via the
+                  // client router leaves the old track playing with stale
+                  // props. A full load guarantees a clean player.
+                  e.preventDefault()
+                  stop()
+                  window.location.assign('/')
+                }}
                 className='group relative inline-block -rotate-3 transition-all duration-300 hover:scale-105 hover:rotate-0 active:scale-95'
               >
                 {/* Scotch-tape "pieces" pinning the label to the page */}
