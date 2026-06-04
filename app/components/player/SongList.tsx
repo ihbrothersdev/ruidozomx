@@ -27,7 +27,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
 
   return (
     <>
-      {/* Desktop: 2-column layout */}
       <div
         className='relative mx-auto hidden w-full md:block'
         style={{ maxWidth: 793, aspectRatio: '1344 / 975' }}
