@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 const DEBOUNCE_MS = 350
-const MIN_QUERY_LEN = 3
+const MIN_QUERY_LEN = 2
 const COMPACT_LIMIT = 3
 const MAX_CACHE_ENTRIES = 50
 

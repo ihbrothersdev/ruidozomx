@@ -2,6 +2,9 @@ import type { Role } from '@/lib/types'
 import { createClient } from './server'
 
 const PER_CATEGORY_LIMIT = 8
+// Profiles/songs have no inherent order, so a bare LIMIT returns arbitrary
+// rows. Fetch a wider pool, rank by relevance, then trim to PER_CATEGORY_LIMIT.
+const RANK_FETCH_LIMIT = PER_CATEGORY_LIMIT * 3
 
 export interface SearchProfileResult {
   id: string
@@ -72,6 +75,13 @@ function normalizeForDedup(value: string): string {
   return value.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+/** Rows where a matched field STARTS with the query rank above mere substring
+ *  matches. Stable sort keeps the DB order within each tier. */
+function rankByPrefix<T>(rows: T[], normalizedQuery: string, fields: (row: T) => (string | null | undefined)[]): T[] {
+  const score = (row: T) => (fields(row).some(f => f && normalizeForDedup(f).startsWith(normalizedQuery)) ? 0 : 1)
+  return [...rows].sort((a, b) => score(a) - score(b))
+}
+
 /**
  * Run a global search across the public-facing tables (profiles, songs, cassettes, events).
  * Returns at most PER_CATEGORY_LIMIT rows per category. An empty / whitespace-only query
@@ -93,13 +103,13 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .eq('active', true)
       .neq('role', 'admin')
       .or(`display_name.ilike.${term},slug.ilike.${term},bio.ilike.${term},city.ilike.${term},state.ilike.${term}`)
-      .limit(PER_CATEGORY_LIMIT),
+      .limit(RANK_FETCH_LIMIT),
 
     supabase
       .from('songs')
       .select('id, title, artist, genre, cassette_id, side, position')
       .or(`title.ilike.${term},artist.ilike.${term},genre.ilike.${term}`)
-      .limit(PER_CATEGORY_LIMIT),
+      .limit(RANK_FETCH_LIMIT),
 
     // The active cassette plus past ones — never future/upcoming cassettes,
     // which are still being prepared (empty, would open a blank player).
@@ -122,7 +132,11 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .limit(PER_CATEGORY_LIMIT)
   ])
 
-  const profiles = (profilesRes.data ?? []) as SearchProfileResult[]
+  const nq = normalizeForDedup(query)
+  const profiles = rankByPrefix((profilesRes.data ?? []) as SearchProfileResult[], nq, p => [
+    p.display_name,
+    p.slug
+  ]).slice(0, PER_CATEGORY_LIMIT)
   const rawSongs = (songsRes.data ?? []) as SearchSongResult[]
   const cassettes = (cassettesRes.data ?? []) as SearchCassetteResult[]
   const events = (eventsRes.data ?? []) as SearchEventResult[]
@@ -133,13 +147,14 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
   // The same name is occasionally typed with and without diacritics
   // ("Niña Fatal" vs "Nina Fatal"), so strip those before matching.
   const seen = new Set<string>()
-  const songs: SearchSongResult[] = []
+  const deduped: SearchSongResult[] = []
   for (const s of rawSongs) {
     const key = `${normalizeForDedup(s.title)}::${normalizeForDedup(s.artist)}`
     if (seen.has(key)) continue
     seen.add(key)
-    songs.push(s)
+    deduped.push(s)
   }
+  const songs = rankByPrefix(deduped, nq, s => [s.title, s.artist]).slice(0, PER_CATEGORY_LIMIT)
 
   return {
     query,

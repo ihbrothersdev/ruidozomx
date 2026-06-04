@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const { songs, cassetteId, cassetteStartDate, initialSongId, autoPlay, cassetteActive, concatAudioUrl } = requested
     ? {
         songs: requested.songs,
-        cassetteId: null as string | null,
+        cassetteId: requested.cassetteId,
         cassetteStartDate: requested.cassetteStartDate,
         initialSongId: requested.initialSongId,
         autoPlay: true,
