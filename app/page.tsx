@@ -37,15 +37,18 @@ export default async function Home({ searchParams }: HomeProps) {
 
   // If the URL points at a specific song, load *that* song's cassette so prev/
   // next stays coherent. Falls back to the active cassette when the id is
-  // unknown / archived song wasn't found.
+  // unknown / archived song wasn't found. Searched/archived cassettes play in
+  // legacy per-song mode (no concat URL); only the active cassette streams the
+  // concatenated file.
   const requested = requestedSongId ? await getCassetteContextForSong(requestedSongId) : null
-  const { songs, cassetteStartDate, initialSongId, autoPlay, cassetteActive } = requested
+  const { songs, cassetteStartDate, initialSongId, autoPlay, cassetteActive, concatAudioUrl } = requested
     ? {
         songs: requested.songs,
         cassetteStartDate: requested.cassetteStartDate,
         initialSongId: requested.initialSongId,
         autoPlay: true,
-        cassetteActive: requested.cassetteActive
+        cassetteActive: requested.cassetteActive,
+        concatAudioUrl: null as string | null
       }
     : await (async () => {
         const active = await getActiveCassetteSongs()
@@ -54,7 +57,8 @@ export default async function Home({ searchParams }: HomeProps) {
           cassetteStartDate: active.cassetteStartDate,
           initialSongId: active.songs[0]?.id ?? '',
           autoPlay: false,
-          cassetteActive: true
+          cassetteActive: true,
+          concatAudioUrl: active.concatAudioUrl
         }
       })()
 
@@ -98,6 +102,7 @@ export default async function Home({ searchParams }: HomeProps) {
             isAuthenticated={!!user}
             autoPlay={autoPlay}
             cassetteActive={cassetteActive}
+            concatAudioUrl={concatAudioUrl}
           />
         )}
 

@@ -1,4 +1,4 @@
-import type { PlayerSong } from '@/lib/types'
+import type { PlayerSong, SongOffset } from '@/lib/types'
 import { createClient } from './server'
 
 const FALLBACK_CASSETTE_NAME = 'Cassette'
@@ -25,22 +25,37 @@ const FALLBACK_SONGS: PlayerSong[] = [
  * `cassetteStartDate` is the publication date of the active cassette
  * (`cassettes.start_date`). The cassette label uses it so the date only
  * changes when a new cassette is published, not every day.
+ *
+ * `concatAudioUrl` is the URL of the single concatenated MP3 (all songs
+ * glued together by `npm run build-cassette`), or `null` when the cassette
+ * hasn't been processed yet. When present, the player uses it as a single
+ * continuous source and navigates between songs via `currentTime` instead
+ * of swapping URLs — this survives Chrome's background tab freeze on
+ * Android where JS-driven `src` swaps fail.
  */
 export async function getActiveCassetteSongs(): Promise<{
   songs: PlayerSong[]
   cassetteName: string
   cassetteStartDate: string | null
+  concatAudioUrl: string | null
 }> {
   const supabase = await createClient()
 
-  // 1. Find the active cassette
-  const { data: cassette } = await supabase.from('cassettes').select('id, name, start_date').eq('active', true).single()
+  const { data: cassette } = await supabase
+    .from('cassettes')
+    .select('id, name, start_date, concat_audio_url, song_offsets')
+    .eq('active', true)
+    .single()
 
   if (!cassette) {
-    return { songs: FALLBACK_SONGS, cassetteName: FALLBACK_CASSETTE_NAME, cassetteStartDate: null }
+    return {
+      songs: FALLBACK_SONGS,
+      cassetteName: FALLBACK_CASSETTE_NAME,
+      cassetteStartDate: null,
+      concatAudioUrl: null
+    }
   }
 
-  // 2. Fetch songs ordered by side + position
   const { data: rows } = await supabase
     .from('songs')
     .select('id, title, artist, duration_seconds, side, position, audio_url')
@@ -52,25 +67,43 @@ export async function getActiveCassetteSongs(): Promise<{
     return {
       songs: FALLBACK_SONGS,
       cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME,
-      cassetteStartDate: cassette.start_date ?? null
+      cassetteStartDate: cassette.start_date ?? null,
+      concatAudioUrl: null
     }
   }
 
-  // 3. Map DB rows → PlayerSong
-  const songs: PlayerSong[] = rows.map(row => ({
-    id: row.id,
-    title: row.title,
-    artist: row.artist,
-    side: row.side as 'A' | 'B',
-    position: row.position,
-    durationSeconds: row.duration_seconds ?? 0,
-    audioSrc: row.audio_url ?? ''
-  }))
+  // Only honour the concatenated URL when offsets cover every song — a partial
+  // or stale offsets table would corrupt navigation, so fall back to legacy
+  // per-file mode in that case.
+  const rawOffsets = (cassette.song_offsets as SongOffset[] | null) ?? null
+  const offsetBySongId = new Map<string, SongOffset>()
+  if (rawOffsets) {
+    for (const o of rawOffsets) offsetBySongId.set(o.song_id, o)
+  }
+  const offsetsCoverAllSongs = rawOffsets !== null && rows.every(r => offsetBySongId.has(r.id))
+  const concatAudioUrl =
+    cassette.concat_audio_url && offsetsCoverAllSongs ? (cassette.concat_audio_url as string) : null
+
+  const songs: PlayerSong[] = rows.map(row => {
+    const off = concatAudioUrl ? offsetBySongId.get(row.id) : undefined
+    return {
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      side: row.side as 'A' | 'B',
+      position: row.position,
+      durationSeconds: row.duration_seconds ?? (off ? Math.round(off.end - off.start) : 0),
+      audioSrc: row.audio_url ?? '',
+      startSeconds: off?.start,
+      endSeconds: off?.end
+    }
+  })
 
   return {
     songs,
     cassetteName: cassette.name ?? FALLBACK_CASSETTE_NAME,
-    cassetteStartDate: cassette.start_date ?? null
+    cassetteStartDate: cassette.start_date ?? null,
+    concatAudioUrl
   }
 }
 

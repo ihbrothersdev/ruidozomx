@@ -29,7 +29,6 @@ export default async function PublicPerfilPage({ params }: Props) {
   const { slug } = await params
   const supabase = await createClient()
 
-  // Fetch base profile by slug
   const { data: profile } = await supabase.from('profiles').select('*').eq('slug', slug).single()
 
   if (!profile) {
@@ -42,18 +41,33 @@ export default async function PublicPerfilPage({ params }: Props) {
   const photoUrl = profile.photo_url as string | null
   const socialLinks = (profile.social_links as Record<string, string>) || null
 
-  // Check if current user is the profile owner
   const {
     data: { user }
   } = await supabase.auth.getUser()
   const isOwnProfile = !!user && user.id === profile.id
 
-  // If viewing own profile via slug, redirect to /perfil
   if (isOwnProfile) {
     redirect('/perfil')
   }
 
-  // Fetch role-specific profile
+  // Admin check — admins can edit and (soft-)delete other profiles.
+  let isAdmin = false
+  if (user) {
+    const { data: viewerProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    isAdmin = viewerProfile?.role === 'admin'
+  }
+
+  // For admins, look up whether the target has confirmed their email so we
+  // can offer a one-click "Confirmar cuenta" action. Only admins get this
+  // info — service client bypasses RLS.
+  let isUserConfirmed: boolean | undefined = undefined
+  if (isAdmin) {
+    const { createServiceClient } = await import('@/lib/supabase/service')
+    const adminClient = createServiceClient()
+    const { data: targetAuth } = await adminClient.auth.admin.getUserById(profile.id)
+    isUserConfirmed = Boolean(targetAuth?.user?.email_confirmed_at)
+  }
+
   let roleProfile: Record<string, unknown> | null = null
   if (role && ROLE_TABLE[role]) {
     try {
@@ -67,7 +81,6 @@ export default async function PublicPerfilPage({ params }: Props) {
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
   const lastActivityAt = profile.last_activity_at as string | null
 
-  // Check if current user already sent a proposal or interest to this profile
   const alreadySent = {
     proposal: false,
     sendInterest: false
@@ -93,6 +106,10 @@ export default async function PublicPerfilPage({ params }: Props) {
     alreadySent.sendInterest = !!interestCheck.data
   }
 
+  // `event_date` is a `date` column (no time, no timezone). Compare against
+  // today as a YYYY-MM-DD string so a same-day event stays visible all day.
+  const todayDate = new Date().toISOString().slice(0, 10)
+
   // Profile owner's song proposals (latest 3 for display) + total count for
   // the badge. RLS only returns rows when the viewer is the proposal owner
   // or an admin — for everyone else both come back empty and the module is
@@ -105,14 +122,14 @@ export default async function PublicPerfilPage({ params }: Props) {
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
-    // Upcoming events. RLS lets the public read `published` and `draft`; the
-    // owner also sees their own. Cancelled is hidden via the query filter.
+    // Upcoming events. RLS lets the public read `published`; the owner also
+    // sees their own. Cancelled is hidden via the query filter.
     supabase
       .from('events')
-      .select('id, title, event_date, event_type, venue_name, city, status')
+      .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
       .eq('profile_id', profile.id)
       .neq('status', 'cancelled')
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
       .limit(5)
   ])
@@ -136,6 +153,11 @@ export default async function PublicPerfilPage({ params }: Props) {
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
       lastActivityAt={lastActivityAt}
+      isAdmin={isAdmin}
+      isUserConfirmed={isUserConfirmed}
+      country={(profile.country as string | null) ?? null}
+      state={(profile.state as string | null) ?? null}
+      city={(profile.city as string | null) ?? null}
     />
   )
 }

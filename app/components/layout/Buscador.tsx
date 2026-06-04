@@ -199,7 +199,6 @@ export function Buscador() {
         )}
       </div>
 
-      {/* Dropdown */}
       {showDropdown && (
         <div className='absolute top-full right-0 z-50 mt-2 w-[min(94vw,520px)] sm:w-[520px]'>
           <div className='relative overflow-hidden rounded-md border-2 border-black/20 bg-[#f5f0e8] shadow-[6px_6px_0_rgba(0,0,0,0.25)]'>
