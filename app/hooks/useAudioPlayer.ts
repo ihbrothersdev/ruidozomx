@@ -305,6 +305,37 @@ export function useAudioPlayer(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // When the cassette swaps under us (e.g. user clicks "Retomar el de hoy"
+  // while a song from an archived cassette is playing) the `songs[]` array
+  // changes but the audio element survives — so the previous track would
+  // keep playing while `currentSongId` no longer exists in the new list,
+  // leaving the cassette label blank. Detect that mismatch and switch to the
+  // new first song, auto-playing it (the click on the back link counts as the
+  // user gesture autoplay policies require).
+  useEffect(() => {
+    if (songs.length === 0) return
+    if (songs.some(s => s.id === currentSongId)) return
+    const audio = audioRef.current
+    const first = songs[0]
+    userPausedRef.current = false
+    setCurrentSongId(first.id)
+    setIsStopped(false)
+    setElapsedSeconds(0)
+    setDuration(0)
+    if (audio) {
+      audio.pause()
+      if (concatModeRef.current && concatAudioUrlRef.current) {
+        // Concat mode keeps a single src for the whole cassette; navigate by
+        // seeking to the new first song's offset rather than swapping src.
+        audio.currentTime = first.startSeconds ?? 0
+      } else {
+        audio.src = first.audioSrc
+        audio.currentTime = 0
+      }
+      audio.play().catch(() => {})
+    }
+  }, [songs, currentSongId])
+
   // In concat mode, `durationchange` fires once for the entire cassette
   // file, which is useless for the per-song UI (the cassette label shows
   // 03:42 / 03:42, not 03:42 / 47:18). Drive `duration` from the current
@@ -340,9 +371,7 @@ export function useAudioPlayer(
 
     const artworkUrl = `${window.location.origin}/assets/media-artwork.png?v=2`
     navigator.mediaSession.metadata = new MediaMetadata({
-      // Line 1 on the lock screen: "Canción - Autor"
       title: `${currentSong.title} - ${currentSong.artist}`,
-      // Line 2 on the lock screen: brand
       artist: 'Ruidozo MX',
       album: 'Cassette semanal',
       artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }]
@@ -418,9 +447,8 @@ export function useAudioPlayer(
     const sorted = sortedSongsRef.current
     const idx = sorted.findIndex(s => s.id === currentSongIdRef.current)
 
-    // Standard behaviour: if more than 3 s into the current song, restart it.
-    // In concat mode "current time" means time within the song, so compute it
-    // relative to the song's start offset.
+    // >3 s into the song restarts it; otherwise go to the previous song. In
+    // concat mode "current time" is file-absolute, so subtract the start offset.
     const cur = idx >= 0 ? sorted[idx] : undefined
     const intoSong =
       concatModeRef.current && cur?.startSeconds !== undefined
@@ -436,7 +464,6 @@ export function useAudioPlayer(
       return
     }
 
-    // Otherwise go to previous song
     if (idx <= 0) return
     const prevSong = sorted[idx - 1]
     setIsStopped(false)

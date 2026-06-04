@@ -58,8 +58,6 @@ export default function ProfileChips({ role, roleProfile, editing = false, onFie
   )
 }
 
-// ── Edit mode ─────────────────────────────────────────────────────────
-
 interface EditableChipsGroupProps {
   role: Role
   state: Record<string, unknown>

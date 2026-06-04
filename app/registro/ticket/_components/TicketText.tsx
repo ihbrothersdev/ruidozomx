@@ -50,7 +50,6 @@ export default function TicketText({
 
   return (
     <div className={`font-akzidenz grid grid-rows-5 text-center ${className}`}>
-      {/* ── Row 1: headline pre-text (role-specific) ── */}
       <div className='flex flex-col items-center justify-end px-1 lg:px-2'>
         {role === 'manager' && (
           <button
@@ -127,7 +126,6 @@ export default function TicketText({
         )} */}
       </div>
 
-      {/* ── Row 2: big headline + detail (role-specific) — clickable to open proponer rola modal ── */}
       <button
         onClick={gated(() => setProponerRolaOpen(true))}
         className='group pointer-events-auto row-span-2 flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
@@ -221,7 +219,6 @@ export default function TicketText({
         )}
       </button>
 
-      {/* ── Row 3: Static share text — clickable ── */}
       <button
         onClick={gated(() => setCompartirOpen(true))}
         className='group pointer-events-auto flex cursor-pointer flex-col items-center justify-center px-1 lg:px-2'
@@ -237,7 +234,6 @@ export default function TicketText({
         </p>
       </button>
 
-      {/* ── Row 4: Static CTA — clickable ── */}
       <div className='pointer-events-auto flex items-center justify-center px-1 lg:px-2'>
         <Link
           href='/comunidad'

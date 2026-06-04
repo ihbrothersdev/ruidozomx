@@ -29,7 +29,6 @@ export default async function PublicPerfilPage({ params }: Props) {
   const { slug } = await params
   const supabase = await createClient()
 
-  // Fetch base profile by slug
   const { data: profile } = await supabase.from('profiles').select('*').eq('slug', slug).single()
 
   if (!profile) {
@@ -42,13 +41,11 @@ export default async function PublicPerfilPage({ params }: Props) {
   const photoUrl = profile.photo_url as string | null
   const socialLinks = (profile.social_links as Record<string, string>) || null
 
-  // Check if current user is the profile owner
   const {
     data: { user }
   } = await supabase.auth.getUser()
   const isOwnProfile = !!user && user.id === profile.id
 
-  // If viewing own profile via slug, redirect to /perfil
   if (isOwnProfile) {
     redirect('/perfil')
   }
@@ -71,7 +68,6 @@ export default async function PublicPerfilPage({ params }: Props) {
     isUserConfirmed = Boolean(targetAuth?.user?.email_confirmed_at)
   }
 
-  // Fetch role-specific profile
   let roleProfile: Record<string, unknown> | null = null
   if (role && ROLE_TABLE[role]) {
     try {
@@ -85,7 +81,6 @@ export default async function PublicPerfilPage({ params }: Props) {
   const acceptProposals = Boolean(roleProfile?.accept_proposals ?? roleProfile?.accepts_indie_proposals)
   const lastActivityAt = profile.last_activity_at as string | null
 
-  // Check if current user already sent a proposal or interest to this profile
   const alreadySent = {
     proposal: false,
     sendInterest: false

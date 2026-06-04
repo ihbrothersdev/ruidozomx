@@ -23,17 +23,14 @@ export default function ProfileLayout({
 }: ProfileLayoutProps) {
   return (
     <div className='relative min-h-screen'>
-      {/* Paper texture background */}
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
         style={{ backgroundImage: "url('/assets/registro/explicacion-rol/shared/fondo.png')" }}
       />
 
       <div className='relative z-10 mx-auto max-w-5xl px-4 py-8'>
-        {/* Top nav (Volver / Home) */}
         {floatingNav && <div className='mb-4'>{floatingNav}</div>}
 
-        {/* Top decoration — visible only on mobile */}
         {topDecoration && <div className='mb-6 lg:hidden'>{topDecoration}</div>}
 
         {singleColumn ? (
@@ -45,7 +42,6 @@ export default function ProfileLayout({
           </div>
         )}
 
-        {/* Bottom section (full width) */}
         {bottomSection && <div className='mt-10'>{bottomSection}</div>}
       </div>
     </div>

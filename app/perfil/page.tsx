@@ -68,7 +68,6 @@ export default async function PerfilPage({
   const socialLinks = (profile?.social_links as Record<string, string>) || null
   const bio = profile?.bio as string | null
 
-  // Fetch role-specific profile
   let roleProfile: Record<string, unknown> | null = null
   if (role && ROLE_TABLE[role]) {
     try {
@@ -86,9 +85,6 @@ export default async function PerfilPage({
   // unread-state UX; doesn't gate rendering today.
   await markReceivedProposalsAsSeen()
 
-  // Fetch this user's song proposals (latest 3 for display) + total count
-  // for the badge. RLS allows users to read their own; on stranger profiles
-  // RLS returns 0 and the module is auto-hidden by DynamicModules.
   const CONNECTIONS_SHOWN = 5
   // `!inner` makes the join an INNER JOIN at the PostgREST layer, so rows
   // pointing to soft-deleted (or otherwise RLS-hidden) profiles drop out of
@@ -119,7 +115,6 @@ export default async function PerfilPage({
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId),
-    // Upcoming events (cancelled excluded).
     supabase
       .from('events')
       .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
@@ -128,30 +123,24 @@ export default async function PerfilPage({
       .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
       .limit(5),
-    // Connections received: someone sent the user an interest. Inner-join the
-    // sender so we can render avatar + name + link and so the count stays in
-    // sync when the sender's profile is gone.
     supabase
       .from('interests')
       .select(CONNECTION_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
       .eq('to_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    // Connections sent: the user reached out to someone. Inner-join recipient.
     supabase
       .from('interests')
       .select(CONNECTION_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
       .eq('from_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    // User proposals received (someone proposed to the user). Inner-join sender.
     supabase
       .from('user_proposals')
       .select(PROPOSAL_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
       .eq('to_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    // User proposals sent. Inner-join recipient.
     supabase
       .from('user_proposals')
       .select(PROPOSAL_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })

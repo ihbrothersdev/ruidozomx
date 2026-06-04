@@ -77,7 +77,7 @@ export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; da
   admin: [...PROPOSAL_MODULES, ...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }]
 }
 
-/** Primary name field per role (for display in identity block) */
+/** Field holding the display name, per role (used in the identity block). */
 export const ROLE_NAME_FIELD: Record<Role, string> = {
   banda: 'band_name',
   fan: 'alias',
@@ -89,7 +89,6 @@ export const ROLE_NAME_FIELD: Record<Role, string> = {
   admin: 'display_name'
 }
 
-/** Link field names per role */
 export const ROLE_LINK_FIELD: Record<Role, string> = {
   banda: 'project_link',
   fan: '',

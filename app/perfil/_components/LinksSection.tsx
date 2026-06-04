@@ -102,8 +102,6 @@ export default function LinksSection({
   )
 }
 
-// ── Edit mode ──────────────────────────────────────────────────────────
-
 interface EditingViewProps {
   socialLinks: Record<string, string>
   contact: string

@@ -280,7 +280,7 @@ interface SubmitSongProposalInput {
 function getStartOfWeek(): string {
   const now = new Date()
   const day = now.getDay()
-  const diff = day === 0 ? 6 : day - 1 // Monday = start of week
+  const diff = day === 0 ? 6 : day - 1 // week starts Monday, getDay()=0 is Sunday
   const start = new Date(now)
   start.setDate(now.getDate() - diff)
   start.setHours(0, 0, 0, 0)
@@ -306,7 +306,6 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     return { error: 'El nombre de la banda/proyecto es obligatorio.' }
   }
 
-  // Check weekly limit (3 per calendar week)
   const { count } = await supabase
     .from('song_proposals')
     .select('*', { count: 'exact', head: true })

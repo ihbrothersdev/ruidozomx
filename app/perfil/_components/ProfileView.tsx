@@ -169,7 +169,6 @@ export default function ProfileView(props: ProfileViewProps) {
     })
   }
 
-  // Which admin confirmation modal is currently open (if any).
   const [adminModal, setAdminModal] = useState<'delete' | 'confirm' | null>(null)
 
   function runDelete() {
@@ -235,9 +234,8 @@ export default function ProfileView(props: ProfileViewProps) {
   const showAdminActions =
     Boolean(props.isAdmin) && !props.isOwnProfile && !isEditing && (canEdit || canDelete || canConfirm)
 
-  // ── Edit mode: single-column flow. No DynamicModules (they're read-only
-  // and would just create dead space alongside the dense form). View mode
-  // keeps the original two-column layout. ──────────────────────────────────
+  // Edit mode drops DynamicModules (read-only, would just be dead space next
+  // to the dense form) and uses a single-column flow instead of two columns.
   if (isEditing) {
     return (
       <ProfileLayout
