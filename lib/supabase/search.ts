@@ -83,6 +83,8 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
 
   const supabase = await createClient()
   const term = `%${escapeForILike(query)}%`
+  // `start_date` is a `date` (no tz); compare as YYYY-MM-DD.
+  const today = new Date().toISOString().slice(0, 10)
 
   const [profilesRes, songsRes, cassettesRes, eventsRes] = await Promise.all([
     supabase
@@ -99,12 +101,12 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .or(`title.ilike.${term},artist.ilike.${term},genre.ilike.${term}`)
       .limit(PER_CATEGORY_LIMIT),
 
-    // Only past cassettes — the active one is still being filled (often empty)
-    // and is already reachable from the home page.
+    // The active cassette plus past ones — never future/upcoming cassettes,
+    // which are still being prepared (empty, would open a blank player).
     supabase
       .from('cassettes')
       .select('id, name, curator_name, start_date, active, cover_image_url')
-      .eq('active', false)
+      .or(`active.eq.true,start_date.lte.${today}`)
       .or(`name.ilike.${term},curator_name.ilike.${term}`)
       .order('start_date', { ascending: false })
       .limit(PER_CATEGORY_LIMIT),
