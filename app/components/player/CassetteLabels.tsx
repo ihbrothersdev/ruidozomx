@@ -35,50 +35,59 @@ export function CassetteLabels({ songTitle, artist, artistSlug, date }: Cassette
         style={{ left: '15%', top: '10%', width: '70%', height: '22%' }}
       >
         <div className='absolute inset-0 flex flex-col items-center justify-center px-4'>
-          <div className='relative w-full'>
-            <TruncatedLabel
-              text={songTitle}
-              className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
-            />
-          </div>
-          <div className='relative w-3/4'>
-            {artistSlug ? (
-              <Link
-                href={`/perfil/${artistSlug}`}
-                title={`Ver perfil de ${artist}`}
-                className='flex items-center justify-center gap-1.5 text-red-700 transition-opacity hover:opacity-75'
-              >
-                {/* Persistent profile-link cue (mobile has no hover): brand-red
-                 *  name + solid underline + person icon. */}
+          {artistSlug ? (
+            // Both the song title and the band name link to the band profile.
+            // Persistent cue (mobile has no hover): brand-red band name +
+            // underline + an avatar-style profile badge.
+            <Link
+              href={`/perfil/${artistSlug}`}
+              title={`Ver perfil de ${artist}`}
+              className='flex w-full flex-col items-center transition-opacity hover:opacity-75'
+            >
+              <div className='relative w-full'>
+                <TruncatedLabel
+                  text={songTitle}
+                  className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
+                />
+              </div>
+              <div className='relative flex w-3/4 items-center justify-center gap-1.5 text-red-700'>
                 <TruncatedLabel
                   text={artist}
                   className='font-corose min-w-0 truncate text-center text-xs leading-tight uppercase underline decoration-red-700/60 underline-offset-2 sm:text-xl md:text-2xl'
                 />
-                <svg
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  strokeWidth='2.5'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  aria-hidden='true'
-                  className='h-3 w-3 shrink-0 sm:h-4 sm:w-4'
-                >
-                  <path d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' />
-                  <circle
-                    cx='12'
-                    cy='7'
-                    r='4'
-                  />
-                </svg>
-              </Link>
-            ) : (
-              <TruncatedLabel
-                text={artist}
-                className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
-              />
-            )}
-          </div>
+                <span className='inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-700 text-yellow-50 shadow-sm sm:h-5 sm:w-5'>
+                  <svg
+                    viewBox='0 0 24 24'
+                    fill='currentColor'
+                    aria-hidden='true'
+                    className='h-2.5 w-2.5 sm:h-3 sm:w-3'
+                  >
+                    <circle
+                      cx='12'
+                      cy='8'
+                      r='4.5'
+                    />
+                    <path d='M3.5 21a8.5 8.5 0 0 1 17 0Z' />
+                  </svg>
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <>
+              <div className='relative w-full'>
+                <TruncatedLabel
+                  text={songTitle}
+                  className='font-corose-alt text-md block w-full truncate text-center leading-tight font-bold text-black uppercase sm:text-2xl md:text-3xl'
+                />
+              </div>
+              <div className='relative w-3/4'>
+                <TruncatedLabel
+                  text={artist}
+                  className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
