@@ -15,14 +15,7 @@ interface HomePlayerSectionProps {
   isAuthenticated: boolean
   autoPlay?: boolean
   cassetteActive?: boolean
-  /** Active cassette's UUID — scope for analytics `cassette_session_*` events. */
   cassetteId: string | null
-  /**
-   * URL of the concatenated cassette MP3 (produced by `npm run build-cassette`).
-   * When present (and `songs` carry per-song offsets), the player streams a
-   * single continuous file and navigates via `currentTime`. When null, the
-   * player falls back to the legacy per-song-URL mode. See useAudioPlayer.
-   */
   concatAudioUrl?: string | null
 }
 
@@ -60,23 +53,18 @@ export function HomePlayerSection({
     playSong(initialSongId)
   }, [autoPlay, initialSongId, playSong])
 
-  // On archived cassettes, mirror the playing song into the URL so a refresh or
-  // shared link resumes on it. replaceState (not a Next navigation) avoids
-  // remounting this server-component tree, which would interrupt playback. The
-  // active cassette keeps its clean `/` URL.
   useEffect(() => {
     if (cassetteActive || !currentSongId) return
     const params = new URLSearchParams(window.location.search)
     params.set('song', currentSongId)
     params.delete('cassette')
-    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params.toString()}`)
+    window.history.replaceState(null, '', `?${params.toString()}`)
   }, [cassetteActive, currentSongId])
 
   const currentSong = songs.find(s => s.id === currentSongId)
 
   return (
     <>
-      {/* Body 1: Cassette player area */}
       <section className='relative flex flex-col items-center px-4 pt-4 pb-4'>
         <div className='relative mx-auto w-full max-w-5xl'>
           <div className='relative flex justify-center'>
