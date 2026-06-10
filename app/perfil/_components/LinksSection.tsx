@@ -156,24 +156,25 @@ function EditingView({
   const canAdd = available.length > 0
 
   const isPrivate = variant === 'private'
-  // Private edit matches the "Descripción" field (ReviewSection): thin 1px
-  // border in red-500 — same color & weight, not the heavier border-2/red-700.
-  const containerCls = isPrivate ? 'border border-red-500 p-4' : 'border border-dashed border-black/20 p-4'
+  // On-brand but desaturated: keep the red look (labels, hints of red) without
+  // the heavy full-red borders everywhere — soft panel with a faint red wash,
+  // thin low-opacity red borders, and a stronger red only on focus.
+  const containerCls = isPrivate ? '' : 'border border-dashed border-black/20 p-4'
   const headingCls = isPrivate
     ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
     : 'font-pt-mono text-lg font-bold tracking-wider text-black uppercase'
-  const cardCls = isPrivate ? 'border border-red-500/30 bg-red-500/[0.03]' : 'border border-black/10 bg-black/[0.02]'
+  const cardCls = isPrivate ? 'bg-red-700/[0.035]' : 'border border-black/10 bg-black/[0.02]'
   const labelCls = isPrivate
     ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
     : 'font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'
   const inputClsV = isPrivate
-    ? 'h-auto w-full rounded-none border border-red-500 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700 focus-visible:ring-0'
+    ? 'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-2 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
     : inputCls
   const selectClsV = isPrivate
-    ? 'h-auto w-full rounded-none border border-red-500 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none focus:border-red-700 focus:ring-0'
+    ? 'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-2 font-pt-mono text-sm text-black shadow-none focus:border-red-700/70 focus:ring-0'
     : selectTriggerCls
   const removeBtnCls = isPrivate
-    ? 'border border-red-500 text-red-600 hover:bg-red-500 hover:text-white'
+    ? 'text-red-600/60 hover:bg-red-600/10 hover:text-red-700'
     : 'border-2 border-red-600 text-red-700 hover:bg-red-600 hover:text-white'
 
   function updatePlatform(prevPlatform: string, nextPlatform: string) {
@@ -212,12 +213,12 @@ function EditingView({
           <p className='font-pt-mono text-xs text-black/40 italic'>Aún no has agregado ningún enlace.</p>
         )}
 
-        {/* Each link is one card: platform + remove on the top row (so the
+        {/* Each link is one soft panel: platform + remove on the top row (so the
             chevron and the × line up), URL input full-width below. */}
         {rows.map(([platform, url]) => (
           <div
             key={platform}
-            className={`space-y-2 rounded-sm p-2.5 ${cardCls}`}
+            className={`space-y-2 rounded-lg p-3 ${cardCls}`}
           >
             <div className='flex items-center gap-2'>
               <div className='min-w-0 flex-1'>
@@ -250,7 +251,7 @@ function EditingView({
                 type='button'
                 onClick={() => remove(platform)}
                 aria-label='Quitar enlace'
-                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-sm text-lg leading-none transition-colors ${removeBtnCls}`}
+                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-lg leading-none transition-colors ${removeBtnCls}`}
               >
                 ×
               </button>
@@ -271,7 +272,7 @@ function EditingView({
         <button
           type='button'
           onClick={add}
-          className='font-pt-mono mt-3 cursor-pointer text-xs font-bold tracking-wider text-red-700 uppercase transition-colors hover:text-red-900'
+          className='font-pt-mono mt-3 cursor-pointer text-xs font-bold tracking-wider text-red-700/90 uppercase transition-colors hover:text-red-800'
         >
           + Agregar otra
         </button>
