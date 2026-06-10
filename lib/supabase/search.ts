@@ -27,15 +27,6 @@ export interface SearchSongResult {
   position: number
 }
 
-export interface SearchCassetteResult {
-  id: string
-  name: string | null
-  curator_name: string | null
-  start_date: string
-  active: boolean
-  cover_image_url: string | null
-}
-
 export interface SearchEventResult {
   id: string
   title: string
@@ -54,7 +45,6 @@ export interface SearchResults {
   query: string
   profiles: SearchProfileResult[]
   songs: SearchSongResult[]
-  cassettes: SearchCassetteResult[]
   events: SearchEventResult[]
   total: number
 }
@@ -62,7 +52,6 @@ export interface SearchResults {
 const EMPTY: Omit<SearchResults, 'query'> = {
   profiles: [],
   songs: [],
-  cassettes: [],
   events: [],
   total: 0
 }
@@ -86,7 +75,7 @@ function rankByPrefix<T>(rows: T[], normalizedQuery: string, fields: (row: T) =>
 }
 
 /**
- * Run a global search across the public-facing tables (profiles, songs, cassettes, events).
+ * Run a global search across the public-facing tables (profiles, songs, events).
  * Returns at most PER_CATEGORY_LIMIT rows per category. An empty / whitespace-only query
  * short-circuits to an empty result set.
  */
@@ -96,10 +85,8 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
 
   const supabase = await createClient()
   const term = `%${escapeForILike(query)}%`
-  // `start_date` is a `date` (no tz); compare as YYYY-MM-DD.
-  const today = new Date().toISOString().slice(0, 10)
 
-  const [profilesRes, songsRes, cassettesRes, eventsRes] = await Promise.all([
+  const [profilesRes, songsRes, eventsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, display_name, slug, photo_url, role, city, state, country')
@@ -113,16 +100,6 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .select('id, title, artist, genre, cassette_id, side, position')
       .or(`title.ilike.${term},artist.ilike.${term},genre.ilike.${term}`)
       .limit(RANK_FETCH_LIMIT),
-
-    // The active cassette plus past ones — never future/upcoming cassettes,
-    // which are still being prepared (empty, would open a blank player).
-    supabase
-      .from('cassettes')
-      .select('id, name, curator_name, start_date, active, cover_image_url')
-      .or(`active.eq.true,start_date.lte.${today}`)
-      .or(`name.ilike.${term},curator_name.ilike.${term}`)
-      .order('start_date', { ascending: false })
-      .limit(PER_CATEGORY_LIMIT),
 
     supabase
       .from('events')
@@ -145,7 +122,6 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
     p.slug
   ]).slice(0, PER_CATEGORY_LIMIT)
   const rawSongs = (songsRes.data ?? []) as SearchSongResult[]
-  const cassettes = (cassettesRes.data ?? []) as SearchCassetteResult[]
   // supabase-js can't infer the disambiguated FK embed, so type the row by hand.
   type EventRow = Omit<SearchEventResult, 'proposer_slug'> & {
     proposer: { slug: string | null } | { slug: string | null }[] | null
@@ -174,8 +150,7 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
     query,
     profiles,
     songs,
-    cassettes,
     events,
-    total: profiles.length + songs.length + cassettes.length + events.length
+    total: profiles.length + songs.length + events.length
   }
 }
