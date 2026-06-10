@@ -123,8 +123,8 @@ export default function OwnProfileView({
           />
 
           <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-12 lg:pb-12'>
-            {/* Header row: broche on the left + Ruidozo logo to its right */}
-            <div className='mb-6 flex items-center gap-4 sm:gap-6 lg:mb-8'>
+            {/* Header: stacked & centered on mobile; broche left + logo right on sm+ */}
+            <div className='mb-6 flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:mb-8'>
               <PolaroidCard
                 photoUrl={photoUrl}
                 displayName={displayName}
@@ -136,6 +136,14 @@ export default function OwnProfileView({
                 height={183}
                 className='h-12 w-auto sm:h-16 lg:h-20'
                 priority
+              />
+            </div>
+
+            {/* Mobile only: action buttons right below the user photo/logo */}
+            <div className='mb-6 flex justify-center lg:hidden'>
+              <OwnProfileActions
+                role={role}
+                onEdit={() => setIsEditing(true)}
               />
             </div>
 
@@ -153,7 +161,6 @@ export default function OwnProfileView({
                   receivedProposalsCount={receivedProposalsCount}
                   eventsCount={events.length}
                   receivedConnectionsCount={receivedConnectionsCount}
-                  songProposalsCount={songProposalsCount}
                 />
 
                 <EventsSection
@@ -166,14 +173,15 @@ export default function OwnProfileView({
                   roleProfile={roleProfile ?? null}
                 />
 
-                <FanProposedSongs
+                <ProposedSongs
                   role={role}
                   songs={songProposals}
+                  total={songProposalsCount}
                 />
               </div>
 
-              {/* Right column */}
-              <div className='flex flex-col items-end space-y-6'>
+              {/* Right column — centered on mobile, right-aligned on lg+ */}
+              <div className='flex flex-col items-center space-y-6 lg:items-end'>
                 <OwnProfileActions
                   role={role}
                   onEdit={() => setIsEditing(true)}
@@ -362,24 +370,61 @@ function ServicesSection({ role, roleProfile }: { role: Role | null; roleProfile
 // ── Fan-only sections ────────────────────────────────────────────────────────
 
 /** Fan (left): their proposed songs shown as a box, empty box if none. */
-function FanProposedSongs({ role, songs }: { role: Role | null; songs: SongProposalSummary[] }) {
-  if (role !== 'fan') return null
+const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: string }> = {
+  pending: { label: 'Pendiente', cls: 'bg-black/10 text-black/70' },
+  accepted: { label: 'Aceptada', cls: 'bg-green-600/15 text-green-700' },
+  rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
+}
+
+/**
+ * Songs the user proposed to the cassette — same content as the public
+ * profile (title — artist + status badge), shown for any role that has
+ * proposed at least one. The count badge shows the all-time total; the list
+ * shows the latest few (capped by the page query).
+ */
+function ProposedSongs({
+  role,
+  songs,
+  total
+}: {
+  role: Role | null
+  songs: SongProposalSummary[]
+  total: number
+}) {
+  if (role === 'admin' || total === 0) return null
 
   return (
     <div className='space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-        Rolas propuestas al cassete
-      </p>
-      <div className='min-h-24 border-2 border-red-700 px-3 py-2 space-y-1'>
-        {songs.length === 0 ? null : (
-          songs.map(s => (
-            <div key={s.id} className='font-pt-mono text-xs text-black uppercase'>
-              <span className='font-bold'>{s.title}</span>
-              <span className='text-black/60'> · {s.artist}</span>
-            </div>
-          ))
-        )}
+      <div className='flex items-baseline justify-between gap-3'>
+        <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
+          Rolas propuestas al casete
+        </p>
+        <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
+          {total}
+        </span>
       </div>
+      <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
+        {songs.map(p => {
+          const status = SONG_STATUS_LABEL[p.status]
+          return (
+            <li
+              key={p.id}
+              className='flex items-start gap-2 text-sm'
+            >
+              <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+              <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+                <span className='font-bold text-black uppercase'>{p.title}</span>
+                <span className='text-xs text-black/60'>— {p.artist}</span>
+                <span
+                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
+                >
+                  {status.label}
+                </span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
@@ -435,7 +480,6 @@ interface ActivityInboxProps {
   receivedProposalsCount: number
   eventsCount: number
   receivedConnectionsCount: number
-  songProposalsCount: number
 }
 
 /**
@@ -453,8 +497,7 @@ function ActivityInbox({
   role,
   receivedProposalsCount,
   eventsCount,
-  receivedConnectionsCount,
-  songProposalsCount
+  receivedConnectionsCount
 }: ActivityInboxProps) {
   // fan and admin see no inbox
   const INBOX_ROLES: Role[] = ['agente', 'manager', 'banda', 'promotor', 'proveedor', 'venue']
@@ -463,11 +506,12 @@ function ActivityInbox({
   // Proveedor publishes "ofertas" instead of "eventos"
   const publishLabel = role === 'proveedor' ? 'Publicaste una oferta' : 'Publicaste un evento'
 
+  // Note: "Rolas propuestas al casete" is rendered as its own ProposedSongs
+  // section (with the actual songs + status), so it's intentionally NOT here.
   const items = [
     { label: 'Recibiste una propuesta', href: '#propuestas', count: receivedProposalsCount },
     { label: publishLabel, href: '#eventos', count: eventsCount },
-    { label: 'Alguien quiere conectar contigo', href: '#conexiones', count: receivedConnectionsCount },
-    { label: 'Rolas propuestas al casete', href: '#rolas', count: songProposalsCount }
+    { label: 'Alguien quiere conectar contigo', href: '#conexiones', count: receivedConnectionsCount }
   ].filter(i => i.count > 0)
 
   if (items.length === 0) return null
