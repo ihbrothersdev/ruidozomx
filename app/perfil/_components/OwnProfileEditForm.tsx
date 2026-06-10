@@ -195,6 +195,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                 contact={contact}
                 role={activeRole}
                 editing
+                variant='private'
                 onSocialLinksChange={setSocialLinks}
                 onContactChange={setContact}
               />

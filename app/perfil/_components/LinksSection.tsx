@@ -67,6 +67,7 @@ export default function LinksSection({
       <EditingView
         socialLinks={socialLinks ?? {}}
         contact={contact ?? ''}
+        variant={variant}
         onSocialLinksChange={onSocialLinksChange ?? (() => {})}
         onContactChange={onContactChange ?? (() => {})}
       />
@@ -137,15 +138,43 @@ export default function LinksSection({
 interface EditingViewProps {
   socialLinks: Record<string, string>
   contact: string
+  variant?: 'public' | 'private'
   onSocialLinksChange: (next: Record<string, string>) => void
   onContactChange: (next: string) => void
 }
 
-function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChange }: EditingViewProps) {
+function EditingView({
+  socialLinks,
+  contact,
+  variant = 'public',
+  onSocialLinksChange,
+  onContactChange
+}: EditingViewProps) {
   const rows = sortLinks(socialLinks)
   const usedPlatforms = new Set(rows.map(([p]) => p))
   const available = PLATFORM_ORDER.filter(p => !usedPlatforms.has(p))
   const canAdd = available.length > 0
+
+  const isPrivate = variant === 'private'
+  // Private edit matches the "Descripción" field (ReviewSection): thin 1px
+  // border in red-500 — same color & weight, not the heavier border-2/red-700.
+  const containerCls = isPrivate ? 'border border-red-500 p-4' : 'border border-dashed border-black/20 p-4'
+  const headingCls = isPrivate
+    ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
+    : 'font-pt-mono text-lg font-bold tracking-wider text-black uppercase'
+  const cardCls = isPrivate ? 'border border-red-500/30 bg-red-500/[0.03]' : 'border border-black/10 bg-black/[0.02]'
+  const labelCls = isPrivate
+    ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
+    : 'font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'
+  const inputClsV = isPrivate
+    ? 'h-auto w-full rounded-none border border-red-500 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700 focus-visible:ring-0'
+    : inputCls
+  const selectClsV = isPrivate
+    ? 'h-auto w-full rounded-none border border-red-500 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none focus:border-red-700 focus:ring-0'
+    : selectTriggerCls
+  const removeBtnCls = isPrivate
+    ? 'border border-red-500 text-red-600 hover:bg-red-500 hover:text-white'
+    : 'border-2 border-red-600 text-red-700 hover:bg-red-600 hover:text-white'
 
   function updatePlatform(prevPlatform: string, nextPlatform: string) {
     if (prevPlatform === nextPlatform) return
@@ -175,65 +204,65 @@ function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChang
   }
 
   return (
-    <div className='border border-dashed border-black/20 p-4'>
-      <h4 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>Links</h4>
+    <div className={containerCls}>
+      <h4 className={headingCls}>Links</h4>
 
-      <div className='mt-3 space-y-2'>
+      <div className='mt-3 space-y-3'>
         {rows.length === 0 && (
           <p className='font-pt-mono text-xs text-black/40 italic'>Aún no has agregado ningún enlace.</p>
         )}
 
+        {/* Each link is one card: platform + remove on the top row (so the
+            chevron and the × line up), URL input full-width below. */}
         {rows.map(([platform, url]) => (
           <div
             key={platform}
-            className='flex flex-col gap-2 sm:flex-row sm:items-stretch'
+            className={`space-y-2 rounded-sm p-2.5 ${cardCls}`}
           >
-            <div className='w-full sm:w-44 sm:shrink-0'>
-              <Select
-                value={platform}
-                onValueChange={v => updatePlatform(platform, v)}
-              >
-                <SelectTrigger className={selectTriggerCls}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PLATFORM_ORDER.map(p => (
-                    <SelectItem
-                      key={p}
-                      value={p}
-                      disabled={p !== platform && usedPlatforms.has(p)}
-                    >
-                      <PlatformIcon
-                        platform={p}
-                        className='size-4'
-                      />
-                      {getPlatformLabel(p)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='flex items-stretch gap-2 sm:flex-1'>
+            <div className='flex items-center gap-2'>
               <div className='min-w-0 flex-1'>
-                <Input
-                  type='url'
-                  value={url}
-                  onChange={e => updateUrl(platform, e.target.value)}
-                  placeholder='https://…'
-                  className={inputCls}
-                />
+                <Select
+                  value={platform}
+                  onValueChange={v => updatePlatform(platform, v)}
+                >
+                  <SelectTrigger className={selectClsV}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLATFORM_ORDER.map(p => (
+                      <SelectItem
+                        key={p}
+                        value={p}
+                        disabled={p !== platform && usedPlatforms.has(p)}
+                      >
+                        <PlatformIcon
+                          platform={p}
+                          className='size-4'
+                        />
+                        {getPlatformLabel(p)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <button
                 type='button'
                 onClick={() => remove(platform)}
                 aria-label='Quitar enlace'
-                className='font-pt-mono shrink-0 cursor-pointer px-2 text-lg leading-none text-red-700 transition-colors hover:text-red-900'
+                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-sm text-lg leading-none transition-colors ${removeBtnCls}`}
               >
                 ×
               </button>
             </div>
+
+            <Input
+              type='url'
+              value={url}
+              onChange={e => updateUrl(platform, e.target.value)}
+              placeholder='https://…'
+              className={inputClsV}
+            />
           </div>
         ))}
       </div>
@@ -242,19 +271,19 @@ function EditingView({ socialLinks, contact, onSocialLinksChange, onContactChang
         <button
           type='button'
           onClick={add}
-          className='font-pt-mono mt-2 cursor-pointer text-xs font-bold tracking-wider text-red-700 uppercase transition-colors hover:text-red-900'
+          className='font-pt-mono mt-3 cursor-pointer text-xs font-bold tracking-wider text-red-700 uppercase transition-colors hover:text-red-900'
         >
           + Agregar otra
         </button>
       )}
 
       <div className='mt-4 space-y-1'>
-        <p className='font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'>Contacto público</p>
+        <p className={labelCls}>Contacto público</p>
         <Input
           value={contact}
           onChange={e => onContactChange(e.target.value)}
           placeholder='Email, teléfono o handle'
-          className={inputCls}
+          className={inputClsV}
         />
       </div>
     </div>
