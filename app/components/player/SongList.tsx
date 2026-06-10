@@ -27,7 +27,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
 
   return (
     <>
-      {/* Desktop: 2-column layout */}
       <div
         className='relative mx-auto hidden w-full md:block'
         style={{ maxWidth: 793, aspectRatio: '1344 / 975' }}
@@ -84,7 +83,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
           />
         </div>
 
-        {/* Side A — top half */}
         <div
           className='absolute top-[9%] right-[4%] bottom-[53%] left-[4%] z-[2] grid grid-cols-1'
           style={{ gridTemplateRows: `repeat(${ROWS_PER_SIDE_MOBILE}, 1fr)` }}
@@ -115,7 +113,6 @@ export function SongList({ songs, currentSongId, isPlaying = false, onSelectSong
           })}
         </div>
 
-        {/* Side B — bottom half */}
         <div
           className='absolute top-[58%] right-[4%] bottom-[4%] left-[4%] z-[2] grid grid-cols-1'
           style={{ gridTemplateRows: `repeat(${ROWS_PER_SIDE_MOBILE}, 1fr)` }}

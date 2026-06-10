@@ -1,8 +1,8 @@
 'use client'
 
 /* eslint-disable @next/next/no-img-element */
+import { TrackedProfileLink } from '@/app/components/analytics/TrackedProfileLink'
 import Image from 'next/image'
-import Link from 'next/link'
 import type { CommunityProfile } from '../types'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -23,8 +23,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const location = [profile.city, profile.country].filter(Boolean).join(', ')
 
   return (
-    <Link
+    <TrackedProfileLink
       href={`/perfil/${profile.slug}`}
+      targetProfileSlug={profile.slug}
+      targetProfileId={profile.id}
+      source='comunidad'
       className='group relative block w-full'
       style={{ aspectRatio: '3 / 4' }}
     >
@@ -119,6 +122,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           style={{ height: 'auto' }}
         />
       </div>
-    </Link>
+    </TrackedProfileLink>
   )
 }

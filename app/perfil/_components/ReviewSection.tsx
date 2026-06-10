@@ -16,7 +16,7 @@ export default function ReviewSection({ bio, role, editing = false, onBioChange 
   return (
     <div className='flex flex-1 flex-col'>
       <h2 className='font-pt-mono text-lg tracking-wider text-black uppercase'>{title}</h2>
-      <div className='mt-2 flex-1 min-h-62 border border-red-500 p-4'>
+      <div className='mt-2 min-h-62 flex-1 border border-red-500 p-4'>
         {editing ? (
           <Textarea
             value={bio ?? ''}

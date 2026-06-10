@@ -1,5 +1,6 @@
 'use server'
 
+import { logEvent } from '@/app/analytics/actions'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
@@ -170,6 +171,9 @@ export async function markReceivedProposalsAsSeen() {
 interface SendInterestInput {
   toProfileId: string
   motivo: string
+  songId?: string | null
+  cassetteId?: string | null
+  sessionId?: string | null
 }
 
 export async function sendInterest(input: SendInterestInput) {
@@ -204,6 +208,14 @@ export async function sendInterest(input: SendInterestInput) {
     console.error('Error saving interest:', error)
     return { error: 'No se pudo enviar la conexión. Intenta de nuevo.' }
   }
+
+  await logEvent({
+    type: 'interest_click',
+    songId: input.songId ?? null,
+    cassetteId: input.cassetteId ?? null,
+    sessionId: input.sessionId ?? null,
+    metadata: { target_profile_id: input.toProfileId, motivo: input.motivo.trim() }
+  })
 
   const adminClient = createServiceClient()
   const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
@@ -262,13 +274,14 @@ interface SubmitSongProposalInput {
   title: string
   artist: string
   externalLink?: string
+  downloadLink?: string
   vibes?: string[]
 }
 
 function getStartOfWeek(): string {
   const now = new Date()
   const day = now.getDay()
-  const diff = day === 0 ? 6 : day - 1 // Monday = start of week
+  const diff = day === 0 ? 6 : day - 1 // week starts Monday, getDay()=0 is Sunday
   const start = new Date(now)
   start.setDate(now.getDate() - diff)
   start.setHours(0, 0, 0, 0)
@@ -294,7 +307,6 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     return { error: 'El nombre de la banda/proyecto es obligatorio.' }
   }
 
-  // Check weekly limit (3 per calendar week)
   const { count } = await supabase
     .from('song_proposals')
     .select('*', { count: 'exact', head: true })
@@ -310,6 +322,7 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     title: input.title.trim(),
     artist: input.artist.trim(),
     external_link: input.externalLink?.trim() || null,
+    download_link: input.downloadLink?.trim() || null,
     comment: input.vibes?.length ? input.vibes.join(' / ') : null,
     status: 'pending'
   })

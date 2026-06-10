@@ -14,25 +14,15 @@
  *       NEXT_PUBLIC_SUPABASE_URL
  *       SUPABASE_SERVICE_ROLE_KEY
  *
- * What this does (idempotent — safe to re-run on the same cassette):
- *   1. Fetches the cassette row and its songs (ordered by side, position).
- *   2. Downloads every song's MP3 to a temp directory.
- *   3. Probes each file's duration with ffprobe → builds the offsets table.
- *   4. Concatenates with the ffmpeg `concat` FILTER (not the demuxer) and
- *      re-encodes to one MP3 stream (libmp3lame, 256k CBR, 44.1 kHz,
- *      stereo). The filter is required because in practice the per-song
- *      uploads are a mix of formats (some MP3, some WAV masquerading with
- *      `.mp3` extension). The concat *demuxer* locks onto the first
- *      file's stream parameters and reads every subsequent file as if it
- *      were the same format — for our mixed bag that produces clean audio
- *      for song 1 and pure static for songs 2..N. The concat *filter*
- *      decodes each input independently in its native codec, normalises
- *      to stereo/44.1kHz, and only then glues the PCM streams together,
- *      so any combination of inputs works. Slower than the demuxer (more
- *      decoding work) but bulletproof.
- *   5. Uploads the result to `songs/cassettes/<cassette_id>.mp3`.
- *   6. Updates `cassettes.concat_audio_url` + `cassettes.song_offsets`.
- *   7. Cleans up the temp dir.
+ * Idempotent — safe to re-run on the same cassette.
+ *
+ * Concatenation uses the ffmpeg `concat` FILTER, not the demuxer: per-song
+ * uploads are a mix of formats (some MP3, some WAV with a `.mp3` extension).
+ * The demuxer locks onto the first file's stream parameters and reads the
+ * rest as the same format — producing clean audio for song 1 and pure static
+ * for songs 2..N. The filter decodes each input in its native codec,
+ * normalises to stereo/44.1kHz, then splices the PCM streams. Slower but
+ * handles any mix of inputs.
  *
  * Why this exists: the cassette player streams a single continuous file so
  * the browser handles song-to-song transitions natively. That survives
@@ -47,10 +37,6 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-// ────────────────────────────────────────────────────────────────────────────
-// CLI args
-// ────────────────────────────────────────────────────────────────────────────
-
 const args = process.argv.slice(2)
 const useActive = args.includes('--active')
 const cassetteIdArg = args.find(a => !a.startsWith('--'))
@@ -60,10 +46,6 @@ if (!useActive && !cassetteIdArg) {
   console.error('       npm run build-cassette -- --active')
   process.exit(1)
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Env
-// ────────────────────────────────────────────────────────────────────────────
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -83,10 +65,6 @@ const STORAGE_PREFIX = 'cassettes'
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
-
-// ────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ────────────────────────────────────────────────────────────────────────────
 
 /** Run a command, stream its output, resolve on success or reject on non-zero exit. */
 function run(cmd, args, opts = {}) {
@@ -144,14 +122,9 @@ async function downloadTo(url, filePath) {
   await writeFile(filePath, buf)
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Main
-// ────────────────────────────────────────────────────────────────────────────
-
 async function main() {
   await assertTooling()
 
-  // 1. Resolve cassette ──────────────────────────────────────────────────
   const cassetteQuery = supabase.from('cassettes').select('id, name, active').limit(1)
   const { data: cassetteRows, error: cErr } = await (useActive
     ? cassetteQuery.eq('active', true)
@@ -163,7 +136,6 @@ async function main() {
   }
   console.log(`▶ Cassette: ${cassette.id} ${cassette.name ? `(${cassette.name})` : ''}`)
 
-  // 2. Fetch songs ───────────────────────────────────────────────────────
   const { data: songs, error: sErr } = await supabase
     .from('songs')
     .select('id, title, artist, side, position, audio_url')
@@ -178,12 +150,10 @@ async function main() {
   }
   console.log(`▶ ${songs.length} songs (side A + side B), in order`)
 
-  // 3. Working dir ───────────────────────────────────────────────────────
   const workDir = await mkdtemp(join(tmpdir(), `rdz-cassette-${cassette.id}-`))
   console.log(`▶ Workdir: ${workDir}`)
 
   try {
-    // 4. Download each song ──────────────────────────────────────────────
     const localPaths = []
     for (let i = 0; i < songs.length; i++) {
       const song = songs[i]
@@ -193,7 +163,6 @@ async function main() {
       localPaths.push(localPath)
     }
 
-    // 5. Probe durations + build offsets ─────────────────────────────────
     const offsets = []
     let cursor = 0
     for (let i = 0; i < songs.length; i++) {
@@ -205,11 +174,8 @@ async function main() {
     }
     console.log(`▶ Total duration: ${(cursor / 60).toFixed(2)} min`)
 
-    // 6. Build filter_complex + run ffmpeg ───────────────────────────────
-    // Concat *filter* (not demuxer). Each input file is decoded with its own
-    // codec, normalised to stereo/44.1kHz via aformat, then all the PCM
-    // streams are spliced by the concat filter. The encoder writes one
-    // continuous MP3.
+    // Concat *filter* (see top-of-file note): aformat normalises each decoded
+    // input to stereo/44.1kHz before the concat filter splices the PCM streams.
     //
     //   ffmpeg -i s0 -i s1 ... -filter_complex "
     //     [0:a]aformat=channel_layouts=stereo:sample_rates=44100[a0];
@@ -230,7 +196,7 @@ async function main() {
     const outPath = join(workDir, `cassette-${cassette.id}.mp3`)
     console.log('▶ Running ffmpeg concat filter + re-encode to MP3 256k (this can take a few minutes)…')
     await run('ffmpeg', [
-      '-y', // overwrite without prompt
+      '-y',
       ...inputArgs,
       '-filter_complex',
       filterComplex,
@@ -244,7 +210,6 @@ async function main() {
     ])
     if (!existsSync(outPath)) throw new Error('ffmpeg did not produce the expected output.')
 
-    // 7. Upload to Storage ───────────────────────────────────────────────
     const storagePath = `${STORAGE_PREFIX}/${cassette.id}.mp3`
     console.log(`▶ Uploading to storage: ${STORAGE_BUCKET}/${storagePath}`)
     const fileBuf = await (await import('node:fs/promises')).readFile(outPath)
@@ -260,7 +225,6 @@ async function main() {
     } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath)
     console.log(`▶ Public URL: ${publicUrl}`)
 
-    // 8. Update DB ───────────────────────────────────────────────────────
     const { error: dbErr } = await supabase
       .from('cassettes')
       .update({ concat_audio_url: publicUrl, song_offsets: offsets })

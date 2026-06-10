@@ -86,7 +86,6 @@ export default function ActionButtons({
         </>
       )}
 
-      {/* Banda-specific: "Proponer rola de esta banda" */}
       {role === 'banda' &&
         (!isOwnProfile ? (
           <>

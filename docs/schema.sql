@@ -207,21 +207,23 @@ CREATE INDEX idx_proposals_status ON song_proposals(status);
 -- ============================================================
 
 CREATE TABLE songs (
-  id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  cassette_id      UUID         NOT NULL REFERENCES cassettes(id) ON DELETE CASCADE,
-  title            VARCHAR(200) NOT NULL,
-  artist           VARCHAR(200) NOT NULL,
-  genre            VARCHAR(100),
-  duration_seconds INTEGER,
-  side             cassette_side NOT NULL,
-  position         INTEGER      NOT NULL,
-  audio_url        TEXT,
-  proposal_id      UUID         REFERENCES song_proposals(id),
-  plays            INTEGER      NOT NULL DEFAULT 0,
-  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+  id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  cassette_id        UUID         NOT NULL REFERENCES cassettes(id) ON DELETE CASCADE,
+  title              VARCHAR(200) NOT NULL,
+  artist             VARCHAR(200) NOT NULL,                 -- display name (works for bands without a profile)
+  artist_profile_id  UUID         REFERENCES profiles(id) ON DELETE SET NULL,
+  genre              VARCHAR(100),
+  duration_seconds   INTEGER,
+  side               cassette_side NOT NULL,
+  position           INTEGER      NOT NULL,
+  audio_url          TEXT,
+  proposal_id        UUID         REFERENCES song_proposals(id),
+  plays              INTEGER      NOT NULL DEFAULT 0,
+  created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_songs_cassette ON songs(cassette_id, side, position);
+CREATE INDEX idx_songs_cassette       ON songs(cassette_id, side, position);
+CREATE INDEX idx_songs_artist_profile ON songs(artist_profile_id) WHERE artist_profile_id IS NOT NULL;
 
 -- ============================================================
 -- EVENTS

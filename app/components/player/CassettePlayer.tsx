@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Cassette } from './Cassette'
 import { DialogBubble } from './DialogBubble'
-import { PlayingArrow } from './PlayingArrow'
 import { ProponRolaModal } from './ProponRolaModal'
 import { TransportControls } from './TransportControls'
 
 interface CassettePlayerProps {
   songTitle: string
   artist: string
+  artistSlug?: string
   date: string
   side: 'A' | 'B'
   isPlaying: boolean
@@ -30,6 +30,7 @@ interface CassettePlayerProps {
 export function CassettePlayer({
   songTitle,
   artist,
+  artistSlug,
   date,
   side,
   isPlaying,
@@ -68,7 +69,6 @@ export function CassettePlayer({
       className='relative mx-auto w-full'
       style={{ maxWidth: 793 }}
     >
-      {/* Cassette + Playing arrow + Dialog bubble */}
       <div className='relative'>
         <Cassette
           songTitle={songTitle}
@@ -77,8 +77,25 @@ export function CassettePlayer({
           side={side}
           isPlaying={isPlaying}
         />
-        <PlayingArrow />
         <DialogBubble isAuthenticated={isAuthenticated} />
+
+        {/* "Ir al artista" arrow — replaces the old "Playing" señal, links to
+         *  the current song's band profile when it has one. */}
+        {artistSlug && (
+          <Link
+            href={`/perfil/${artistSlug}`}
+            title={`Ver perfil de ${artist}`}
+            className='absolute top-8 right-2 z-20 w-[90px] drop-shadow-[2px_2px_3px_rgba(0,0,0,0.5)] transition-transform hover:scale-105 sm:top-15 sm:right-1 sm:w-[105px] md:w-[115px] lg:top-[20%] lg:right-0 lg:w-[130px] lg:-translate-y-1/2 lg:drop-shadow-none xl:right-[-16px] xl:w-[140px]'
+          >
+            <Image
+              src='/assets/body1/ir-al-artista.png'
+              alt={`Ir al artista: ${artist}`}
+              width={251}
+              height={102}
+              className='w-full'
+            />
+          </Link>
+        )}
 
         {/* Desktop: Propón una Rola button */}
         {isAuthenticated ? (

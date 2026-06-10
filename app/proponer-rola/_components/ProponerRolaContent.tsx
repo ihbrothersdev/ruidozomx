@@ -8,9 +8,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
-import { submitProposal } from '../actions'
 import { inputCls, labelCls } from '../constants'
 import { FormField } from './FormField'
+import { SubmitButton } from './SubmitButton'
 
 export function ProponerRolaContent({ role }: { role: Role | null }) {
   const searchParams = useSearchParams()
@@ -111,6 +111,12 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 required
               />
               <FormField
+                label='Link de descarga'
+                name='download_link'
+                type='url'
+                placeholder='WeTransfer, Google Drive, Dropbox o link directo (opcional)'
+              />
+              <FormField
                 label='Correo de contacto'
                 name='contact_email'
                 required
@@ -170,24 +176,10 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
 
               {/* Submit button */}
               <div className='flex justify-end pt-2'>
-                <button
-                  formAction={submitProposal}
+                <SubmitButton
                   disabled={submitDisabled}
-                  className='cursor-pointer disabled:cursor-not-allowed'
-                >
-                  <Image
-                    src={
-                      limitReached
-                        ? '/assets/registro/proponer-rola/boton-proponer-rola-hover.png'
-                        : '/assets/registro/proponer-rola/boton-proponer-rola.png'
-                    }
-                    alt='Proponer rola'
-                    width={200}
-                    height={100}
-                    className={`w-28 transition-opacity sm:w-36 ${submitDisabled ? 'opacity-50' : 'hover:opacity-90'}`}
-                    style={{ height: 'auto' }}
-                  />
-                </button>
+                  limitReached={limitReached}
+                />
               </div>
             </form>
           </div>

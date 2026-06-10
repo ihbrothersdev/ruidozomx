@@ -57,7 +57,7 @@ export interface UserProposalSummary {
 
 interface DynamicModulesProps {
   role: Role
-  roleProfile?: Record<string, any> | null
+  roleProfile?: Record<string, unknown> | null
   /** Latest proposals to display (cap to 3 from the page). */
   songProposals?: SongProposalSummary[]
   /** Total proposals submitted by this user (across all time). */
@@ -81,13 +81,12 @@ interface DynamicModulesProps {
 }
 
 /** Resolve data for a module: returns an array of items to display as a list */
-function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string, any> | null): string[] {
+function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string, unknown> | null): string[] {
   if (!mod.dataField || !roleProfile) return []
   const value = roleProfile[mod.dataField]
   if (!value) return []
-  if (Array.isArray(value)) return value.filter(Boolean)
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
   if (typeof value === 'string' && value.trim()) {
-    // Split comma-separated text into list items
     return value
       .split(',')
       .map((s: string) => s.trim())
@@ -155,7 +154,6 @@ export function computeVisibleDynamicEntries({
   const modules = ROLE_DYNAMIC_MODULES[role]
   if (!modules || modules.length === 0) return []
 
-  // Always show the latest 3 in the list, regardless of how many came in.
   const proposalsToShow = songProposals.slice(0, 3)
   const proposalsTotal = songProposalsCount ?? songProposals.length
 
@@ -174,7 +172,13 @@ export function computeVisibleDynamicEntries({
       }
 
       if (mod.key === 'connections_received') {
-        return { mod, kind: 'connections', direction: 'received', connections: receivedConnections, total: receivedTotal }
+        return {
+          mod,
+          kind: 'connections',
+          direction: 'received',
+          connections: receivedConnections,
+          total: receivedTotal
+        }
       }
 
       if (mod.key === 'connections_sent') {
@@ -222,7 +226,6 @@ export function computeVisibleDynamicEntries({
           }
           return { mod, kind: 'events', events: events.slice(0, 5) }
         }
-        // Other roles: just show events if any, hide if none.
         return { mod, kind: 'events', events: events.slice(0, 5) }
       }
 
@@ -238,7 +241,6 @@ export function computeVisibleDynamicEntries({
       if (entry.kind === 'connections') return entry.total > 0
       if (entry.kind === 'user_proposals') return entry.total > 0
       if (entry.kind === 'events') {
-        // Keep when there are events OR there's a forced empty/disabled message.
         return entry.events.length > 0 || !!entry.emptyMessage
       }
       return entry.items.length > 0
