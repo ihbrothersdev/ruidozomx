@@ -206,10 +206,12 @@ export default function OwnProfileView({
                   />
                 </div>
 
-                <OwnProfileActions
-                  role={role}
-                  onEdit={() => setIsEditing(true)}
-                />
+                <div className='hidden lg:block'>
+                  <OwnProfileActions
+                    role={role}
+                    onEdit={() => setIsEditing(true)}
+                  />
+                </div>
 
                 <RoleModules
                   role={role}
