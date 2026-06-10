@@ -1,11 +1,13 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
+import { ProfileInbox } from './inbox/ProfileInbox'
 
 export interface OwnProfileViewProps {
   displayName: string
@@ -59,6 +61,12 @@ export default function OwnProfileView({
   receivedConnectionsCount = 0,
   songProposalsCount = 0,
   receivedProposals = [],
+  sentProposals = [],
+  sentProposalsCount = 0,
+  receivedConnections = [],
+  sentConnections = [],
+  sentConnectionsCount = 0,
+  mutualIds = [],
   nearbyEvents = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
@@ -129,14 +137,20 @@ export default function OwnProfileView({
                 photoUrl={photoUrl}
                 displayName={displayName}
               />
-              <Image
-                src='/assets/logo.png'
-                alt='Ruidozo'
-                width={380}
-                height={183}
-                className='h-12 w-auto sm:h-16 lg:h-20'
-                priority
-              />
+              <Link
+                href='/'
+                aria-label='Ir al inicio'
+                className='transition-transform hover:scale-105'
+              >
+                <Image
+                  src='/assets/logo.png'
+                  alt='Ruidozo'
+                  width={380}
+                  height={183}
+                  className='h-12 w-auto sm:h-16 lg:h-20'
+                  priority
+                />
+              </Link>
             </div>
 
             {/* Mobile only: action buttons right below the user photo/logo */}
@@ -201,10 +215,21 @@ export default function OwnProfileView({
                   role={role}
                   events={nearbyEvents}
                 /> */}
-
-                <ReceivedProposals proposals={receivedProposals} />
               </div>
             </div>
+
+            {/* Full-width inbox: connections + proposals received/sent. */}
+            <ProfileInbox
+              receivedConnections={receivedConnections}
+              sentConnections={sentConnections}
+              receivedProposals={receivedProposals}
+              sentProposals={sentProposals}
+              receivedConnectionsCount={receivedConnectionsCount}
+              sentConnectionsCount={sentConnectionsCount}
+              receivedProposalsCount={receivedProposalsCount}
+              sentProposalsCount={sentProposalsCount}
+              mutualIds={mutualIds}
+            />
           </div>
         </div>
       </div>
@@ -230,7 +255,10 @@ function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Re
     const list = Array.isArray(raw)
       ? (raw as string[]).filter(Boolean)
       : typeof raw === 'string'
-        ? (raw as string).split(',').map(s => s.trim()).filter(Boolean)
+        ? (raw as string)
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean)
         : []
     if (list.length > 0) modules.push({ title: 'Artistas representados', values: list })
   }
@@ -252,7 +280,10 @@ function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Re
   return (
     <div className='w-full space-y-4'>
       {modules.map(mod => (
-        <div key={mod.title} className='space-y-1'>
+        <div
+          key={mod.title}
+          className='space-y-1'
+        >
           <p className={MODULE_LABEL}>{mod.title}</p>
           <div className={MODULE_BOX}>
             {mod.values.map((v, i) => (
@@ -261,28 +292,6 @@ function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Re
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-function ReceivedProposals({ proposals }: { proposals: UserProposalSummary[] }) {
-  if (proposals.length === 0) return null
-
-  return (
-    <div className='w-full space-y-1'>
-      <p className={MODULE_LABEL}>Propuestas recibidas</p>
-      <div className={MODULE_BOX + ' space-y-1'}>
-        {proposals.map(p => {
-          const from = p.otherProfile.display_name ?? 'Alguien'
-          const fromRole = p.otherProfile.role ? ROLE_LABELS[p.otherProfile.role] : ''
-          return (
-            <div key={p.id} className='leading-tight'>
-              <span className='font-bold'>{from}</span>
-              {fromRole && <span className='text-black/60'> · {fromRole}</span>}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -300,10 +309,11 @@ function EventsSection({ role, events }: EventsSectionProps) {
   if (!role || !EVENTS_ROLES.includes(role)) return null
 
   return (
-    <div className='space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-        Eventos publicados
-      </p>
+    <div
+      id='eventos'
+      className='scroll-mt-24 space-y-2'
+    >
+      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Eventos publicados</p>
 
       {events.length === 0 ? (
         <>
@@ -312,7 +322,7 @@ function EventsSection({ role, events }: EventsSectionProps) {
           </div>
         </>
       ) : (
-        <div className='border-2 border-red-700 px-3 py-2 space-y-2'>
+        <div className='space-y-2 border-2 border-red-700 px-3 py-2'>
           {events.map(ev => {
             const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
               day: '2-digit',
@@ -320,7 +330,10 @@ function EventsSection({ role, events }: EventsSectionProps) {
               year: 'numeric'
             })
             return (
-              <div key={ev.id} className='font-pt-mono text-sm text-black uppercase'>
+              <div
+                key={ev.id}
+                className='font-pt-mono text-sm text-black uppercase'
+              >
                 <span className='font-bold'>{ev.title}</span>
                 <span className='text-black/60'> · {dateLabel}</span>
                 {ev.city && <span className='text-black/60'> · {ev.city}</span>}
@@ -346,18 +359,19 @@ function ServicesSection({ role, roleProfile }: { role: Role | null; roleProfile
 
   return (
     <div className='space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-        Servicios publicados
-      </p>
+      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Servicios publicados</p>
 
       {services.length === 0 ? (
         <div className='font-pt-mono border-2 border-red-700 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
           Este perfil no publica servicios aún
         </div>
       ) : (
-        <div className='border-2 border-red-700 px-3 py-2 space-y-1'>
+        <div className='space-y-1 border-2 border-red-700 px-3 py-2'>
           {services.map((s, i) => (
-            <div key={i} className='font-pt-mono text-sm text-black uppercase'>
+            <div
+              key={i}
+              className='font-pt-mono text-sm text-black uppercase'
+            >
               {s}
             </div>
           ))}
@@ -382,15 +396,7 @@ const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; 
  * proposed at least one. The count badge shows the all-time total; the list
  * shows the latest few (capped by the page query).
  */
-function ProposedSongs({
-  role,
-  songs,
-  total
-}: {
-  role: Role | null
-  songs: SongProposalSummary[]
-  total: number
-}) {
+function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongProposalSummary[]; total: number }) {
   if (role === 'admin' || total === 0) return null
 
   return (
@@ -493,12 +499,7 @@ interface ActivityInboxProps {
  * | Alguien quiere conectar     | All except admin                             |
  * | Rolas propuestas al casete  | All except admin                             |
  */
-function ActivityInbox({
-  role,
-  receivedProposalsCount,
-  eventsCount,
-  receivedConnectionsCount
-}: ActivityInboxProps) {
+function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConnectionsCount }: ActivityInboxProps) {
   // fan and admin see no inbox
   const INBOX_ROLES: Role[] = ['agente', 'manager', 'banda', 'promotor', 'proveedor', 'venue']
   if (!role || !INBOX_ROLES.includes(role)) return null
@@ -535,8 +536,6 @@ function ActivityInbox({
     </div>
   )
 }
-
-
 
 interface DataFieldsProps {
   displayName: string
@@ -592,7 +591,10 @@ function PolaroidCard({ photoUrl, displayName }: PolaroidCardProps) {
   return (
     <div className='relative w-36 sm:w-44 lg:w-48'>
       {/* marco (233×291) + photo slot */}
-      <div className='relative w-full' style={{ aspectRatio: '233 / 291' }}>
+      <div
+        className='relative w-full'
+        style={{ aspectRatio: '233 / 291' }}
+      >
         <Image
           src='/assets/private-profile/marco.png'
           alt=''
@@ -622,7 +624,10 @@ function PolaroidCard({ photoUrl, displayName }: PolaroidCardProps) {
 
         {/* broche — absolute on the marco, top-left, wire arms floating above.
             Negative top pushes the arms above the red stripe. */}
-        <div className='absolute left-0 z-10' style={{ top: '35%', width: '53%', left: '-22%' }}>
+        <div
+          className='absolute left-0 z-10'
+          style={{ top: '35%', width: '53%', left: '-22%' }}
+        >
           <Image
             src='/assets/private-profile/broche.png'
             alt=''
