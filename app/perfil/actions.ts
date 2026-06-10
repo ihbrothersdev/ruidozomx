@@ -274,6 +274,7 @@ interface SubmitSongProposalInput {
   title: string
   artist: string
   externalLink?: string
+  downloadLink?: string
   vibes?: string[]
 }
 
@@ -321,6 +322,7 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     title: input.title.trim(),
     artist: input.artist.trim(),
     external_link: input.externalLink?.trim() || null,
+    download_link: input.downloadLink?.trim() || null,
     comment: input.vibes?.length ? input.vibes.join(' / ') : null,
     status: 'pending'
   })

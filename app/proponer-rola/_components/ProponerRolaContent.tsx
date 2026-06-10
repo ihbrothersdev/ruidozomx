@@ -111,6 +111,12 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 required
               />
               <FormField
+                label='Link de descarga'
+                name='download_link'
+                type='url'
+                placeholder='WeTransfer, Google Drive, Dropbox o link directo (opcional)'
+              />
+              <FormField
                 label='Correo de contacto'
                 name='contact_email'
                 required

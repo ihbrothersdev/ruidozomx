@@ -42,6 +42,7 @@ export default function ProponerRolaBandaModal({
   const [artistName, setArtistName] = useState('')
   const [songName, setSongName] = useState('')
   const [listenLink, setListenLink] = useState('')
+  const [downloadLink, setDownloadLink] = useState('')
   const [selectedVibes, setSelectedVibes] = useState<string[]>([])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -62,6 +63,7 @@ export default function ProponerRolaBandaModal({
       title: songName,
       artist,
       externalLink: listenLink || undefined,
+      downloadLink: downloadLink || undefined,
       vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
     })
     setSending(false)
@@ -71,6 +73,7 @@ export default function ProponerRolaBandaModal({
       setSent(true)
       setSongName('')
       setListenLink('')
+      setDownloadLink('')
       setArtistName('')
       setSelectedVibes([])
       setTimeout(() => {
@@ -127,7 +130,7 @@ export default function ProponerRolaBandaModal({
                 <p className='font-pt-mono text-md mt-3 text-center leading-tight tracking-wider text-red-600'>
                   Esta rola se va a la fila de curaduría
                   <br />
-                  del casete semanal
+                  del casete quincenal
                 </p>
 
                 {/* Form */}
@@ -182,6 +185,20 @@ export default function ProponerRolaBandaModal({
                       type='url'
                       placeholder='Spotify, YouTube, Bandcamp, SoundCloud o link directo'
                       required
+                      className={inputCls}
+                    />
+                  </div>
+
+                  {/* Link de descarga (opcional) */}
+                  <div className='space-y-1'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Link de descarga
+                    </Label>
+                    <Input
+                      value={downloadLink}
+                      onChange={e => setDownloadLink(e.target.value)}
+                      type='url'
+                      placeholder='WeTransfer, Google Drive, Dropbox o link directo (opcional)'
                       className={inputCls}
                     />
                   </div>
