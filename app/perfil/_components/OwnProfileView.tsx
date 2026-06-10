@@ -114,13 +114,20 @@ export default function OwnProfileView({
             fill
             className='object-cover lg:hidden'
           />
-          {/* Desktop: folder with tab cut */}
-          <Image
-            src='/assets/registro/formulario/shared/folder-grey-back.png'
-            alt=''
-            fill
-            className='hidden object-fill lg:block'
-          />
+          {/* Desktop: rectangular grey texture with a FIXED-height tab cut at the
+              top-right (clip-path, px not %), so the notch doesn't stretch as the
+              content grows. */}
+          <div
+            className='absolute inset-0 hidden lg:block'
+            style={{ clipPath: 'polygon(0 0, 50% 0, 50% 64px, 100% 64px, 100% 100%, 0 100%)' }}
+          >
+            <Image
+              src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
+              alt=''
+              fill
+              className='object-cover'
+            />
+          </div>
 
           {/* Top decoration: rayo on the right corner */}
           <Image
