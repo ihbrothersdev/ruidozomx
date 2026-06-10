@@ -148,7 +148,7 @@ export function Buscador() {
        *  magnifier in the asset replaces the icon, the cream stripe is the
        *  writable area. Scale via height; width follows the asset's aspect. */}
       <div
-        className='relative h-9 sm:h-10 md:h-15'
+        className='relative h-9 sm:h-10 md:h-18'
         style={{ aspectRatio: ASSET_ASPECT }}
       >
         <Image
@@ -269,8 +269,7 @@ function ResultsPanel({
   const compactCount =
     Math.min(results.profiles.length, COMPACT_LIMIT) +
     Math.min(results.songs.length, COMPACT_LIMIT) +
-    Math.min(results.events.length, COMPACT_LIMIT) +
-    Math.min(results.cassettes.length, COMPACT_LIMIT)
+    Math.min(results.events.length, COMPACT_LIMIT)
   const hasMore = results.total > compactCount
 
   return (
@@ -339,31 +338,6 @@ function ResultsPanel({
               }
               primary={ev.title}
               secondary={[formatCassetteDate(ev.event_date), ev.venue_name, ev.city].filter(Boolean).join(' · ')}
-            />
-          ))}
-        </Section>
-      )}
-
-      {results.cassettes.length > 0 && (
-        <Section
-          title='Cassettes'
-          count={results.cassettes.length}
-        >
-          {results.cassettes.slice(0, limit).map(c => (
-            <ResultItem
-              key={c.id}
-              href={`/?cassette=${c.id}`}
-              onNavigate={onNavigate}
-              avatar={
-                <CoverThumb
-                  src={c.cover_image_url}
-                  emoji='📼'
-                />
-              }
-              primary={c.name ?? 'Cassette'}
-              secondary={[formatCassetteDate(c.start_date), c.curator_name && `Curador: ${c.curator_name}`]
-                .filter(Boolean)
-                .join(' · ')}
             />
           ))}
         </Section>

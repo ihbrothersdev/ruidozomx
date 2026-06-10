@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Buscador } from './Buscador'
+import { Caseteca } from './Caseteca'
 import { ProfileDropdown } from './ProfileDropdown'
 
 interface HeaderProps {
@@ -29,6 +30,8 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
 
       {/* Navigation buttons */}
       <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
+        <Caseteca />
+
         <Link href='/quienes-somos'>
           <Image
             src='/assets/header/quienes-somos.png'
