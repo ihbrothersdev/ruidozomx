@@ -40,7 +40,7 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
           alt='Mi perfil'
           width={200}
           height={250}
-          className='h-10 w-auto md:h-16'
+          className='h-9 w-auto sm:h-10 md:h-18'
           style={{ height: undefined }}
         />
         <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
