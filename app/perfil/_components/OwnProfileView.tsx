@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
+import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
 import { ProfileInbox } from './inbox/ProfileInbox'
@@ -168,6 +169,7 @@ export default function OwnProfileView({
                   displayName={displayName}
                   location={location}
                   role={role}
+                  bio={bio}
                 />
 
                 <ActivityInbox
@@ -195,7 +197,15 @@ export default function OwnProfileView({
               </div>
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
-              <div className='flex flex-col items-center space-y-6 lg:items-end'>
+              <div className='flex flex-col items-end space-y-6'>
+                <div className='w-full'>
+                  <LinksSection
+                    socialLinks={socialLinks}
+                    contact={contact}
+                    variant='private'
+                  />
+                </div>
+
                 <OwnProfileActions
                   role={role}
                   onEdit={() => setIsEditing(true)}
@@ -541,6 +551,7 @@ interface DataFieldsProps {
   displayName: string
   location: string
   role: Role | null
+  bio?: string
 }
 
 /**
@@ -549,7 +560,7 @@ interface DataFieldsProps {
  * box containing the value. Display only — actual editing happens inline when
  * the user clicks "Editar perfil", which swaps in OwnProfileEditForm.
  */
-function DataFields({ displayName, location, role }: DataFieldsProps) {
+function DataFields({ displayName, location, role, bio }: DataFieldsProps) {
   const fields: { label: string; value: string }[] = [
     { label: 'Nombre/Alias/Proyecto/Marca', value: displayName },
     { label: 'Ciudad / País', value: location || '—' },
@@ -569,6 +580,15 @@ function DataFields({ displayName, location, role }: DataFieldsProps) {
           </div>
         </div>
       ))}
+
+      {bio?.trim() && (
+        <div className='space-y-1'>
+          <p className='font-pt-mono text-sm tracking-wider text-red-700 uppercase'>Descripción</p>
+          <div className='font-pt-mono border-2 border-red-700 bg-transparent px-3 py-1.5 text-sm whitespace-pre-wrap text-black'>
+            {bio}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
