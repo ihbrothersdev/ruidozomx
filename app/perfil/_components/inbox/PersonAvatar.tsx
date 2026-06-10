@@ -1,0 +1,18 @@
+/** Avatar (photo or initial) for an inbox counterpart. */
+export function PersonAvatar({ photoUrl, name }: { photoUrl: string | null; name: string }) {
+  if (photoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt={name}
+        className='h-9 w-9 shrink-0 rounded-full border border-red-700/40 object-cover'
+      />
+    )
+  }
+  return (
+    <span className='font-pt-mono flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-700/40 bg-red-700/10 text-xs font-bold text-red-700'>
+      {name.trim().charAt(0).toUpperCase() || '?'}
+    </span>
+  )
+}

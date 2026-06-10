@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
@@ -12,11 +13,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }
 }
 
-export default async function PerfilPage({
-  searchParams
-}: {
-  searchParams: Promise<{ debug_uid?: string }>
-}) {
+export default async function PerfilPage({ searchParams }: { searchParams: Promise<{ debug_uid?: string }> }) {
   const supabase = await createClient()
   const {
     data: { user }
@@ -37,11 +34,10 @@ export default async function PerfilPage({
   // Debug helper: pass ?debug_uid=<slug-or-uuid> to impersonate another profile
   // for testing. Allowed on local dev and Vercel *preview* deployments, but
   // NEVER on production (ruidozo.mx). Vercel sets VERCEL_ENV per deployment.
-  const debugAllowed =
-    process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
+  const debugAllowed = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview'
   const { debug_uid } = await searchParams
   const isDebug = debugAllowed && !!debug_uid
-  const profileId = isDebug ? debug_uid! : (profile?.id as string ?? user.id)
+  const profileId = isDebug ? debug_uid! : ((profile?.id as string) ?? user.id)
 
   // If debugging a different profile, re-fetch by slug (falls back to id lookup)
   if (isDebug) {
@@ -58,7 +54,13 @@ export default async function PerfilPage({
   }
 
   // Re-derive profileId from the (possibly re-fetched) profile
-  const resolvedProfileId = isDebug ? (profile?.id as string ?? user.id) : profileId
+  const resolvedProfileId = isDebug ? ((profile?.id as string) ?? user.id) : profileId
+
+  // The inbox tables (interests, user_proposals) are RLS-scoped to the *real*
+  // logged-in user, so when impersonating another profile via ?debug_uid the
+  // reads come back empty. In debug mode only (dev/preview, never production)
+  // use the service client — which bypasses RLS — for those reads.
+  const dataClient = isDebug ? createServiceClient() : supabase
 
   const displayName =
     (profile?.display_name as string) || user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario'
@@ -123,25 +125,25 @@ export default async function PerfilPage({
       .gte('event_date', todayDate)
       .order('event_date', { ascending: true })
       .limit(5),
-    supabase
+    dataClient
       .from('interests')
       .select(CONNECTION_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
       .eq('to_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    supabase
+    dataClient
       .from('interests')
       .select(CONNECTION_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
       .eq('from_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    supabase
+    dataClient
       .from('user_proposals')
       .select(PROPOSAL_SELECT.replace('{FK}', 'from_profile_id'), { count: 'exact' })
       .eq('to_profile_id', resolvedProfileId)
       .order('created_at', { ascending: false })
       .limit(CONNECTIONS_SHOWN),
-    supabase
+    dataClient
       .from('user_proposals')
       .select(PROPOSAL_SELECT.replace('{FK}', 'to_profile_id'), { count: 'exact' })
       .eq('from_profile_id', resolvedProfileId)
@@ -155,11 +157,11 @@ export default async function PerfilPage({
   // would otherwise tag invisible counterparts as "mutual" if they ever came
   // back).
   const [{ data: incomingIds }, { data: outgoingIds }] = await Promise.all([
-    supabase
+    dataClient
       .from('interests')
       .select('from_profile_id, profile:profiles!from_profile_id!inner(id)')
       .eq('to_profile_id', resolvedProfileId),
-    supabase
+    dataClient
       .from('interests')
       .select('to_profile_id, profile:profiles!to_profile_id!inner(id)')
       .eq('from_profile_id', resolvedProfileId)

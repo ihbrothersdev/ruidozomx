@@ -231,6 +231,22 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                             </a>
                           </Button>
                         )}
+                        {p.download_link && (
+                          <Button
+                            asChild
+                            variant='link'
+                            size='xs'
+                            className='font-pt-mono h-auto p-0 text-[11px] font-bold text-red-400 hover:text-red-300'
+                          >
+                            <a
+                              href={p.download_link}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              Link de descarga <ExternalLink className='h-3 w-3' />
+                            </a>
+                          </Button>
+                        )}
                         {p.audio_file_path && (
                           <Button
                             asChild

@@ -10,6 +10,8 @@ interface LinksSectionProps {
   contact: string | null
   role?: Role | null
   editing?: boolean
+  /** 'public' = dashed black box (public profile); 'private' = red-folder box. */
+  variant?: 'public' | 'private'
   onSocialLinksChange?: (next: Record<string, string>) => void
   onContactChange?: (next: string) => void
 }
@@ -56,6 +58,7 @@ export default function LinksSection({
   socialLinks,
   contact,
   editing = false,
+  variant = 'public',
   onSocialLinksChange,
   onContactChange
 }: LinksSectionProps) {
@@ -75,6 +78,35 @@ export default function LinksSection({
   const hasAnyContent = hasSocialLinks || contact
 
   if (!hasAnyContent) return null
+
+  // Private variant matches the red-folder dashboard (red label + red box);
+  // public keeps the dashed-black card used on the public profile.
+  if (variant === 'private') {
+    return (
+      <div className='w-full space-y-1'>
+        <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Links</p>
+        <div className='space-y-1 border-2 border-red-700 px-3 py-2'>
+          {sortedLinks.map(([platform, url]) => (
+            <a
+              key={platform}
+              href={url.startsWith('http') ? url : `https://${url}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='font-pt-mono flex items-center gap-2 text-sm text-black transition-colors hover:text-red-700'
+            >
+              <PlatformIcon
+                platform={platform}
+                className='size-4 shrink-0'
+              />
+              <span className='underline decoration-red-700/50 underline-offset-2'>{getPlatformLabel(platform)}</span>
+            </a>
+          ))}
+
+          {contact && <p className='font-pt-mono text-sm text-black'>Contacto: {contact}</p>}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='border border-dashed border-black/20 p-4'>
