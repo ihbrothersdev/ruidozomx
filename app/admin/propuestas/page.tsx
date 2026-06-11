@@ -27,7 +27,7 @@ interface SearchParams {
   page?: string
 }
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
   pending: { label: 'Pendiente', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
