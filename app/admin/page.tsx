@@ -1,10 +1,10 @@
 import { Card, CardContent } from '@/app/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { CalendarClock, CalendarDays, Disc3, Heart, Inbox, Music2, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const todayIso = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
 
