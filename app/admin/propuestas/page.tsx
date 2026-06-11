@@ -313,7 +313,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
 
                 <CardFooter className='flex flex-col gap-3 bg-white/2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
                   <p className='font-pt-mono text-[10px] text-white/30'>
-                    {p.reviewed_at ? `Revisada el ${formatShortDateMX(p.reviewed_at)}` : 'Sin revisar'}
+                    {p.reviewed_at ? `Revisada el ${formatShortDateMX(p.reviewed_at)}` : 'Pendiente de revisión'}
                   </p>
                   <ProposalActions
                     proposalId={p.id}
