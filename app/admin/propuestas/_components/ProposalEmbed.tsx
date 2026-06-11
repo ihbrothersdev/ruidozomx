@@ -1,7 +1,6 @@
 'use client'
 
-import { Music2, Play } from 'lucide-react'
-import { useState } from 'react'
+import { Music2 } from 'lucide-react'
 
 /** Clean Drive card — Drive's embedded preview is unreliable, so we show a styled link that opens the file in a new tab */
 function DriveEmbed({ fileId }: { fileId: string }) {
@@ -34,53 +33,34 @@ function DriveEmbed({ fileId }: { fileId: string }) {
   )
 }
 
-/** Click-to-load iframe facade: no request hits the embed provider until the
- * admin clicks play. Prevents IP-level rate limiting (Spotify 429) when many
- * proposals render at once. */
+/** Wrap an iframe in a dark, clipped container so service-rendered corners blend with the card */
 function EmbedFrame({
   height,
   src,
   allow,
   allowFullScreen,
-  sandbox,
-  label
+  sandbox
 }: {
   height: number
   src: string
   allow?: string
   allowFullScreen?: boolean
   sandbox?: string
-  label: string
 }) {
-  const [loaded, setLoaded] = useState(false)
-
   return (
     <div
       className='overflow-hidden rounded-xl bg-neutral-900'
       style={{ height }}
     >
-      {loaded ? (
-        <iframe
-          src={src}
-          allow={allow}
-          allowFullScreen={allowFullScreen}
-          sandbox={sandbox}
-          loading='lazy'
-          className='block h-full w-full'
-          style={{ border: 0 }}
-        />
-      ) : (
-        <button
-          type='button'
-          onClick={() => setLoaded(true)}
-          className='group flex h-full w-full items-center justify-center gap-3 text-white/60 transition-colors hover:bg-white/[0.04] hover:text-white'
-        >
-          <span className='flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors group-hover:bg-emerald-500/20 group-hover:text-emerald-300'>
-            <Play className='h-4 w-4 translate-x-px' />
-          </span>
-          <span className='font-pt-mono text-xs font-bold tracking-wide uppercase'>Cargar {label}</span>
-        </button>
-      )}
+      <iframe
+        src={src}
+        allow={allow}
+        allowFullScreen={allowFullScreen}
+        sandbox={sandbox}
+        loading='lazy'
+        className='block h-full w-full'
+        style={{ border: 0 }}
+      />
     </div>
   )
 }
@@ -104,7 +84,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         src={`https://www.youtube.com/embed/${ytMatch[1]}`}
         allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope'
         allowFullScreen
-        label='YouTube'
       />
     )
   }
@@ -117,7 +96,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         height={152}
         src={`https://open.spotify.com/embed/track/${spotifyMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        label='Spotify'
       />
     )
   }
@@ -130,7 +108,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         height={152}
         src={`https://open.spotify.com/embed/album/${spotifyAlbumMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        label='Spotify'
       />
     )
   }
@@ -143,7 +120,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         height={152}
         src={`https://open.spotify.com/embed/playlist/${spotifyPlaylistMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        label='Spotify'
       />
     )
   }
@@ -169,7 +145,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         src={embedUrl}
         allow='autoplay *; encrypted-media *; fullscreen *; clipboard-write'
         sandbox='allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation'
-        label='Apple Music'
       />
     )
   }
@@ -181,7 +156,6 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         height={80}
         src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23e11d48&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
         allow='autoplay'
-        label='SoundCloud'
       />
     )
   }
