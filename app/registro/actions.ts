@@ -227,7 +227,7 @@ export async function registroSignup(formData: FormData) {
   const socialLinks = buildSocialLinks(formData)
   const bio = getStr(formData, 'review') ?? getStr(formData, 'description')
   const contact = getStr(formData, 'contact')
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ruidozo.mx'
 
   // After email confirmation we want the user to land on their onboarding
   // ticket — not /perfil — so they don't miss it.
