@@ -1,10 +1,12 @@
 import { Card, CardContent } from '@/app/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
+import { CalendarClock, CalendarDays, Disc3, Heart, Inbox, Music2, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
+
+  const todayIso = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
 
   const [
     { data: activeCassette },
@@ -12,7 +14,9 @@ export default async function AdminDashboardPage() {
     { count: pendingCount },
     { count: totalProposals },
     { count: totalUsers },
+    { count: totalBands },
     { count: publishedEvents },
+    { count: upcomingEvents },
     { count: totalInterests },
     { count: totalMessages }
   ] = await Promise.all([
@@ -21,7 +25,13 @@ export default async function AdminDashboardPage() {
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'banda'),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    supabase
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .gte('event_date', todayIso),
     supabase.from('interests').select('*', { count: 'exact', head: true }),
     supabase.from('user_proposals').select('*', { count: 'exact', head: true })
   ])
@@ -84,13 +94,6 @@ export default async function AdminDashboardPage() {
           href='/admin/propuestas'
         />
         <StatCard
-          label='Usuarios'
-          value={String(totalUsers ?? 0)}
-          sub='registrados'
-          accent='neutral'
-          icon={Users}
-        />
-        <StatCard
           label='Eventos publicados'
           value={String(publishedEvents ?? 0)}
           sub='visibles al público'
@@ -98,32 +101,36 @@ export default async function AdminDashboardPage() {
           icon={CalendarDays}
           href='/admin/eventos'
         />
-      </section>
-
-      <section>
-        <h2 className='font-pt-mono mb-3 text-xs font-bold tracking-[0.3em] text-white/40 uppercase'>Atajos</h2>
-        <div className='grid gap-3 sm:grid-cols-2'>
-          <ActionLink
-            href='/admin/propuestas'
-            title='Revisar propuestas'
-            description={`${pendingCount ?? 0} esperando tu decisión`}
-          />
-          <ActionLink
-            href='/admin/cassettes'
-            title='Gestionar cassettes'
-            description='Crea, marca como siguiente o publica'
-          />
-          <ActionLink
-            href='/admin/metricas'
-            title='Ver métricas'
-            description='Plays, sesiones y top de la comunidad'
-          />
-          <ActionLink
-            href='/admin/conexiones'
-            title='Ver conexiones'
-            description={`${totalConnections} entre perfiles`}
-          />
-        </div>
+        <StatCard
+          label='Eventos próximos'
+          value={String(upcomingEvents ?? 0)}
+          sub='por venir'
+          accent='emerald'
+          icon={CalendarClock}
+          href='/admin/eventos'
+        />
+        <StatCard
+          label='Conexiones'
+          value={String(totalConnections)}
+          sub={`${totalInterests ?? 0} intereses · ${totalMessages ?? 0} mensajes`}
+          accent='red'
+          icon={Heart}
+          href='/admin/conexiones'
+        />
+        <StatCard
+          label='Bandas'
+          value={String(totalBands ?? 0)}
+          sub={`de ${totalUsers ?? 0} usuarios`}
+          accent='neutral'
+          icon={Music2}
+        />
+        <StatCard
+          label='Usuarios'
+          value={String(totalUsers ?? 0)}
+          sub='registrados'
+          accent='neutral'
+          icon={Users}
+        />
       </section>
     </div>
   )
@@ -181,24 +188,5 @@ function StatCard({
     </Link>
   ) : (
     inner
-  )
-}
-
-function ActionLink({ href, title, description }: { href: string; title: string; description: string }) {
-  return (
-    <Card className='group gap-0 border-white/10 bg-white/3 py-0 transition-all hover:border-red-500/30 hover:bg-white/6'>
-      <CardContent className='p-0'>
-        <Link
-          href={href}
-          className='flex items-center justify-between gap-4 p-5'
-        >
-          <div>
-            <p className='font-pt-mono text-sm font-bold text-white uppercase'>{title}</p>
-            <p className='font-pt-mono mt-1 text-xs text-white/40'>{description}</p>
-          </div>
-          <ArrowRight className='h-4 w-4 text-white/30 transition-all group-hover:translate-x-1 group-hover:text-red-400' />
-        </Link>
-      </CardContent>
-    </Card>
   )
 }
