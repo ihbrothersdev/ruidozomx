@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { signout } from '@/app/(auth)/actions'
-import { BarChart3, Disc3, Heart, Inbox, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
+import { BarChart3, CalendarDays, Disc3, Heart, Inbox, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,6 +18,7 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/propuestas', label: 'Propuestas', icon: Inbox },
   { href: '/admin/cassettes', label: 'Cassettes', icon: Disc3 },
+  { href: '/admin/eventos', label: 'Eventos', icon: CalendarDays },
   { href: '/admin/metricas', label: 'Métricas', icon: BarChart3 },
   { href: '/admin/conexiones', label: 'Conexiones', icon: Heart }
 ]
