@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/app/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboardPage() {
@@ -11,14 +11,22 @@ export default async function AdminDashboardPage() {
     { data: nextCassette },
     { count: pendingCount },
     { count: totalProposals },
-    { count: totalUsers }
+    { count: totalUsers },
+    { count: publishedEvents },
+    { count: totalInterests },
+    { count: totalMessages }
   ] = await Promise.all([
     supabase.from('cassettes').select('id, name').eq('active', true).maybeSingle(),
     supabase.from('cassettes').select('id, name').eq('is_next', true).maybeSingle(),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true })
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    supabase.from('interests').select('*', { count: 'exact', head: true }),
+    supabase.from('user_proposals').select('*', { count: 'exact', head: true })
   ])
+
+  const totalConnections = (totalInterests ?? 0) + (totalMessages ?? 0)
 
   let activeFilled = 0
   let nextFilled = 0
@@ -45,8 +53,8 @@ export default async function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className='font-pt-mono mt-2 max-w-xl text-sm text-white/40'>
-          Resumen del estado de la trinchera. Cura el cassette siguiente, publícalo cuando esté listo, y revisa las
-          propuestas que llegan.
+          Resumen del estado de la trinchera. Cura y publica el cassette siguiente, revisa las propuestas que llegan, y
+          sigue cómo se mueve la comunidad en métricas y conexiones.
         </p>
       </header>
 
@@ -82,6 +90,13 @@ export default async function AdminDashboardPage() {
           accent='neutral'
           icon={Users}
         />
+        <StatCard
+          label='Eventos publicados'
+          value={String(publishedEvents ?? 0)}
+          sub='visibles al público'
+          accent='amber'
+          icon={CalendarDays}
+        />
       </section>
 
       <section>
@@ -96,6 +111,16 @@ export default async function AdminDashboardPage() {
             href='/admin/cassettes'
             title='Gestionar cassettes'
             description='Crea, marca como siguiente o publica'
+          />
+          <ActionLink
+            href='/admin/metricas'
+            title='Ver métricas'
+            description='Plays, sesiones y top de la comunidad'
+          />
+          <ActionLink
+            href='/admin/conexiones'
+            title='Ver conexiones'
+            description={`${totalConnections} entre perfiles`}
           />
         </div>
       </section>

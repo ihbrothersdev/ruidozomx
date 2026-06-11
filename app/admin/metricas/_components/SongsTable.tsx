@@ -5,7 +5,16 @@ import { Button } from '@/app/components/ui/button'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, ExternalLink, Search } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  Search
+} from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { SinceWindow, SongMetricRow } from '../_lib/aggregations'
@@ -25,13 +34,13 @@ type SortKey =
 
 type SideFilter = 'all' | 'A' | 'B'
 
-const PAGE_SIZE = 30
+const PAGE_SIZE = 10
 
 export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: SinceWindow }) {
   const [search, setSearch] = useState('')
   const [side, setSide] = useState<SideFilter>('all')
   const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'plays_total', dir: 'desc' })
-  const [showAll, setShowAll] = useState(false)
+  const [page, setPage] = useState(0)
   const [detailSongId, setDetailSongId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
@@ -56,10 +65,13 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
     return out
   }, [rows, search, side, sort])
 
-  const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages - 1)
+  const visible = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
 
   function toggleSort(key: SortKey) {
     setSort(prev => (prev.key === key ? { key, dir: prev.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: 'desc' }))
+    setPage(0)
   }
 
   function exportCsv() {
@@ -117,7 +129,10 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
             <Search className='pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-white/30' />
             <Input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => {
+                setSearch(e.target.value)
+                setPage(0)
+              }}
               placeholder='Buscar artista, título o cassette…'
               className='font-pt-mono h-8 border-white/10 bg-white/3 pl-9 text-xs text-white placeholder:text-white/30'
             />
@@ -128,7 +143,10 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
               <button
                 key={s}
                 type='button'
-                onClick={() => setSide(s)}
+                onClick={() => {
+                  setSide(s)
+                  setPage(0)
+                }}
                 className={`font-pt-mono cursor-pointer rounded px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
                   side === s ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
                 }`}
@@ -288,13 +306,28 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
         </div>
 
         {filtered.length > PAGE_SIZE && (
-          <button
-            type='button'
-            onClick={() => setShowAll(v => !v)}
-            className='font-pt-mono w-full cursor-pointer border-t border-white/5 py-2 text-center text-[10px] tracking-widest text-white/40 uppercase hover:bg-white/3 hover:text-white'
-          >
-            {showAll ? `Mostrar solo ${PAGE_SIZE}` : `Ver las ${filtered.length} canciones`}
-          </button>
+          <div className='flex items-center justify-between border-t border-white/5 pt-2'>
+            <span className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
+              {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
+            </span>
+            <div className='flex items-center gap-1'>
+              <PagerButton
+                disabled={safePage === 0}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+              >
+                <ChevronLeft className='h-3.5 w-3.5' />
+              </PagerButton>
+              <span className='font-pt-mono px-1 text-[10px] tracking-widest text-white/40 uppercase'>
+                {safePage + 1}/{totalPages}
+              </span>
+              <PagerButton
+                disabled={safePage >= totalPages - 1}
+                onClick={() => setPage(p => p + 1)}
+              >
+                <ChevronRight className='h-3.5 w-3.5' />
+              </PagerButton>
+            </div>
+          </div>
         )}
       </CardContent>
 
@@ -348,6 +381,27 @@ function Td({ children, align, bold }: { children: React.ReactNode; align?: 'rig
     >
       {children}
     </TableCell>
+  )
+}
+
+function PagerButton({
+  children,
+  disabled,
+  onClick
+}: {
+  children: React.ReactNode
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type='button'
+      disabled={disabled}
+      onClick={onClick}
+      className='flex h-7 w-7 cursor-pointer items-center justify-center rounded border border-white/10 bg-white/3 text-white/60 transition-colors hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white/3'
+    >
+      {children}
+    </button>
   )
 }
 

@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from '@/app/components/ui/alert'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Separator } from '@/app/components/ui/separator'
 import { createServiceClient } from '@/lib/supabase/service'
-import { BarChart3, Headphones, Heart, LineChart, Music2, Play, Send, Users } from 'lucide-react'
+import { BarChart3, CalendarDays, Headphones, Heart, LineChart, Music2, Play, Send, Users } from 'lucide-react'
 import Link from 'next/link'
 import { CassetteFilter, type CassetteOption } from './_components/CassetteFilter'
 import { CassettesTable } from './_components/CassettesTable'
@@ -87,28 +87,26 @@ export default async function MetricasPage({
     .order('start_date', { ascending: false })
 
   // songs (filtered by cassette if selected) + their cassette name
-  let songsQuery = svc
-    .from('songs')
-    .select('id, title, artist, side, position, cassette_id, cassettes!inner(name)')
+  let songsQuery = svc.from('songs').select('id, title, artist, side, position, cassette_id, cassettes!inner(name)')
   if (cassetteFilter) songsQuery = songsQuery.eq('cassette_id', cassetteFilter)
   const songsPromise = songsQuery
 
   // events within the selected window (and cassette, if any)
-  let eventsQuery = svc
-    .from('song_events')
-    .select('id, type, song_id, cassette_id, user_id, session_id, created_at')
+  let eventsQuery = svc.from('song_events').select('id, type, song_id, cassette_id, user_id, session_id, created_at')
   if (sinceDate) eventsQuery = eventsQuery.gte('created_at', sinceDate.toISOString())
   if (cassetteFilter) eventsQuery = eventsQuery.eq('cassette_id', cassetteFilter)
   const eventsPromise = eventsQuery
 
-  const [cassetteListRes, songsRes, eventsRes, listenersRes, proposersRes, connectionsRes] = await Promise.all([
-    cassetteListPromise,
-    songsPromise,
-    eventsPromise,
-    svc.rpc('top_listeners', { p_limit: 10 }),
-    svc.rpc('top_proposers', { p_limit: 10 }),
-    svc.rpc('connection_metrics')
-  ])
+  const [cassetteListRes, songsRes, eventsRes, listenersRes, proposersRes, connectionsRes, publishedEventsRes] =
+    await Promise.all([
+      cassetteListPromise,
+      songsPromise,
+      eventsPromise,
+      svc.rpc('top_listeners', { p_limit: 10 }),
+      svc.rpc('top_proposers', { p_limit: 10 }),
+      svc.rpc('connection_metrics'),
+      svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published')
+    ])
 
   // ── Normalize ─────────────────────────────────────────────────────────────
   const cassetteList = (cassetteListRes.data ?? []) as CassetteRow[]
@@ -159,6 +157,7 @@ export default async function MetricasPage({
   const totalAuthPlays = events.filter(e => e.type === 'play_start' && e.user_id).length
   const totalSessionsStarted = events.filter(e => e.type === 'cassette_session_start').length
   const totalUniqueListeners = new Set(topListeners.map(l => l.user_id)).size
+  const publishedEvents = publishedEventsRes.count ?? 0
 
   const hasAnyData =
     totalPlays > 0 ||
@@ -185,7 +184,8 @@ export default async function MetricasPage({
             . Click en una canción para ver detalle de oyentes.
           </p>
           <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
-            Top fans, proponentes y conexiones son globales (no respetan los filtros).
+            Top fans y proponentes son globales (no respetan los filtros). Las conexiones entre perfiles viven en su
+            propia pestaña.
           </p>
         </div>
         <div className='flex flex-wrap items-end gap-3'>
@@ -235,6 +235,13 @@ export default async function MetricasPage({
           sub={`${topProposers.length} proponentes`}
           icon={Users}
           accent='emerald'
+        />
+        <BigStat
+          label='Eventos publicados'
+          value={publishedEvents.toLocaleString('es-MX')}
+          sub='Global · ignora filtros'
+          icon={CalendarDays}
+          accent='amber'
         />
       </section>
 
@@ -366,40 +373,6 @@ export default async function MetricasPage({
           )}
         </div>
       </section>
-
-      <section>
-        <SectionHeader
-          icon={Heart}
-          title='Conexiones entre usuarios'
-          description='Solicitudes de "Conectar" + propuestas directas entre perfiles.'
-        />
-        <div className='grid grid-cols-2 gap-3 sm:grid-cols-3'>
-          <SmallStat
-            label='Total solicitudes'
-            value={connections.total_interests}
-          />
-          <SmallStat
-            label='Quién las envía'
-            value={connections.unique_interest_givers}
-          />
-          <SmallStat
-            label='Quién las recibe'
-            value={connections.unique_interest_receivers}
-          />
-          <SmallStat
-            label='Mensajes directos'
-            value={connections.total_user_proposals}
-          />
-          <SmallStat
-            label='Quién manda mensajes'
-            value={connections.unique_proposers}
-          />
-          <SmallStat
-            label='Quién los recibe'
-            value={connections.unique_proposed_to}
-          />
-        </div>
-      </section>
     </div>
   )
 }
@@ -415,13 +388,14 @@ function BigStat({
   value: string
   sub: string
   icon: typeof BarChart3
-  accent: 'red' | 'blue' | 'pink' | 'emerald'
+  accent: 'red' | 'blue' | 'pink' | 'emerald' | 'amber'
 }) {
   const tints = {
     red: 'border-red-500/20 bg-red-500/5 text-red-300',
     blue: 'border-blue-500/20 bg-blue-500/5 text-blue-300',
     pink: 'border-pink-500/20 bg-pink-500/5 text-pink-300',
-    emerald: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300'
+    emerald: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300',
+    amber: 'border-amber-400/20 bg-amber-500/5 text-amber-300'
   }[accent]
   return (
     <Card className={`gap-2 border py-4 ${tints}`}>
@@ -432,17 +406,6 @@ function BigStat({
         </div>
         <p className='font-baby-doll text-3xl font-bold tracking-wider text-white uppercase sm:text-4xl'>{value}</p>
         <p className='font-pt-mono mt-1 text-[10px] text-white/50'>{sub}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function SmallStat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card className='gap-1 border-white/10 bg-white/3 py-3'>
-      <CardContent className='px-3'>
-        <p className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>{label}</p>
-        <p className='font-baby-doll mt-1 text-2xl font-bold text-white'>{value.toLocaleString('es-MX')}</p>
       </CardContent>
     </Card>
   )
