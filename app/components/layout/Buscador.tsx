@@ -200,7 +200,7 @@ export function Buscador() {
       </div>
 
       {showDropdown && (
-        <div className='absolute top-full right-0 z-50 mt-2 w-[min(94vw,520px)] sm:w-[520px]'>
+        <div className='absolute top-full left-1/2 z-50 mt-2 w-[min(80vw,320px)] -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 sm:w-[520px]'>
           <div className='relative overflow-hidden rounded-md border-2 border-black/20 bg-[#f5f0e8] shadow-[6px_6px_0_rgba(0,0,0,0.25)]'>
             <div className='pointer-events-none absolute inset-0 z-0 opacity-25'>
               <Image
