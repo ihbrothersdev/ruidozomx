@@ -19,8 +19,8 @@ const NAV = [
   { href: '/admin/propuestas', label: 'Propuestas', icon: Inbox },
   { href: '/admin/cassettes', label: 'Cassettes', icon: Disc3 },
   { href: '/admin/eventos', label: 'Eventos', icon: CalendarDays },
-  { href: '/admin/metricas', label: 'Métricas', icon: BarChart3 },
-  { href: '/admin/conexiones', label: 'Conexiones', icon: Heart }
+  { href: '/admin/conexiones', label: 'Conexiones', icon: Heart },
+  { href: '/admin/metricas', label: 'Métricas', icon: BarChart3 }
 ]
 
 export function AdminShell({ displayName, photoUrl, children }: AdminShellProps) {
