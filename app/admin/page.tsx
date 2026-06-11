@@ -96,6 +96,7 @@ export default async function AdminDashboardPage() {
           sub='visibles al público'
           accent='amber'
           icon={CalendarDays}
+          href='/admin/eventos'
         />
       </section>
 
