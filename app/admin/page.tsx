@@ -53,8 +53,8 @@ export default async function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className='font-pt-mono mt-2 max-w-xl text-sm text-white/40'>
-          Resumen del estado de la trinchera. Cura el cassette siguiente, publícalo cuando esté listo, y revisa las
-          propuestas que llegan.
+          Resumen del estado de la trinchera. Cura y publica el cassette siguiente, revisa las propuestas que llegan, y
+          sigue cómo se mueve la comunidad en métricas y conexiones.
         </p>
       </header>
 
