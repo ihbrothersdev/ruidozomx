@@ -140,7 +140,9 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
           </span>
           <span className='font-pt-mono text-[10px] text-white/30'>{date}</span>
         </div>
-        {edge.detail ? <p className='font-pt-mono w-full truncate text-[11px] text-white/40'>{edge.detail}</p> : null}
+        {edge.detail ? (
+          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{edge.detail}</p>
+        ) : null}
       </CardContent>
     </Card>
   )

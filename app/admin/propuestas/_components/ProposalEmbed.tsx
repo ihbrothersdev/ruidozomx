@@ -11,7 +11,7 @@ function DriveEmbed({ fileId }: { fileId: string }) {
       rel='noopener noreferrer'
       className='group flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 transition-all hover:border-white/20 hover:bg-white/[0.06]'
     >
-      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 ring-1 ring-inset ring-amber-500/20'>
+      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20 ring-inset'>
         <Music2 className='h-4 w-4 text-amber-300' />
       </div>
       <div className='min-w-0 flex-1'>
@@ -57,6 +57,7 @@ function EmbedFrame({
         allow={allow}
         allowFullScreen={allowFullScreen}
         sandbox={sandbox}
+        loading='lazy'
         className='block h-full w-full'
         style={{ border: 0 }}
       />

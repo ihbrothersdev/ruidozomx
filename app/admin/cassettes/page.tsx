@@ -184,7 +184,7 @@ function FeaturedCard({
 
           <div className='font-pt-mono mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/50'>
             <span>
-              <strong className='text-white'>{songCount}</strong>/26 slots
+              <strong className='text-white'>{songCount}</strong>/{Math.max(26, songCount)} slots
             </span>
             {cassette.curator_name && (
               <span>
@@ -210,7 +210,7 @@ function CassetteRow({ cassette, songCount }: { cassette: CassetteRowData; songC
           <div className='min-w-0 flex-1'>
             <p className='font-pt-mono truncate text-sm font-bold text-white uppercase'>{cassette.name}</p>
             <p className='font-pt-mono mt-1 text-[11px] text-white/40'>
-              {songCount}/26 slots
+              {songCount}/{Math.max(26, songCount)} slots
               {cassette.curator_name && ` · ${cassette.curator_name}`}
               {' · creado '}
               {formatShortDateMX(cassette.created_at)}

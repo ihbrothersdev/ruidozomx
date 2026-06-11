@@ -64,6 +64,7 @@ export function FilterTabs({ counts }: FilterTabsProps) {
 
   function changeTab(id: Filter) {
     const sp = new URLSearchParams(params.toString())
+    sp.delete('page')
     if (id === 'pending') sp.delete('f')
     else sp.set('f', id)
     const qs = sp.toString()

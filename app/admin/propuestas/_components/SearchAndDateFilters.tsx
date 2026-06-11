@@ -29,6 +29,7 @@ export function SearchAndDateFilters() {
 
   function pushParams(next: { q?: string; from?: string; to?: string }) {
     const sp = new URLSearchParams(params.toString())
+    sp.delete('page')
     const merged = { q, from, to, ...next }
     for (const [k, v] of Object.entries(merged)) {
       if (v && v.length > 0) sp.set(k, v)
@@ -42,6 +43,7 @@ export function SearchAndDateFilters() {
     setFrom('')
     setTo('')
     const sp = new URLSearchParams(params.toString())
+    sp.delete('page')
     sp.delete('q')
     sp.delete('from')
     sp.delete('to')

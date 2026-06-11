@@ -1,10 +1,12 @@
 import { Card, CardContent } from '@/app/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
+import { createServiceClient } from '@/lib/supabase/service'
+import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
+
+  const todayIso = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
 
   const [
     { data: activeCassette },
@@ -12,7 +14,9 @@ export default async function AdminDashboardPage() {
     { count: pendingCount },
     { count: totalProposals },
     { count: totalUsers },
+    { count: totalBands },
     { count: publishedEvents },
+    { count: upcomingEvents },
     { count: totalInterests },
     { count: totalMessages }
   ] = await Promise.all([
@@ -21,7 +25,13 @@ export default async function AdminDashboardPage() {
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'banda'),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    supabase
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .gte('event_date', todayIso),
     supabase.from('interests').select('*', { count: 'exact', head: true }),
     supabase.from('user_proposals').select('*', { count: 'exact', head: true })
   ])
@@ -46,7 +56,7 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className='mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
+    <div className='mx-auto w-full max-w-6xl space-y-10 px-4 py-8 sm:px-8 sm:py-12'>
       <header>
         <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Panel</p>
         <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
@@ -58,146 +68,190 @@ export default async function AdminDashboardPage() {
         </p>
       </header>
 
-      <section className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-        <StatCard
-          label='Cassette activo'
-          value={activeCassette?.name ?? '—'}
-          sub={activeCassette ? `${activeFilled}/26 slots` : 'Ninguno'}
-          accent='red'
-          icon={Disc3}
-          href='/admin/cassettes'
-        />
-        <StatCard
-          label='Cassette siguiente'
-          value={nextCassette?.name ?? 'Sin definir'}
-          sub={nextCassette ? `${nextFilled}/26 slots` : 'Crea uno en Cassettes'}
-          accent='amber'
-          icon={Sparkles}
-          href='/admin/cassettes'
-        />
-        <StatCard
-          label='Propuestas pendientes'
-          value={String(pendingCount ?? 0)}
-          sub={`de ${totalProposals ?? 0} totales`}
-          accent='emerald'
-          icon={Inbox}
-          href='/admin/propuestas'
-        />
-        <StatCard
-          label='Usuarios'
-          value={String(totalUsers ?? 0)}
-          sub='registrados'
-          accent='neutral'
-          icon={Users}
-        />
-        <StatCard
-          label='Eventos publicados'
-          value={String(publishedEvents ?? 0)}
-          sub='visibles al público'
-          accent='amber'
-          icon={CalendarDays}
-        />
-      </section>
-
-      <section>
-        <h2 className='font-pt-mono mb-3 text-xs font-bold tracking-[0.3em] text-white/40 uppercase'>Atajos</h2>
-        <div className='grid gap-3 sm:grid-cols-2'>
-          <ActionLink
-            href='/admin/propuestas'
-            title='Revisar propuestas'
-            description={`${pendingCount ?? 0} esperando tu decisión`}
+      {/* ── Cassettes ── */}
+      <section className='space-y-3'>
+        <SectionLabel>Cassettes</SectionLabel>
+        <div className='grid gap-4 md:grid-cols-2'>
+          <CassettePanel
+            tone='active'
+            label='Activo'
+            name={activeCassette?.name ?? '—'}
+            filled={activeFilled}
+            empty={!activeCassette}
           />
-          <ActionLink
-            href='/admin/cassettes'
-            title='Gestionar cassettes'
-            description='Crea, marca como siguiente o publica'
-          />
-          <ActionLink
-            href='/admin/metricas'
-            title='Ver métricas'
-            description='Plays, sesiones y top de la comunidad'
-          />
-          <ActionLink
-            href='/admin/conexiones'
-            title='Ver conexiones'
-            description={`${totalConnections} entre perfiles`}
+          <CassettePanel
+            tone='next'
+            label='Siguiente'
+            name={nextCassette?.name ?? 'Sin definir'}
+            filled={nextFilled}
+            empty={!nextCassette}
           />
         </div>
+      </section>
+
+      {/* ── Operación ── */}
+      <section className='space-y-3'>
+        <SectionLabel>Operación</SectionLabel>
+        <div className='grid gap-4 md:grid-cols-2'>
+          <Link
+            href='/admin/propuestas'
+            className='group block'
+          >
+            <Card className='h-full gap-0 border-emerald-400/20 bg-emerald-500/[0.06] py-0 transition-colors hover:bg-emerald-500/10'>
+              <CardContent className='flex h-full items-center gap-4 p-5'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300'>
+                  <Inbox className='h-5 w-5' />
+                </div>
+                <div className='min-w-0 flex-1'>
+                  <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
+                    Propuestas pendientes
+                  </p>
+                  <p className='font-baby-doll mt-1 text-3xl leading-none font-bold text-white'>{pendingCount ?? 0}</p>
+                  <p className='font-pt-mono mt-1 text-xs text-white/40'>de {totalProposals ?? 0} totales</p>
+                </div>
+                <ArrowRight className='h-4 w-4 shrink-0 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-emerald-300' />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link
+            href='/admin/eventos'
+            className='group block'
+          >
+            <Card className='h-full gap-0 border-white/10 bg-white/[0.03] py-0 transition-colors hover:bg-white/[0.06]'>
+              <CardContent className='p-5'>
+                <div className='flex items-center justify-between'>
+                  <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
+                    Eventos
+                  </p>
+                  <CalendarDays className='h-4 w-4 text-white/40' />
+                </div>
+                <div className='mt-3 flex items-center gap-6'>
+                  <Figure
+                    value={publishedEvents ?? 0}
+                    label='Publicados'
+                  />
+                  <div className='h-8 w-px bg-white/10' />
+                  <Figure
+                    value={upcomingEvents ?? 0}
+                    label='Próximos'
+                    accent
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Comunidad ── */}
+      <section className='space-y-3'>
+        <SectionLabel>Comunidad</SectionLabel>
+        <Card className='gap-0 border-white/10 bg-white/[0.03] py-0'>
+          <CardContent className='flex flex-wrap items-center gap-x-10 gap-y-5 p-5'>
+            <Figure
+              value={totalUsers ?? 0}
+              label='Usuarios'
+            />
+            <div className='h-8 w-px bg-white/10' />
+            <Figure
+              value={totalBands ?? 0}
+              label='Bandas'
+            />
+            <div className='h-8 w-px bg-white/10' />
+            <Link
+              href='/admin/conexiones'
+              className='group flex items-center gap-2'
+            >
+              <Figure
+                value={totalConnections}
+                label='Conexiones'
+              />
+              <ArrowRight className='h-4 w-4 text-white/20 transition-all group-hover:translate-x-0.5 group-hover:text-red-400' />
+            </Link>
+            <p className='font-pt-mono ml-auto text-right text-[11px] text-white/30'>
+              {totalInterests ?? 0} intereses · {totalMessages ?? 0} mensajes directos
+            </p>
+          </CardContent>
+        </Card>
       </section>
     </div>
   )
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-  accent,
-  icon: Icon,
-  href
-}: {
-  label: string
-  value: string
-  sub: string
-  accent: 'red' | 'amber' | 'emerald' | 'neutral'
-  icon: React.ComponentType<{ className?: string }>
-  href?: string
-}) {
-  const accentCls = {
-    red: 'border-red-500/20 bg-red-500/5',
-    amber: 'border-amber-400/20 bg-amber-500/5',
-    emerald: 'border-emerald-400/20 bg-emerald-500/5',
-    neutral: 'border-white/10 bg-white/[0.04]'
-  }[accent]
-  const iconCls = {
-    red: 'text-red-400 bg-red-500/10',
-    amber: 'text-amber-300 bg-amber-500/10',
-    emerald: 'text-emerald-300 bg-emerald-500/10',
-    neutral: 'text-white/50 bg-white/5'
-  }[accent]
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>{children}</h2>
+}
 
-  const inner = (
-    <Card className={`gap-3 border py-5 transition-colors ${accentCls} ${href ? 'hover:bg-white/6' : ''}`}>
-      <CardContent>
-        <div className='flex items-center justify-between'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>{label}</p>
-          <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${iconCls}`}>
-            <Icon className='h-3.5 w-3.5' />
-          </div>
-        </div>
-        <p className='font-baby-doll mt-3 truncate text-2xl font-bold text-white uppercase'>{value}</p>
-        <p className='font-pt-mono mt-1 text-xs text-white/40'>{sub}</p>
-      </CardContent>
-    </Card>
-  )
-
-  return href ? (
-    <Link
-      href={href}
-      className='block'
-    >
-      {inner}
-    </Link>
-  ) : (
-    inner
+function Figure({ value, label, accent }: { value: number; label: string; accent?: boolean }) {
+  return (
+    <div>
+      <p className={`font-baby-doll text-3xl leading-none font-bold ${accent ? 'text-emerald-300' : 'text-white'}`}>
+        {value.toLocaleString('es-MX')}
+      </p>
+      <p className='font-pt-mono mt-1.5 text-[10px] tracking-widest text-white/40 uppercase'>{label}</p>
+    </div>
   )
 }
 
-function ActionLink({ href, title, description }: { href: string; title: string; description: string }) {
+function CassettePanel({
+  tone,
+  label,
+  name,
+  filled,
+  empty
+}: {
+  tone: 'active' | 'next'
+  label: string
+  name: string
+  filled: number
+  empty: boolean
+}) {
+  const cap = Math.max(26, filled)
+  const pct = Math.round((filled / cap) * 100)
+  const card =
+    tone === 'active'
+      ? 'border-red-500/20 bg-red-500/[0.06] hover:bg-red-500/10'
+      : 'border-amber-400/20 bg-amber-500/[0.06] hover:bg-amber-500/10'
+  const bar = tone === 'active' ? 'bg-red-500' : 'bg-amber-400'
+  const Icon = tone === 'active' ? Disc3 : Sparkles
+
   return (
-    <Card className='group gap-0 border-white/10 bg-white/3 py-0 transition-all hover:border-red-500/30 hover:bg-white/6'>
-      <CardContent className='p-0'>
-        <Link
-          href={href}
-          className='flex items-center justify-between gap-4 p-5'
-        >
-          <div>
-            <p className='font-pt-mono text-sm font-bold text-white uppercase'>{title}</p>
-            <p className='font-pt-mono mt-1 text-xs text-white/40'>{description}</p>
+    <Link
+      href='/admin/cassettes'
+      className='block'
+    >
+      <Card className={`h-full gap-0 border py-0 transition-colors ${card}`}>
+        <CardContent className='p-5'>
+          <div className='flex items-center justify-between'>
+            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
+              Cassette {label}
+            </p>
+            <Icon className='h-4 w-4 text-white/40' />
           </div>
-          <ArrowRight className='h-4 w-4 text-white/30 transition-all group-hover:translate-x-1 group-hover:text-red-400' />
-        </Link>
-      </CardContent>
-    </Card>
+          <p className='font-baby-doll mt-3 truncate text-3xl font-bold text-white uppercase'>{name}</p>
+          {empty ? (
+            <p className='font-pt-mono mt-4 text-xs text-white/40'>
+              {tone === 'active' ? 'Ninguno activo' : 'Crea uno en Cassettes'}
+            </p>
+          ) : (
+            <div className='mt-4'>
+              <div className='mb-1.5 flex items-center justify-between'>
+                <span className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>
+                  {filled}/{cap} slots
+                </span>
+                <span className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>{pct}%</span>
+              </div>
+              <div className='h-1.5 w-full overflow-hidden rounded-full bg-white/10'>
+                <div
+                  className={`h-full rounded-full ${bar}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   )
 }
