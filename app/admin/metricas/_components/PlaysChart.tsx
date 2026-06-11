@@ -148,13 +148,13 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
               dataKey='date'
               tickFormatter={fmtShort}
               stroke='rgba(255,255,255,0.3)'
-              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(255,255,255,0.6)' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               stroke='rgba(255,255,255,0.3)'
-              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)' }}
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(255,255,255,0.6)' }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
@@ -189,7 +189,7 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
               strokeWidth={2}
               fill='url(#fill-plays)'
             />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend content={<ChartLegendContent className='text-white/60' />} />
           </AreaChart>
         </ChartContainer>
       </CardContent>
