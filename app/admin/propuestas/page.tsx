@@ -6,7 +6,7 @@ import { Separator } from '@/app/components/ui/separator'
 import { createClient } from '@/lib/supabase/server'
 import type { ProposalStatus } from '@/lib/types'
 import { formatLongDateMX, formatShortDateMX } from '@/lib/utils'
-import { AlertCircle, ExternalLink, Music2 } from 'lucide-react'
+import { AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Music2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FilterTabs } from './_components/FilterTabs'
@@ -24,7 +24,10 @@ interface SearchParams {
   q?: string
   from?: string
   to?: string
+  page?: string
 }
+
+const PAGE_SIZE = 20
 
 const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
   pending: { label: 'Pendiente', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
@@ -39,6 +42,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
   const search = (params.q ?? '').trim()
   const from = (params.from ?? '').trim()
   const to = (params.to ?? '').trim()
+  const pageNum = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
 
   const supabase = await createClient()
 
@@ -76,7 +80,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
 
   let query = supabase
     .from('song_proposals')
-    .select('*, profiles!song_proposals_user_id_fkey(display_name, slug, photo_url)')
+    .select('*, profiles!song_proposals_user_id_fkey(display_name, slug, photo_url)', { count: 'exact' })
     .order('created_at', { ascending: false })
   if (filter !== 'all') query = query.eq('status', filter)
   if (search) {
@@ -85,7 +89,21 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
   }
   if (from) query = query.gte('created_at', `${from}T00:00:00`)
   if (to) query = query.lte('created_at', `${to}T23:59:59`)
-  const { data: proposals } = await query
+  const fromIdx = (pageNum - 1) * PAGE_SIZE
+  const { data: proposals, count: filteredCount } = await query.range(fromIdx, fromIdx + PAGE_SIZE - 1)
+  const totalCount = filteredCount ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+
+  function buildHref(p: number) {
+    const sp = new URLSearchParams()
+    if (filter !== 'pending') sp.set('f', filter)
+    if (search) sp.set('q', search)
+    if (from) sp.set('from', from)
+    if (to) sp.set('to', to)
+    if (p > 1) sp.set('page', String(p))
+    const qs = sp.toString()
+    return qs ? `/admin/propuestas?${qs}` : '/admin/propuestas'
+  }
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-8 sm:py-12'>
@@ -329,6 +347,47 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
           })}
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className='flex items-center justify-between border-t border-white/5 pt-4'>
+          <p className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
+            {fromIdx + 1}–{Math.min(pageNum * PAGE_SIZE, totalCount)} de {totalCount}
+          </p>
+          <div className='flex items-center gap-2'>
+            <PagerLink
+              href={buildHref(pageNum - 1)}
+              disabled={pageNum <= 1}
+            >
+              <ChevronLeft className='h-4 w-4' />
+            </PagerLink>
+            <span className='font-pt-mono text-[11px] tracking-widest text-white/40 uppercase'>
+              {pageNum}/{totalPages}
+            </span>
+            <PagerLink
+              href={buildHref(pageNum + 1)}
+              disabled={pageNum >= totalPages}
+            >
+              <ChevronRight className='h-4 w-4' />
+            </PagerLink>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function PagerLink({ href, disabled, children }: { href: string; disabled: boolean; children: React.ReactNode }) {
+  const base =
+    'flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-white/3 text-white/60 transition-colors'
+  if (disabled) {
+    return <span className={`${base} cursor-not-allowed opacity-30`}>{children}</span>
+  }
+  return (
+    <Link
+      href={href}
+      className={`${base} hover:bg-white/8 hover:text-white`}
+    >
+      {children}
+    </Link>
   )
 }
