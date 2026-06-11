@@ -23,19 +23,24 @@ function fmtDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+type TimeFilter = 'all' | 'upcoming' | 'past'
+
 export function EventsList({ events, todayIso }: { events: EventItem[]; todayIso: string }) {
-  const [onlyUpcoming, setOnlyUpcoming] = useState(false)
+  const [filter, setFilterState] = useState<TimeFilter>('all')
   const [page, setPage] = useState(0)
 
   const upcomingCount = events.filter(e => e.event_date >= todayIso).length
-  const filtered = onlyUpcoming ? events.filter(e => e.event_date >= todayIso) : events
+  const pastCount = events.length - upcomingCount
+  const filtered = events.filter(e =>
+    filter === 'upcoming' ? e.event_date >= todayIso : filter === 'past' ? e.event_date < todayIso : true
+  )
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const visible = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
 
-  function setFilter(next: boolean) {
-    setOnlyUpcoming(next)
+  function setFilter(next: TimeFilter) {
+    setFilterState(next)
     setPage(0)
   }
 
@@ -43,16 +48,22 @@ export function EventsList({ events, todayIso }: { events: EventItem[]; todayIso
     <div className='space-y-3'>
       <div className='flex items-center gap-1 self-start rounded-md border border-white/10 bg-white/3 p-0.5'>
         <FilterTab
-          active={!onlyUpcoming}
-          onClick={() => setFilter(false)}
+          active={filter === 'all'}
+          onClick={() => setFilter('all')}
         >
           Todos ({events.length})
         </FilterTab>
         <FilterTab
-          active={onlyUpcoming}
-          onClick={() => setFilter(true)}
+          active={filter === 'upcoming'}
+          onClick={() => setFilter('upcoming')}
         >
           Próximos ({upcomingCount})
+        </FilterTab>
+        <FilterTab
+          active={filter === 'past'}
+          onClick={() => setFilter('past')}
+        >
+          Vencidos ({pastCount})
         </FilterTab>
       </div>
 
