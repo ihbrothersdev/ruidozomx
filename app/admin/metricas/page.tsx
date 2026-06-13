@@ -211,7 +211,7 @@ export default async function MetricasPage({
             global. Las conexiones entre perfiles viven en su propia pestaña.
           </p>
         </div>
-        <div className='flex flex-wrap items-end gap-3'>
+        <div className='flex flex-wrap items-center gap-3'>
           <TimeFilter selected={since} />
           <CassetteFilter
             options={cassetteOptions}
