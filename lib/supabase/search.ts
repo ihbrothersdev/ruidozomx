@@ -1,4 +1,4 @@
-import type { Role } from '@/lib/types'
+import { ROLE_LABELS, ROLES, type Role } from '@/lib/types'
 import { createClient } from './server'
 
 const PER_CATEGORY_LIMIT = 8
@@ -67,6 +67,17 @@ function normalizeForDedup(value: string): string {
   return value.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+function rolesMatchingQuery(normalizedQuery: string): Role[] {
+  if (normalizedQuery.length < 3) return []
+  return ROLES.filter(role => {
+    if (role === 'admin') return false
+    const tokens = [role, ...ROLE_LABELS[role].split(/[^a-záéíóúñ]+/i)]
+      .map(normalizeForDedup)
+      .filter(t => t.length >= 3)
+    return tokens.some(t => t.includes(normalizedQuery) || normalizedQuery.includes(t))
+  })
+}
+
 /** Rows where a matched field STARTS with the query rank above mere substring
  *  matches. Stable sort keeps the DB order within each tier. */
 function rankByPrefix<T>(rows: T[], normalizedQuery: string, fields: (row: T) => (string | null | undefined)[]): T[] {
@@ -86,13 +97,23 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
   const supabase = await createClient()
   const term = `%${escapeForILike(query)}%`
 
+  const matchedRoles = rolesMatchingQuery(normalizeForDedup(query))
+  const profileFilter = [
+    `display_name.ilike.${term}`,
+    `slug.ilike.${term}`,
+    `bio.ilike.${term}`,
+    `city.ilike.${term}`,
+    `state.ilike.${term}`,
+    ...(matchedRoles.length ? [`role.in.(${matchedRoles.join(',')})`] : [])
+  ].join(',')
+
   const [profilesRes, songsRes, eventsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, display_name, slug, photo_url, role, city, state, country')
       .eq('active', true)
       .neq('role', 'admin')
-      .or(`display_name.ilike.${term},slug.ilike.${term},bio.ilike.${term},city.ilike.${term},state.ilike.${term}`)
+      .or(profileFilter)
       .limit(RANK_FETCH_LIMIT),
 
     supabase

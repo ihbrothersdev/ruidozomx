@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 
 const DEBOUNCE_MS = 350
 const MIN_QUERY_LEN = 2
-const COMPACT_LIMIT = 3
+const COMPACT_LIMIT = 5
 const MAX_CACHE_ENTRIES = 50
 
 const ASSET_W = 528
