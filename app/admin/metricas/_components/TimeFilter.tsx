@@ -31,7 +31,7 @@ export function TimeFilter({ selected }: { selected: TimeWindow }) {
       <span className='font-pt-mono text-[10px] tracking-[0.25em] text-white/40 uppercase'>Rango</span>
       <div
         role='radiogroup'
-        className={`flex items-center gap-0.5 rounded-md border border-white/10 bg-white/3 p-0.5 ${pending ? 'opacity-60' : ''}`}
+        className={`flex h-8 items-center gap-0.5 rounded-md border border-white/10 bg-white/3 p-0.5 ${pending ? 'opacity-60' : ''}`}
       >
         {OPTIONS.map(o => (
           <button
