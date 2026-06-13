@@ -41,7 +41,6 @@ export type SongDetail = {
     unique_anon_sessions: number
   }
   listeners: SongDetailListener[]
-  top_anonymous_sessions: { session_id: string; plays: number; first_at: string }[]
 }
 
 /**
@@ -67,33 +66,45 @@ export async function getSongDetail(songId: string, since: SinceWindow): Promise
   const { data: events } = await q
   const allEvents = events ?? []
 
-  const plays = allEvents.filter(e => e.type === 'play_start')
-  const completes = allEvents.filter(e => e.type === 'play_complete')
+  // Resolve roles for the involved users so admins can be dropped from every count.
+  const eventUserIds = Array.from(new Set(allEvents.map(e => e.user_id).filter(Boolean))) as string[]
+  let profiles: {
+    id: string
+    display_name: string | null
+    slug: string | null
+    photo_url: string | null
+    role: string
+  }[] = []
+  if (eventUserIds.length > 0) {
+    const { data } = await svc.from('profiles').select('id, display_name, slug, photo_url, role').in('id', eventUserIds)
+    profiles = data ?? []
+  }
+  const adminIds = new Set(profiles.filter(p => p.role === 'admin').map(p => p.id))
+  const profileById = new Map(profiles.map(p => [p.id, p]))
+
+  const isAdminEvent = (e: { user_id: string | null }) => !!e.user_id && adminIds.has(e.user_id)
+  // Logged-in, non-admin only. Anonymous plays are excluded from the detail.
+  const isIdentified = (e: { user_id: string | null }) => !!e.user_id && !adminIds.has(e.user_id)
+
+  // Plays/completes excluding admins, but keeping anonymous activity in the totals.
+  const plays = allEvents.filter(e => e.type === 'play_start' && !isAdminEvent(e))
   const authPlays = plays.filter(e => e.user_id)
   const anonPlays = plays.filter(e => !e.user_id && e.session_id)
+  const completes = allEvents.filter(e => e.type === 'play_complete' && !isAdminEvent(e))
 
-  // Group plays/completes per authenticated user.
+  // Group plays/completes per authenticated non-admin user.
   const byUser = new Map<string, { plays: number; completes: number; last_played_at: string }>()
   for (const e of allEvents) {
-    if (!e.user_id) continue
+    if (!isIdentified(e)) continue
     if (e.type !== 'play_start' && e.type !== 'play_complete') continue
-    const bucket = byUser.get(e.user_id) ?? { plays: 0, completes: 0, last_played_at: e.created_at }
+    const bucket = byUser.get(e.user_id!) ?? { plays: 0, completes: 0, last_played_at: e.created_at }
     if (e.type === 'play_start') bucket.plays++
     if (e.type === 'play_complete') bucket.completes++
     if (e.created_at > bucket.last_played_at) bucket.last_played_at = e.created_at
-    byUser.set(e.user_id, bucket)
+    byUser.set(e.user_id!, bucket)
   }
 
-  // Resolve profiles for the listed user_ids in one query.
-  const userIds = Array.from(byUser.keys())
-  let profiles: { id: string; display_name: string | null; slug: string | null; photo_url: string | null }[] = []
-  if (userIds.length > 0) {
-    const { data } = await svc.from('profiles').select('id, display_name, slug, photo_url').in('id', userIds)
-    profiles = data ?? []
-  }
-  const profileById = new Map(profiles.map(p => [p.id, p]))
-
-  const listeners: SongDetailListener[] = userIds
+  const listeners: SongDetailListener[] = Array.from(byUser.keys())
     .map(uid => {
       const b = byUser.get(uid)!
       const p = profileById.get(uid)
@@ -108,20 +119,6 @@ export async function getSongDetail(songId: string, since: SinceWindow): Promise
       }
     })
     .sort((a, b) => b.plays - a.plays)
-
-  // Group anonymous plays per session.
-  const bySession = new Map<string, { plays: number; first_at: string }>()
-  for (const e of anonPlays) {
-    if (!e.session_id) continue
-    const bucket = bySession.get(e.session_id) ?? { plays: 0, first_at: e.created_at }
-    bucket.plays++
-    if (e.created_at < bucket.first_at) bucket.first_at = e.created_at
-    bySession.set(e.session_id, bucket)
-  }
-  const top_anonymous_sessions = Array.from(bySession.entries())
-    .map(([session_id, b]) => ({ session_id, plays: b.plays, first_at: b.first_at }))
-    .sort((a, b) => b.plays - a.plays)
-    .slice(0, 5)
 
   const cassetteName =
     (Array.isArray(song.cassettes) ? song.cassettes[0]?.name : (song.cassettes as { name?: string } | null)?.name) ??
@@ -142,13 +139,12 @@ export async function getSongDetail(songId: string, since: SinceWindow): Promise
       plays_authenticated: authPlays.length,
       plays_anonymous: anonPlays.length,
       completes: completes.length,
-      profile_clicks: allEvents.filter(e => e.type === 'profile_click').length,
-      interest_clicks: allEvents.filter(e => e.type === 'interest_click').length,
-      share_clicks: allEvents.filter(e => e.type === 'share_click').length,
-      unique_listeners: new Set(authPlays.map(e => e.user_id)).size,
+      profile_clicks: allEvents.filter(e => e.type === 'profile_click' && !isAdminEvent(e)).length,
+      interest_clicks: allEvents.filter(e => e.type === 'interest_click' && !isAdminEvent(e)).length,
+      share_clicks: allEvents.filter(e => e.type === 'share_click' && !isAdminEvent(e)).length,
+      unique_listeners: byUser.size,
       unique_anon_sessions: new Set(anonPlays.map(e => e.session_id)).size
     },
-    listeners,
-    top_anonymous_sessions
+    listeners
   }
 }

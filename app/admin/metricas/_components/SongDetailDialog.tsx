@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/app/components/ui/dialog'
-import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { getSongDetail, type SongDetail } from '../actions'
@@ -63,11 +63,7 @@ export function SongDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {loading && (
-          <div className='font-pt-mono flex items-center gap-2 py-8 text-xs text-white/40'>
-            <Loader2 className='h-4 w-4 animate-spin' /> Cargando datos…
-          </div>
-        )}
+        {loading && <SongDetailSkeleton />}
 
         {error && (
           <div className='font-pt-mono py-4 text-xs text-red-300'>Error: {error}</div>
@@ -118,7 +114,7 @@ export function SongDetailDialog({
             {/* ── Listeners ───────────────────────────────────────────── */}
             <section>
               <h3 className='font-pt-mono mb-2 text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Oyentes con sesión ({data.listeners.length})
+                Top oyentes con sesión {data.listeners.length > 5 ? `(top 5 de ${data.listeners.length})` : `(${data.listeners.length})`}
               </h3>
               {data.listeners.length === 0 ? (
                 <p className='font-pt-mono rounded-md border border-dashed border-white/10 py-4 text-center text-xs text-white/30'>
@@ -126,7 +122,7 @@ export function SongDetailDialog({
                 </p>
               ) : (
                 <ul className='space-y-1.5'>
-                  {data.listeners.slice(0, 15).map(l => (
+                  {data.listeners.slice(0, 5).map(l => (
                     <li
                       key={l.user_id}
                       className='flex items-center gap-3 rounded-md border border-white/5 bg-white/3 px-3 py-2'
@@ -157,42 +153,51 @@ export function SongDetailDialog({
                       </span>
                     </li>
                   ))}
-                  {data.listeners.length > 15 && (
+                  {data.listeners.length > 5 && (
                     <li className='font-pt-mono pt-1 text-center text-[10px] text-white/30'>
-                      +{data.listeners.length - 15} oyentes más
+                      +{data.listeners.length - 5} oyentes más
                     </li>
                   )}
                 </ul>
               )}
             </section>
-
-            {/* ── Top anonymous sessions ──────────────────────────────── */}
-            {data.top_anonymous_sessions.length > 0 && (
-              <section>
-                <h3 className='font-pt-mono mb-2 text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                  Top sesiones anónimas
-                </h3>
-                <ul className='space-y-1.5'>
-                  {data.top_anonymous_sessions.map(s => (
-                    <li
-                      key={s.session_id}
-                      className='flex items-center gap-3 rounded-md border border-white/5 bg-white/3 px-3 py-2'
-                    >
-                      <code className='font-pt-mono min-w-0 flex-1 truncate text-[10px] text-white/40'>
-                        {s.session_id}
-                      </code>
-                      <span className='font-pt-mono w-12 shrink-0 text-right text-xs font-bold text-blue-400'>
-                        {s.plays}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
           </div>
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function SongDetailSkeleton() {
+  return (
+    <div className='space-y-6'>
+      <div className='grid grid-cols-3 gap-2 sm:grid-cols-4'>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className='rounded-md border border-white/5 bg-white/3 px-2 py-2'
+          >
+            <Skeleton className='h-2.5 w-12 bg-white/10' />
+            <Skeleton className='mt-2 h-6 w-10 bg-white/10' />
+          </div>
+        ))}
+      </div>
+      <section>
+        <Skeleton className='mb-2 h-2.5 w-44 bg-white/10' />
+        <ul className='space-y-1.5'>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <li
+              key={i}
+              className='flex items-center gap-3 rounded-md border border-white/5 bg-white/3 px-3 py-2'
+            >
+              <Skeleton className='h-7 w-7 shrink-0 rounded-full bg-white/10' />
+              <Skeleton className='h-3 flex-1 bg-white/10' />
+              <Skeleton className='h-3 w-12 shrink-0 bg-white/10' />
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   )
 }
 
