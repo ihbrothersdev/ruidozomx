@@ -47,6 +47,12 @@ interface ProposerRow {
   acceptance_rate: number
 }
 
+interface ActiveStats {
+  active_users: number
+  listeners: number
+  proposers: number
+}
+
 interface ConnectionMetrics {
   total_interests: number
   unique_interest_givers: number
@@ -60,7 +66,7 @@ const WINDOW_LABEL: Record<SinceWindow, string> = {
   '24h': 'últimas 24 horas',
   '7d': 'últimos 7 días',
   '30d': 'últimos 30 días',
-  all: 'todos los tiempos'
+  all: 'historial completo'
 }
 
 function parseWindow(raw: string | undefined): SinceWindow {
@@ -77,6 +83,7 @@ export default async function MetricasPage({
   const since = parseWindow(sp.since)
   const cassetteFilter = sp.cassette && sp.cassette !== 'all' ? sp.cassette : null
   const sinceDate = windowToDate(since)
+  const sinceParam = sinceDate ? sinceDate.toISOString() : null
 
   const svc = createServiceClient()
 
@@ -97,16 +104,25 @@ export default async function MetricasPage({
   if (cassetteFilter) eventsQuery = eventsQuery.eq('cassette_id', cassetteFilter)
   const eventsPromise = eventsQuery
 
-  const [cassetteListRes, songsRes, eventsRes, listenersRes, proposersRes, connectionsRes, publishedEventsRes] =
-    await Promise.all([
-      cassetteListPromise,
-      songsPromise,
-      eventsPromise,
-      svc.rpc('top_listeners', { p_limit: 10 }),
-      svc.rpc('top_proposers', { p_limit: 10 }),
-      svc.rpc('connection_metrics'),
-      svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published')
-    ])
+  const [
+    cassetteListRes,
+    songsRes,
+    eventsRes,
+    listenersRes,
+    proposersRes,
+    connectionsRes,
+    publishedEventsRes,
+    activeStatsRes
+  ] = await Promise.all([
+    cassetteListPromise,
+    songsPromise,
+    eventsPromise,
+    svc.rpc('top_listeners', { p_limit: 10, p_since: sinceParam }),
+    svc.rpc('top_proposers', { p_limit: 10, p_since: sinceParam }),
+    svc.rpc('connection_metrics', { p_since: sinceParam }),
+    svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    svc.rpc('active_user_stats', { p_since: sinceParam })
+  ])
 
   // ── Normalize ─────────────────────────────────────────────────────────────
   const cassetteList = (cassetteListRes.data ?? []) as CassetteRow[]
@@ -131,7 +147,7 @@ export default async function MetricasPage({
   )
   const daily = buildDailySeries(events, since)
 
-  // RPCs we keep as-is (these don't need the time/cassette window).
+  // These RPCs respect the time window (p_since) but not the cassette filter.
   const topListeners = (listenersRes.data ?? []) as ListenerRow[]
   const topProposers = (proposersRes.data ?? []) as ProposerRow[]
   const connections = ((connectionsRes.data ?? [])[0] ?? {
@@ -156,7 +172,14 @@ export default async function MetricasPage({
   const totalPlays = events.filter(e => e.type === 'play_start').length
   const totalAuthPlays = events.filter(e => e.type === 'play_start' && e.user_id).length
   const totalSessionsStarted = events.filter(e => e.type === 'cassette_session_start').length
-  const totalUniqueListeners = new Set(topListeners.map(l => l.user_id)).size
+  const activeStats = ((activeStatsRes.data ?? [])[0] ?? {
+    active_users: 0,
+    listeners: 0,
+    proposers: 0
+  }) as ActiveStats
+  const bothActive = Math.max(0, activeStats.listeners + activeStats.proposers - activeStats.active_users)
+  const onlyProposers = activeStats.proposers - bothActive
+  const onlyListeners = activeStats.listeners - bothActive
   const publishedEvents = publishedEventsRes.count ?? 0
 
   const hasAnyData =
@@ -174,18 +197,18 @@ export default async function MetricasPage({
             Métricas
           </h1>
           <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
-            Cómo está conectando la gente con el contenido durante los <strong>{WINDOW_LABEL[since]}</strong>
+            Cómo conecta la gente con el contenido · <strong className='text-white'>{WINDOW_LABEL[since]}</strong>
             {selectedCassetteName ? (
               <>
-                {' '}
-                en <strong className='text-white'>{selectedCassetteName}</strong>
+                {' · '}
+                <strong className='text-white'>{selectedCassetteName}</strong>
               </>
             ) : null}
-            . Click en una canción para ver detalle de oyentes.
+            . Haz clic en una canción para ver el detalle de oyentes.
           </p>
           <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
-            Top fans y proponentes son globales (no respetan los filtros). Las conexiones entre perfiles viven en su
-            propia pestaña.
+            Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados es
+            global. Las conexiones entre perfiles viven en su propia pestaña.
           </p>
         </div>
         <div className='flex flex-wrap items-end gap-3'>
@@ -207,7 +230,11 @@ export default async function MetricasPage({
         </Alert>
       )}
 
-      <section className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
+      <section className='space-y-3'>
+        <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>
+          Resumen del periodo
+        </h2>
+        <div className='grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5'>
         <BigStat
           label='Reproducciones'
           value={totalPlays.toLocaleString('es-MX')}
@@ -231,8 +258,8 @@ export default async function MetricasPage({
         />
         <BigStat
           label='Usuarios activos'
-          value={Math.max(totalUniqueListeners, topProposers.length).toLocaleString('es-MX')}
-          sub={`${topProposers.length} proponentes`}
+          value={activeStats.active_users.toLocaleString('es-MX')}
+          sub={`${onlyProposers} solo sugieren · ${bothActive} ambos · ${onlyListeners} solo oyen`}
           icon={Users}
           accent='emerald'
         />
@@ -243,6 +270,7 @@ export default async function MetricasPage({
           icon={CalendarDays}
           accent='amber'
         />
+        </div>
       </section>
 
       <section>
@@ -307,8 +335,10 @@ export default async function MetricasPage({
                         {l.display_name ?? 'Usuario'}
                       </Link>
                       <p className='font-pt-mono text-[10px] text-white/40'>
-                        {l.unique_songs} canciones distintas
-                        {l.most_played_count ? ` · top repite x${l.most_played_count}` : ''}
+                        {l.unique_songs} {l.unique_songs === 1 ? 'rola distinta' : 'rolas distintas'}
+                        {l.most_played_count && l.most_played_count > 1
+                          ? ` · la más escuchada, ${l.most_played_count} veces`
+                          : ''}
                       </p>
                     </div>
                     <div className='text-right'>
@@ -327,7 +357,7 @@ export default async function MetricasPage({
         <div>
           <SectionHeader
             icon={Send}
-            title='Top proponentes'
+            title='Top sugerencias'
             description='Quién manda más rolas y cuántas se aceptan.'
           />
           {topProposers.length === 0 ? (
@@ -390,22 +420,32 @@ function BigStat({
   icon: typeof BarChart3
   accent: 'red' | 'blue' | 'pink' | 'emerald' | 'amber'
 }) {
-  const tints = {
-    red: 'border-red-500/20 bg-red-500/5 text-red-300',
-    blue: 'border-blue-500/20 bg-blue-500/5 text-blue-300',
-    pink: 'border-pink-500/20 bg-pink-500/5 text-pink-300',
-    emerald: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300',
-    amber: 'border-amber-400/20 bg-amber-500/5 text-amber-300'
+  const a = {
+    red: { card: 'border-red-500/20 bg-red-500/[0.06] hover:bg-red-500/10', badge: 'bg-red-500/15 text-red-300' },
+    blue: { card: 'border-blue-500/20 bg-blue-500/[0.06] hover:bg-blue-500/10', badge: 'bg-blue-500/15 text-blue-300' },
+    pink: { card: 'border-pink-500/20 bg-pink-500/[0.06] hover:bg-pink-500/10', badge: 'bg-pink-500/15 text-pink-300' },
+    emerald: {
+      card: 'border-emerald-400/20 bg-emerald-500/[0.06] hover:bg-emerald-500/10',
+      badge: 'bg-emerald-500/15 text-emerald-300'
+    },
+    amber: {
+      card: 'border-amber-400/20 bg-amber-500/[0.06] hover:bg-amber-500/10',
+      badge: 'bg-amber-500/15 text-amber-300'
+    }
   }[accent]
   return (
-    <Card className={`gap-2 border py-4 ${tints}`}>
-      <CardContent className='px-4'>
-        <div className='mb-2 flex items-center justify-between'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/40 uppercase'>{label}</p>
-          <Icon className='h-3.5 w-3.5 opacity-60' />
+    <Card className={`h-full gap-0 border py-0 transition-colors ${a.card}`}>
+      <CardContent className='flex h-full flex-col p-5'>
+        <div className='flex items-start justify-between gap-2'>
+          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>{label}</p>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.badge}`}>
+            <Icon className='h-5 w-5' />
+          </div>
         </div>
-        <p className='font-baby-doll text-3xl font-bold tracking-wider text-white uppercase sm:text-4xl'>{value}</p>
-        <p className='font-pt-mono mt-1 text-[10px] text-white/50'>{sub}</p>
+        <p className='font-baby-doll mt-3 text-4xl leading-none font-bold tracking-wider text-white uppercase'>
+          {value}
+        </p>
+        <p className='font-pt-mono mt-auto pt-2 text-[11px] text-white/40'>{sub}</p>
       </CardContent>
     </Card>
   )

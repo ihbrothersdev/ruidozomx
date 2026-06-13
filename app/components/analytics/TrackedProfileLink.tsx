@@ -10,6 +10,7 @@ interface TrackedProfileLinkProps {
   children: ReactNode
   className?: string
   style?: CSSProperties
+  title?: string
   /** Profile slug or id we are linking to (for analytics metadata) */
   targetProfileSlug?: string
   targetProfileId?: string
@@ -32,6 +33,7 @@ export function TrackedProfileLink({
   children,
   className,
   style,
+  title,
   targetProfileSlug,
   targetProfileId,
   songId,
@@ -60,6 +62,7 @@ export function TrackedProfileLink({
       onClick={handleClick}
       className={className}
       style={style}
+      title={title}
     >
       {children}
     </Link>
