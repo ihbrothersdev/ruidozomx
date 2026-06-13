@@ -47,6 +47,12 @@ interface ProposerRow {
   acceptance_rate: number
 }
 
+interface ActiveStats {
+  active_users: number
+  listeners: number
+  proposers: number
+}
+
 interface ConnectionMetrics {
   total_interests: number
   unique_interest_givers: number
@@ -97,16 +103,25 @@ export default async function MetricasPage({
   if (cassetteFilter) eventsQuery = eventsQuery.eq('cassette_id', cassetteFilter)
   const eventsPromise = eventsQuery
 
-  const [cassetteListRes, songsRes, eventsRes, listenersRes, proposersRes, connectionsRes, publishedEventsRes] =
-    await Promise.all([
-      cassetteListPromise,
-      songsPromise,
-      eventsPromise,
-      svc.rpc('top_listeners', { p_limit: 10 }),
-      svc.rpc('top_proposers', { p_limit: 10 }),
-      svc.rpc('connection_metrics'),
-      svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published')
-    ])
+  const [
+    cassetteListRes,
+    songsRes,
+    eventsRes,
+    listenersRes,
+    proposersRes,
+    connectionsRes,
+    publishedEventsRes,
+    activeStatsRes
+  ] = await Promise.all([
+    cassetteListPromise,
+    songsPromise,
+    eventsPromise,
+    svc.rpc('top_listeners', { p_limit: 10 }),
+    svc.rpc('top_proposers', { p_limit: 10 }),
+    svc.rpc('connection_metrics'),
+    svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    svc.rpc('active_user_stats')
+  ])
 
   // ── Normalize ─────────────────────────────────────────────────────────────
   const cassetteList = (cassetteListRes.data ?? []) as CassetteRow[]
@@ -156,7 +171,14 @@ export default async function MetricasPage({
   const totalPlays = events.filter(e => e.type === 'play_start').length
   const totalAuthPlays = events.filter(e => e.type === 'play_start' && e.user_id).length
   const totalSessionsStarted = events.filter(e => e.type === 'cassette_session_start').length
-  const totalUniqueListeners = new Set(topListeners.map(l => l.user_id)).size
+  const activeStats = ((activeStatsRes.data ?? [])[0] ?? {
+    active_users: 0,
+    listeners: 0,
+    proposers: 0
+  }) as ActiveStats
+  const bothActive = Math.max(0, activeStats.listeners + activeStats.proposers - activeStats.active_users)
+  const onlyProposers = activeStats.proposers - bothActive
+  const onlyListeners = activeStats.listeners - bothActive
   const publishedEvents = publishedEventsRes.count ?? 0
 
   const hasAnyData =
@@ -231,8 +253,8 @@ export default async function MetricasPage({
         />
         <BigStat
           label='Usuarios activos'
-          value={Math.max(totalUniqueListeners, topProposers.length).toLocaleString('es-MX')}
-          sub={`${topProposers.length} proponentes`}
+          value={activeStats.active_users.toLocaleString('es-MX')}
+          sub={`${onlyProposers} solo sugieren · ${bothActive} ambos · ${onlyListeners} solo oyen`}
           icon={Users}
           accent='emerald'
         />
@@ -307,8 +329,10 @@ export default async function MetricasPage({
                         {l.display_name ?? 'Usuario'}
                       </Link>
                       <p className='font-pt-mono text-[10px] text-white/40'>
-                        {l.unique_songs} canciones distintas
-                        {l.most_played_count ? ` · top repite x${l.most_played_count}` : ''}
+                        {l.unique_songs} {l.unique_songs === 1 ? 'rola distinta' : 'rolas distintas'}
+                        {l.most_played_count && l.most_played_count > 1
+                          ? ` · la más escuchada, ${l.most_played_count} veces`
+                          : ''}
                       </p>
                     </div>
                     <div className='text-right'>
@@ -327,7 +351,7 @@ export default async function MetricasPage({
         <div>
           <SectionHeader
             icon={Send}
-            title='Top proponentes'
+            title='Top sugerencias'
             description='Quién manda más rolas y cuántas se aceptan.'
           />
           {topProposers.length === 0 ? (
