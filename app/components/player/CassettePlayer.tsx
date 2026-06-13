@@ -1,5 +1,6 @@
 'use client'
 
+import { TrackedProfileLink } from '@/app/components/analytics/TrackedProfileLink'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -12,6 +13,8 @@ interface CassettePlayerProps {
   songTitle: string
   artist: string
   artistSlug?: string
+  songId?: string | null
+  cassetteId?: string | null
   date: string
   side: 'A' | 'B'
   isPlaying: boolean
@@ -27,10 +30,22 @@ interface CassettePlayerProps {
   onSeek: (progress: number) => void
 }
 
+/** Carries the currently-playing song/cassette into the profile URL so the
+ *  "Conectar" flow there can attribute the interest_click back to this song. */
+function buildArtistQuery(songId?: string | null, cassetteId?: string | null) {
+  const params = new URLSearchParams()
+  if (songId) params.set('song', songId)
+  if (cassetteId) params.set('cassette', cassetteId)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
+}
+
 export function CassettePlayer({
   songTitle,
   artist,
   artistSlug,
+  songId,
+  cassetteId,
   date,
   side,
   isPlaying,
@@ -82,8 +97,12 @@ export function CassettePlayer({
         {/* "Ir al artista" arrow — replaces the old "Playing" señal, links to
          *  the current song's band profile when it has one. */}
         {artistSlug && (
-          <Link
-            href={`/perfil/${artistSlug}`}
+          <TrackedProfileLink
+            href={`/perfil/${artistSlug}${buildArtistQuery(songId, cassetteId)}`}
+            targetProfileSlug={artistSlug}
+            songId={songId}
+            cassetteId={cassetteId}
+            source='player'
             title={`Ver perfil de ${artist}`}
             className='absolute top-8 right-2 z-20 w-[90px] drop-shadow-[2px_2px_3px_rgba(0,0,0,0.5)] transition-transform hover:scale-105 sm:top-15 sm:right-1 sm:w-[105px] md:w-[115px] lg:top-[20%] lg:right-0 lg:w-[130px] lg:-translate-y-1/2 lg:drop-shadow-none xl:right-[-16px] xl:w-[140px]'
           >
@@ -94,7 +113,7 @@ export function CassettePlayer({
               height={102}
               className='w-full'
             />
-          </Link>
+          </TrackedProfileLink>
         )}
 
         {/* Desktop: Propón una Rola button */}

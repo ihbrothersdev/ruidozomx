@@ -72,6 +72,8 @@ export function HomePlayerSection({
               songTitle={currentSong?.title ?? ''}
               artist={currentSong?.artist ?? ''}
               artistSlug={currentSong?.artistSlug}
+              songId={currentSong?.id}
+              cassetteId={cassetteId}
               date={date}
               side={currentSide}
               isPlaying={isPlaying}

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Label } from '@/app/components/ui/label'
 import { Checkbox } from '@/app/components/ui/checkbox'
+import { getAnonSessionId } from '@/lib/analytics/session'
 import { sileo } from 'sileo'
 import { sendInterest } from '../actions'
 
@@ -35,7 +36,17 @@ export default function ConectarModal({ open, onOpenChange, profileId, profileNa
       return
     }
     setSending(true)
-    const result = await sendInterest({ toProfileId: profileId, motivo: selectedMotivos.join(' / ') })
+    // Song/cassette context arrives via the URL when the user reached this
+    // profile from the player (e.g. /perfil/slug?song=…&cassette=…), letting
+    // the interest_click attribute back to what they were listening to.
+    const params = new URLSearchParams(window.location.search)
+    const result = await sendInterest({
+      toProfileId: profileId,
+      motivo: selectedMotivos.join(' / '),
+      songId: params.get('song'),
+      cassetteId: params.get('cassette'),
+      sessionId: getAnonSessionId() || null
+    })
     setSending(false)
     if (result.error) {
       sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
