@@ -18,21 +18,29 @@ export default async function EventosPage() {
     .select(
       'id, title, event_date, venue_name, city, event_type, external_link, status, organizer:profiles!events_profile_id_fkey(display_name, slug)'
     )
-    .order('event_date', { ascending: false })
-
-  const events: EventItem[] = (data ?? []).map(e => ({
-    id: e.id,
-    title: e.title,
-    event_date: e.event_date,
-    venue_name: e.venue_name,
-    city: e.city,
-    event_type: e.event_type,
-    external_link: e.external_link,
-    status: e.status as 'published' | 'cancelled',
-    organizer: pickOrganizer(e.organizer)
-  }))
 
   const todayIso = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, local
+
+  const events: EventItem[] = (data ?? [])
+    .map(e => ({
+      id: e.id,
+      title: e.title,
+      event_date: e.event_date,
+      venue_name: e.venue_name,
+      city: e.city,
+      event_type: e.event_type,
+      external_link: e.external_link,
+      status: e.status as 'published' | 'cancelled',
+      organizer: pickOrganizer(e.organizer)
+    }))
+    // Agenda order: upcoming first (soonest → latest), then past (most recent → oldest).
+    .sort((a, b) => {
+      const aUpcoming = a.event_date >= todayIso
+      const bUpcoming = b.event_date >= todayIso
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
+      if (aUpcoming) return a.event_date < b.event_date ? -1 : 1
+      return a.event_date > b.event_date ? -1 : 1
+    })
   const publishedCount = events.filter(e => e.status === 'published').length
   const cancelledCount = events.length - publishedCount
 
