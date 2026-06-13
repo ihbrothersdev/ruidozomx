@@ -37,13 +37,13 @@ export default async function ConexionesPage() {
     svc
       .from('interests')
       .select(
-        'id, message, created_at, from_profile:profiles!interests_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!interests_to_profile_id_fkey(display_name, slug, photo_url)'
+        'id, message, created_at, from_profile_id, to_profile_id, from_profile:profiles!interests_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!interests_to_profile_id_fkey(display_name, slug, photo_url)'
       )
       .order('created_at', { ascending: false }),
     svc
       .from('user_proposals')
       .select(
-        'id, subject, message, created_at, from_profile:profiles!user_proposals_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!user_proposals_to_profile_id_fkey(display_name, slug, photo_url)'
+        'id, subject, message, created_at, from_profile_id, to_profile_id, from_profile:profiles!user_proposals_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!user_proposals_to_profile_id_fkey(display_name, slug, photo_url)'
       )
       .order('created_at', { ascending: false })
   ])
@@ -57,11 +57,13 @@ export default async function ConexionesPage() {
     unique_proposed_to: 0
   }) as ConnectionMetrics
 
-  const connectionEdges: ConnectionEdge[] = [
+  const rawEdges = [
     ...(interestsRes.data ?? []).map(r => ({
       id: `i-${r.id}`,
       kind: 'interest' as const,
       createdAt: r.created_at,
+      fromId: r.from_profile_id as string,
+      toId: r.to_profile_id as string,
       from: pickProfile(r.from_profile),
       to: pickProfile(r.to_profile),
       detail: r.message ?? ''
@@ -70,11 +72,59 @@ export default async function ConexionesPage() {
       id: `p-${r.id}`,
       kind: 'proposal' as const,
       createdAt: r.created_at,
+      fromId: r.from_profile_id as string,
+      toId: r.to_profile_id as string,
       from: pickProfile(r.from_profile),
       to: pickProfile(r.to_profile),
       detail: r.subject || r.message || ''
     }))
-  ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+  ]
+
+  // A connection is mutual when the reverse direction exists within the same kind
+  // (both gave "Conectar", or both messaged each other).
+  const present = new Set(rawEdges.map(e => `${e.kind}:${e.fromId}->${e.toId}`))
+
+  // Most recent message + timestamp per direction (rawEdges arrive date-desc).
+  const metaByDir = new Map<string, { text: string; at: string }>()
+  for (const e of rawEdges) {
+    const k = `${e.kind}:${e.fromId}->${e.toId}`
+    if (!metaByDir.has(k)) metaByDir.set(k, { text: e.detail, at: e.createdAt })
+  }
+
+  // Collapse each mutual pair into a single A↔B row, carrying both directions'
+  // messages with their timestamps (oldest first → who reached out first).
+  const seenMutualPair = new Set<string>()
+  const connectionEdges: ConnectionEdge[] = []
+  for (const e of rawEdges) {
+    const mutual = e.fromId !== e.toId && present.has(`${e.kind}:${e.toId}->${e.fromId}`)
+    if (mutual) {
+      const pairKey = `${e.kind}:${[e.fromId, e.toId].sort().join('-')}`
+      if (seenMutualPair.has(pairKey)) continue
+      seenMutualPair.add(pairKey)
+    }
+    const rev = mutual ? metaByDir.get(`${e.kind}:${e.toId}->${e.fromId}`) : undefined
+    const mutualMessages = mutual
+      ? [
+          { name: e.from.name, text: e.detail, at: e.createdAt },
+          { name: e.to.name, text: rev?.text ?? '', at: rev?.at ?? e.createdAt }
+        ].sort((a, b) => (a.at < b.at ? -1 : 1))
+      : undefined
+    connectionEdges.push({
+      id: e.id,
+      kind: e.kind,
+      createdAt: e.createdAt,
+      from: e.from,
+      to: e.to,
+      detail: e.detail,
+      mutualMessages,
+      mutual
+    })
+  }
+  // Mutual pairs grouped first, then the rest — each block newest to oldest.
+  connectionEdges.sort((a, b) => {
+    if (a.mutual !== b.mutual) return a.mutual ? -1 : 1
+    return a.createdAt < b.createdAt ? 1 : -1
+  })
 
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
@@ -126,7 +176,7 @@ export default async function ConexionesPage() {
               Quién se conecta con quién
             </h2>
             <p className='font-pt-mono text-[11px] text-white/40'>
-              Cada interés o mensaje, del más reciente al más antiguo. Filtra por tipo arriba.
+              Las conexiones mutuas (↔) van primero; el resto, del más reciente al más antiguo. Filtra por tipo arriba.
             </p>
           </div>
         </div>

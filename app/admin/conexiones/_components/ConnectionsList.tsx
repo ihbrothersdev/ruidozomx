@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent } from '@/app/components/ui/card'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -14,11 +14,17 @@ export interface ConnectionEdge {
   from: ConnectionProfile
   to: ConnectionProfile
   detail: string
+  mutualMessages?: { name: string; text: string; at: string }[]
+  mutual: boolean
 }
 
 type KindFilter = 'all' | 'interest' | 'proposal'
 
 const PAGE_SIZE = 10
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
   const [kind, setKind] = useState<KindFilter>('all')
@@ -124,13 +130,25 @@ function FilterTab({ children, active, onClick }: { children: React.ReactNode; a
 function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
   const isInterest = edge.kind === 'interest'
   const date = new Date(edge.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+
   return (
-    <Card className='gap-0 border-white/10 bg-white/3 py-0'>
+    <Card
+      className={`gap-0 py-0 ${edge.mutual ? 'border-teal-400/30 bg-teal-500/[0.06]' : 'border-white/10 bg-white/3'}`}
+    >
       <CardContent className='flex flex-wrap items-center gap-x-3 gap-y-2 p-3'>
         <ConnectionParty profile={edge.from} />
-        <ArrowRight className='h-3.5 w-3.5 shrink-0 text-white/30' />
+        {edge.mutual ? (
+          <ArrowLeftRight className='h-3.5 w-3.5 shrink-0 text-teal-300' />
+        ) : (
+          <ArrowRight className='h-3.5 w-3.5 shrink-0 text-white/30' />
+        )}
         <ConnectionParty profile={edge.to} />
         <div className='ml-auto flex shrink-0 items-center gap-2'>
+          {edge.mutual ? (
+            <span className='font-pt-mono rounded bg-teal-500/15 px-2 py-0.5 text-[9px] font-bold tracking-widest text-teal-200 uppercase'>
+              Mutua
+            </span>
+          ) : null}
           <span
             className={`font-pt-mono rounded px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase ${
               isInterest ? 'bg-pink-500/10 text-pink-300' : 'bg-blue-500/10 text-blue-300'
@@ -140,7 +158,20 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
           </span>
           <span className='font-pt-mono text-[10px] text-white/30'>{date}</span>
         </div>
-        {edge.detail ? (
+        {edge.mutual && edge.mutualMessages?.length ? (
+          <div className='w-full space-y-1'>
+            {edge.mutualMessages.map((m, i) => (
+              <p
+                key={i}
+                className='font-pt-mono line-clamp-2 text-[11px] break-words text-white/40'
+              >
+                <span className='font-bold text-white/55'>{m.name}</span>
+                <span className='text-white/30'> · {fmtDateTime(m.at)}</span>
+                {m.text ? `: ${m.text}` : ''}
+              </p>
+            ))}
+          </div>
+        ) : edge.detail ? (
           <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{edge.detail}</p>
         ) : null}
       </CardContent>
