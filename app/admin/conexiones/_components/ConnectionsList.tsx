@@ -14,13 +14,17 @@ export interface ConnectionEdge {
   from: ConnectionProfile
   to: ConnectionProfile
   detail: string
-  reverseDetail?: string
+  mutualMessages?: { name: string; text: string; at: string }[]
   mutual: boolean
 }
 
 type KindFilter = 'all' | 'interest' | 'proposal'
 
 const PAGE_SIZE = 10
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
   const [kind, setKind] = useState<KindFilter>('all')
@@ -127,12 +131,6 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
   const isInterest = edge.kind === 'interest'
   const date = new Date(edge.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
 
-  const messages: { name: string; text: string }[] = []
-  if (edge.detail) messages.push({ name: edge.from.name, text: edge.detail })
-  if (edge.mutual && edge.reverseDetail && edge.reverseDetail !== edge.detail) {
-    messages.push({ name: edge.to.name, text: edge.reverseDetail })
-  }
-
   return (
     <Card
       className={`gap-0 py-0 ${edge.mutual ? 'border-teal-400/30 bg-teal-500/[0.06]' : 'border-white/10 bg-white/3'}`}
@@ -160,19 +158,21 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
           </span>
           <span className='font-pt-mono text-[10px] text-white/30'>{date}</span>
         </div>
-        {messages.length === 1 ? (
-          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{messages[0].text}</p>
-        ) : messages.length > 1 ? (
+        {edge.mutual && edge.mutualMessages?.length ? (
           <div className='w-full space-y-1'>
-            {messages.map((m, i) => (
+            {edge.mutualMessages.map((m, i) => (
               <p
                 key={i}
                 className='font-pt-mono line-clamp-2 text-[11px] break-words text-white/40'
               >
-                <span className='font-bold text-white/55'>{m.name}:</span> {m.text}
+                <span className='font-bold text-white/55'>{m.name}</span>
+                <span className='text-white/30'> · {fmtDateTime(m.at)}</span>
+                {m.text ? `: ${m.text}` : ''}
               </p>
             ))}
           </div>
+        ) : edge.detail ? (
+          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{edge.detail}</p>
         ) : null}
       </CardContent>
     </Card>

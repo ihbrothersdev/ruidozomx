@@ -84,15 +84,15 @@ export default async function ConexionesPage() {
   // (both gave "Conectar", or both messaged each other).
   const present = new Set(rawEdges.map(e => `${e.kind}:${e.fromId}->${e.toId}`))
 
-  // Most recent message per direction (rawEdges arrive date-desc, so first wins).
-  const detailByDir = new Map<string, string>()
+  // Most recent message + timestamp per direction (rawEdges arrive date-desc).
+  const metaByDir = new Map<string, { text: string; at: string }>()
   for (const e of rawEdges) {
     const k = `${e.kind}:${e.fromId}->${e.toId}`
-    if (!detailByDir.has(k)) detailByDir.set(k, e.detail)
+    if (!metaByDir.has(k)) metaByDir.set(k, { text: e.detail, at: e.createdAt })
   }
 
-  // Collapse each mutual pair into a single A↔B row (keeping both messages so the
-  // UI can show the reverse one when it differs), and keep non-mutual edges as-is.
+  // Collapse each mutual pair into a single A↔B row, carrying both directions'
+  // messages with their timestamps (oldest first → who reached out first).
   const seenMutualPair = new Set<string>()
   const connectionEdges: ConnectionEdge[] = []
   for (const e of rawEdges) {
@@ -102,6 +102,13 @@ export default async function ConexionesPage() {
       if (seenMutualPair.has(pairKey)) continue
       seenMutualPair.add(pairKey)
     }
+    const rev = mutual ? metaByDir.get(`${e.kind}:${e.toId}->${e.fromId}`) : undefined
+    const mutualMessages = mutual
+      ? [
+          { name: e.from.name, text: e.detail, at: e.createdAt },
+          { name: e.to.name, text: rev?.text ?? '', at: rev?.at ?? e.createdAt }
+        ].sort((a, b) => (a.at < b.at ? -1 : 1))
+      : undefined
     connectionEdges.push({
       id: e.id,
       kind: e.kind,
@@ -109,7 +116,7 @@ export default async function ConexionesPage() {
       from: e.from,
       to: e.to,
       detail: e.detail,
-      reverseDetail: mutual ? (detailByDir.get(`${e.kind}:${e.toId}->${e.fromId}`) ?? '') : '',
+      mutualMessages,
       mutual
     })
   }
