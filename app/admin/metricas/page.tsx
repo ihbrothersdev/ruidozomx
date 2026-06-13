@@ -83,6 +83,7 @@ export default async function MetricasPage({
   const since = parseWindow(sp.since)
   const cassetteFilter = sp.cassette && sp.cassette !== 'all' ? sp.cassette : null
   const sinceDate = windowToDate(since)
+  const sinceParam = sinceDate ? sinceDate.toISOString() : null
 
   const svc = createServiceClient()
 
@@ -116,11 +117,11 @@ export default async function MetricasPage({
     cassetteListPromise,
     songsPromise,
     eventsPromise,
-    svc.rpc('top_listeners', { p_limit: 10 }),
-    svc.rpc('top_proposers', { p_limit: 10 }),
-    svc.rpc('connection_metrics'),
+    svc.rpc('top_listeners', { p_limit: 10, p_since: sinceParam }),
+    svc.rpc('top_proposers', { p_limit: 10, p_since: sinceParam }),
+    svc.rpc('connection_metrics', { p_since: sinceParam }),
     svc.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
-    svc.rpc('active_user_stats')
+    svc.rpc('active_user_stats', { p_since: sinceParam })
   ])
 
   // ── Normalize ─────────────────────────────────────────────────────────────
@@ -146,7 +147,7 @@ export default async function MetricasPage({
   )
   const daily = buildDailySeries(events, since)
 
-  // RPCs we keep as-is (these don't need the time/cassette window).
+  // These RPCs respect the time window (p_since) but not the cassette filter.
   const topListeners = (listenersRes.data ?? []) as ListenerRow[]
   const topProposers = (proposersRes.data ?? []) as ProposerRow[]
   const connections = ((connectionsRes.data ?? [])[0] ?? {
@@ -206,8 +207,8 @@ export default async function MetricasPage({
             . Click en una canción para ver detalle de oyentes.
           </p>
           <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
-            Top fans y proponentes son globales (no respetan los filtros). Las conexiones entre perfiles viven en su
-            propia pestaña.
+            Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados es
+            global. Las conexiones entre perfiles viven en su propia pestaña.
           </p>
         </div>
         <div className='flex flex-wrap items-end gap-3'>
