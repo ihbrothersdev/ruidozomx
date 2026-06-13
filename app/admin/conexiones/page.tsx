@@ -84,17 +84,32 @@ export default async function ConexionesPage() {
   // (both gave "Conectar", or both messaged each other).
   const present = new Set(rawEdges.map(e => `${e.kind}:${e.fromId}->${e.toId}`))
 
-  const connectionEdges: ConnectionEdge[] = rawEdges
-    .map(e => ({
+  // Collapse each mutual pair into a single A↔B row (the most recent direction,
+  // since interests/proposals arrive date-desc), keeping non-mutual edges as-is.
+  const seenMutualPair = new Set<string>()
+  const connectionEdges: ConnectionEdge[] = []
+  for (const e of rawEdges) {
+    const mutual = e.fromId !== e.toId && present.has(`${e.kind}:${e.toId}->${e.fromId}`)
+    if (mutual) {
+      const pairKey = `${e.kind}:${[e.fromId, e.toId].sort().join('-')}`
+      if (seenMutualPair.has(pairKey)) continue
+      seenMutualPair.add(pairKey)
+    }
+    connectionEdges.push({
       id: e.id,
       kind: e.kind,
       createdAt: e.createdAt,
       from: e.from,
       to: e.to,
       detail: e.detail,
-      mutual: e.fromId !== e.toId && present.has(`${e.kind}:${e.toId}->${e.fromId}`)
-    }))
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      mutual
+    })
+  }
+  // Mutual pairs grouped first, then the rest — each block newest to oldest.
+  connectionEdges.sort((a, b) => {
+    if (a.mutual !== b.mutual) return a.mutual ? -1 : 1
+    return a.createdAt < b.createdAt ? 1 : -1
+  })
 
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
@@ -146,7 +161,7 @@ export default async function ConexionesPage() {
               Quién se conecta con quién
             </h2>
             <p className='font-pt-mono text-[11px] text-white/40'>
-              Cada interés o mensaje, del más reciente al más antiguo. Filtra por tipo arriba.
+              Las conexiones mutuas (↔) van primero; el resto, del más reciente al más antiguo. Filtra por tipo arriba.
             </p>
           </div>
         </div>
