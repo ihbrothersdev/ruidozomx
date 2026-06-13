@@ -37,6 +37,42 @@ function getPlatformLabel(platform: string): string {
   return PLATFORM_LABELS[platform] ?? platform
 }
 
+/** Build the proper profile URL for a handle-based platform. */
+const HANDLE_URL: Record<string, (handle: string) => string> = {
+  instagram: h => `https://instagram.com/${h}`,
+  tiktok: h => `https://tiktok.com/@${h}`,
+  twitter: h => `https://x.com/${h}`,
+  facebook: h => `https://facebook.com/${h}`,
+  youtube: h => `https://youtube.com/@${h}`
+}
+
+const KNOWN_DOMAINS = [
+  'instagram.com',
+  'tiktok.com',
+  'twitter.com',
+  'x.com',
+  'facebook.com',
+  'fb.com',
+  'youtube.com',
+  'youtu.be'
+]
+
+/** Turn a stored social value into a working href. Handles full URLs, bare
+ * domains, and bare handles (with or without a leading @) for known platforms. */
+function buildLinkHref(platform: string, raw: string): string {
+  const value = raw.trim()
+  if (/^https?:\/\//i.test(value)) return value
+
+  const builder = HANDLE_URL[platform]
+  if (builder) {
+    const lower = value.toLowerCase()
+    const looksLikeUrl = value.includes('/') || KNOWN_DOMAINS.some(d => lower.includes(d))
+    if (!looksLikeUrl) return builder(value.replace(/^@+/, ''))
+  }
+
+  return `https://${value}`
+}
+
 function sortLinks(socialLinks: Record<string, string>): [string, string][] {
   return Object.entries(socialLinks).sort(([a], [b]) => {
     const ai = PLATFORM_ORDER.indexOf(a)
@@ -90,7 +126,7 @@ export default function LinksSection({
           {sortedLinks.map(([platform, url]) => (
             <a
               key={platform}
-              href={url.startsWith('http') ? url : `https://${url}`}
+              href={buildLinkHref(platform, url)}
               target='_blank'
               rel='noopener noreferrer'
               className='font-pt-mono flex items-center gap-2 text-sm text-black transition-colors hover:text-red-700'
@@ -116,7 +152,7 @@ export default function LinksSection({
         {sortedLinks.map(([platform, url]) => (
           <a
             key={platform}
-            href={url.startsWith('http') ? url : `https://${url}`}
+            href={buildLinkHref(platform, url)}
             target='_blank'
             rel='noopener noreferrer'
             className='font-pt-mono flex items-center gap-2 text-sm text-black/70 hover:text-black'
