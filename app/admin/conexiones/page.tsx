@@ -84,8 +84,15 @@ export default async function ConexionesPage() {
   // (both gave "Conectar", or both messaged each other).
   const present = new Set(rawEdges.map(e => `${e.kind}:${e.fromId}->${e.toId}`))
 
-  // Collapse each mutual pair into a single A↔B row (the most recent direction,
-  // since interests/proposals arrive date-desc), keeping non-mutual edges as-is.
+  // Most recent message per direction (rawEdges arrive date-desc, so first wins).
+  const detailByDir = new Map<string, string>()
+  for (const e of rawEdges) {
+    const k = `${e.kind}:${e.fromId}->${e.toId}`
+    if (!detailByDir.has(k)) detailByDir.set(k, e.detail)
+  }
+
+  // Collapse each mutual pair into a single A↔B row (keeping both messages so the
+  // UI can show the reverse one when it differs), and keep non-mutual edges as-is.
   const seenMutualPair = new Set<string>()
   const connectionEdges: ConnectionEdge[] = []
   for (const e of rawEdges) {
@@ -102,6 +109,7 @@ export default async function ConexionesPage() {
       from: e.from,
       to: e.to,
       detail: e.detail,
+      reverseDetail: mutual ? (detailByDir.get(`${e.kind}:${e.toId}->${e.fromId}`) ?? '') : '',
       mutual
     })
   }

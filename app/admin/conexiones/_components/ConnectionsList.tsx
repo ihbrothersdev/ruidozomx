@@ -14,6 +14,7 @@ export interface ConnectionEdge {
   from: ConnectionProfile
   to: ConnectionProfile
   detail: string
+  reverseDetail?: string
   mutual: boolean
 }
 
@@ -125,6 +126,13 @@ function FilterTab({ children, active, onClick }: { children: React.ReactNode; a
 function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
   const isInterest = edge.kind === 'interest'
   const date = new Date(edge.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+
+  const messages: { name: string; text: string }[] = []
+  if (edge.detail) messages.push({ name: edge.from.name, text: edge.detail })
+  if (edge.mutual && edge.reverseDetail && edge.reverseDetail !== edge.detail) {
+    messages.push({ name: edge.to.name, text: edge.reverseDetail })
+  }
+
   return (
     <Card
       className={`gap-0 py-0 ${edge.mutual ? 'border-teal-400/30 bg-teal-500/[0.06]' : 'border-white/10 bg-white/3'}`}
@@ -152,8 +160,19 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
           </span>
           <span className='font-pt-mono text-[10px] text-white/30'>{date}</span>
         </div>
-        {edge.detail ? (
-          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{edge.detail}</p>
+        {messages.length === 1 ? (
+          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{messages[0].text}</p>
+        ) : messages.length > 1 ? (
+          <div className='w-full space-y-1'>
+            {messages.map((m, i) => (
+              <p
+                key={i}
+                className='font-pt-mono line-clamp-2 text-[11px] break-words text-white/40'
+              >
+                <span className='font-bold text-white/55'>{m.name}:</span> {m.text}
+              </p>
+            ))}
+          </div>
         ) : null}
       </CardContent>
     </Card>
