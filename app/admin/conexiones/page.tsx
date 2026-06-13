@@ -37,13 +37,13 @@ export default async function ConexionesPage() {
     svc
       .from('interests')
       .select(
-        'id, message, created_at, from_profile_id, to_profile_id, from_profile:profiles!interests_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!interests_to_profile_id_fkey(display_name, slug, photo_url)'
+        'id, message, created_at, from_profile:profiles!interests_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!interests_to_profile_id_fkey(display_name, slug, photo_url)'
       )
       .order('created_at', { ascending: false }),
     svc
       .from('user_proposals')
       .select(
-        'id, subject, message, created_at, from_profile_id, to_profile_id, from_profile:profiles!user_proposals_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!user_proposals_to_profile_id_fkey(display_name, slug, photo_url)'
+        'id, subject, message, created_at, from_profile:profiles!user_proposals_from_profile_id_fkey(display_name, slug, photo_url), to_profile:profiles!user_proposals_to_profile_id_fkey(display_name, slug, photo_url)'
       )
       .order('created_at', { ascending: false })
   ])
@@ -57,13 +57,11 @@ export default async function ConexionesPage() {
     unique_proposed_to: 0
   }) as ConnectionMetrics
 
-  const rawEdges = [
+  const connectionEdges: ConnectionEdge[] = [
     ...(interestsRes.data ?? []).map(r => ({
       id: `i-${r.id}`,
       kind: 'interest' as const,
       createdAt: r.created_at,
-      fromId: r.from_profile_id as string,
-      toId: r.to_profile_id as string,
       from: pickProfile(r.from_profile),
       to: pickProfile(r.to_profile),
       detail: r.message ?? ''
@@ -72,29 +70,11 @@ export default async function ConexionesPage() {
       id: `p-${r.id}`,
       kind: 'proposal' as const,
       createdAt: r.created_at,
-      fromId: r.from_profile_id as string,
-      toId: r.to_profile_id as string,
       from: pickProfile(r.from_profile),
       to: pickProfile(r.to_profile),
       detail: r.subject || r.message || ''
     }))
-  ]
-
-  // A connection is mutual when the reverse direction exists within the same kind
-  // (both gave "Conectar", or both messaged each other).
-  const present = new Set(rawEdges.map(e => `${e.kind}:${e.fromId}->${e.toId}`))
-
-  const connectionEdges: ConnectionEdge[] = rawEdges
-    .map(e => ({
-      id: e.id,
-      kind: e.kind,
-      createdAt: e.createdAt,
-      from: e.from,
-      to: e.to,
-      detail: e.detail,
-      mutual: e.fromId !== e.toId && present.has(`${e.kind}:${e.toId}->${e.fromId}`)
-    }))
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+  ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
 
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
