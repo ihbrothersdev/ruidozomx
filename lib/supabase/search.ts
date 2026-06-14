@@ -95,25 +95,41 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
   if (!query) return { query, ...EMPTY }
 
   const supabase = await createClient()
-  const term = `%${escapeForILike(query)}%`
+  const escaped = escapeForILike(query)
+  const term = `%${escaped}%` // substring match (name, slug, song fields)
+  const prefixTerm = `${escaped}%` // prefix match (city, state)
 
   const matchedRoles = rolesMatchingQuery(normalizeForDedup(query))
+  // City/state use a PREFIX match, not substring: a substring match made
+  // "pop" hit "Za-pop-an" and surfaced every band from Zapopan. Prefix still
+  // supports typeahead ("guad" → "Guadalajara") without the mid-word noise.
+  //
+  // `bio` is intentionally NOT searched — free-text bios produced the same
+  // class of noisy substring hits. Band genre is searched separately below
+  // via `band_profiles.genre`.
   const profileFilter = [
     `display_name.ilike.${term}`,
     `slug.ilike.${term}`,
-    `bio.ilike.${term}`,
-    `city.ilike.${term}`,
-    `state.ilike.${term}`,
+    `city.ilike.${prefixTerm}`,
+    `state.ilike.${prefixTerm}`,
     ...(matchedRoles.length ? [`role.in.(${matchedRoles.join(',')})`] : [])
   ].join(',')
 
-  const [profilesRes, songsRes, eventsRes] = await Promise.all([
+  const [profilesRes, genreBandsRes, songsRes, eventsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, display_name, slug, photo_url, role, city, state, country')
       .eq('active', true)
       .neq('role', 'admin')
       .or(profileFilter)
+      .limit(RANK_FETCH_LIMIT),
+
+    // Bands whose main genre matches the term (band_profiles.genre). Inner-join
+    // profiles so we get full profile rows + can drop inactive accounts.
+    supabase
+      .from('band_profiles')
+      .select('profiles!inner(id, display_name, slug, photo_url, role, city, state, country, active)')
+      .ilike('genre', term)
       .limit(RANK_FETCH_LIMIT),
 
     supabase
@@ -138,10 +154,24 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
   ])
 
   const nq = normalizeForDedup(query)
-  const profiles = rankByPrefix((profilesRes.data ?? []) as SearchProfileResult[], nq, p => [
-    p.display_name,
-    p.slug
-  ]).slice(0, PER_CATEGORY_LIMIT)
+
+  // Merge name/slug/city/state matches with the genre-matched bands, deduped
+  // by profile id. The genre embed comes back as `{ profiles: {...} }`.
+  type GenreBandRow = { profiles: (SearchProfileResult & { active: boolean }) | null }
+  const genreProfiles = ((genreBandsRes.data ?? []) as unknown as GenreBandRow[])
+    .map(r => r.profiles)
+    .filter((p): p is SearchProfileResult & { active: boolean } => !!p && p.active)
+    .map(({ active: _active, ...p }) => p as SearchProfileResult)
+
+  const mergedProfiles = new Map<string, SearchProfileResult>()
+  for (const p of [...((profilesRes.data ?? []) as SearchProfileResult[]), ...genreProfiles]) {
+    if (!mergedProfiles.has(p.id)) mergedProfiles.set(p.id, p)
+  }
+
+  const profiles = rankByPrefix([...mergedProfiles.values()], nq, p => [p.display_name, p.slug]).slice(
+    0,
+    PER_CATEGORY_LIMIT
+  )
   const rawSongs = (songsRes.data ?? []) as SearchSongResult[]
   // supabase-js can't infer the disambiguated FK embed, so type the row by hand.
   type EventRow = Omit<SearchEventResult, 'proposer_slug'> & {

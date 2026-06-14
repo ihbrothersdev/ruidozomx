@@ -20,22 +20,43 @@ function parseRoleFilter(value: string | null): RoleFilter | null {
   return value in ROLE_FILTER_LABELS ? (value as RoleFilter) : null
 }
 
+/** URL `page` param is 1-based; internal state is a 0-based index. */
+function parsePageParam(value: string | null): number {
+  const n = value ? parseInt(value, 10) : NaN
+  return Number.isFinite(n) && n > 1 ? n - 1 : 0
+}
+
 export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [activeFilter, setActiveFilter] = useState<RoleFilter | null>(() => parseRoleFilter(searchParams.get('role')))
   const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(0)
+  // Initialized from the URL so returning here (router.back from a profile)
+  // restores the page the user was on instead of resetting to the first.
+  const [page, setPage] = useState(() => parsePageParam(searchParams.get('page')))
+
+  // Reflect filter + page into the URL (page is 1-based there). Replace, not
+  // push, so paging doesn't pollute the browser history.
+  function syncUrl(nextFilter: RoleFilter | null, nextPage: number) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (nextFilter) params.set('role', nextFilter)
+    else params.delete('role')
+    if (nextPage > 0) params.set('page', String(nextPage + 1))
+    else params.delete('page')
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
+  function goToPage(nextPage: number) {
+    setPage(nextPage)
+    syncUrl(activeFilter, nextPage)
+  }
 
   function handleFilterChange(next: RoleFilter | null) {
     setActiveFilter(next)
     setPage(0)
-    const params = new URLSearchParams(searchParams.toString())
-    if (next) params.set('role', next)
-    else params.delete('role')
-    const query = params.toString()
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+    syncUrl(next, 0)
   }
 
   const filtered = useMemo(() => {
@@ -60,6 +81,7 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
   function handleSearchChange(next: string) {
     setSearchQuery(next)
     setPage(0)
+    syncUrl(activeFilter, 0)
   }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -105,7 +127,7 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
               <div className='flex items-center gap-2'>
                 <PagerButton
                   disabled={safePage === 0}
-                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  onClick={() => goToPage(Math.max(0, safePage - 1))}
                 >
                   <ChevronLeft className='h-4 w-4' />
                 </PagerButton>
@@ -114,7 +136,7 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
                 </span>
                 <PagerButton
                   disabled={safePage >= totalPages - 1}
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => goToPage(safePage + 1)}
                 >
                   <ChevronRight className='h-4 w-4' />
                 </PagerButton>
