@@ -27,12 +27,12 @@ export function SearchAndDateFilters() {
     setTo(params.get('to') ?? '')
   }, [params])
 
-  // Debounced search: push `q` to the URL ~350ms after the user stops typing.
+  // Debounced search: push `q` to the URL ~250ms after the user stops typing.
   // Guard against the URL-sync effect above re-triggering this on mount/back-forward.
   useEffect(() => {
     const current = params.get('q') ?? ''
     if (q === current) return
-    const t = setTimeout(() => pushParams({ q }), 350)
+    const t = setTimeout(() => pushParams({ q }), 250)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q])
