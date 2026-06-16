@@ -1,6 +1,7 @@
 'use client'
 
 import { finalizeSongAudio, prepareSongAudioUpload } from '@/app/admin/actions'
+import { type AdminError, ErrorModal } from '@/app/admin/_components/ErrorModal'
 import { Button } from '@/app/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
@@ -29,6 +30,17 @@ export function UploadAudioButton({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState(false)
+  const [errorModal, setErrorModal] = useState<AdminError | null>(null)
+
+  // Known validation codes get a quick toast; anything unmapped or thrown gets
+  // the modal with the raw detail, so nothing fails silently.
+  function showError(code: string) {
+    if (ERROR_LABELS[code]) {
+      sileo.error({ title: 'Error al subir', description: ERROR_LABELS[code], position: 'top-center', duration: 5000 })
+    } else {
+      setErrorModal({ title: 'Error al subir el MP3', message: 'No se pudo completar la subida.', detail: code })
+    }
+  }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -36,46 +48,36 @@ export function UploadAudioButton({
     if (!file) return
 
     setPending(true)
-
-    const fail = (error: string) => {
-      setPending(false)
-      sileo.error({
-        title: 'Error al subir',
-        description: ERROR_LABELS[error] ?? error,
-        position: 'top-center',
-        duration: 5000
+    try {
+      const prep = await prepareSongAudioUpload({
+        songId,
+        cassetteId,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
       })
-    }
+      if (!prep.ok) return showError(prep.error)
 
-    const prep = await prepareSongAudioUpload({
-      songId,
-      cassetteId,
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size
-    })
-    if (!prep.ok) return fail(prep.error)
+      const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
+      if (!uploaded.ok) return showError(uploaded.error)
 
-    const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
-    if (!uploaded.ok) return fail(uploaded.error)
+      const res = await finalizeSongAudio({ songId, cassetteId, key: prep.key })
+      if (!res.ok) return showError(res.error)
 
-    const res = await finalizeSongAudio({ songId, cassetteId, key: prep.key })
-    setPending(false)
-
-    if (res.ok) {
       sileo.success({
         title: 'MP3 subido',
         description: 'La canción ya es reproducible.',
         position: 'top-center',
         duration: 3000
       })
-    } else {
-      sileo.error({
-        title: 'Error al subir',
-        description: ERROR_LABELS[res.error] ?? res.error,
-        position: 'top-center',
-        duration: 5000
+    } catch (err) {
+      setErrorModal({
+        title: 'Error al subir el MP3',
+        message: 'Ocurrió un error inesperado. Toma una captura de pantalla y compártela con el equipo.',
+        detail: err instanceof Error ? err.message : String(err)
       })
+    } finally {
+      setPending(false)
     }
   }
 
@@ -110,6 +112,10 @@ export function UploadAudioButton({
           <TooltipContent>{tip}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      <ErrorModal
+        error={errorModal}
+        onClose={() => setErrorModal(null)}
+      />
     </>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { finalizeAddSong, prepareAddSong, searchBandasByName } from '@/app/admin/actions'
+import { type AdminError, ErrorModal } from '@/app/admin/_components/ErrorModal'
 import { Button } from '@/app/components/ui/button'
 import {
   Dialog,
@@ -81,6 +82,7 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
   const [submitting, setSubmitting] = useState(false)
   const [artist, setArtist] = useState('')
   const [bandaProfile, setBandaProfile] = useState<BandaResult | null>(null)
+  const [errorModal, setErrorModal] = useState<AdminError | null>(null)
 
   // Auto-detect the track length when a file is picked and pre-fill the field;
   // the admin can still overwrite it. Detection reads the local file, so it's
@@ -157,31 +159,36 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
 
     setSubmitting(true)
 
-    const fail = (error: string) => {
-      setSubmitting(false)
-      sileo.error({
-        title: 'No se pudo agregar',
-        description: ERROR_LABELS[error] ?? error,
-        position: 'top-center',
-        duration: 5000
-      })
+    // Known validation codes get a quick toast; anything unmapped or thrown gets
+    // the modal with the raw detail, so nothing fails silently.
+    const showError = (code: string) => {
+      if (ERROR_LABELS[code]) {
+        sileo.error({
+          title: 'No se pudo agregar',
+          description: ERROR_LABELS[code],
+          position: 'top-center',
+          duration: 5000
+        })
+      } else {
+        setErrorModal({ title: 'No se pudo agregar la canción', message: 'La operación no se completó.', detail: code })
+      }
     }
 
-    const prep = await prepareAddSong({
-      ...sharedSong,
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size
-    })
-    if (!prep.ok) return fail(prep.error)
+    try {
+      const prep = await prepareAddSong({
+        ...sharedSong,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
+      })
+      if (!prep.ok) return showError(prep.error)
 
-    const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
-    if (!uploaded.ok) return fail(uploaded.error)
+      const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
+      if (!uploaded.ok) return showError(uploaded.error)
 
-    const res = await finalizeAddSong({ ...sharedSong, genre, durationSeconds, key: prep.key })
-    setSubmitting(false)
+      const res = await finalizeAddSong({ ...sharedSong, genre, durationSeconds, key: prep.key })
+      if (!res.ok) return showError(res.error)
 
-    if (res.ok) {
       sileo.success({
         title: 'Canción agregada',
         description: `Lado ${side} · #${position}`,
@@ -194,13 +201,14 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
       setDurationInput('')
       setArtist('')
       setBandaProfile(null)
-    } else {
-      sileo.error({
-        title: 'No se pudo agregar',
-        description: ERROR_LABELS[res.error] ?? res.error,
-        position: 'top-center',
-        duration: 5000
+    } catch (err) {
+      setErrorModal({
+        title: 'No se pudo agregar la canción',
+        message: 'Ocurrió un error inesperado. Toma una captura de pantalla y compártela con el equipo.',
+        detail: err instanceof Error ? err.message : String(err)
       })
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -210,164 +218,170 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
   const cassetteFull = !sideAFree && !sideBFree
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogTrigger asChild>
-        <Button
-          size='lg'
-          disabled={cassetteFull}
-          className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500 disabled:opacity-40'
-        >
-          <Plus className='h-4 w-4' />
-          {cassetteFull ? 'Cassette lleno' : 'Agregar canción'}
-        </Button>
-      </DialogTrigger>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={onOpenChange}
+      >
+        <DialogTrigger asChild>
+          <Button
+            size='lg'
+            disabled={cassetteFull}
+            className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500 disabled:opacity-40'
+          >
+            <Plus className='h-4 w-4' />
+            {cassetteFull ? 'Cassette lleno' : 'Agregar canción'}
+          </Button>
+        </DialogTrigger>
 
-      <DialogContent className='border-white/10 bg-neutral-900 text-white sm:max-w-lg'>
-        <DialogHeader className='text-left'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>Nueva canción</p>
-          <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
-            Agregar al cassette
-          </DialogTitle>
-          <DialogDescription className='font-pt-mono text-xs text-white/40'>
-            La canción se sube directo al bucket de audio y queda lista para reproducir.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogContent className='border-white/10 bg-neutral-900 text-white sm:max-w-lg'>
+          <DialogHeader className='text-left'>
+            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>Nueva canción</p>
+            <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
+              Agregar al cassette
+            </DialogTitle>
+            <DialogDescription className='font-pt-mono text-xs text-white/40'>
+              La canción se sube directo al bucket de audio y queda lista para reproducir.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form
-          onSubmit={onSubmit}
-          className='space-y-4'
-        >
-          <BandaAutocomplete
-            value={artist}
-            selected={bandaProfile}
-            onChange={next => {
-              setArtist(next)
-              if (bandaProfile && next !== bandaProfile.displayName) {
-                setBandaProfile(null)
-              }
-            }}
-            onSelect={banda => {
-              setBandaProfile(banda)
-              setArtist(banda.displayName)
-            }}
-          />
+          <form
+            onSubmit={onSubmit}
+            className='space-y-4'
+          >
+            <BandaAutocomplete
+              value={artist}
+              selected={bandaProfile}
+              onChange={next => {
+                setArtist(next)
+                if (bandaProfile && next !== bandaProfile.displayName) {
+                  setBandaProfile(null)
+                }
+              }}
+              onSelect={banda => {
+                setBandaProfile(banda)
+                setArtist(banda.displayName)
+              }}
+            />
 
-          <Field
-            label='Título de la rola'
-            name='title'
-            placeholder='Vampiro'
-            required
-          />
+            <Field
+              label='Título de la rola'
+              name='title'
+              placeholder='Vampiro'
+              required
+            />
 
-          <Field
-            label='Género (opcional)'
-            name='genre'
-            placeholder='Punk, garage…'
-          />
+            <Field
+              label='Género (opcional)'
+              name='genre'
+              placeholder='Punk, garage…'
+            />
 
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Lado <span className='ml-1 text-red-400'>*</span>
-              </Label>
-              <Select
-                value={side}
-                onValueChange={v => resetForSide(v as Side)}
-              >
-                <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className='border-white/10 bg-neutral-900 text-white'>
-                  <SelectItem
-                    value='A'
-                    disabled={!sideAFree}
-                  >
-                    Lado A {!sideAFree && '(lleno)'}
-                  </SelectItem>
-                  <SelectItem
-                    value='B'
-                    disabled={!sideBFree}
-                  >
-                    Lado B {!sideBFree && '(lleno)'}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-1.5'>
-              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Posición <span className='ml-1 text-red-400'>*</span>
-              </Label>
-              <Select
-                value={position}
-                onValueChange={setPosition}
-                disabled={noFreeSlots}
-              >
-                <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
-                  <SelectValue placeholder={noFreeSlots ? 'Lado lleno' : 'Elige #'} />
-                </SelectTrigger>
-                <SelectContent className='border-white/10 bg-neutral-900 text-white'>
-                  {availablePositions.map(p => (
+            <div className='grid gap-4 sm:grid-cols-2'>
+              <div className='space-y-1.5'>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                  Lado <span className='ml-1 text-red-400'>*</span>
+                </Label>
+                <Select
+                  value={side}
+                  onValueChange={v => resetForSide(v as Side)}
+                >
+                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
                     <SelectItem
-                      key={p}
-                      value={String(p)}
+                      value='A'
+                      disabled={!sideAFree}
                     >
-                      #{p}
+                      Lado A {!sideAFree && '(lleno)'}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <SelectItem
+                      value='B'
+                      disabled={!sideBFree}
+                    >
+                      Lado B {!sideBFree && '(lleno)'}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-1.5'>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                  Posición <span className='ml-1 text-red-400'>*</span>
+                </Label>
+                <Select
+                  value={position}
+                  onValueChange={setPosition}
+                  disabled={noFreeSlots}
+                >
+                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                    <SelectValue placeholder={noFreeSlots ? 'Lado lleno' : 'Elige #'} />
+                  </SelectTrigger>
+                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
+                    {availablePositions.map(p => (
+                      <SelectItem
+                        key={p}
+                        value={String(p)}
+                      >
+                        #{p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          <div className='space-y-1.5'>
-            <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-              Archivo de audio <span className='ml-1 text-red-400'>*</span>
-            </Label>
-            <label className='font-pt-mono flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/3 px-3 py-3 text-xs text-white/60 transition-colors hover:border-white/30 hover:text-white'>
-              <input
-                type='file'
-                accept='audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4'
-                className='hidden'
-                onChange={onFileChange}
-              />
-              {file ? <Music2 className='h-4 w-4 text-emerald-400' /> : <UploadCloud className='h-4 w-4' />}
-              <span className='truncate'>{file ? file.name : 'MP3, WAV o M4A (máx. 30 MB)'}</span>
-            </label>
-          </div>
+            <div className='space-y-1.5'>
+              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                Archivo de audio <span className='ml-1 text-red-400'>*</span>
+              </Label>
+              <label className='font-pt-mono flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/3 px-3 py-3 text-xs text-white/60 transition-colors hover:border-white/30 hover:text-white'>
+                <input
+                  type='file'
+                  accept='audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4'
+                  className='hidden'
+                  onChange={onFileChange}
+                />
+                {file ? <Music2 className='h-4 w-4 text-emerald-400' /> : <UploadCloud className='h-4 w-4' />}
+                <span className='truncate'>{file ? file.name : 'MP3, WAV o M4A (máx. 30 MB)'}</span>
+              </label>
+            </div>
 
-          <Field
-            label={detectingDuration ? 'Duración (detectando…)' : 'Duración (opcional · auto-detectada)'}
-            name='duration_input'
-            placeholder='3:42'
-            value={durationInput}
-            onChange={setDurationInput}
-          />
+            <Field
+              label={detectingDuration ? 'Duración (detectando…)' : 'Duración (opcional · auto-detectada)'}
+              name='duration_input'
+              placeholder='3:42'
+              value={durationInput}
+              onChange={setDurationInput}
+            />
 
-          <DialogFooter className='gap-2 border-t border-white/5 pt-4'>
-            <Button
-              type='button'
-              variant='ghost'
-              onClick={() => setOpen(false)}
-              className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
-            >
-              Cancelar
-            </Button>
-            <Button
-              type='submit'
-              disabled={submitting || !position || !file || !artist.trim()}
-              className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500 disabled:opacity-40'
-            >
-              {submitting && <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />}
-              {submitting ? 'Subiendo…' : 'Agregar canción'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter className='gap-2 border-t border-white/5 pt-4'>
+              <Button
+                type='button'
+                variant='ghost'
+                onClick={() => setOpen(false)}
+                className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
+              >
+                Cancelar
+              </Button>
+              <Button
+                type='submit'
+                disabled={submitting || !position || !file || !artist.trim()}
+                className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500 disabled:opacity-40'
+              >
+                {submitting && <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />}
+                {submitting ? 'Subiendo…' : 'Agregar canción'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <ErrorModal
+        error={errorModal}
+        onClose={() => setErrorModal(null)}
+      />
+    </>
   )
 }
 
