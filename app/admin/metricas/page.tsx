@@ -364,7 +364,9 @@ export default async function MetricasPage({
             <EmptyCard text='Aún no hay propuestas registradas.' />
           ) : (
             <ul className='space-y-2'>
-              {topProposers.map((p, i) => (
+              {topProposers.map((p, i) => {
+                const reviewed = Number(p.accepted) + Number(p.rejected)
+                return (
                 <Card
                   key={p.user_id}
                   className='gap-0 border-white/10 bg-white/3 py-0'
@@ -393,12 +395,13 @@ export default async function MetricasPage({
                     <div className='text-right'>
                       <p className='font-baby-doll text-xl font-bold text-emerald-400'>{p.total_proposals}</p>
                       <p className='font-pt-mono text-[9px] tracking-widest text-white/30 uppercase'>
-                        {Number(p.acceptance_rate)}% acep.
+                        {reviewed > 0 ? `${Number(p.acceptance_rate)}% de ${reviewed} rev.` : 'Sin revisar'}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>
