@@ -128,10 +128,19 @@ export async function acceptProposal(formData: FormData) {
     await backToProposals('e', 'ya_revisada')
   }
 
+  // The proposal's submitter is the band itself: `song_proposals.user_id`
+  // equals the band's `profiles.id`. Link the song to that profile so the
+  // player can show the "ir al artista" link — but only when the submitter is
+  // a band, mirroring the manual add flow (searchBandasByName filters role).
+  let artistProfileId: string | null = null
+  const { data: submitter } = await svc.from('profiles').select('id, role').eq('id', proposal!.user_id).single()
+  if (submitter?.role === 'banda') artistProfileId = submitter.id
+
   const { error: songError } = await svc.from('songs').insert({
     cassette_id: target!.id,
     title: proposal!.title,
     artist: proposal!.artist,
+    artist_profile_id: artistProfileId,
     genre: proposal!.genre,
     side,
     position,
