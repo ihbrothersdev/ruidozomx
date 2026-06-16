@@ -1,6 +1,7 @@
 'use client'
 
-import { addSongToCassette, searchBandasByName } from '@/app/admin/actions'
+import { finalizeAddSong, prepareAddSong, searchBandasByName } from '@/app/admin/actions'
+import { type AdminError, ErrorModal } from '@/app/admin/_components/ErrorModal'
 import { Button } from '@/app/components/ui/button'
 import {
   Dialog,
@@ -14,6 +15,7 @@ import {
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { CheckCircle2, Loader2, Music2, Plus, Search, UploadCloud } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { sileo } from 'sileo'
@@ -27,7 +29,8 @@ const ERROR_LABELS: Record<string, string> = {
   tipo_no_soportado: 'Formato no soportado. Usa MP3, WAV o M4A.',
   cassette_no_encontrado: 'Cassette no encontrado.',
   banda_no_encontrada: 'La banda vinculada ya no existe.',
-  slot_ocupado: 'Ese slot ya tiene una canción. Elige otra posición.'
+  slot_ocupado: 'Ese slot ya tiene una canción. Elige otra posición.',
+  no_se_pudo_preparar: 'No se pudo preparar la subida. Intenta de nuevo.'
 }
 
 type BandaResult = { id: string; displayName: string; slug: string; photoUrl: string | null }
@@ -63,14 +66,37 @@ function parseDurationInput(value: string): number | null {
   return Number(m[1]) * 60 + Number(m[2])
 }
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occupied: Slot[] }) {
   const [open, setOpen] = useState(false)
   const [side, setSide] = useState<Side>('A')
   const [position, setPosition] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
+  const [durationInput, setDurationInput] = useState('')
+  const [detectingDuration, setDetectingDuration] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [artist, setArtist] = useState('')
   const [bandaProfile, setBandaProfile] = useState<BandaResult | null>(null)
+  const [errorModal, setErrorModal] = useState<AdminError | null>(null)
+
+  // Auto-detect the track length when a file is picked and pre-fill the field;
+  // the admin can still overwrite it. Detection reads the local file, so it's
+  // independent of the upload.
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.files?.[0] ?? null
+    setFile(next)
+    setDurationInput('')
+    if (!next) return
+    setDetectingDuration(true)
+    const seconds = await detectDuration(next)
+    setDetectingDuration(false)
+    if (seconds) setDurationInput(formatDuration(seconds))
+  }
 
   const availablePositions = useMemo(() => {
     const taken = new Set(occupied.filter(s => s.side === side).map(s => s.position))
@@ -90,6 +116,7 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
     setOpen(next)
     if (next) {
       setFile(null)
+      setDurationInput('')
       setArtist('')
       setBandaProfile(null)
       resetForSide('A')
@@ -102,11 +129,8 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
 
     const formEl = e.currentTarget
     const fd = new FormData(formEl)
-    fd.set('cassette_id', cassetteId)
-    fd.set('side', side)
-    fd.set('position', position)
-    fd.set('artist', artist.trim())
-    fd.set('artist_profile_id', bandaProfile?.id ?? '')
+    const title = ((fd.get('title') as string) ?? '').trim()
+    const genre = ((fd.get('genre') as string) ?? '').trim() || null
 
     if (!file) {
       sileo.error({
@@ -117,23 +141,54 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
       })
       return
     }
-    fd.set('file', file)
 
-    // Manual override takes priority; otherwise try metadata sniffing.
-    const manualDuration = parseDurationInput((fd.get('duration_input') as string) ?? '')
-    if (manualDuration !== null) {
-      fd.set('duration_seconds', String(manualDuration))
-    } else {
-      const detected = await detectDuration(file)
-      if (detected) fd.set('duration_seconds', String(detected))
+    const positionNum = Number(position)
+    const trimmedArtist = artist.trim()
+    const sharedSong = {
+      cassetteId,
+      title,
+      artist: trimmedArtist,
+      artistProfileId: bandaProfile?.id ?? null,
+      side,
+      position: positionNum
     }
-    fd.delete('duration_input')
+
+    // The field is pre-filled from auto-detection on file select; fall back to
+    // a fresh sniff only if it's still empty (e.g. detection hadn't finished).
+    const durationSeconds = parseDurationInput(durationInput) ?? (await detectDuration(file))
 
     setSubmitting(true)
-    const res = await addSongToCassette(fd)
-    setSubmitting(false)
 
-    if (res.ok) {
+    // Known validation codes get a quick toast; anything unmapped or thrown gets
+    // the modal with the raw detail, so nothing fails silently.
+    const showError = (code: string) => {
+      if (ERROR_LABELS[code]) {
+        sileo.error({
+          title: 'No se pudo agregar',
+          description: ERROR_LABELS[code],
+          position: 'top-center',
+          duration: 5000
+        })
+      } else {
+        setErrorModal({ title: 'No se pudo agregar la canción', message: 'La operación no se completó.', detail: code })
+      }
+    }
+
+    try {
+      const prep = await prepareAddSong({
+        ...sharedSong,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
+      })
+      if (!prep.ok) return showError(prep.error)
+
+      const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
+      if (!uploaded.ok) return showError(uploaded.error)
+
+      const res = await finalizeAddSong({ ...sharedSong, genre, durationSeconds, key: prep.key })
+      if (!res.ok) return showError(res.error)
+
       sileo.success({
         title: 'Canción agregada',
         description: `Lado ${side} · #${position}`,
@@ -143,15 +198,17 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
       setOpen(false)
       formEl.reset()
       setFile(null)
+      setDurationInput('')
       setArtist('')
       setBandaProfile(null)
-    } else {
-      sileo.error({
-        title: 'No se pudo agregar',
-        description: ERROR_LABELS[res.error] ?? res.error,
-        position: 'top-center',
-        duration: 5000
+    } catch (err) {
+      setErrorModal({
+        title: 'No se pudo agregar la canción',
+        message: 'Ocurrió un error inesperado. Toma una captura de pantalla y compártela con el equipo.',
+        detail: err instanceof Error ? err.message : String(err)
       })
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -161,162 +218,170 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
   const cassetteFull = !sideAFree && !sideBFree
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogTrigger asChild>
-        <Button
-          size='lg'
-          disabled={cassetteFull}
-          className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500 disabled:opacity-40'
-        >
-          <Plus className='h-4 w-4' />
-          {cassetteFull ? 'Cassette lleno' : 'Agregar canción'}
-        </Button>
-      </DialogTrigger>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={onOpenChange}
+      >
+        <DialogTrigger asChild>
+          <Button
+            size='lg'
+            disabled={cassetteFull}
+            className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500 disabled:opacity-40'
+          >
+            <Plus className='h-4 w-4' />
+            {cassetteFull ? 'Cassette lleno' : 'Agregar canción'}
+          </Button>
+        </DialogTrigger>
 
-      <DialogContent className='border-white/10 bg-neutral-900 text-white sm:max-w-lg'>
-        <DialogHeader className='text-left'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>Nueva canción</p>
-          <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
-            Agregar al cassette
-          </DialogTitle>
-          <DialogDescription className='font-pt-mono text-xs text-white/40'>
-            La canción se sube directo al bucket de audio y queda lista para reproducir.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogContent className='border-white/10 bg-neutral-900 text-white sm:max-w-lg'>
+          <DialogHeader className='text-left'>
+            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>Nueva canción</p>
+            <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
+              Agregar al cassette
+            </DialogTitle>
+            <DialogDescription className='font-pt-mono text-xs text-white/40'>
+              La canción se sube directo al bucket de audio y queda lista para reproducir.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form
-          onSubmit={onSubmit}
-          className='space-y-4'
-        >
-          <BandaAutocomplete
-            value={artist}
-            selected={bandaProfile}
-            onChange={next => {
-              setArtist(next)
-              if (bandaProfile && next !== bandaProfile.displayName) {
-                setBandaProfile(null)
-              }
-            }}
-            onSelect={banda => {
-              setBandaProfile(banda)
-              setArtist(banda.displayName)
-            }}
-          />
+          <form
+            onSubmit={onSubmit}
+            className='space-y-4'
+          >
+            <BandaAutocomplete
+              value={artist}
+              selected={bandaProfile}
+              onChange={next => {
+                setArtist(next)
+                if (bandaProfile && next !== bandaProfile.displayName) {
+                  setBandaProfile(null)
+                }
+              }}
+              onSelect={banda => {
+                setBandaProfile(banda)
+                setArtist(banda.displayName)
+              }}
+            />
 
-          <Field
-            label='Título de la rola'
-            name='title'
-            placeholder='Vampiro'
-            required
-          />
+            <Field
+              label='Título de la rola'
+              name='title'
+              placeholder='Vampiro'
+              required
+            />
 
-          <Field
-            label='Género (opcional)'
-            name='genre'
-            placeholder='Punk, garage…'
-          />
+            <Field
+              label='Género (opcional)'
+              name='genre'
+              placeholder='Punk, garage…'
+            />
 
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Lado <span className='ml-1 text-red-400'>*</span>
-              </Label>
-              <Select
-                value={side}
-                onValueChange={v => resetForSide(v as Side)}
-              >
-                <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className='border-white/10 bg-neutral-900 text-white'>
-                  <SelectItem
-                    value='A'
-                    disabled={!sideAFree}
-                  >
-                    Lado A {!sideAFree && '(lleno)'}
-                  </SelectItem>
-                  <SelectItem
-                    value='B'
-                    disabled={!sideBFree}
-                  >
-                    Lado B {!sideBFree && '(lleno)'}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-1.5'>
-              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Posición <span className='ml-1 text-red-400'>*</span>
-              </Label>
-              <Select
-                value={position}
-                onValueChange={setPosition}
-                disabled={noFreeSlots}
-              >
-                <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
-                  <SelectValue placeholder={noFreeSlots ? 'Lado lleno' : 'Elige #'} />
-                </SelectTrigger>
-                <SelectContent className='border-white/10 bg-neutral-900 text-white'>
-                  {availablePositions.map(p => (
+            <div className='grid gap-4 sm:grid-cols-2'>
+              <div className='space-y-1.5'>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                  Lado <span className='ml-1 text-red-400'>*</span>
+                </Label>
+                <Select
+                  value={side}
+                  onValueChange={v => resetForSide(v as Side)}
+                >
+                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
                     <SelectItem
-                      key={p}
-                      value={String(p)}
+                      value='A'
+                      disabled={!sideAFree}
                     >
-                      #{p}
+                      Lado A {!sideAFree && '(lleno)'}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <SelectItem
+                      value='B'
+                      disabled={!sideBFree}
+                    >
+                      Lado B {!sideBFree && '(lleno)'}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-1.5'>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                  Posición <span className='ml-1 text-red-400'>*</span>
+                </Label>
+                <Select
+                  value={position}
+                  onValueChange={setPosition}
+                  disabled={noFreeSlots}
+                >
+                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                    <SelectValue placeholder={noFreeSlots ? 'Lado lleno' : 'Elige #'} />
+                  </SelectTrigger>
+                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
+                    {availablePositions.map(p => (
+                      <SelectItem
+                        key={p}
+                        value={String(p)}
+                      >
+                        #{p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          <div className='space-y-1.5'>
-            <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-              Archivo de audio <span className='ml-1 text-red-400'>*</span>
-            </Label>
-            <label className='font-pt-mono flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/3 px-3 py-3 text-xs text-white/60 transition-colors hover:border-white/30 hover:text-white'>
-              <input
-                type='file'
-                accept='audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4'
-                className='hidden'
-                onChange={e => setFile(e.target.files?.[0] ?? null)}
-              />
-              {file ? <Music2 className='h-4 w-4 text-emerald-400' /> : <UploadCloud className='h-4 w-4' />}
-              <span className='truncate'>{file ? file.name : 'MP3, WAV o M4A (máx. 30 MB)'}</span>
-            </label>
-          </div>
+            <div className='space-y-1.5'>
+              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
+                Archivo de audio <span className='ml-1 text-red-400'>*</span>
+              </Label>
+              <label className='font-pt-mono flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/3 px-3 py-3 text-xs text-white/60 transition-colors hover:border-white/30 hover:text-white'>
+                <input
+                  type='file'
+                  accept='audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4'
+                  className='hidden'
+                  onChange={onFileChange}
+                />
+                {file ? <Music2 className='h-4 w-4 text-emerald-400' /> : <UploadCloud className='h-4 w-4' />}
+                <span className='truncate'>{file ? file.name : 'MP3, WAV o M4A (máx. 30 MB)'}</span>
+              </label>
+            </div>
 
-          <Field
-            label='Duración (opcional · auto-detectada)'
-            name='duration_input'
-            placeholder='3:42'
-          />
+            <Field
+              label={detectingDuration ? 'Duración (detectando…)' : 'Duración (opcional · auto-detectada)'}
+              name='duration_input'
+              placeholder='3:42'
+              value={durationInput}
+              onChange={setDurationInput}
+            />
 
-          <DialogFooter className='gap-2 border-t border-white/5 pt-4'>
-            <Button
-              type='button'
-              variant='ghost'
-              onClick={() => setOpen(false)}
-              className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
-            >
-              Cancelar
-            </Button>
-            <Button
-              type='submit'
-              disabled={submitting || !position || !file || !artist.trim()}
-              className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500 disabled:opacity-40'
-            >
-              {submitting && <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />}
-              {submitting ? 'Subiendo…' : 'Agregar canción'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter className='gap-2 border-t border-white/5 pt-4'>
+              <Button
+                type='button'
+                variant='ghost'
+                onClick={() => setOpen(false)}
+                className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
+              >
+                Cancelar
+              </Button>
+              <Button
+                type='submit'
+                disabled={submitting || !position || !file || !artist.trim()}
+                className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500 disabled:opacity-40'
+              >
+                {submitting && <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />}
+                {submitting ? 'Subiendo…' : 'Agregar canción'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <ErrorModal
+        error={errorModal}
+        onClose={() => setErrorModal(null)}
+      />
+    </>
   )
 }
 
@@ -446,13 +511,17 @@ function Field({
   name,
   type = 'text',
   placeholder,
-  required
+  required,
+  value,
+  onChange
 }: {
   label: string
   name: string
   type?: string
   placeholder?: string
   required?: boolean
+  value?: string
+  onChange?: (next: string) => void
 }) {
   return (
     <div className='space-y-1.5'>
@@ -469,6 +538,8 @@ function Field({
         name={name}
         placeholder={placeholder}
         required={required}
+        value={value}
+        onChange={onChange ? e => onChange(e.target.value) : undefined}
         className='font-pt-mono border-white/10 bg-white/3 text-sm text-white placeholder:text-white/30 focus-visible:border-red-500/50 focus-visible:ring-red-500/20'
       />
     </div>

@@ -1,5 +1,4 @@
-function requireEnv(name: string): string {
-  const value = process.env[name]
+function requireEnv(name: string, value: string | undefined): string {
   if (!value) {
     throw new Error(
       `Missing environment variable: ${name}. ` +
@@ -11,7 +10,7 @@ function requireEnv(name: string): string {
 
 export function getSupabaseEnv() {
   return {
-    url: requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
-    anonKey: requireEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+    url: requireEnv('NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL),
+    anonKey: requireEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
   }
 }
