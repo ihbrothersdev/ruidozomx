@@ -1,8 +1,9 @@
 'use client'
 
-import { uploadSongAudio } from '@/app/admin/actions'
+import { finalizeSongAudio, prepareSongAudioUpload } from '@/app/admin/actions'
 import { Button } from '@/app/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
+import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { Loader2, UploadCloud } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { sileo } from 'sileo'
@@ -13,7 +14,8 @@ const ERROR_LABELS: Record<string, string> = {
   archivo_muy_grande: 'El archivo supera el límite de 30 MB.',
   tipo_no_soportado: 'Formato no soportado. Usa MP3, WAV o M4A.',
   cancion_no_encontrada: 'La canción ya no existe.',
-  cassette_mismatch: 'La canción pertenece a otro cassette.'
+  cassette_mismatch: 'La canción pertenece a otro cassette.',
+  no_se_pudo_preparar: 'No se pudo preparar la subida. Intenta de nuevo.'
 }
 
 export function UploadAudioButton({
@@ -34,12 +36,30 @@ export function UploadAudioButton({
     if (!file) return
 
     setPending(true)
-    const fd = new FormData()
-    fd.append('song_id', songId)
-    fd.append('cassette_id', cassetteId)
-    fd.append('file', file)
 
-    const res = await uploadSongAudio(fd)
+    const fail = (error: string) => {
+      setPending(false)
+      sileo.error({
+        title: 'Error al subir',
+        description: ERROR_LABELS[error] ?? error,
+        position: 'top-center',
+        duration: 5000
+      })
+    }
+
+    const prep = await prepareSongAudioUpload({
+      songId,
+      cassetteId,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    })
+    if (!prep.ok) return fail(prep.error)
+
+    const uploaded = await uploadAudioToSignedUrl(prep.key, prep.token, file)
+    if (!uploaded.ok) return fail(uploaded.error)
+
+    const res = await finalizeSongAudio({ songId, cassetteId, key: prep.key })
     setPending(false)
 
     if (res.ok) {

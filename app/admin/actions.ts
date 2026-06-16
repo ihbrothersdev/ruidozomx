@@ -56,6 +56,15 @@ function backWithSuccess(path: string, code: string, msg?: string) {
   redirect(`${path}?${params.toString()}`)
 }
 
+/** Validates client-reported audio metadata before minting a signed upload URL. */
+function audioMetaError(fileName: string, fileType: string, fileSize: number): string | null {
+  if (!fileName) return 'faltan_datos'
+  if (!Number.isFinite(fileSize) || fileSize <= 0) return 'archivo_vacio'
+  if (fileSize > MAX_AUDIO_BYTES) return 'archivo_muy_grande'
+  if (fileType && !ALLOWED_AUDIO_MIME.has(fileType)) return 'tipo_no_soportado'
+  return null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Proposals
 // ─────────────────────────────────────────────────────────────────────────────
@@ -372,55 +381,61 @@ export async function removeSongFromCassette(formData: FormData) {
 }
 
 /**
- * Upload an MP3 (or other supported audio file) to the public `songs` bucket
- * and point the song's `audio_url` to the new public URL. This is how admins
- * "complete" an accepted proposal that only had a Spotify/YouTube reference.
+ * Replace an accepted song's audio: mint a signed upload URL so the browser can
+ * push the MP3 straight to the `songs` bucket (the file never travels through a
+ * Server Action body, which caps at 5mb). Pair with {@link finalizeSongAudio}.
  */
-export async function uploadSongAudio(
-  formData: FormData
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+export async function prepareSongAudioUpload(input: {
+  songId: string
+  cassetteId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+}): Promise<{ ok: true; key: string; token: string } | { ok: false; error: string }> {
   await requireAdmin()
   const svc = createServiceClient()
 
-  const songId = formData.get('song_id') as string
-  const cassetteId = formData.get('cassette_id') as string
-  const file = formData.get('file') as File | null
+  if (!input.songId || !input.cassetteId) return { ok: false, error: 'faltan_datos' }
+  const metaError = audioMetaError(input.fileName, input.fileType, input.fileSize)
+  if (metaError) return { ok: false, error: metaError }
 
-  if (!songId || !cassetteId || !file) {
-    return { ok: false, error: 'faltan_datos' }
-  }
-  if (file.size === 0) {
-    return { ok: false, error: 'archivo_vacio' }
-  }
-  if (file.size > MAX_AUDIO_BYTES) {
-    return { ok: false, error: 'archivo_muy_grande' }
-  }
-  if (file.type && !ALLOWED_AUDIO_MIME.has(file.type)) {
-    return { ok: false, error: 'tipo_no_soportado' }
-  }
-
-  const { data: song } = await svc.from('songs').select('artist, title, cassette_id').eq('id', songId).single()
+  const { data: song } = await svc.from('songs').select('artist, title, cassette_id').eq('id', input.songId).single()
   if (!song) return { ok: false, error: 'cancion_no_encontrada' }
-  if (song.cassette_id !== cassetteId) return { ok: false, error: 'cassette_mismatch' }
+  if (song.cassette_id !== input.cassetteId) return { ok: false, error: 'cassette_mismatch' }
 
-  const ext = (file.name.split('.').pop() ?? 'mp3').toLowerCase()
-  const key = songStorageKey({ cassetteId, artist: song.artist, title: song.title, ext })
+  const ext = (input.fileName.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = songStorageKey({ cassetteId: input.cassetteId, artist: song.artist, title: song.title, ext })
 
-  const { error: uploadError } = await svc.storage.from(SONGS_BUCKET).upload(key, file, {
-    contentType: file.type || 'audio/mpeg',
-    upsert: true,
-    cacheControl: '3600'
-  })
-  if (uploadError) return { ok: false, error: uploadError.message }
+  const { data, error } = await svc.storage.from(SONGS_BUCKET).createSignedUploadUrl(key, { upsert: true })
+  if (error || !data) return { ok: false, error: error?.message ?? 'no_se_pudo_preparar' }
+
+  return { ok: true, key, token: data.token }
+}
+
+/** Point a song's `audio_url` at the file the browser just uploaded to `key`. */
+export async function finalizeSongAudio(input: {
+  songId: string
+  cassetteId: string
+  key: string
+}): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  if (!input.songId || !input.cassetteId || !input.key) return { ok: false, error: 'faltan_datos' }
+  if (!input.key.startsWith(`${input.cassetteId}/`)) return { ok: false, error: 'faltan_datos' }
+
+  const { data: song } = await svc.from('songs').select('cassette_id').eq('id', input.songId).single()
+  if (!song) return { ok: false, error: 'cancion_no_encontrada' }
+  if (song.cassette_id !== input.cassetteId) return { ok: false, error: 'cassette_mismatch' }
 
   const {
     data: { publicUrl }
-  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(input.key)
 
-  const { error: updateError } = await svc.from('songs').update({ audio_url: publicUrl }).eq('id', songId)
+  const { error: updateError } = await svc.from('songs').update({ audio_url: publicUrl }).eq('id', input.songId)
   if (updateError) return { ok: false, error: updateError.message }
 
-  revalidatePath(`/admin/cassettes/${cassetteId}`)
+  revalidatePath(`/admin/cassettes/${input.cassetteId}`)
   revalidatePath('/')
   return { ok: true, url: publicUrl }
 }
@@ -462,107 +477,121 @@ export async function searchBandasByName(
   }
 }
 
-/**
- * Manually add a song to a cassette: validates required fields, uploads the
- * MP3 to the `songs` bucket and inserts the song row. Used by admins to add
- * tracks that didn't come through the proposal flow (label, curated picks…).
- */
-export async function addSongToCassette(
-  formData: FormData
-): Promise<{ ok: true; songId: string } | { ok: false; error: string }> {
-  await requireAdmin()
-  const svc = createServiceClient()
+type NewSongInput = {
+  cassetteId: string
+  title: string
+  artist: string
+  artistProfileId: string | null
+  side: 'A' | 'B'
+  position: number
+}
 
-  const cassetteId = formData.get('cassette_id') as string
-  const title = ((formData.get('title') as string) ?? '').trim()
-  const artist = ((formData.get('artist') as string) ?? '').trim()
-  const artistProfileIdRaw = ((formData.get('artist_profile_id') as string) ?? '').trim()
-  const artistProfileId = artistProfileIdRaw || null
-  const genre = ((formData.get('genre') as string) ?? '').trim() || null
-  const side = formData.get('side') as 'A' | 'B'
-  const position = Number(formData.get('position'))
-  const durationRaw = formData.get('duration_seconds')
-  const durationSeconds =
-    durationRaw && Number.isFinite(Number(durationRaw)) && Number(durationRaw) > 0
-      ? Math.round(Number(durationRaw))
-      : null
-  const file = formData.get('file') as File | null
-
-  if (!cassetteId || !title || !artist || !side || !position || !file) {
-    return { ok: false, error: 'faltan_datos' }
+/** Shared validation for the manual "add song" flow (prepare + finalize). */
+async function validateNewSongSlot(
+  svc: ReturnType<typeof createServiceClient>,
+  input: NewSongInput
+): Promise<string | null> {
+  if (!input.cassetteId || !input.title || !input.artist || !input.side || !input.position) {
+    return 'faltan_datos'
   }
-  if (side !== 'A' && side !== 'B') {
-    return { ok: false, error: 'lado_invalido' }
-  }
-  if (!Number.isInteger(position) || position < 1 || position > 14) {
-    return { ok: false, error: 'posicion_invalida' }
-  }
-  if (file.size === 0) {
-    return { ok: false, error: 'archivo_vacio' }
-  }
-  if (file.size > MAX_AUDIO_BYTES) {
-    return { ok: false, error: 'archivo_muy_grande' }
-  }
-  if (file.type && !ALLOWED_AUDIO_MIME.has(file.type)) {
-    return { ok: false, error: 'tipo_no_soportado' }
+  if (input.side !== 'A' && input.side !== 'B') return 'lado_invalido'
+  if (!Number.isInteger(input.position) || input.position < 1 || input.position > 14) {
+    return 'posicion_invalida'
   }
 
-  const { data: cassette } = await svc.from('cassettes').select('id').eq('id', cassetteId).maybeSingle()
-  if (!cassette) return { ok: false, error: 'cassette_no_encontrado' }
+  const { data: cassette } = await svc.from('cassettes').select('id').eq('id', input.cassetteId).maybeSingle()
+  if (!cassette) return 'cassette_no_encontrado'
 
-  if (artistProfileId) {
-    const { data: bandaProfile } = await svc.from('profiles').select('id, role').eq('id', artistProfileId).maybeSingle()
-    if (!bandaProfile || bandaProfile.role !== 'banda') {
-      return { ok: false, error: 'banda_no_encontrada' }
-    }
+  if (input.artistProfileId) {
+    const { data: banda } = await svc.from('profiles').select('id, role').eq('id', input.artistProfileId).maybeSingle()
+    if (!banda || banda.role !== 'banda') return 'banda_no_encontrada'
   }
 
   const { data: existing } = await svc
     .from('songs')
     .select('id')
-    .eq('cassette_id', cassetteId)
-    .eq('side', side)
-    .eq('position', position)
+    .eq('cassette_id', input.cassetteId)
+    .eq('side', input.side)
+    .eq('position', input.position)
     .maybeSingle()
-  if (existing) return { ok: false, error: 'slot_ocupado' }
+  if (existing) return 'slot_ocupado'
 
-  const ext = (file.name.split('.').pop() ?? 'mp3').toLowerCase()
-  const key = songStorageKey({ cassetteId, artist, title, ext })
+  return null
+}
 
-  const { error: uploadError } = await svc.storage.from(SONGS_BUCKET).upload(key, file, {
-    contentType: file.type || 'audio/mpeg',
-    upsert: true,
-    cacheControl: '3600'
-  })
-  if (uploadError) return { ok: false, error: uploadError.message }
+/**
+ * Manually add a song to a cassette: validates the slot and mints a signed
+ * upload URL so the browser pushes the MP3 straight to the `songs` bucket,
+ * keeping the file out of the Server Action body. Pair with {@link finalizeAddSong}.
+ */
+export async function prepareAddSong(
+  input: NewSongInput & { fileName: string; fileType: string; fileSize: number }
+): Promise<{ ok: true; key: string; token: string } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const title = input.title.trim()
+  const artist = input.artist.trim()
+  const metaError = audioMetaError(input.fileName, input.fileType, input.fileSize)
+  if (metaError) return { ok: false, error: metaError }
+
+  const slotError = await validateNewSongSlot(svc, { ...input, title, artist })
+  if (slotError) return { ok: false, error: slotError }
+
+  const ext = (input.fileName.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = songStorageKey({ cassetteId: input.cassetteId, artist, title, ext })
+
+  const { data, error } = await svc.storage.from(SONGS_BUCKET).createSignedUploadUrl(key, { upsert: true })
+  if (error || !data) return { ok: false, error: error?.message ?? 'no_se_pudo_preparar' }
+
+  return { ok: true, key, token: data.token }
+}
+
+/** Insert the song row for an MP3 the browser already uploaded to `key`. */
+export async function finalizeAddSong(
+  input: NewSongInput & { genre: string | null; durationSeconds: number | null; key: string }
+): Promise<{ ok: true; songId: string } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const title = input.title.trim()
+  const artist = input.artist.trim()
+  if (!input.key || !input.key.startsWith(`${input.cassetteId}/`)) return { ok: false, error: 'faltan_datos' }
+
+  // Re-check the slot: it may have been taken between prepare and finalize.
+  const slotError = await validateNewSongSlot(svc, { ...input, title, artist })
+  if (slotError) {
+    await svc.storage.from(SONGS_BUCKET).remove([input.key])
+    return { ok: false, error: slotError }
+  }
 
   const {
     data: { publicUrl }
-  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(input.key)
 
   const { data: inserted, error: insertError } = await svc
     .from('songs')
     .insert({
-      cassette_id: cassetteId,
+      cassette_id: input.cassetteId,
       title,
       artist,
-      artist_profile_id: artistProfileId,
-      genre,
-      side,
-      position,
+      artist_profile_id: input.artistProfileId,
+      genre: input.genre,
+      side: input.side,
+      position: input.position,
       audio_url: publicUrl,
-      duration_seconds: durationSeconds
+      duration_seconds: input.durationSeconds
     })
     .select('id')
     .single()
 
   if (insertError || !inserted) {
     // Keep DB and storage in sync if the row failed to insert.
-    await svc.storage.from(SONGS_BUCKET).remove([key])
+    await svc.storage.from(SONGS_BUCKET).remove([input.key])
     return { ok: false, error: insertError?.message ?? 'insert_failed' }
   }
 
-  revalidatePath(`/admin/cassettes/${cassetteId}`)
+  revalidatePath(`/admin/cassettes/${input.cassetteId}`)
   revalidatePath('/admin/cassettes')
   revalidatePath('/')
   return { ok: true, songId: inserted.id }

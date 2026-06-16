@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { isPlayableAudio } from '@/lib/audio'
-import { Play } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Loader2, Pause, Play } from 'lucide-react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { RemoveSongButton } from './CassetteActions'
 import { UploadAudioButton } from './UploadAudioButton'
 
@@ -59,6 +59,100 @@ function parseTime(input: string): number | null {
   return Number(m[1]) * 60 + Number(m[2])
 }
 
+// ─── Audio preview (one track plays at a time across both sides) ──────────────
+
+type PreviewStatus = 'loading' | 'playing'
+
+const AudioPreviewContext = createContext<{
+  activeId: string | null
+  status: PreviewStatus | null
+  toggle: (id: string, url: string) => void
+} | null>(null)
+
+function AudioPreviewProvider({ children }: { children: React.ReactNode }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [status, setStatus] = useState<PreviewStatus | null>(null)
+
+  const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+      audioRef.current = null
+    }
+    setActiveId(null)
+    setStatus(null)
+  }, [])
+
+  const toggle = useCallback(
+    (id: string, url: string) => {
+      // Clicking the track that's already active stops it.
+      if (audioRef.current && activeId === id) {
+        stop()
+        return
+      }
+      stop()
+      // No crossOrigin: plain playback of cross-origin audio doesn't need CORS,
+      // and requiring it would break if the bucket didn't send the headers.
+      const audio = new Audio()
+      audio.preload = 'auto'
+      audioRef.current = audio
+      setActiveId(id)
+      setStatus('loading')
+      audio.addEventListener('playing', () => setStatus('playing'))
+      audio.addEventListener('ended', stop)
+      audio.addEventListener('error', stop)
+      audio.src = url
+      audio.play().catch(stop)
+    },
+    [activeId, stop]
+  )
+
+  useEffect(() => stop, [stop])
+
+  return <AudioPreviewContext.Provider value={{ activeId, status, toggle }}>{children}</AudioPreviewContext.Provider>
+}
+
+function PreviewButton({ songId, url, playable }: { songId: string; url: string | null; playable: boolean }) {
+  const ctx = useContext(AudioPreviewContext)
+  const isActive = ctx?.activeId === songId
+  const status = isActive ? ctx?.status : null
+  const disabled = !playable || !url
+
+  const label = disabled ? 'Sin MP3 reproducible' : status === 'playing' ? 'Pausar' : 'Escuchar para verificar'
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type='button'
+            disabled={disabled}
+            onClick={() => url && ctx?.toggle(songId, url)}
+            aria-label={label}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+              disabled
+                ? 'cursor-not-allowed bg-white/5 text-white/20'
+                : isActive
+                  ? 'bg-red-600 text-white hover:bg-red-500'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+            }`}
+          >
+            {status === 'loading' ? (
+              <Loader2 className='h-3.5 w-3.5 animate-spin' />
+            ) : status === 'playing' ? (
+              <Pause className='h-3.5 w-3.5 fill-current' />
+            ) : (
+              <Play className='h-3.5 w-3.5 translate-x-px fill-current' />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
 export function CassetteSides({
   cassetteId,
   songs,
@@ -72,20 +166,22 @@ export function CassetteSides({
   const sideB = songs.filter(s => s.side === 'B').sort((a, b) => a.position - b.position)
 
   return (
-    <section className='grid gap-4 md:grid-cols-2'>
-      <SideCard
-        side='A'
-        songs={sideA}
-        cassetteId={cassetteId}
-        canRemove={canRemove}
-      />
-      <SideCard
-        side='B'
-        songs={sideB}
-        cassetteId={cassetteId}
-        canRemove={canRemove}
-      />
-    </section>
+    <AudioPreviewProvider>
+      <section className='grid gap-4 xl:grid-cols-2'>
+        <SideCard
+          side='A'
+          songs={sideA}
+          cassetteId={cassetteId}
+          canRemove={canRemove}
+        />
+        <SideCard
+          side='B'
+          songs={sideB}
+          cassetteId={cassetteId}
+          canRemove={canRemove}
+        />
+      </section>
+    </AudioPreviewProvider>
   )
 }
 
@@ -125,7 +221,7 @@ function SideCard({
               return (
                 <li
                   key={pos}
-                  className='font-pt-mono flex items-center gap-3 rounded-lg border border-dashed border-white/5 px-3 py-2 text-[11px] text-white/20'
+                  className='font-pt-mono flex items-center gap-3 rounded-lg border border-dashed border-white/5 px-2.5 py-2 text-[11px] text-white/20 sm:px-3'
                 >
                   <span className='w-5 text-right'>#{pos}</span>
                   <span className='italic'>vacío</span>
@@ -136,9 +232,14 @@ function SideCard({
             return (
               <li
                 key={pos}
-                className='flex items-center gap-3 rounded-lg border border-white/10 bg-white/4 px-3 py-2'
+                className='flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-2 sm:gap-x-3 sm:px-3'
               >
-                <span className='font-pt-mono w-5 text-right text-[11px] text-white/40'>#{pos}</span>
+                <span className='font-pt-mono w-5 shrink-0 text-right text-[11px] text-white/40'>#{pos}</span>
+                <PreviewButton
+                  songId={song.id}
+                  url={song.audioUrl}
+                  playable={playable}
+                />
                 <div className='min-w-0 flex-1'>
                   <div className='flex items-center gap-1.5'>
                     <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
@@ -149,36 +250,39 @@ function SideCard({
                   </div>
                   <p className='font-pt-mono truncate text-[10px] text-white/40'>{song.title}</p>
                 </div>
-                <DurationCell
-                  song={song}
-                  cassetteId={cassetteId}
-                />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className='font-pt-mono inline-flex w-12 items-center justify-end gap-1 text-[10px] text-white/40'>
-                        <Play className='h-2.5 w-2.5 fill-current' />
-                        {song.plays.toLocaleString('es-MX')}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {song.plays === 1 ? '1 reproducción' : `${song.plays.toLocaleString('es-MX')} reproducciones`}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                {canRemove && (
-                  <UploadAudioButton
-                    songId={song.id}
-                    cassetteId={cassetteId}
-                    playable={playable}
-                  />
-                )}
-                {canRemove && (
-                  <RemoveSongButton
-                    songId={song.id}
+                {/* Controls cluster — wraps under the title on narrow screens. */}
+                <div className='ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2'>
+                  <DurationCell
+                    song={song}
                     cassetteId={cassetteId}
                   />
-                )}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className='font-pt-mono inline-flex w-11 items-center justify-end gap-1 text-[10px] text-white/40'>
+                          <Play className='h-2.5 w-2.5 fill-current' />
+                          {song.plays.toLocaleString('es-MX')}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {song.plays === 1 ? '1 reproducción' : `${song.plays.toLocaleString('es-MX')} reproducciones`}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {canRemove && (
+                    <UploadAudioButton
+                      songId={song.id}
+                      cassetteId={cassetteId}
+                      playable={playable}
+                    />
+                  )}
+                  {canRemove && (
+                    <RemoveSongButton
+                      songId={song.id}
+                      cassetteId={cassetteId}
+                    />
+                  )}
+                </div>
               </li>
             )
           })}
