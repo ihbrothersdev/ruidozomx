@@ -1,12 +1,25 @@
 'use client'
 
-import { updateSongDuration } from '@/app/admin/actions'
+import { moveSong, updateSongDuration } from '@/app/admin/actions'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { isPlayableAudio } from '@/lib/audio'
-import { Loader2, Pause, Play } from 'lucide-react'
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent
+} from '@dnd-kit/core'
+import { GripVertical, Loader2, Pause, Play } from 'lucide-react'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { sileo } from 'sileo'
 import { RemoveSongButton } from './CassetteActions'
 import { UploadAudioButton } from './UploadAudioButton'
 
@@ -57,6 +70,21 @@ function parseTime(input: string): number | null {
   const m = trimmed.match(/^(\d+):([0-5]?\d)$/)
   if (!m) return null
   return Number(m[1]) * 60 + Number(m[2])
+}
+
+const slotId = (side: Side, position: number) => `${side}:${position}`
+
+/** Optimistic swap/move that mirrors the `move_song` RPC, for instant UI feedback. */
+function applyMove(list: CassetteSong[], songId: string, toSide: Side, toPosition: number): CassetteSong[] {
+  const moving = list.find(s => s.id === songId)
+  if (!moving) return list
+  if (moving.side === toSide && moving.position === toPosition) return list
+  const other = list.find(s => s.side === toSide && s.position === toPosition)
+  return list.map(s => {
+    if (s.id === songId) return { ...s, side: toSide, position: toPosition }
+    if (other && s.id === other.id) return { ...s, side: moving.side, position: moving.position }
+    return s
+  })
 }
 
 // ─── Audio preview (one track plays at a time across both sides) ──────────────
@@ -162,25 +190,89 @@ export function CassetteSides({
   songs: CassetteSong[]
   canRemove: boolean
 }) {
-  const sideA = songs.filter(s => s.side === 'A').sort((a, b) => a.position - b.position)
-  const sideB = songs.filter(s => s.side === 'B').sort((a, b) => a.position - b.position)
+  // Local copy so drag-and-drop updates the UI instantly; reconciled with the
+  // server (revalidation) whenever the `songs` prop changes.
+  const [items, setItems] = useState(songs)
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setItems(songs)
+  }, [songs])
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  function onDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string)
+  }
+
+  function onDragEnd(event: DragEndEvent) {
+    setActiveId(null)
+    const { active, over } = event
+    if (!over) return
+    const songId = active.id as string
+    const target = over.data.current as { side: Side; position: number } | undefined
+    if (!target) return
+
+    const moving = items.find(s => s.id === songId)
+    if (!moving || (moving.side === target.side && moving.position === target.position)) return
+
+    const prev = items
+    setItems(applyMove(items, songId, target.side, target.position))
+
+    void moveSong({ songId, cassetteId, toSide: target.side, toPosition: target.position }).then(res => {
+      if (!res.ok) {
+        setItems(prev)
+        sileo.error({
+          title: 'No se pudo mover',
+          description: res.error,
+          position: 'top-center',
+          duration: 5000
+        })
+      }
+    })
+  }
+
+  const sideA = items.filter(s => s.side === 'A').sort((a, b) => a.position - b.position)
+  const sideB = items.filter(s => s.side === 'B').sort((a, b) => a.position - b.position)
+  const activeSong = activeId ? items.find(s => s.id === activeId) : null
 
   return (
     <AudioPreviewProvider>
-      <section className='grid gap-4 xl:grid-cols-2'>
-        <SideCard
-          side='A'
-          songs={sideA}
-          cassetteId={cassetteId}
-          canRemove={canRemove}
-        />
-        <SideCard
-          side='B'
-          songs={sideB}
-          cassetteId={cassetteId}
-          canRemove={canRemove}
-        />
-      </section>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={pointerWithin}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setActiveId(null)}
+      >
+        <section className='grid gap-4 xl:grid-cols-2'>
+          <SideCard
+            side='A'
+            songs={sideA}
+            cassetteId={cassetteId}
+            canRemove={canRemove}
+            activeId={activeId}
+          />
+          <SideCard
+            side='B'
+            songs={sideB}
+            cassetteId={cassetteId}
+            canRemove={canRemove}
+            activeId={activeId}
+          />
+        </section>
+        <DragOverlay dropAnimation={null}>
+          {activeSong ? (
+            <div className='flex items-center gap-2 rounded-lg border border-red-500/40 bg-neutral-900/95 px-3 py-2 shadow-xl shadow-black/40'>
+              <GripVertical className='h-3.5 w-3.5 text-white/40' />
+              <div className='min-w-0'>
+                <p className='font-pt-mono truncate text-xs font-bold text-white'>{activeSong.artist}</p>
+                <p className='font-pt-mono truncate text-[10px] text-white/40'>{activeSong.title}</p>
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </AudioPreviewProvider>
   )
 }
@@ -189,12 +281,14 @@ function SideCard({
   side,
   songs,
   cassetteId,
-  canRemove
+  canRemove,
+  activeId
 }: {
   side: Side
   songs: CassetteSong[]
   cassetteId: string
   canRemove: boolean
+  activeId: string | null
 }) {
   const sideCls = side === 'A' ? 'border-red-500/20 bg-red-500/[0.03]' : 'border-blue-500/20 bg-blue-500/[0.03]'
   const badgeCls = side === 'A' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
@@ -215,80 +309,164 @@ function SideCard({
         </div>
 
         <ol className='space-y-1'>
-          {Array.from({ length: count }, (_, i) => i + 1).map(pos => {
-            const song = songs.find(s => s.position === pos)
-            if (!song) {
-              return (
-                <li
-                  key={pos}
-                  className='font-pt-mono flex items-center gap-3 rounded-lg border border-dashed border-white/5 px-2.5 py-2 text-[11px] text-white/20 sm:px-3'
-                >
-                  <span className='w-5 text-right'>#{pos}</span>
-                  <span className='italic'>vacío</span>
-                </li>
-              )
-            }
-            const playable = isPlayableAudio(song.audioUrl)
-            return (
-              <li
-                key={pos}
-                className='flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-2 sm:gap-x-3 sm:px-3'
-              >
-                <span className='font-pt-mono w-5 shrink-0 text-right text-[11px] text-white/40'>#{pos}</span>
-                <PreviewButton
-                  songId={song.id}
-                  url={song.audioUrl}
-                  playable={playable}
-                />
-                <div className='min-w-0 flex-1'>
-                  <div className='flex items-center gap-1.5'>
-                    <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
-                    <AudioStatusDot
-                      playable={playable}
-                      hasAny={!!song.audioUrl}
-                    />
-                  </div>
-                  <p className='font-pt-mono truncate text-[10px] text-white/40'>{song.title}</p>
-                </div>
-                {/* Controls cluster — wraps under the title on narrow screens. */}
-                <div className='ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2'>
-                  <DurationCell
-                    song={song}
-                    cassetteId={cassetteId}
-                  />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className='font-pt-mono inline-flex w-11 items-center justify-end gap-1 text-[10px] text-white/40'>
-                          <Play className='h-2.5 w-2.5 fill-current' />
-                          {song.plays.toLocaleString('es-MX')}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {song.plays === 1 ? '1 reproducción' : `${song.plays.toLocaleString('es-MX')} reproducciones`}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {canRemove && (
-                    <UploadAudioButton
-                      songId={song.id}
-                      cassetteId={cassetteId}
-                      playable={playable}
-                    />
-                  )}
-                  {canRemove && (
-                    <RemoveSongButton
-                      songId={song.id}
-                      cassetteId={cassetteId}
-                    />
-                  )}
-                </div>
-              </li>
-            )
-          })}
+          {Array.from({ length: count }, (_, i) => i + 1).map(pos => (
+            <Slot
+              key={pos}
+              side={side}
+              position={pos}
+              song={songs.find(s => s.position === pos) ?? null}
+              cassetteId={cassetteId}
+              canRemove={canRemove}
+              activeId={activeId}
+            />
+          ))}
         </ol>
       </CardContent>
     </Card>
+  )
+}
+
+function Slot({
+  side,
+  position,
+  song,
+  cassetteId,
+  canRemove,
+  activeId
+}: {
+  side: Side
+  position: number
+  song: CassetteSong | null
+  cassetteId: string
+  canRemove: boolean
+  activeId: string | null
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: slotId(side, position),
+    data: { side, position },
+    disabled: !canRemove
+  })
+  // Highlight only when a *different* song hovers over this slot.
+  const dropTarget = isOver && activeId !== null && activeId !== song?.id
+
+  if (!song) {
+    return (
+      <li
+        ref={setNodeRef}
+        className={`font-pt-mono flex items-center gap-3 rounded-lg border border-dashed px-2.5 py-2 text-[11px] transition-colors sm:px-3 ${
+          dropTarget ? 'border-red-400/60 bg-red-400/10 text-white/40' : 'border-white/5 text-white/20'
+        }`}
+      >
+        <span className='w-5 text-right'>#{position}</span>
+        <span className='italic'>{dropTarget ? 'soltar aquí' : 'vacío'}</span>
+      </li>
+    )
+  }
+
+  return (
+    <li
+      ref={setNodeRef}
+      className={`rounded-lg border transition-colors ${
+        dropTarget ? 'border-red-400/60 bg-red-400/10' : 'border-white/10 bg-white/4'
+      }`}
+    >
+      <SongRow
+        song={song}
+        position={position}
+        cassetteId={cassetteId}
+        canRemove={canRemove}
+      />
+    </li>
+  )
+}
+
+function SongRow({
+  song,
+  position,
+  cassetteId,
+  canRemove
+}: {
+  song: CassetteSong
+  position: number
+  cassetteId: string
+  canRemove: boolean
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
+    id: song.id,
+    data: { side: song.side, position },
+    disabled: !canRemove
+  })
+  const playable = isPlayableAudio(song.audioUrl)
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 px-2.5 py-2 sm:gap-x-3 sm:px-3 ${
+        isDragging ? 'opacity-30' : ''
+      }`}
+    >
+      {canRemove && (
+        <button
+          ref={setActivatorNodeRef}
+          type='button'
+          aria-label='Arrastrar para reordenar'
+          className='flex h-6 w-4 shrink-0 cursor-grab touch-none items-center justify-center text-white/25 transition-colors hover:text-white/60 active:cursor-grabbing'
+          {...listeners}
+          {...attributes}
+        >
+          <GripVertical className='h-3.5 w-3.5' />
+        </button>
+      )}
+      <span className='font-pt-mono w-5 shrink-0 text-right text-[11px] text-white/40'>#{position}</span>
+      <PreviewButton
+        songId={song.id}
+        url={song.audioUrl}
+        playable={playable}
+      />
+      <div className='min-w-0 flex-1'>
+        <div className='flex items-center gap-1.5'>
+          <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
+          <AudioStatusDot
+            playable={playable}
+            hasAny={!!song.audioUrl}
+          />
+        </div>
+        <p className='font-pt-mono truncate text-[10px] text-white/40'>{song.title}</p>
+      </div>
+      {/* Controls cluster — wraps under the title on narrow screens. */}
+      <div className='ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2'>
+        <DurationCell
+          song={song}
+          cassetteId={cassetteId}
+        />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className='font-pt-mono inline-flex w-11 items-center justify-end gap-1 text-[10px] text-white/40'>
+                <Play className='h-2.5 w-2.5 fill-current' />
+                {song.plays.toLocaleString('es-MX')}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {song.plays === 1 ? '1 reproducción' : `${song.plays.toLocaleString('es-MX')} reproducciones`}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        {canRemove && (
+          <UploadAudioButton
+            songId={song.id}
+            cassetteId={cassetteId}
+            playable={playable}
+          />
+        )}
+        {canRemove && (
+          <RemoveSongButton
+            songId={song.id}
+            cassetteId={cassetteId}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 
