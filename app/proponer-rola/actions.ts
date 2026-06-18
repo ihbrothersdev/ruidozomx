@@ -44,10 +44,13 @@ export async function submitProposal(formData: FormData) {
   }
 
   if (user.email) {
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
       email: user.email
     })
+    if (!result.ok) {
+      console.error('[song-proposal] email failed', { userId: user.id, error: result.error })
+    }
   }
 
   redirect('/proponer-rola?success=true')
