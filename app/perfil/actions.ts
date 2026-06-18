@@ -68,17 +68,22 @@ export async function sendProposal(input: SendProposalInput) {
   const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
   const recipientEmail = recipient?.user?.email
 
-  if (recipientEmail) {
+  if (!recipientEmail) {
+    console.error('[proposal] no recipient email', { toProfileId: input.toProfileId })
+  } else {
     const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
     const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
 
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
       email: recipientEmail,
       dataVariables: {
         profile: profileUrl
       }
     })
+    if (!result.ok) {
+      console.error('[proposal] email failed', { toProfileId: input.toProfileId, error: result.error })
+    }
   }
 
   return { success: true }
@@ -221,18 +226,23 @@ export async function sendInterest(input: SendInterestInput) {
   const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
   const recipientEmail = recipient?.user?.email
 
-  if (recipientEmail) {
+  if (!recipientEmail) {
+    console.error('[interest] no recipient email', { toProfileId: input.toProfileId })
+  } else {
     const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
 
     const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
 
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
       email: recipientEmail,
       dataVariables: {
         profile: profileUrl
       }
     })
+    if (!result.ok) {
+      console.error('[interest] email failed', { toProfileId: input.toProfileId, error: result.error })
+    }
   }
 
   return { success: true }
@@ -335,10 +345,13 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
   // Confirmation email — same template the legacy /proponer-rola form uses.
   // Fire-and-forget: a Loops outage shouldn't break the proposal flow.
   if (user.email) {
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
       email: user.email
     })
+    if (!result.ok) {
+      console.error('[song-proposal] email failed', { userId: user.id, error: result.error })
+    }
   }
 
   return { success: true }
