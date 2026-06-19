@@ -10,6 +10,7 @@ import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { ExplorarComunidad } from './components/player/ExplorarComunidad'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
+import { UpcomingEventsCarousel } from './components/player/UpcomingEventsCarousel'
 
 const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -116,7 +117,6 @@ export default async function Home({ searchParams }: HomeProps) {
             cassetteActive={cassetteActive}
             cassetteId={cassetteId}
             concatAudioUrl={concatAudioUrl}
-            upcomingEvents={upcomingEvents}
             totalListeners={totalListeners}
           />
         )}
@@ -125,6 +125,12 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className='flex justify-center xl:absolute xl:top-330 xl:left-5 xl:z-0 xl:block'>
           <ExplorarComunidad />
         </div>
+
+        {upcomingEvents.length > 0 && (
+          <section className='relative z-20 pt-6 pb-16'>
+            <UpcomingEventsCarousel events={upcomingEvents} />
+          </section>
+        )}
 
         {/* Rocket man - right side. z-30 so the events marquee (z-20) passes
             behind it instead of over it. pointer-events-none keeps the
