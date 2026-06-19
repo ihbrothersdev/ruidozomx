@@ -140,10 +140,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
 
         {upcomingEvents.length > 0 && (
-          // Extra top padding on wide desktop clears the "Explorar Comunidad"
-          // block, which is absolutely positioned there and would otherwise
-          // overlap the marquee.
-          <section className='relative z-20 pt-6 pb-16 xl:pt-36'>
+          <section className='relative z-20 pt-6 pb-16 xl:pt-28'>
             <UpcomingEventsCarousel events={upcomingEvents} />
           </section>
         )}
