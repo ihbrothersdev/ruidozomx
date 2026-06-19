@@ -1,5 +1,17 @@
 import { createClient } from './server'
 
+/**
+ * `external_link` is free text — people paste sentences, emails or bare words
+ * like "Gratis" that Next would treat as a relative route. Only keep it when
+ * it's a single, absolute http(s) URL; otherwise the card falls back to the
+ * organizer's profile.
+ */
+function sanitizeExternalUrl(value: string | null): string | null {
+  if (!value) return null
+  const v = value.trim()
+  return /^https?:\/\/\S+$/i.test(v) ? v : null
+}
+
 export interface UpcomingEvent {
   id: string
   title: string
@@ -42,6 +54,7 @@ export async function getUpcomingEvents(limit = 12): Promise<UpcomingEvent[]> {
   }
   return (data as unknown as EventRow[]).map(({ proposer, ...rest }) => ({
     ...rest,
+    external_link: sanitizeExternalUrl(rest.external_link),
     proposer_slug: (Array.isArray(proposer) ? proposer[0]?.slug : proposer?.slug) ?? null
   }))
 }

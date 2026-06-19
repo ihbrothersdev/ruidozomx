@@ -1,6 +1,5 @@
 'use client'
 
-import type { UpcomingEvent } from '@/lib/supabase/events'
 import type { PlayerSong } from '@/lib/types'
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
@@ -8,7 +7,6 @@ import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
-import { UpcomingEventsCarousel } from './UpcomingEventsCarousel'
 
 interface HomePlayerSectionProps {
   songs: PlayerSong[]
@@ -19,7 +17,6 @@ interface HomePlayerSectionProps {
   cassetteActive?: boolean
   cassetteId: string | null
   concatAudioUrl?: string | null
-  upcomingEvents?: UpcomingEvent[]
   totalListeners?: number
 }
 
@@ -32,7 +29,6 @@ export function HomePlayerSection({
   cassetteActive = true,
   cassetteId,
   concatAudioUrl,
-  upcomingEvents = [],
   totalListeners = 0
 }: HomePlayerSectionProps) {
   const {
@@ -139,14 +135,8 @@ export function HomePlayerSection({
 
       <MientrasSuena totalListeners={totalListeners} />
 
-      {upcomingEvents.length > 0 && (
-        <section className='relative z-20 pt-24 pb-10 md:pt-36'>
-          <UpcomingEventsCarousel events={upcomingEvents} />
-        </section>
-      )}
-
       {/* Body 2: Song list */}
-      <section className='relative px-4 pt-8 pb-16'>
+      <section className='relative px-4 pt-8 pb-12'>
         <div className='relative mx-auto max-w-5xl'>
           <div className='flex flex-col items-center gap-2 md:flex-row md:items-start md:justify-center'>
             <div className='w-full max-w-[793px] flex-1'>

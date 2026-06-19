@@ -13,18 +13,43 @@ interface UpcomingEventsCarouselProps {
   events: UpcomingEvent[]
 }
 
-const PIXELS_PER_SECOND = 40
 const GAP_PX = 16 // matches gap-4 on the track; keeps the loop seam gapless
+const BASE_VELOCITY = -40 // px/s; negative = drifts left
+const MAX_FLING = 1400 // px/s cap so a hard flick can't launch it off
+const RETURN_TAU = 0.6 // s; how fast a flick eases back to the base drift
+const DRAG_THRESHOLD = 6 // px of movement before a press counts as a drag (vs a click)
+
+/** Keep the offset within one copy's width so the loop stays seamless either way. */
+function wrap(value: number, copyWidth: number): number {
+  if (copyWidth <= 0) return value
+  let n = value % copyWidth
+  if (n > 0) n -= copyWidth
+  return n
+}
 
 export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) {
   const x = useMotionValue(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-  const [paused, setPaused] = useState(false)
   // Only scroll when one copy of the list is wider than the viewport. With few
   // events the strip can't fill the width, so animating just slides a short row
   // around awkwardly — we center it statically instead.
   const [shouldScroll, setShouldScroll] = useState(false)
+
+  // Drag/inertia state lives in refs so it never triggers re-renders per frame.
+  const velocity = useRef(BASE_VELOCITY)
+  const pressing = useRef(false) // pointer is down (pauses the drift)
+  const dragging = useRef(false) // movement crossed the threshold → really dragging
+  const moved = useRef(false)
+  const startX = useRef(0)
+  const lastPointerX = useRef(0)
+  const lastMoveTime = useRef(0)
+
+  const copyWidth = () => {
+    const track = trackRef.current
+    if (!track) return 0
+    return (track.scrollWidth + GAP_PX) / 2
+  }
 
   useLayoutEffect(() => {
     const container = containerRef.current
@@ -47,15 +72,65 @@ export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) 
   }, [shouldScroll, events.length, x])
 
   useAnimationFrame((_, delta) => {
-    if (!shouldScroll || paused || !trackRef.current) return
-    // One copy's advance = (full strip + one gap) / 2, since the duplicated
-    // strip has an odd number of gaps; using scrollWidth/2 leaves a half-gap jump.
-    const halfWidth = (trackRef.current.scrollWidth + GAP_PX) / 2
-    if (halfWidth <= GAP_PX) return
-    let next = x.get() - (PIXELS_PER_SECOND * delta) / 1000
-    if (next <= -halfWidth) next += halfWidth
-    x.set(next)
+    if (!shouldScroll || pressing.current) return
+    const width = copyWidth()
+    if (width <= GAP_PX) return
+    const dt = delta / 1000
+    // Ease the current velocity back toward the base drift after a flick.
+    const k = 1 - Math.exp(-dt / RETURN_TAU)
+    velocity.current += (BASE_VELOCITY - velocity.current) * k
+    x.set(wrap(x.get() + velocity.current * dt, width))
   })
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!shouldScroll) return
+    pressing.current = true
+    dragging.current = false
+    moved.current = false
+    startX.current = e.clientX
+    lastPointerX.current = e.clientX
+    lastMoveTime.current = e.timeStamp
+    // NOTE: capture is deferred until a real drag — capturing here would
+    // redirect the follow-up click to this container and break card links.
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pressing.current) return
+    const dx = e.clientX - lastPointerX.current
+
+    // Promote to a drag only once movement clears the threshold; that's also
+    // when we grab pointer capture, so plain taps/clicks reach the card link.
+    if (!dragging.current && Math.abs(e.clientX - startX.current) > DRAG_THRESHOLD) {
+      dragging.current = true
+      moved.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+    }
+
+    if (dragging.current) {
+      if (dx !== 0) {
+        const dt = Math.max(1, e.timeStamp - lastMoveTime.current) / 1000
+        velocity.current = Math.max(-MAX_FLING, Math.min(MAX_FLING, dx / dt))
+      }
+      x.set(wrap(x.get() + dx, copyWidth()))
+    }
+    lastPointerX.current = e.clientX
+    lastMoveTime.current = e.timeStamp
+  }
+
+  const endDrag = (e: React.PointerEvent) => {
+    if (!pressing.current) return
+    pressing.current = false
+    dragging.current = false
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+  }
+
+  // Swallow the click that follows a real drag so a fling doesn't open a card.
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (moved.current) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
 
   // Duplicate the list only when scrolling so the loop seams seamlessly.
   const items = shouldScroll ? [...events, ...events] : events
@@ -70,9 +145,15 @@ export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) 
           title stays aligned with the page content above. */}
       <div
         ref={containerRef}
-        className='group relative overflow-hidden'
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
+        className={cn(
+          'relative overflow-hidden',
+          shouldScroll && 'cursor-grab touch-pan-y select-none active:cursor-grabbing'
+        )}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
       >
         {/* Fade edges so cards melt in/out at the real screen edges */}
         {shouldScroll && (
@@ -104,13 +185,14 @@ function EventCard({ event }: { event: UpcomingEvent }) {
 
   const card = (
     <Card className='h-full w-[260px] gap-0 overflow-hidden border-2 border-red-700/70 bg-yellow-100/95 py-0 shadow-[4px_4px_0_rgba(0,0,0,0.4)] transition-transform duration-300 hover:-translate-y-1 hover:rotate-1'>
-      <div className='relative h-32 w-full bg-neutral-800'>
+      <div className='relative h-24 w-full bg-neutral-800'>
         {event.cover_image_url ? (
           <Image
             src={event.cover_image_url}
             alt={event.title}
             fill
             sizes='260px'
+            draggable={false}
             className='object-cover'
           />
         ) : (
@@ -143,6 +225,7 @@ function EventCard({ event }: { event: UpcomingEvent }) {
   return (
     <Link
       href={href}
+      draggable={false}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={cn('block shrink-0')}
     >
