@@ -1,5 +1,6 @@
 'use client'
 
+import type { UpcomingEvent } from '@/lib/supabase/events'
 import type { PlayerSong } from '@/lib/types'
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
@@ -7,6 +8,7 @@ import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import { CassettePlayer } from './CassettePlayer'
 import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
+import { UpcomingEventsCarousel } from './UpcomingEventsCarousel'
 
 interface HomePlayerSectionProps {
   songs: PlayerSong[]
@@ -17,6 +19,8 @@ interface HomePlayerSectionProps {
   cassetteActive?: boolean
   cassetteId: string | null
   concatAudioUrl?: string | null
+  upcomingEvents?: UpcomingEvent[]
+  totalListeners?: number
 }
 
 export function HomePlayerSection({
@@ -27,7 +31,9 @@ export function HomePlayerSection({
   autoPlay,
   cassetteActive = true,
   cassetteId,
-  concatAudioUrl
+  concatAudioUrl,
+  upcomingEvents = [],
+  totalListeners = 0
 }: HomePlayerSectionProps) {
   const {
     isPlaying,
@@ -131,9 +137,13 @@ export function HomePlayerSection({
         </div>
       </section>
 
-      <div className='pb-6'>
-        <MientrasSuena />
-      </div>
+      <MientrasSuena totalListeners={totalListeners} />
+
+      {upcomingEvents.length > 0 && (
+        <section className='relative z-20 pt-24 pb-10 md:pt-36'>
+          <UpcomingEventsCarousel events={upcomingEvents} />
+        </section>
+      )}
 
       {/* Body 2: Song list */}
       <section className='relative px-4 pt-8 pb-16'>
