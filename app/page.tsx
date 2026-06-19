@@ -126,12 +126,6 @@ export default async function Home({ searchParams }: HomeProps) {
           <ExplorarComunidad />
         </div>
 
-        {upcomingEvents.length > 0 && (
-          <section className='relative z-20 pt-6 pb-16'>
-            <UpcomingEventsCarousel events={upcomingEvents} />
-          </section>
-        )}
-
         {/* Rocket man - right side. z-30 so the events marquee (z-20) passes
             behind it instead of over it. pointer-events-none keeps the
             decorative image from swallowing clicks on the content underneath. */}
@@ -144,6 +138,12 @@ export default async function Home({ searchParams }: HomeProps) {
             className='h-auto w-full'
           />
         </div>
+
+        {upcomingEvents.length > 0 && (
+          <section className='relative z-20 pt-6 pb-16'>
+            <UpcomingEventsCarousel events={upcomingEvents} />
+          </section>
+        )}
 
         <SomosTrinchera />
 
