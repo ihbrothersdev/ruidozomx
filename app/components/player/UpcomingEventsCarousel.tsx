@@ -185,7 +185,7 @@ function EventCard({ event }: { event: UpcomingEvent }) {
 
   const card = (
     <Card className='h-full w-[260px] gap-0 overflow-hidden border-2 border-red-700/70 bg-yellow-100/95 py-0 shadow-[4px_4px_0_rgba(0,0,0,0.4)] transition-transform duration-300 hover:-translate-y-1 hover:rotate-1'>
-      <div className='relative h-32 w-full bg-neutral-800'>
+      <div className='relative h-20 w-full bg-neutral-800'>
         {event.cover_image_url ? (
           <Image
             src={event.cover_image_url}
