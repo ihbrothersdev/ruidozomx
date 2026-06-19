@@ -38,8 +38,10 @@ export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) 
 
   // Drag/inertia state lives in refs so it never triggers re-renders per frame.
   const velocity = useRef(BASE_VELOCITY)
-  const dragging = useRef(false)
+  const pressing = useRef(false) // pointer is down (pauses the drift)
+  const dragging = useRef(false) // movement crossed the threshold → really dragging
   const moved = useRef(false)
+  const startX = useRef(0)
   const lastPointerX = useRef(0)
   const lastMoveTime = useRef(0)
 
@@ -70,7 +72,7 @@ export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) 
   }, [shouldScroll, events.length, x])
 
   useAnimationFrame((_, delta) => {
-    if (!shouldScroll || dragging.current) return
+    if (!shouldScroll || pressing.current) return
     const width = copyWidth()
     if (width <= GAP_PX) return
     const dt = delta / 1000
@@ -82,28 +84,42 @@ export function UpcomingEventsCarousel({ events }: UpcomingEventsCarouselProps) 
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!shouldScroll) return
-    dragging.current = true
+    pressing.current = true
+    dragging.current = false
     moved.current = false
+    startX.current = e.clientX
     lastPointerX.current = e.clientX
     lastMoveTime.current = e.timeStamp
-    e.currentTarget.setPointerCapture(e.pointerId)
+    // NOTE: capture is deferred until a real drag — capturing here would
+    // redirect the follow-up click to this container and break card links.
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging.current) return
+    if (!pressing.current) return
     const dx = e.clientX - lastPointerX.current
-    if (Math.abs(dx) > 0) {
-      const dt = Math.max(1, e.timeStamp - lastMoveTime.current) / 1000
-      velocity.current = Math.max(-MAX_FLING, Math.min(MAX_FLING, dx / dt))
+
+    // Promote to a drag only once movement clears the threshold; that's also
+    // when we grab pointer capture, so plain taps/clicks reach the card link.
+    if (!dragging.current && Math.abs(e.clientX - startX.current) > DRAG_THRESHOLD) {
+      dragging.current = true
+      moved.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
     }
-    if (Math.abs(dx) > DRAG_THRESHOLD) moved.current = true
-    x.set(wrap(x.get() + dx, copyWidth()))
+
+    if (dragging.current) {
+      if (dx !== 0) {
+        const dt = Math.max(1, e.timeStamp - lastMoveTime.current) / 1000
+        velocity.current = Math.max(-MAX_FLING, Math.min(MAX_FLING, dx / dt))
+      }
+      x.set(wrap(x.get() + dx, copyWidth()))
+    }
     lastPointerX.current = e.clientX
     lastMoveTime.current = e.timeStamp
   }
 
   const endDrag = (e: React.PointerEvent) => {
-    if (!dragging.current) return
+    if (!pressing.current) return
+    pressing.current = false
     dragging.current = false
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
   }
