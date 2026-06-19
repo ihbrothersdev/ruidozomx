@@ -32,6 +32,16 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
       <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
         <Caseteca />
 
+        <Link href='/comunidad'>
+          <Image
+            src='/assets/header/explorar.png'
+            alt='Explorar'
+            width={1383}
+            height={455}
+            className='h-9 w-auto sm:h-10 md:h-18'
+          />
+        </Link>
+
         <Link href='/quienes-somos'>
           <Image
             src='/assets/header/quienes-somos.png'
