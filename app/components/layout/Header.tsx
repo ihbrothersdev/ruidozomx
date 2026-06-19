@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Buscador } from './Buscador'
 import { Caseteca } from './Caseteca'
+import { ExplorarNavButton } from './ExplorarNavButton'
 import { ProfileDropdown } from './ProfileDropdown'
 
 interface HeaderProps {
@@ -32,15 +33,7 @@ export function Header({ user, photoUrl, role }: HeaderProps) {
       <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
         <Caseteca />
 
-        <Link href='/comunidad'>
-          <Image
-            src='/assets/header/explorar.png'
-            alt='Explorar'
-            width={1383}
-            height={455}
-            className='h-9 w-auto sm:h-10 md:h-18'
-          />
-        </Link>
+        <ExplorarNavButton />
 
         <Link href='/quienes-somos'>
           <Image
