@@ -340,6 +340,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         cassetteActive: ctx.cassetteActive,
         currentSongId: initial?.id ?? null,
         isStopped: false,
+        isPlaying: false,
         elapsedSeconds: 0,
         duration:
           isConcat && initial?.startSeconds !== undefined && initial?.endSeconds !== undefined
@@ -348,6 +349,10 @@ export const useAudioStore = create<AudioStore>((set, get) => {
       })
       updateMediaMetadata()
 
+      // Mark this as a deliberate pause so the 'pause' listener honours it
+      // (otherwise it's treated as an iOS spurious pause and `isPlaying` would
+      // stay true, leaving the bar showing "playing" while frozen).
+      userPaused = true
       audio.pause()
       if (isConcat && ctx.concatAudioUrl) {
         audio.src = ctx.concatAudioUrl
