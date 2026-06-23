@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import {
   usePlayerState,
@@ -61,6 +61,18 @@ export function PersistentPlayerBar() {
 
   const progressScrub = makeScrub(seek)
   const volumeScrub = makeScrub(setVolume)
+
+  // iOS forces audio volume to the hardware buttons (HTMLAudioElement.volume is
+  // read-only), so a volume control there is dead UI — hide it. useSyncExternalStore
+  // returns false on the server and the real value on the client without a
+  // hydration mismatch.
+  const isIOS = useSyncExternalStore(
+    () => () => {},
+    () =>
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    () => false
+  )
 
   // Don't render until songs are loaded
   if (songs.length === 0) return null
@@ -173,8 +185,8 @@ export function PersistentPlayerBar() {
           </button>
         </div>
 
-        {/* Row 4: Volume slider with icons on each side */}
-        <div className='flex items-center gap-2 px-2'>
+        {/* Row 4: Volume — hidden on iOS (volume is hardware-controlled there). */}
+        <div className={`flex items-center gap-2 px-2 ${isIOS ? 'hidden' : ''}`}>
           <button
             onClick={toggleMute}
             className='flex shrink-0 cursor-pointer items-center justify-center transition-opacity hover:opacity-80'
@@ -328,8 +340,8 @@ export function PersistentPlayerBar() {
           </div>
         </div>
 
-        {/* Right: Volume */}
-        <div className='flex shrink-0 items-center justify-end gap-1 md:w-[30%]'>
+        {/* Right: Volume — hidden on iOS (volume is hardware-controlled there). */}
+        <div className={`flex shrink-0 items-center justify-end gap-1 md:w-[30%] ${isIOS ? 'hidden' : ''}`}>
           <button
             onClick={toggleMute}
             className='flex h-8 w-8 cursor-pointer items-center justify-center transition-opacity hover:opacity-80'
