@@ -92,9 +92,16 @@ export function PersistentPlayerBar() {
   // its own audio; the global bar has no place there.
   if (pathname === '/quienes-somos') return null
 
+  // On admin routes the full-height sidebar owns the left rail, so dock the bar
+  // beside it (its width) instead of running underneath. Mobile keeps full width
+  // since the sidebar is a drawer there.
+  const isAdmin = pathname?.startsWith('/admin')
+
   return (
     <div
-      className='fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5'
+      className={`fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5 ${
+        isAdmin ? 'md:left-64' : ''
+      }`}
       style={{
         backgroundImage: "url('/assets/player-bar/background.png')",
         backgroundRepeat: 'repeat-x',

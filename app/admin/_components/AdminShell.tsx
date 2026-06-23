@@ -51,7 +51,7 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
       />
 
       {/* ── Sidebar (desktop) ── */}
-      <aside className='fixed top-0 left-0 z-[60] hidden h-[100dvh] w-64 flex-col overflow-y-auto border-r border-white/5 bg-neutral-950 md:flex'>
+      <aside className='fixed top-0 left-0 z-40 hidden h-[100dvh] w-64 flex-col overflow-y-auto border-r border-white/5 bg-black/40 md:flex'>
         <SidebarContent
           displayName={displayName}
           photoUrl={photoUrl}
