@@ -55,7 +55,8 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
         concatAudioUrl: null,
         cassetteActive: false,
         initialSongId: key,
-        autoPlay: true
+        autoPlay: true,
+        loop: true
       })
     }
   }

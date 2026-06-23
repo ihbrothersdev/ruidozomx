@@ -29,6 +29,8 @@ export interface PlaybackContext {
   initialSongId?: string
   /** Start playing as soon as the playlist loads (archived/search/profile deep-links). */
   autoPlay?: boolean
+  /** Loop the playlist: last → first (and next/prev wrap around). */
+  loop?: boolean
 }
 
 // ── Engine singletons (live outside React) ───────────────────────────────────
@@ -56,6 +58,7 @@ interface AudioStore {
   cassetteId: string | null
   concatAudioUrl: string | null
   cassetteActive: boolean
+  loop: boolean
 
   // Playback state
   currentSongId: string | null
@@ -210,8 +213,13 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         setCurrentSong(first.id)
         audio.src = first.audioSrc
         audio.currentTime = 0
-        set({ isPlaying: false })
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
+        if (get().loop) {
+          // Circular playlist (profile rolas): wrap to the first and keep going.
+          audio.play().catch(() => {})
+        } else {
+          set({ isPlaying: false })
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
+        }
       }
     })
 
@@ -306,6 +314,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
     cassetteId: null,
     concatAudioUrl: null,
     cassetteActive: true,
+    loop: false,
     currentSongId: null,
     isPlaying: false,
     isStopped: false,
@@ -345,6 +354,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         cassetteId: ctx.cassetteId,
         concatAudioUrl: ctx.concatAudioUrl,
         cassetteActive: ctx.cassetteActive,
+        loop: !!ctx.loop,
         currentSongId: initial?.id ?? null,
         isStopped: false,
         isPlaying: willPlay,
@@ -404,8 +414,10 @@ export const useAudioStore = create<AudioStore>((set, get) => {
       if (!audio) return
       const sorted = getSorted(get().songs)
       const idx = sorted.findIndex(s => s.id === get().currentSongId)
-      if (idx < 0 || idx >= sorted.length - 1) return
-      const nextSong = sorted[idx + 1]
+      if (idx < 0) return
+      const atEnd = idx >= sorted.length - 1
+      if (atEnd && !get().loop) return
+      const nextSong = atEnd ? sorted[0] : sorted[idx + 1]
       set({ isStopped: false })
       setCurrentSong(nextSong.id)
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'
@@ -435,8 +447,10 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         return
       }
 
-      if (idx <= 0) return
-      const prevSong = sorted[idx - 1]
+      if (idx < 0) return
+      const atStart = idx === 0
+      if (atStart && !get().loop) return
+      const prevSong = atStart ? sorted[sorted.length - 1] : sorted[idx - 1]
       set({ isStopped: false })
       setCurrentSong(prevSong.id)
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'
