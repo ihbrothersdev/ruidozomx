@@ -88,6 +88,7 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
+        events={events}
         onExitEdit={() => setIsEditing(false)}
       />
     )

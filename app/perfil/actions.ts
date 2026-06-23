@@ -422,6 +422,67 @@ export async function submitEvent(input: SubmitEventInput) {
   return { success: true }
 }
 
+interface UpdateEventInput extends SubmitEventInput {
+  id: string
+}
+
+export async function updateEvent(input: UpdateEventInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  if (!input.id) {
+    return { error: 'Evento no válido.' }
+  }
+  if (!input.title.trim()) {
+    return { error: 'El nombre del evento es obligatorio.' }
+  }
+  if (!input.type.trim()) {
+    return { error: 'El tipo de evento es obligatorio.' }
+  }
+  if (!input.date) {
+    return { error: 'La fecha del evento es obligatoria.' }
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
+    return { error: 'La fecha no es válida.' }
+  }
+
+  // `.eq('profile_id', user.id)` mirrors the `events_update_own` RLS policy and
+  // makes ownership explicit; `.select()` lets us tell "not yours" from a no-op.
+  const { data, error } = await supabase
+    .from('events')
+    .update({
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      event_date: input.date,
+      venue_name: input.venueName?.trim() || null,
+      address: input.address?.trim() || null,
+      city: input.city?.trim() || null,
+      event_type: input.type.trim(),
+      external_link: input.externalLink?.trim() || null
+    })
+    .eq('id', input.id)
+    .eq('profile_id', user.id)
+    .select('id')
+
+  if (error) {
+    console.error('Error updating event:', error)
+    return { error: 'No se pudo actualizar el evento. Intenta de nuevo.' }
+  }
+  if (!data || data.length === 0) {
+    return { error: 'No se encontró el evento o no tienes permiso para editarlo.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
 const INDUSTRY_ROLES: readonly Role[] = ['manager', 'promotor', 'agente']
 const ROLE_DETAIL_TABLE: Record<Role, string | null> = {
   banda: 'band_profiles',
