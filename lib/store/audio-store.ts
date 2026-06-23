@@ -31,6 +31,12 @@ export interface PlaybackContext {
   autoPlay?: boolean
   /** Loop the playlist: last → first (and next/prev wrap around). */
   loop?: boolean
+  /**
+   * Only load when nothing is playing yet (the global default). The layout's
+   * AudioProvider sets the live cassette this way so a server re-render
+   * (revalidate/refresh) never clobbers a profile rola that took over.
+   */
+  onlyIfEmpty?: boolean
 }
 
 // ── Engine singletons (live outside React) ───────────────────────────────────
@@ -328,9 +334,13 @@ export const useAudioStore = create<AudioStore>((set, get) => {
       const audio = getAudio()
       if (!audio || ctx.songs.length === 0) return
 
+      const state = get()
+      // The global default (layout) only seeds the player when empty — it must
+      // never override an already-loaded source (e.g. a profile rola) on a
+      // server re-render.
+      if (ctx.onlyIfEmpty && state.songs.length > 0) return
       // Idempotent: re-loading the same source (e.g. the layout's active-cassette
       // init firing on every navigation) must not interrupt playback.
-      const state = get()
       if (state.songs.length > 0 && state.contextId === ctx.contextId) return
 
       // Preserve the play/pause state across a context swap: if the user was

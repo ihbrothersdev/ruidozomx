@@ -25,7 +25,8 @@ export function AudioProvider({ children, songs, cassetteId, concatAudioUrl }: A
       songs,
       cassetteId,
       concatAudioUrl,
-      cassetteActive: true
+      cassetteActive: true,
+      onlyIfEmpty: true
     })
   }, [loadContext, songs, cassetteId, concatAudioUrl])
 
