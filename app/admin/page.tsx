@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
     supabase.from('cassettes').select('id, name').eq('is_next', true).maybeSingle(),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).neq('role', 'admin'),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'banda'),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),
     supabase
