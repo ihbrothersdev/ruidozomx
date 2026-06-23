@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 export default async function ComunidadPage() {
   let user = null
   let photoUrl: string | null = null
+  let role: string | null = null
   let profiles: CommunityProfile[] = []
 
   try {
@@ -22,8 +23,9 @@ export default async function ComunidadPage() {
     user = authData.user
 
     if (user) {
-      const { data: userProfile } = await supabase.from('profiles').select('photo_url').eq('id', user.id).single()
+      const { data: userProfile } = await supabase.from('profiles').select('photo_url, role').eq('id', user.id).single()
       photoUrl = (userProfile?.photo_url as string) || null
+      role = (userProfile?.role as string) || null
     }
 
     // Fetch all active community profiles
@@ -62,6 +64,7 @@ export default async function ComunidadPage() {
         <Header
           user={user}
           photoUrl={photoUrl}
+          role={role}
         />
 
         <div className='mx-auto max-w-7xl px-4 pt-4 pb-12 md:px-8'>
