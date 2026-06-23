@@ -22,7 +22,7 @@ export function PersistentPlayerBar() {
   const songs = usePlayerSongs()
   const currentSong = useCurrentSong()
   const { isPlaying, progress, elapsedSeconds, duration } = usePlayerState()
-  const { play, pause, next, prev, seek, setVolume, toggleMute } = usePlayerActions()
+  const { play, pause, next, prev, seek, startScrub, endScrub, setVolume, toggleMute } = usePlayerActions()
   const { volume, isMuted } = usePlayerVolume()
 
   // Click/drag handlers read the actual element from the event — NOT a shared
@@ -36,23 +36,32 @@ export function PersistentPlayerBar() {
   }
 
   const makeScrub = useCallback(
-    (apply: (pct: number) => void) => ({
+    (apply: (pct: number) => void, opts?: { onStart?: () => void; onCommit?: (pct: number | null) => void }) => ({
       onClick: (e: React.MouseEvent<HTMLDivElement>) => {
         const pct = pctFromBar(e.currentTarget, e.clientX)
-        if (pct !== null) apply(pct)
+        if (pct !== null) {
+          apply(pct)
+          opts?.onCommit?.(pct)
+        }
       },
       // The dot lives inside the bar; its parent is the track we measure against.
       onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
         const bar = e.currentTarget.parentElement
         if (!bar) return
         e.preventDefault()
+        opts?.onStart?.()
+        let last: number | null = null
         const move = (ev: PointerEvent) => {
           const pct = pctFromBar(bar, ev.clientX)
-          if (pct !== null) apply(pct)
+          if (pct !== null) {
+            last = pct
+            apply(pct)
+          }
         }
         const up = () => {
           document.removeEventListener('pointermove', move)
           document.removeEventListener('pointerup', up)
+          opts?.onCommit?.(last)
         }
         document.addEventListener('pointermove', move)
         document.addEventListener('pointerup', up)
@@ -61,7 +70,7 @@ export function PersistentPlayerBar() {
     []
   )
 
-  const progressScrub = makeScrub(seek)
+  const progressScrub = makeScrub(seek, { onStart: startScrub, onCommit: endScrub })
   const volumeScrub = makeScrub(setVolume)
 
   // iOS forces audio volume to the hardware buttons (HTMLAudioElement.volume is
@@ -83,9 +92,16 @@ export function PersistentPlayerBar() {
   // its own audio; the global bar has no place there.
   if (pathname === '/quienes-somos') return null
 
+  // On admin routes the full-height sidebar owns the left rail, so dock the bar
+  // beside it (its width) instead of running underneath. Mobile keeps full width
+  // since the sidebar is a drawer there.
+  const isAdmin = pathname?.startsWith('/admin')
+
   return (
     <div
-      className='fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5'
+      className={`fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5 ${
+        isAdmin ? 'md:left-64' : ''
+      }`}
       style={{
         backgroundImage: "url('/assets/player-bar/background.png')",
         backgroundRepeat: 'repeat-x',
@@ -121,8 +137,8 @@ export function PersistentPlayerBar() {
               style={{ width: `${progress * 100}%` }}
             />
             <div
-              className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
-              style={{ left: `${progress * 100}%` }}
+              className='absolute z-10 cursor-grab active:cursor-grabbing'
+              style={{ left: `calc(${progress * 100}% - ${progress * 12}px)` }}
               onPointerDown={progressScrub.onPointerDown}
             >
               <Image
@@ -142,8 +158,9 @@ export function PersistentPlayerBar() {
           </span>
         </div>
 
-        {/* Row 3: Transport controls — big and centered */}
-        <div className='flex items-center justify-center gap-6'>
+        {/* Row 3: Transport controls — big and centered. Mute floats right so it
+            doesn't shift the prev/play/next group off center. */}
+        <div className='relative flex items-center justify-center gap-6'>
           <button
             onClick={prev}
             className='flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80'
@@ -189,59 +206,24 @@ export function PersistentPlayerBar() {
               draggable={false}
             />
           </button>
-        </div>
 
-        {/* Row 4: Volume — hidden on iOS (volume is hardware-controlled there). */}
-        <div className={`flex items-center gap-2 px-2 ${isIOS ? 'hidden' : ''}`}>
+          {/* Mute toggle — kept on mobile (a quick silence the physical buttons
+              can't do); the volume slider is dropped to save vertical space. */}
           <button
             onClick={toggleMute}
-            className='flex shrink-0 cursor-pointer items-center justify-center transition-opacity hover:opacity-80'
             aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+            className='absolute top-1/2 right-0 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center transition-opacity hover:opacity-80'
           >
             <Image
-              src='/assets/player-bar/mute.png'
-              alt=''
-              width={14}
-              height={14}
-              className='h-3 w-auto opacity-50'
+              src={isMuted ? '/assets/player-bar/mute.png' : '/assets/player-bar/sound.png'}
+              alt={isMuted ? 'Silenciado' : 'Sonido'}
+              width={18}
+              height={18}
+              className='h-4 w-auto opacity-60'
               unoptimized
               draggable={false}
             />
           </button>
-          <div
-            className='relative flex h-3 flex-1 cursor-pointer items-center'
-            onClick={volumeScrub.onClick}
-          >
-            <div className='absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#e8e0c8]/20' />
-            <div
-              className='absolute top-1/2 left-0 h-[3px] -translate-y-1/2 rounded-full bg-[#e8e0c8]/80'
-              style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
-            />
-            <div
-              className='absolute z-10 cursor-grab active:cursor-grabbing'
-              style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - ${(isMuted ? 0 : volume) * 10}px)` }}
-              onPointerDown={volumeScrub.onPointerDown}
-            >
-              <Image
-                src='/assets/player-bar/dot.png'
-                alt='Volumen'
-                width={10}
-                height={10}
-                className='h-2.5 w-2.5'
-                unoptimized
-                draggable={false}
-              />
-            </div>
-          </div>
-          <Image
-            src='/assets/player-bar/sound.png'
-            alt=''
-            width={14}
-            height={14}
-            className='h-3 w-auto shrink-0 opacity-50'
-            unoptimized
-            draggable={false}
-          />
         </div>
       </div>
 
@@ -324,8 +306,8 @@ export function PersistentPlayerBar() {
                 style={{ width: `${progress * 100}%` }}
               />
               <div
-                className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
-                style={{ left: `${progress * 100}%` }}
+                className='absolute z-10 cursor-grab active:cursor-grabbing'
+                style={{ left: `calc(${progress * 100}% - ${progress * 12}px)` }}
                 onPointerDown={progressScrub.onPointerDown}
               >
                 <Image

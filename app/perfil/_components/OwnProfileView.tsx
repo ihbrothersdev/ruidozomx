@@ -446,7 +446,7 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
     <div className='space-y-2'>
       <div className='flex items-baseline justify-between gap-3'>
         <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-          Rolas propuestas al casete
+          Rolas propuestas al cassete
         </p>
         <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
           {total}
@@ -461,15 +461,15 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
               className='flex items-start gap-2 text-sm'
             >
               <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-              <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-                <span className='font-bold text-black uppercase'>{p.title}</span>
-                <span className='text-xs text-black/60'>— {p.artist}</span>
-                <span
-                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
-                >
-                  {status.label}
-                </span>
+              <div className='font-pt-mono min-w-0 flex-1'>
+                <span className='font-bold break-words text-black uppercase'>{p.title}</span>
+                <span className='text-xs text-black/60'> — {p.artist}</span>
               </div>
+              <span
+                className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
+              >
+                {status.label}
+              </span>
             </li>
           )
         })}
@@ -540,7 +540,7 @@ interface ActivityInboxProps {
  * | Recibiste una propuesta     | All except fan & admin                       |
  * | Publicaste un evento        | banda, venue, agente, promotor, manager      |
  * | Alguien quiere conectar     | All except admin                             |
- * | Rolas propuestas al casete  | All except admin                             |
+ * | Rolas propuestas al cassete  | All except admin                             |
  */
 function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConnectionsCount }: ActivityInboxProps) {
   // fan and admin see no inbox
@@ -550,7 +550,7 @@ function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConn
   // Proveedor publishes "ofertas" instead of "eventos"
   const publishLabel = role === 'proveedor' ? 'Publicaste una oferta' : 'Publicaste un evento'
 
-  // Note: "Rolas propuestas al casete" is rendered as its own ProposedSongs
+  // Note: "Rolas propuestas al cassete" is rendered as its own ProposedSongs
   // section (with the actual songs + status), so it's intentionally NOT here.
   const items = [
     { label: 'Recibiste una propuesta', href: '#propuestas', count: receivedProposalsCount },

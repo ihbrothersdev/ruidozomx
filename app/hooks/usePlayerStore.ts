@@ -33,6 +33,8 @@ export function usePlayerActions() {
       next: s.next,
       prev: s.prev,
       seek: s.seek,
+      startScrub: s.startScrub,
+      endScrub: s.endScrub,
       playSong: s.playSong,
       setVolume: s.setVolume,
       toggleMute: s.toggleMute
