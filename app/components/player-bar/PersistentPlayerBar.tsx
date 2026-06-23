@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import Image from 'next/image'
 import {
   usePlayerState,
@@ -23,74 +23,44 @@ export function PersistentPlayerBar() {
   const { play, pause, next, prev, seek, setVolume, toggleMute } = usePlayerActions()
   const { volume, isMuted } = usePlayerVolume()
 
-  const progressRef = useRef<HTMLDivElement>(null)
-  const volumeRef = useRef<HTMLDivElement>(null)
+  // Click/drag handlers read the actual element from the event — NOT a shared
+  // ref. The bar renders twice (mobile + desktop); a single ref would point at
+  // the hidden desktop copy, whose getBoundingClientRect() is 0 on mobile and
+  // broke the sliders there.
+  const pctFromBar = (bar: HTMLElement, clientX: number) => {
+    const rect = bar.getBoundingClientRect()
+    if (!rect.width) return null
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  }
 
-  // ── Progress seek ────────────────────────────────────────────────
-  const handleProgressClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const bar = progressRef.current
-      if (!bar) return
-      const rect = bar.getBoundingClientRect()
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-      seek(pct)
-    },
-    [seek]
+  const makeScrub = useCallback(
+    (apply: (pct: number) => void) => ({
+      onClick: (e: React.MouseEvent<HTMLDivElement>) => {
+        const pct = pctFromBar(e.currentTarget, e.clientX)
+        if (pct !== null) apply(pct)
+      },
+      // The dot lives inside the bar; its parent is the track we measure against.
+      onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+        const bar = e.currentTarget.parentElement
+        if (!bar) return
+        e.preventDefault()
+        const move = (ev: PointerEvent) => {
+          const pct = pctFromBar(bar, ev.clientX)
+          if (pct !== null) apply(pct)
+        }
+        const up = () => {
+          document.removeEventListener('pointermove', move)
+          document.removeEventListener('pointerup', up)
+        }
+        document.addEventListener('pointermove', move)
+        document.addEventListener('pointerup', up)
+      }
+    }),
+    []
   )
 
-  const handleProgressDrag = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const bar = progressRef.current
-      if (!bar) return
-      e.preventDefault()
-
-      const move = (ev: PointerEvent) => {
-        const rect = bar.getBoundingClientRect()
-        const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width))
-        seek(pct)
-      }
-      const up = () => {
-        document.removeEventListener('pointermove', move)
-        document.removeEventListener('pointerup', up)
-      }
-      document.addEventListener('pointermove', move)
-      document.addEventListener('pointerup', up)
-    },
-    [seek]
-  )
-
-  // ── Volume drag ──────────────────────────────────────────────────
-  const handleVolumeClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const bar = volumeRef.current
-      if (!bar) return
-      const rect = bar.getBoundingClientRect()
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-      setVolume(pct)
-    },
-    [setVolume]
-  )
-
-  const handleVolumeDrag = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const bar = volumeRef.current
-      if (!bar) return
-      e.preventDefault()
-
-      const move = (ev: PointerEvent) => {
-        const rect = bar.getBoundingClientRect()
-        const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width))
-        setVolume(pct)
-      }
-      const up = () => {
-        document.removeEventListener('pointermove', move)
-        document.removeEventListener('pointerup', up)
-      }
-      document.addEventListener('pointermove', move)
-      document.addEventListener('pointerup', up)
-    },
-    [setVolume]
-  )
+  const progressScrub = makeScrub(seek)
+  const volumeScrub = makeScrub(setVolume)
 
   // Don't render until songs are loaded
   if (songs.length === 0) return null
@@ -125,9 +95,8 @@ export function PersistentPlayerBar() {
             {formatTime(elapsedSeconds)}
           </span>
           <div
-            ref={progressRef}
             className='relative flex h-3 flex-1 cursor-pointer items-center'
-            onClick={handleProgressClick}
+            onClick={progressScrub.onClick}
           >
             <div
               className='h-[3px] rounded-full bg-[#e8e0c8]/80'
@@ -136,7 +105,7 @@ export function PersistentPlayerBar() {
             <div
               className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
               style={{ left: `${progress * 100}%` }}
-              onPointerDown={handleProgressDrag}
+              onPointerDown={progressScrub.onPointerDown}
             >
               <Image
                 src='/assets/player-bar/dot.png'
@@ -222,9 +191,8 @@ export function PersistentPlayerBar() {
             />
           </button>
           <div
-            ref={volumeRef}
             className='relative flex h-3 flex-1 cursor-pointer items-center'
-            onClick={handleVolumeClick}
+            onClick={volumeScrub.onClick}
           >
             <div className='absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#e8e0c8]/20' />
             <div
@@ -234,7 +202,7 @@ export function PersistentPlayerBar() {
             <div
               className='absolute z-10 cursor-grab active:cursor-grabbing'
               style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - ${(isMuted ? 0 : volume) * 10}px)` }}
-              onPointerDown={handleVolumeDrag}
+              onPointerDown={volumeScrub.onPointerDown}
             >
               <Image
                 src='/assets/player-bar/dot.png'
@@ -330,9 +298,8 @@ export function PersistentPlayerBar() {
               {formatTime(elapsedSeconds)}
             </span>
             <div
-              ref={progressRef}
               className='relative flex h-3 flex-1 cursor-pointer items-center'
-              onClick={handleProgressClick}
+              onClick={progressScrub.onClick}
             >
               <div
                 className='h-[3px] rounded-full bg-[#e8e0c8]/80'
@@ -341,7 +308,7 @@ export function PersistentPlayerBar() {
               <div
                 className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
                 style={{ left: `${progress * 100}%` }}
-                onPointerDown={handleProgressDrag}
+                onPointerDown={progressScrub.onPointerDown}
               >
                 <Image
                   src='/assets/player-bar/dot.png'
@@ -379,9 +346,8 @@ export function PersistentPlayerBar() {
             />
           </button>
           <div
-            ref={volumeRef}
             className='relative flex h-3 w-20 cursor-pointer items-center'
-            onClick={handleVolumeClick}
+            onClick={volumeScrub.onClick}
           >
             <div className='absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-[#e8e0c8]/20' />
             <div
@@ -391,7 +357,7 @@ export function PersistentPlayerBar() {
             <div
               className='absolute z-10 cursor-grab active:cursor-grabbing'
               style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - ${(isMuted ? 0 : volume) * 10}px)` }}
-              onPointerDown={handleVolumeDrag}
+              onPointerDown={volumeScrub.onPointerDown}
             >
               <Image
                 src='/assets/player-bar/dot.png'
