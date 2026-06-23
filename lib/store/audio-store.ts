@@ -324,6 +324,13 @@ export const useAudioStore = create<AudioStore>((set, get) => {
       const state = get()
       if (state.songs.length > 0 && state.contextId === ctx.contextId) return
 
+      // Preserve the play/pause state across a context swap: if the user was
+      // listening (e.g. a profile rola) and lands on a new source, keep it
+      // playing; if paused/idle (fresh page load), stay paused. `autoPlay`
+      // forces playback for deep-links.
+      const wasPlaying = !audio.paused
+      const willPlay = !!ctx.autoPlay || wasPlaying
+
       completedSongs.clear()
       playStartLoggedFor = null
 
@@ -340,7 +347,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         cassetteActive: ctx.cassetteActive,
         currentSongId: initial?.id ?? null,
         isStopped: false,
-        isPlaying: false,
+        isPlaying: willPlay,
         elapsedSeconds: 0,
         duration:
           isConcat && initial?.startSeconds !== undefined && initial?.endSeconds !== undefined
@@ -367,7 +374,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         audio.currentTime = 0
       }
 
-      if (ctx.autoPlay) audio.play().catch(() => {})
+      if (willPlay) audio.play().catch(() => {})
     },
 
     play: () => {
