@@ -75,9 +75,9 @@ export default async function ComunidadPage() {
 function getActivityHighlight(role: string): string {
   switch (role) {
     case 'banda':
-      return 'Rolas propuestas al casete'
+      return 'Rolas propuestas al cassete'
     case 'fan':
-      return 'Rolas propuestas al casete\nBandas que le gustan'
+      return 'Rolas propuestas al cassete\nBandas que le gustan'
     case 'venue':
       return 'Fechas disponibles'
     case 'promotor':
