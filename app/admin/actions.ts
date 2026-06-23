@@ -1,15 +1,17 @@
 'use server'
 
-import { extractStorageKey, isPlayableAudio, songStorageKey } from '@/lib/audio'
+import {
+  audioMetaError,
+  extractStorageKey,
+  isPlayableAudio,
+  SONGS_BUCKET,
+  songStorageKey
+} from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-
-const SONGS_BUCKET = 'songs'
-const MAX_AUDIO_BYTES = 30 * 1024 * 1024 // 30 MB
-const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/mp4'])
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guard
@@ -86,15 +88,6 @@ async function backToProposals(kind: 'ok' | 'e', code: string, msg?: string) {
   redirect(`/admin/propuestas?${params.toString()}`)
 }
 
-/** Validates client-reported audio metadata before minting a signed upload URL. */
-function audioMetaError(fileName: string, fileType: string, fileSize: number): string | null {
-  if (!fileName) return 'faltan_datos'
-  if (!Number.isFinite(fileSize) || fileSize <= 0) return 'archivo_vacio'
-  if (fileSize > MAX_AUDIO_BYTES) return 'archivo_muy_grande'
-  if (fileType && !ALLOWED_AUDIO_MIME.has(fileType)) return 'tipo_no_soportado'
-  return null
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Proposals
 // ─────────────────────────────────────────────────────────────────────────────
@@ -144,7 +137,7 @@ export async function acceptProposal(formData: FormData) {
     genre: proposal!.genre,
     side,
     position,
-    audio_url: proposal!.external_link || proposal!.audio_file_path,
+    audio_url: proposal!.audio_url || proposal!.external_link || proposal!.audio_file_path,
     proposal_id: proposal!.id
   })
 
