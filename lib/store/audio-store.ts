@@ -45,6 +45,10 @@ let engineInited = false
 // The most recent pause initiated by us (UI/OS control). iOS fires spurious
 // 'pause' events on lock-screen even while audio keeps playing; we ignore those.
 let userPaused = false
+// True while the user drags the progress scrubber. Lets us hold at the end of a
+// per-song track without auto-advancing mid-drag (we advance on release instead).
+let scrubbing = false
+let resumeAfterScrub = false
 let sessionId = ''
 let sessionStarted = false
 let playStartLoggedFor: string | null = null
@@ -85,6 +89,8 @@ interface AudioStore {
   next: () => void
   prev: () => void
   seek: (pct: number) => void
+  startScrub: () => void
+  endScrub: (pct: number | null) => void
   playSong: (id: string) => void
   setVolume: (vol: number) => void
   toggleMute: () => void
@@ -191,6 +197,13 @@ export const useAudioStore = create<AudioStore>((set, get) => {
     })
 
     audio.addEventListener('ended', () => {
+      // Dragging the scrubber to the very end: hold at the end of the current
+      // track (a "spurious" pause that leaves isPlaying true) and let endScrub
+      // advance on release, instead of auto-skipping while the finger is down.
+      if (scrubbing) {
+        audio.pause()
+        return
+      }
       const sorted = getSorted(get().songs)
       const endedId = get().currentSongId
       if (endedId && !completedSongs.has(endedId)) {
@@ -482,11 +495,37 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         if (!cur || cur.startSeconds === undefined || cur.endSeconds === undefined) return
         const songDur = cur.endSeconds - cur.startSeconds
         if (songDur <= 0) return
-        audio.currentTime = cur.startSeconds + pct * songDur
+        // Stop just shy of the boundary: endSeconds belongs to the next song's
+        // half-open range, so scrubbing to 100% would otherwise jump tracks.
+        audio.currentTime = Math.min(cur.startSeconds + pct * songDur, cur.endSeconds - 0.25)
         return
       }
       if (!audio.duration) return
-      audio.currentTime = pct * audio.duration
+      // Hold just shy of the end so a mid-drag scrub doesn't fire 'ended' and
+      // skip tracks; advancing to the next rola happens on release (endScrub).
+      audio.currentTime = Math.min(pct * audio.duration, audio.duration - 0.25)
+    },
+
+    startScrub: () => {
+      scrubbing = true
+      const audio = getAudio()
+      resumeAfterScrub = audio ? !audio.paused : false
+    },
+
+    endScrub: pct => {
+      scrubbing = false
+      const audio = getAudio()
+      const resume = resumeAfterScrub
+      resumeAfterScrub = false
+      if (!audio) return
+      // Released at the very end → advance to the next rola. Per-song mode only;
+      // the concatenated cassette advances organically (its standard behaviour).
+      if (pct != null && pct >= 0.999 && !concatMode()) {
+        get().next()
+        return
+      }
+      // Released mid-track after we paused at the end during the drag — resume.
+      if (resume && audio.paused) audio.play().catch(() => {})
     },
 
     playSong: id => {
