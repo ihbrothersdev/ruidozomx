@@ -2,6 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from 'react'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import {
   usePlayerState,
   usePlayerActions,
@@ -17,6 +18,7 @@ function formatTime(seconds: number) {
 }
 
 export function PersistentPlayerBar() {
+  const pathname = usePathname()
   const songs = usePlayerSongs()
   const currentSong = useCurrentSong()
   const { isPlaying, progress, elapsedSeconds, duration } = usePlayerState()
@@ -76,6 +78,10 @@ export function PersistentPlayerBar() {
 
   // Don't render until songs are loaded
   if (songs.length === 0) return null
+
+  // The "quienes somos" page is a full-screen video/manifesto experience with
+  // its own audio; the global bar has no place there.
+  if (pathname === '/quienes-somos') return null
 
   return (
     <div
