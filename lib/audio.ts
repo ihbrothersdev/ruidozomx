@@ -7,6 +7,21 @@
  * admin uses to evaluate a proposal before sourcing the real MP3.
  */
 
+export const SONGS_BUCKET = 'songs'
+export const MAX_AUDIO_BYTES = 30 * 1024 * 1024 // 30 MB
+// Real .mp3 files report `audio/mpeg` in browsers; keep `audio/mp3` for the
+// few user agents that use it.
+export const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3'])
+
+/** Validates client-reported audio metadata before minting a signed upload URL. */
+export function audioMetaError(fileName: string, fileType: string, fileSize: number): string | null {
+  if (!fileName) return 'faltan_datos'
+  if (!Number.isFinite(fileSize) || fileSize <= 0) return 'archivo_vacio'
+  if (fileSize > MAX_AUDIO_BYTES) return 'archivo_muy_grande'
+  if (fileType && !ALLOWED_AUDIO_MIME.has(fileType)) return 'tipo_no_soportado'
+  return null
+}
+
 const PLAYABLE_EXTS = /\.(mp3|m4a|wav|ogg|aac|flac)(\?|#|$)/i
 
 const NON_PLAYABLE_HOSTS = [
@@ -65,6 +80,22 @@ export function slugify(input: string): string {
 export function songStorageKey(opts: { cassetteId: string; artist: string; title: string; ext: string }): string {
   const safeExt = opts.ext.replace(/^\./, '').toLowerCase() || 'mp3'
   return `${opts.cassetteId}/${slugify(opts.artist)}-${slugify(opts.title)}.${safeExt}`
+}
+
+/**
+ * Storage key inside the `songs` bucket for a proposal's MP3. Proposals have no
+ * cassette yet, so they live under a per-user `proposals/` prefix. The `rand`
+ * suffix keeps re-uploads of the same title from clobbering each other.
+ */
+export function proposalStorageKey(opts: {
+  userId: string
+  artist: string
+  title: string
+  ext: string
+  rand: string
+}): string {
+  const safeExt = opts.ext.replace(/^\./, '').toLowerCase() || 'mp3'
+  return `proposals/${opts.userId}/${slugify(opts.artist)}-${slugify(opts.title)}-${opts.rand}.${safeExt}`
 }
 
 /**

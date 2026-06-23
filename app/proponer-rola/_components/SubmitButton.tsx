@@ -1,16 +1,21 @@
 'use client'
 
 import Image from 'next/image'
-import { useFormStatus } from 'react-dom'
-import { submitProposal } from '../actions'
 
-export function SubmitButton({ disabled, limitReached }: { disabled: boolean; limitReached: boolean }) {
-  const { pending } = useFormStatus()
+export function SubmitButton({
+  disabled,
+  limitReached,
+  pending
+}: {
+  disabled: boolean
+  limitReached: boolean
+  pending: boolean
+}) {
   const isDisabled = disabled || pending
 
   return (
     <button
-      formAction={submitProposal}
+      type='submit'
       disabled={isDisabled}
       className='relative cursor-pointer disabled:cursor-not-allowed'
     >

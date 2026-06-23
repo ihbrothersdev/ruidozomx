@@ -3,11 +3,14 @@
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
+import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import type { Role } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { audioErrorMessage } from '../../perfil/audio-errors'
+import { prepareProposalAudioUpload, submitProposal } from '../actions'
 import { inputCls, labelCls } from '../constants'
 import { FormField } from './FormField'
 import { SubmitButton } from './SubmitButton'
@@ -19,6 +22,9 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
   const limitReached = searchParams.get('limit') === 'true'
   const [accepted, setAccepted] = useState(false)
   const [audioLink, setAudioLink] = useState('')
+  const [audioFile, setAudioFile] = useState<File | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(success)
 
   // Mirror the rights checkbox to the link state: putting a link in is taken
@@ -31,7 +37,50 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
   }
 
   const isBanda = role === 'banda'
-  const submitDisabled = (isBanda && !accepted) || limitReached
+  const submitDisabled = (isBanda && !accepted) || limitReached || (isBanda && !audioFile)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (limitReached) return
+    const fd = new FormData(e.currentTarget)
+
+    // The MP3 is mandatory only for bandas (their own material). Others may
+    // propose with just a link, as before.
+    if (isBanda && !audioFile) {
+      setFormError('Sube el MP3 de tu rola para enviar la propuesta.')
+      return
+    }
+    setFormError(null)
+    setSubmitting(true)
+
+    // When a file is attached, upload it via a signed URL first and pass the
+    // public URL to the action (which redirects on success).
+    if (audioFile) {
+      const prep = await prepareProposalAudioUpload({
+        fileName: audioFile.name,
+        fileType: audioFile.type,
+        fileSize: audioFile.size,
+        artist: String(fd.get('artist') ?? ''),
+        title: String(fd.get('title') ?? '')
+      })
+      if (!prep.ok) {
+        setSubmitting(false)
+        setFormError(audioErrorMessage(prep.error))
+        return
+      }
+
+      const upload = await uploadAudioToSignedUrl(prep.key, prep.token, audioFile)
+      if (!upload.ok) {
+        setSubmitting(false)
+        setFormError('No se pudo subir el MP3. Intenta de nuevo.')
+        return
+      }
+
+      fd.set('audio_url', prep.publicUrl)
+    }
+
+    await submitProposal(fd)
+  }
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
@@ -95,7 +144,10 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
               </div>
             )}
 
-            <form className='space-y-5'>
+            <form
+              className='space-y-5'
+              onSubmit={handleSubmit}
+            >
               <FormField
                 label='Nombre proyecto'
                 name='artist'
@@ -127,6 +179,27 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 name='comment'
                 textarea
               />
+
+              {/* MP3 — obligatorio para banda, opcional para el resto */}
+              <div className='space-y-1'>
+                <Label className={labelCls}>{isBanda ? 'Archivo MP3*' : 'Archivo MP3 (opcional)'}</Label>
+                <div className='flex flex-wrap items-center gap-3'>
+                  <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
+                    Elegir archivo
+                    <input
+                      type='file'
+                      accept='.mp3,audio/mpeg,audio/mp3'
+                      onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
+                      className='hidden'
+                    />
+                  </label>
+                  <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
+                    {audioFile
+                      ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
+                      : 'Sin archivo seleccionado'}
+                  </span>
+                </div>
+              </div>
 
               {isBanda && (
                 <>
@@ -174,11 +247,18 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 </>
               )}
 
+              {formError && (
+                <div className='font-pt-mono rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700'>
+                  {formError}
+                </div>
+              )}
+
               {/* Submit button */}
               <div className='flex justify-end pt-2'>
                 <SubmitButton
                   disabled={submitDisabled}
                   limitReached={limitReached}
+                  pending={submitting}
                 />
               </div>
             </form>
