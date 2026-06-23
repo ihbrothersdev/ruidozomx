@@ -232,8 +232,8 @@ export function PersistentPlayerBar() {
               style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
             />
             <div
-              className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
-              style={{ left: `${(isMuted ? 0 : volume) * 100}%` }}
+              className='absolute z-10 cursor-grab active:cursor-grabbing'
+              style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - ${(isMuted ? 0 : volume) * 10}px)` }}
               onPointerDown={handleVolumeDrag}
             >
               <Image
@@ -389,8 +389,8 @@ export function PersistentPlayerBar() {
               style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
             />
             <div
-              className='absolute z-10 -translate-x-1/2 cursor-grab active:cursor-grabbing'
-              style={{ left: `${(isMuted ? 0 : volume) * 100}%` }}
+              className='absolute z-10 cursor-grab active:cursor-grabbing'
+              style={{ left: `calc(${(isMuted ? 0 : volume) * 100}% - ${(isMuted ? 0 : volume) * 10}px)` }}
               onPointerDown={handleVolumeDrag}
             >
               <Image
