@@ -25,6 +25,10 @@ CREATE TYPE proposal_status AS ENUM (
 
 CREATE TYPE cassette_side AS ENUM ('A', 'B');
 
+-- A band's featured profile song can point either at one of its proposals
+-- (`song_proposals`) or at a track already published on a cassette (`songs`).
+CREATE TYPE featured_song_source AS ENUM ('proposal', 'song');
+
 CREATE TYPE activity_type AS ENUM (
   'registration', 'interest', 'proposal', 'song_selected',
   'event_published', 'user_proposal'
@@ -189,7 +193,8 @@ CREATE TABLE song_proposals (
   artist          VARCHAR(200)    NOT NULL,
   genre           VARCHAR(100),
   external_link   TEXT,
-  audio_file_path TEXT,
+  audio_file_path TEXT,                              -- legacy: private download link
+  audio_url       TEXT,                              -- uploaded MP3 (public URL in `songs` bucket), playable
   comment         TEXT,
   rights_accepted BOOLEAN,
   status          proposal_status NOT NULL DEFAULT 'pending',
@@ -224,6 +229,29 @@ CREATE TABLE songs (
 
 CREATE INDEX idx_songs_cassette       ON songs(cassette_id, side, position);
 CREATE INDEX idx_songs_artist_profile ON songs(artist_profile_id) WHERE artist_profile_id IS NOT NULL;
+
+-- ============================================================
+-- PROFILE FEATURED SONGS (up to 3 curated tracks per band profile)
+-- ============================================================
+-- A band picks which rolas show on its public profile. Each pick is polymorphic:
+-- it references either one of the band's proposals or a published cassette track.
+
+CREATE TABLE profile_featured_songs (
+  id          UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id  UUID                 NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  source_type featured_song_source NOT NULL,
+  proposal_id UUID                 REFERENCES song_proposals(id) ON DELETE CASCADE,
+  song_id     UUID                 REFERENCES songs(id) ON DELETE CASCADE,
+  position    SMALLINT             NOT NULL CHECK (position BETWEEN 1 AND 3),
+  created_at  TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
+  UNIQUE (profile_id, position),
+  CHECK (
+    (source_type = 'proposal' AND proposal_id IS NOT NULL AND song_id IS NULL) OR
+    (source_type = 'song'     AND song_id     IS NOT NULL AND proposal_id IS NULL)
+  )
+);
+
+CREATE INDEX idx_featured_profile ON profile_featured_songs(profile_id, position);
 
 -- ============================================================
 -- EVENTS
@@ -347,6 +375,7 @@ ALTER TABLE venue_profiles      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cassettes           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE songs               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE song_proposals      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profile_featured_songs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_proposals      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE interests           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events              ENABLE ROW LEVEL SECURITY;
@@ -390,6 +419,15 @@ CREATE POLICY "songs_select_public"     ON songs     FOR SELECT USING (TRUE);
 -- SONG PROPOSALS
 CREATE POLICY "proposals_select_own"   ON song_proposals FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "proposals_insert_own"   ON song_proposals FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- A proposal featured on a public profile becomes readable by anyone (so the
+-- profile can show its title / play its MP3).
+CREATE POLICY "proposals_select_featured" ON song_proposals FOR SELECT
+  USING (EXISTS (SELECT 1 FROM profile_featured_songs f WHERE f.proposal_id = song_proposals.id));
+
+-- PROFILE FEATURED SONGS
+CREATE POLICY "featured_select_all" ON profile_featured_songs FOR SELECT USING (TRUE);
+CREATE POLICY "featured_write_own"  ON profile_featured_songs FOR ALL
+  USING (auth.uid() = profile_id) WITH CHECK (auth.uid() = profile_id);
 
 -- USER PROPOSALS
 CREATE POLICY "user_proposals_select_involved"
