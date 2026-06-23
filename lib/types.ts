@@ -283,6 +283,8 @@ export interface SongProposal {
   genre: string | null
   external_link: string | null
   audio_file_path: string | null
+  /** Uploaded MP3 (public URL in the `songs` bucket) — playable. */
+  audio_url: string | null
   comment: string | null
   rights_accepted: boolean | null
   status: ProposalStatus
@@ -290,6 +292,38 @@ export interface SongProposal {
   created_at: string
   reviewed_at: string | null
   reviewed_by: string | null
+}
+
+// === Featured profile songs ===
+
+export type FeaturedSongSource = 'proposal' | 'song'
+
+export interface ProfileFeaturedSong {
+  id: string
+  profile_id: string
+  source_type: FeaturedSongSource
+  proposal_id: string | null
+  song_id: string | null
+  position: number
+  created_at: string
+}
+
+/**
+ * A band's rola as shown in the edit picker and the public profile. Unifies the
+ * two sources (a proposal or a published cassette track) into one shape.
+ */
+export interface FeaturedSongView {
+  /** `${type}:${id}` — stable key across both sources. */
+  key: string
+  type: FeaturedSongSource
+  /** Row id in `song_proposals` or `songs`. */
+  id: string
+  title: string
+  artist: string
+  audioUrl: string | null
+  externalLink: string | null
+  /** True when `audioUrl` is a directly streamable file (see isPlayableAudio). */
+  isPlayable: boolean
 }
 
 // === Interests ===

@@ -1,3 +1,4 @@
+import { getFeaturedCandidates, getProfileFeaturedSongs } from '@/lib/supabase/featured-songs'
 import { createClient } from '@/lib/supabase/server'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import type { Metadata } from 'next'
@@ -134,6 +135,17 @@ export default async function PublicPerfilPage({ params }: Props) {
       .limit(5)
   ])
 
+  // Curated rolas shown publicly (with inline playback). For band admins we also
+  // load the candidate pool + current pick so they can edit the selection.
+  const featuredSongs = role === 'banda' ? await getProfileFeaturedSongs(supabase, profile.id) : []
+  let featuredCandidates: typeof featuredSongs = []
+  let featuredSelected: string[] = []
+  if (isAdmin && role === 'banda') {
+    const { createServiceClient } = await import('@/lib/supabase/service')
+    featuredCandidates = await getFeaturedCandidates(createServiceClient(), profile.id)
+    featuredSelected = featuredSongs.map(s => s.key)
+  }
+
   return (
     <ProfileView
       profileId={profile.id}
@@ -158,6 +170,9 @@ export default async function PublicPerfilPage({ params }: Props) {
       country={(profile.country as string | null) ?? null}
       state={(profile.state as string | null) ?? null}
       city={(profile.city as string | null) ?? null}
+      featuredSongs={featuredSongs}
+      featuredCandidates={featuredCandidates}
+      featuredSelected={featuredSelected}
     />
   )
 }

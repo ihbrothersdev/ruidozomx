@@ -3,11 +3,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ROLE_LABELS, type Role } from '@/lib/types'
+import { ROLE_LABELS, type FeaturedSongView, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
+import ProfileFeaturedSongs from './ProfileFeaturedSongs'
 import { ProfileInbox } from './inbox/ProfileInbox'
 
 export interface OwnProfileViewProps {
@@ -42,6 +43,12 @@ export interface OwnProfileViewProps {
   city?: string | null
   /** Fan only: upcoming events near the fan's city. */
   nearbyEvents?: EventSummary[]
+  /** Band only: rolas the band can feature (proposals + cassette tracks). */
+  featuredCandidates?: FeaturedSongView[]
+  /** Band only: curated rolas shown publicly (preview, with inline playback). */
+  featuredSongs?: FeaturedSongView[]
+  /** Band only: currently featured `type:id` keys, in order. */
+  featuredSelected?: string[]
 }
 
 export default function OwnProfileView({
@@ -68,7 +75,10 @@ export default function OwnProfileView({
   sentConnections = [],
   sentConnectionsCount = 0,
   mutualIds = [],
-  nearbyEvents = []
+  nearbyEvents = [],
+  featuredCandidates = [],
+  featuredSongs = [],
+  featuredSelected = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
 
@@ -88,6 +98,8 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
+        featuredCandidates={featuredCandidates}
+        featuredSelected={featuredSelected}
         onExitEdit={() => setIsEditing(false)}
       />
     )
@@ -205,6 +217,12 @@ export default function OwnProfileView({
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
               <div className='flex flex-col items-end space-y-6'>
+                {featuredSongs.length > 0 && (
+                  <div className='w-full'>
+                    <ProfileFeaturedSongs songs={featuredSongs} />
+                  </div>
+                )}
+
                 <div className='w-full'>
                   <LinksSection
                     socialLinks={socialLinks}

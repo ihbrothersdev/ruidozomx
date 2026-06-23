@@ -1,3 +1,4 @@
+import { getFeaturedCandidates, getProfileFeaturedSongs } from '@/lib/supabase/featured-songs'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { Role } from '@/lib/types'
@@ -225,6 +226,21 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   const receivedProposals = normalizeProposals(receivedProposalsRaw)
   const sentProposals = normalizeProposals(sentProposalsRaw)
 
+  // Bands curate up to 3 rolas to feature on their public profile. Load the
+  // candidate pool (own proposals + linked cassette tracks) and the current pick.
+  let featuredCandidates: Awaited<ReturnType<typeof getFeaturedCandidates>> = []
+  let featuredSongs: Awaited<ReturnType<typeof getProfileFeaturedSongs>> = []
+  let featuredSelected: string[] = []
+  if (role === 'banda') {
+    const [candidates, current] = await Promise.all([
+      getFeaturedCandidates(dataClient, resolvedProfileId),
+      getProfileFeaturedSongs(dataClient, resolvedProfileId)
+    ])
+    featuredCandidates = candidates
+    featuredSongs = current
+    featuredSelected = current.map(s => s.key)
+  }
+
   return (
     <OwnProfileView
       displayName={displayName}
@@ -251,6 +267,9 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
       country={(profile?.country as string | null) ?? null}
       state={(profile?.state as string | null) ?? null}
       city={(profile?.city as string | null) ?? null}
+      featuredSongs={featuredSongs}
+      featuredCandidates={featuredCandidates}
+      featuredSelected={featuredSelected}
     />
   )
 }
