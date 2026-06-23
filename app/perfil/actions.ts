@@ -517,7 +517,10 @@ async function uploadPhotoBase64(
     .upload(filePath, buffer, { contentType: mimeType, upsert: true })
   if (error) return null
   const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
-  return data.publicUrl
+  // The path is fixed (`avatar.webp`, upserted), so the public URL never
+  // changes between uploads — browsers/CDN keep serving the cached old image.
+  // Append the upload time as a version param to bust that cache.
+  return `${data.publicUrl}?v=${Date.now()}`
 }
 
 export async function updateOwnProfile(formData: FormData) {
