@@ -35,7 +35,7 @@ export default function ProfilePhoto({ photoUrl, displayName, editable = false, 
           </div>
         )}
         {editable && (
-          <div className='pointer-events-none absolute inset-0 flex items-end justify-center bg-black/0 pb-2 opacity-0 transition-opacity group-hover:bg-black/40 group-hover:opacity-100'>
+          <div className='pointer-events-none absolute inset-0 flex items-end justify-center bg-black/0 pb-2 opacity-0 transition-opacity group-hover/photo:bg-black/40 group-hover/photo:opacity-100'>
             <span className='font-pt-mono rounded-sm bg-black/70 px-2 py-1 text-[10px] font-bold tracking-wider text-white uppercase'>
               Cambiar
             </span>
@@ -58,7 +58,7 @@ export default function ProfilePhoto({ photoUrl, displayName, editable = false, 
 
   return (
     <label
-      className='group relative block shrink-0 cursor-pointer'
+      className='group/photo relative block shrink-0 cursor-pointer'
       style={{ width: 150, height: 190 }}
     >
       <input

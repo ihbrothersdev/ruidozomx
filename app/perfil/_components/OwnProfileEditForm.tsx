@@ -173,7 +173,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
 
             <div className='space-y-6'>
               {/* Photo + identity */}
-              <div className='group flex flex-col items-center gap-5 sm:flex-row sm:items-start'>
+              <div className='flex flex-col items-center gap-5 sm:flex-row sm:items-start'>
                 <ProfilePhoto
                   photoUrl={photoPreview}
                   displayName={displayName}
@@ -222,7 +222,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                   </p>
 
                   {events.length === 0 ? (
-                    <div className='font-pt-mono border-2 border-red-700 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
+                    <div className='font-pt-mono rounded-md border border-red-700/30 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
                       Aún no publicas eventos
                     </div>
                   ) : (
@@ -236,7 +236,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                         return (
                           <li
                             key={ev.id}
-                            className='flex items-center justify-between gap-3 border-2 border-red-700 px-3 py-1.5'
+                            className='flex items-center justify-between gap-3 rounded-md border border-red-700/30 px-3 py-1.5'
                           >
                             <div className='font-pt-mono min-w-0 text-sm text-black uppercase'>
                               <span className='font-bold'>{ev.title}</span>
