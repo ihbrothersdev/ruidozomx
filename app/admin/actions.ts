@@ -1,15 +1,18 @@
 'use server'
 
-import { extractStorageKey, isPlayableAudio, songStorageKey } from '@/lib/audio'
+import {
+  audioMetaError,
+  extractStorageKey,
+  isPlayableAudio,
+  SONGS_BUCKET,
+  songStorageKey
+} from '@/lib/audio'
 import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-
-const SONGS_BUCKET = 'songs'
-const MAX_AUDIO_BYTES = 30 * 1024 * 1024 // 30 MB
-const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/mp4'])
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guard
@@ -57,13 +60,33 @@ function backWithSuccess(path: string, code: string, msg?: string) {
   redirect(`${path}?${params.toString()}`)
 }
 
-/** Validates client-reported audio metadata before minting a signed upload URL. */
-function audioMetaError(fileName: string, fileType: string, fileSize: number): string | null {
-  if (!fileName) return 'faltan_datos'
-  if (!Number.isFinite(fileSize) || fileSize <= 0) return 'archivo_vacio'
-  if (fileSize > MAX_AUDIO_BYTES) return 'archivo_muy_grande'
-  if (fileType && !ALLOWED_AUDIO_MIME.has(fileType)) return 'tipo_no_soportado'
-  return null
+/** Listing params that locate the admin on the proposals page (page + active filters). */
+const PROPOSAL_LISTING_PARAMS = ['page', 'f', 'q', 'from', 'to'] as const
+
+/**
+ * Redirect back to the proposals list, preserving the page and filters the admin
+ * was on. Reads them from the `Referer` so accepting a song on page 5 doesn't
+ * bounce back to page 1.
+ */
+async function backToProposals(kind: 'ok' | 'e', code: string, msg?: string) {
+  const params = new URLSearchParams()
+
+  const referer = (await headers()).get('referer')
+  if (referer) {
+    try {
+      const src = new URL(referer).searchParams
+      for (const key of PROPOSAL_LISTING_PARAMS) {
+        const value = src.get(key)
+        if (value) params.set(key, value)
+      }
+    } catch {
+      // Malformed referer — fall back to the bare listing.
+    }
+  }
+
+  params.set(kind, code)
+  if (msg) params.set('m', msg)
+  redirect(`/admin/propuestas?${params.toString()}`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,38 +106,47 @@ export async function acceptProposal(formData: FormData) {
   const position = Number(formData.get('position'))
 
   if (!proposalId || !side || !position) {
-    backWithError('/admin/propuestas', 'faltan_datos')
+    await backToProposals('e', 'faltan_datos')
   }
 
   const target = await getTargetCassette()
   if (!target) {
-    backWithError('/admin/propuestas', 'no_cassette_destino')
+    await backToProposals('e', 'no_cassette_destino')
   }
 
   const { data: proposal } = await svc.from('song_proposals').select('*').eq('id', proposalId).single()
   if (!proposal) {
-    backWithError('/admin/propuestas', 'generico', 'Propuesta no encontrada.')
+    await backToProposals('e', 'generico', 'Propuesta no encontrada.')
   }
   if (proposal!.status !== 'pending') {
-    backWithError('/admin/propuestas', 'ya_revisada')
+    await backToProposals('e', 'ya_revisada')
   }
+
+  // The proposal's submitter is the band itself: `song_proposals.user_id`
+  // equals the band's `profiles.id`. Link the song to that profile so the
+  // player can show the "ir al artista" link — but only when the submitter is
+  // a band, mirroring the manual add flow (searchBandasByName filters role).
+  let artistProfileId: string | null = null
+  const { data: submitter } = await svc.from('profiles').select('id, role').eq('id', proposal!.user_id).single()
+  if (submitter?.role === 'banda') artistProfileId = submitter.id
 
   const { error: songError } = await svc.from('songs').insert({
     cassette_id: target!.id,
     title: proposal!.title,
     artist: proposal!.artist,
+    artist_profile_id: artistProfileId,
     genre: proposal!.genre,
     side,
     position,
-    audio_url: proposal!.external_link || proposal!.audio_file_path,
+    audio_url: proposal!.audio_url || proposal!.external_link || proposal!.audio_file_path,
     proposal_id: proposal!.id
   })
 
   if (songError) {
     if (songError.code === '23505') {
-      backWithError('/admin/propuestas', 'slot_ocupado')
+      await backToProposals('e', 'slot_ocupado')
     }
-    backWithError('/admin/propuestas', 'generico', songError.message)
+    await backToProposals('e', 'generico', songError.message)
   }
 
   await svc
@@ -130,7 +162,7 @@ export async function acceptProposal(formData: FormData) {
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
   revalidatePath(`/admin/cassettes/${target!.id}`)
-  backWithSuccess('/admin/propuestas', 'aceptada', `→ ${target!.name ?? 'Cassette'} · Lado ${side} · #${position}`)
+  await backToProposals('ok', 'aceptada', `→ ${target!.name ?? 'Cassette'} · Lado ${side} · #${position}`)
 }
 
 /** Reject a proposal. If it was previously selected, also remove its song from the cassette. */
@@ -139,10 +171,10 @@ export async function rejectProposal(formData: FormData) {
   const svc = createServiceClient()
 
   const proposalId = formData.get('proposal_id') as string
-  if (!proposalId) backWithError('/admin/propuestas', 'faltan_datos')
+  if (!proposalId) await backToProposals('e', 'faltan_datos')
 
   const { data: existing } = await svc.from('song_proposals').select('status').eq('id', proposalId).single()
-  if (!existing) backWithError('/admin/propuestas', 'generico', 'Propuesta no encontrada.')
+  if (!existing) await backToProposals('e', 'generico', 'Propuesta no encontrada.')
 
   if (existing!.status === 'accepted') {
     await svc.from('songs').delete().eq('proposal_id', proposalId)
@@ -160,7 +192,7 @@ export async function rejectProposal(formData: FormData) {
 
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
-  backWithSuccess('/admin/propuestas', 'rechazada')
+  await backToProposals('ok', 'rechazada')
 }
 
 /** Re-open a proposal (set back to pending). */
@@ -169,7 +201,7 @@ export async function reopenProposal(formData: FormData) {
   const svc = createServiceClient()
 
   const proposalId = formData.get('proposal_id') as string
-  if (!proposalId) backWithError('/admin/propuestas', 'faltan_datos')
+  if (!proposalId) await backToProposals('e', 'faltan_datos')
 
   await svc.from('songs').delete().eq('proposal_id', proposalId)
 
@@ -180,7 +212,7 @@ export async function reopenProposal(formData: FormData) {
 
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
-  backWithSuccess('/admin/propuestas', 'rechazada', 'Propuesta regresada a pendientes.')
+  await backToProposals('ok', 'rechazada', 'Propuesta regresada a pendientes.')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

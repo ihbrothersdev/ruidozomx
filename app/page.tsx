@@ -1,3 +1,5 @@
+import { getTotalListeners } from '@/lib/analytics/listeners'
+import { getUpcomingEvents } from '@/lib/supabase/events'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveCassetteSongs, getCassetteContextById, getCassetteContextForSong } from '@/lib/supabase/songs'
 import { formatCassetteDate } from '@/lib/utils'
@@ -8,6 +10,7 @@ import { Header } from './components/layout/Header'
 import { SomosTrinchera } from './components/layout/SomosTrinchera'
 import { ExplorarComunidad } from './components/player/ExplorarComunidad'
 import { HomePlayerSection } from './components/player/HomePlayerSection'
+import { UpcomingEventsCarousel } from './components/player/UpcomingEventsCarousel'
 
 const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -68,6 +71,10 @@ export default async function Home({ searchParams }: HomeProps) {
         }
       })()
 
+  const [upcomingEvents, totalListeners] = isSupabaseConfigured
+    ? await Promise.all([getUpcomingEvents(), getTotalListeners()])
+    : [[], 0]
+
   return (
     <main className='relative min-h-screen'>
       <IntroRedirect />
@@ -110,6 +117,7 @@ export default async function Home({ searchParams }: HomeProps) {
             cassetteActive={cassetteActive}
             cassetteId={cassetteId}
             concatAudioUrl={concatAudioUrl}
+            totalListeners={totalListeners}
           />
         )}
 
@@ -118,8 +126,10 @@ export default async function Home({ searchParams }: HomeProps) {
           <ExplorarComunidad />
         </div>
 
-        {/* Rocket man - right side */}
-        <div className='absolute top-230 -right-15 z-0 hidden min-[1728px]:w-[480px] min-[1920px]:w-[540px] xl:block xl:w-[320px] 2xl:w-[400px]'>
+        {/* Rocket man - right side. z-30 so the events marquee (z-20) passes
+            behind it instead of over it. pointer-events-none keeps the
+            decorative image from swallowing clicks on the content underneath. */}
+        <div className='pointer-events-none absolute top-230 -right-15 z-30 hidden min-[1728px]:w-[480px] min-[1920px]:w-[540px] xl:block xl:w-[320px] 2xl:w-[400px]'>
           <Image
             src='/assets/decorativos/cohete.png'
             alt=''
@@ -128,6 +138,12 @@ export default async function Home({ searchParams }: HomeProps) {
             className='h-auto w-full'
           />
         </div>
+
+        {upcomingEvents.length > 0 && (
+          <section className='relative z-20 pt-6 pb-16 xl:pt-28'>
+            <UpcomingEventsCarousel events={upcomingEvents} />
+          </section>
+        )}
 
         <SomosTrinchera />
 

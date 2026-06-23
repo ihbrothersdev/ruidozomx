@@ -1,10 +1,12 @@
 'use server'
 
 import { logEvent } from '@/app/analytics/actions'
+import { extractStorageKey, SONGS_BUCKET } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
-import type { Role, UserProposalType } from '@/lib/types'
+import type { FeaturedSongSource, Role, UserProposalType } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
@@ -68,17 +70,22 @@ export async function sendProposal(input: SendProposalInput) {
   const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
   const recipientEmail = recipient?.user?.email
 
-  if (recipientEmail) {
+  if (!recipientEmail) {
+    console.error('[proposal] no recipient email', { toProfileId: input.toProfileId })
+  } else {
     const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
     const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
 
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
       email: recipientEmail,
       dataVariables: {
         profile: profileUrl
       }
     })
+    if (!result.ok) {
+      console.error('[proposal] email failed', { toProfileId: input.toProfileId, error: result.error })
+    }
   }
 
   return { success: true }
@@ -221,18 +228,23 @@ export async function sendInterest(input: SendInterestInput) {
   const { data: recipient } = await adminClient.auth.admin.getUserById(input.toProfileId)
   const recipientEmail = recipient?.user?.email
 
-  if (recipientEmail) {
+  if (!recipientEmail) {
+    console.error('[interest] no recipient email', { toProfileId: input.toProfileId })
+  } else {
     const { data: senderProfile } = await supabase.from('profiles').select('slug').eq('id', user.id).single()
 
     const profileUrl = senderProfile?.slug ? `${SITE_URL}/perfil/${senderProfile.slug}` : SITE_URL
 
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.INTEREST_RECEIVED,
       email: recipientEmail,
       dataVariables: {
         profile: profileUrl
       }
     })
+    if (!result.ok) {
+      console.error('[interest] email failed', { toProfileId: input.toProfileId, error: result.error })
+    }
   }
 
   return { success: true }
@@ -275,6 +287,8 @@ interface SubmitSongProposalInput {
   artist: string
   externalLink?: string
   downloadLink?: string
+  /** Public URL of the MP3 already uploaded to the `songs` bucket (mandatory). */
+  audioUrl?: string
   vibes?: string[]
 }
 
@@ -307,6 +321,12 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     return { error: 'El nombre de la banda/proyecto es obligatorio.' }
   }
 
+  // The MP3 is optional here (this modal also serves recommending another
+  // band's rola). When provided, it must be a file already uploaded to our
+  // bucket — otherwise ignore it so the field can't point at an arbitrary URL.
+  let audioUrl = input.audioUrl?.trim() || ''
+  if (audioUrl && !extractStorageKey(audioUrl, SONGS_BUCKET)) audioUrl = ''
+
   const { count } = await supabase
     .from('song_proposals')
     .select('*', { count: 'exact', head: true })
@@ -323,6 +343,7 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     artist: input.artist.trim(),
     external_link: input.externalLink?.trim() || null,
     download_link: input.downloadLink?.trim() || null,
+    audio_url: audioUrl || null,
     comment: input.vibes?.length ? input.vibes.join(' / ') : null,
     status: 'pending'
   })
@@ -335,10 +356,13 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
   // Confirmation email — same template the legacy /proponer-rola form uses.
   // Fire-and-forget: a Loops outage shouldn't break the proposal flow.
   if (user.email) {
-    await sendTransactional({
+    const result = await sendTransactional({
       transactionalId: LOOPS_IDS.PROPOSAL_SUBMITTED,
       email: user.email
     })
+    if (!result.ok) {
+      console.error('[song-proposal] email failed', { userId: user.id, error: result.error })
+    }
   }
 
   return { success: true }
@@ -435,6 +459,28 @@ function getArray(formData: FormData, key: string): string[] {
     .getAll(key)
     .map(v => String(v).trim())
     .filter(Boolean)
+}
+
+/**
+ * Parse the band's featured-songs selection (`featured_songs` = JSON array of
+ * `{type, id}`). Returns `null` when the field is absent (don't touch existing
+ * selection) vs `[]` when the band cleared all picks (wipe).
+ */
+function getFeaturedPicks(formData: FormData): FeaturedPick[] | null {
+  const raw = formData.get('featured_songs')
+  if (typeof raw !== 'string' || !raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    return parsed
+      .filter(
+        (p): p is { type: FeaturedSongSource; id: string } =>
+          p && (p.type === 'proposal' || p.type === 'song') && typeof p.id === 'string'
+      )
+      .map(p => ({ type: p.type, id: p.id }))
+  } catch {
+    return null
+  }
 }
 
 function buildSocialLinks(formData: FormData): Record<string, string> {
@@ -555,6 +601,11 @@ export async function updateOwnProfile(formData: FormData) {
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
+  }
+
+  if (nextRole === 'banda') {
+    const picks = getFeaturedPicks(formData)
+    if (picks) await saveFeaturedSongs(supabase, user.id, picks)
   }
 
   revalidatePath('/perfil')
@@ -712,6 +763,11 @@ export async function updateProfileAsAdmin(targetProfileId: string, formData: Fo
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
+  }
+
+  if (nextRole === 'banda') {
+    const picks = getFeaturedPicks(formData)
+    if (picks) await saveFeaturedSongs(serviceClient, targetProfileId, picks)
   }
 
   if (existing.slug) {

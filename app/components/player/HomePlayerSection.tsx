@@ -1,9 +1,9 @@
 'use client'
 
+import { usePlayerActions, usePlayerSongs, usePlayerState, useCurrentSong } from '@/app/hooks/usePlayerStore'
 import type { PlayerSong } from '@/lib/types'
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
-import { useAudioPlayer } from '../../hooks/useAudioPlayer'
+import { useEffect } from 'react'
 import { CassettePlayer } from './CassettePlayer'
 import { MientrasSuena } from './MientrasSuena'
 import { SongList } from './SongList'
@@ -17,41 +17,40 @@ interface HomePlayerSectionProps {
   cassetteActive?: boolean
   cassetteId: string | null
   concatAudioUrl?: string | null
+  totalListeners?: number
 }
 
 export function HomePlayerSection({
-  songs,
+  songs: cassetteSongs,
   initialSongId,
   date,
   isAuthenticated,
   autoPlay,
   cassetteActive = true,
   cassetteId,
-  concatAudioUrl
+  concatAudioUrl,
+  totalListeners = 0
 }: HomePlayerSectionProps) {
-  const {
-    isPlaying,
-    isStopped,
-    currentSongId,
-    currentSide,
-    elapsedSeconds,
-    progress,
-    play,
-    pause,
-    stop,
-    next,
-    prev,
-    seek,
-    playSong
-  } = useAudioPlayer(songs, initialSongId, cassetteId, concatAudioUrl)
+  const { isPlaying, isStopped, currentSongId, currentSide, elapsedSeconds, progress } = usePlayerState()
+  const { loadContext, play, pause, stop, next, prev, seek, playSong } = usePlayerActions()
+  const songs = usePlayerSongs()
+  const currentSong = useCurrentSong()
 
-  const lastPlayedRef = useRef<string | null>(null)
+  // Load this page's resolved cassette into the global engine. Idempotent for
+  // the live cassette (already loaded by the layout); swaps in an archived /
+  // searched cassette — and autoplays it — when the id differs.
   useEffect(() => {
-    if (!autoPlay || !initialSongId) return
-    if (lastPlayedRef.current === initialSongId) return
-    lastPlayedRef.current = initialSongId
-    playSong(initialSongId)
-  }, [autoPlay, initialSongId, playSong])
+    if (cassetteSongs.length === 0) return
+    loadContext({
+      contextId: `cassette:${cassetteId ?? 'active'}`,
+      songs: cassetteSongs,
+      cassetteId,
+      concatAudioUrl: concatAudioUrl ?? null,
+      cassetteActive,
+      initialSongId,
+      autoPlay
+    })
+  }, [loadContext, cassetteSongs, cassetteId, concatAudioUrl, cassetteActive, initialSongId, autoPlay])
 
   useEffect(() => {
     if (cassetteActive || !currentSongId) return
@@ -60,8 +59,6 @@ export function HomePlayerSection({
     params.delete('cassette')
     window.history.replaceState(null, '', `?${params.toString()}`)
   }, [cassetteActive, currentSongId])
-
-  const currentSong = songs.find(s => s.id === currentSongId)
 
   return (
     <>
@@ -131,18 +128,16 @@ export function HomePlayerSection({
         </div>
       </section>
 
-      <div className='pb-6'>
-        <MientrasSuena />
-      </div>
+      <MientrasSuena totalListeners={totalListeners} />
 
       {/* Body 2: Song list */}
-      <section className='relative px-4 pt-8 pb-16'>
+      <section className='relative px-4 pt-8 pb-12'>
         <div className='relative mx-auto max-w-5xl'>
           <div className='flex flex-col items-center gap-2 md:flex-row md:items-start md:justify-center'>
             <div className='w-full max-w-[793px] flex-1'>
               <SongList
                 songs={songs}
-                currentSongId={currentSongId}
+                currentSongId={currentSongId ?? ''}
                 isPlaying={isPlaying}
                 onSelectSong={playSong}
               />

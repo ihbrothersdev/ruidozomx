@@ -23,7 +23,7 @@ export async function sendTransactional(payload: LoopsTransactionalPayload) {
   const apiKey = process.env.LOOPS_API_KEY
 
   if (!apiKey) {
-    console.error('[loops] LOOPS_API_KEY is not set')
+    console.error('[loops] LOOPS_API_KEY is not set', payload.transactionalId)
     return { ok: false as const, error: 'missing_api_key' }
   }
 
@@ -39,13 +39,13 @@ export async function sendTransactional(payload: LoopsTransactionalPayload) {
 
     if (!res.ok) {
       const body = await res.text()
-      console.error('[loops] transactional failed', res.status, body)
+      console.error('[loops] transactional failed', payload.transactionalId, res.status, body)
       return { ok: false as const, error: `http_${res.status}` }
     }
 
     return { ok: true as const }
   } catch (err) {
-    console.error('[loops] transactional threw', err)
+    console.error('[loops] transactional threw', payload.transactionalId, err)
     return { ok: false as const, error: 'fetch_error' }
   }
 }
