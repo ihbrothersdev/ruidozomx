@@ -267,6 +267,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
       country={(profile?.country as string | null) ?? null}
       state={(profile?.state as string | null) ?? null}
       city={(profile?.city as string | null) ?? null}
+      profileId={resolvedProfileId}
       featuredSongs={featuredSongs}
       featuredCandidates={featuredCandidates}
       featuredSelected={featuredSelected}

@@ -32,7 +32,7 @@ export function HomePlayerSection({
   totalListeners = 0
 }: HomePlayerSectionProps) {
   const { isPlaying, isStopped, currentSongId, currentSide, elapsedSeconds, progress } = usePlayerState()
-  const { loadCassette, play, pause, stop, next, prev, seek, playSong } = usePlayerActions()
+  const { loadContext, play, pause, stop, next, prev, seek, playSong } = usePlayerActions()
   const songs = usePlayerSongs()
   const currentSong = useCurrentSong()
 
@@ -41,7 +41,8 @@ export function HomePlayerSection({
   // searched cassette — and autoplays it — when the id differs.
   useEffect(() => {
     if (cassetteSongs.length === 0) return
-    loadCassette({
+    loadContext({
+      contextId: `cassette:${cassetteId ?? 'active'}`,
       songs: cassetteSongs,
       cassetteId,
       concatAudioUrl: concatAudioUrl ?? null,
@@ -49,7 +50,7 @@ export function HomePlayerSection({
       initialSongId,
       autoPlay
     })
-  }, [loadCassette, cassetteSongs, cassetteId, concatAudioUrl, cassetteActive, initialSongId, autoPlay])
+  }, [loadContext, cassetteSongs, cassetteId, concatAudioUrl, cassetteActive, initialSongId, autoPlay])
 
   useEffect(() => {
     if (cassetteActive || !currentSongId) return

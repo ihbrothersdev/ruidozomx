@@ -16,15 +16,18 @@ import { create } from 'zustand'
  * the iOS pause quirks are all preserved.
  */
 
-export interface CassetteContext {
+export interface PlaybackContext {
+  /** Stable id for the source playlist: `cassette:<id>` or `profile:<id>`. */
+  contextId: string
   songs: PlayerSong[]
+  /** Cassette id for analytics; null for non-cassette sources (no analytics). */
   cassetteId: string | null
   concatAudioUrl: string | null
   /** Whether this is the live cassette (vs an archived/searched one). */
   cassetteActive: boolean
   /** Song to open on; falls back to the first song. */
   initialSongId?: string
-  /** Start playing as soon as the cassette loads (archived/search deep-links). */
+  /** Start playing as soon as the playlist loads (archived/search/profile deep-links). */
   autoPlay?: boolean
 }
 
@@ -47,7 +50,8 @@ function getSorted(songs: PlayerSong[]): PlayerSong[] {
 }
 
 interface AudioStore {
-  // Cassette context
+  // Playback context
+  contextId: string | null
   songs: PlayerSong[]
   cassetteId: string | null
   concatAudioUrl: string | null
@@ -65,7 +69,7 @@ interface AudioStore {
   isMuted: boolean
 
   // Actions
-  loadCassette: (ctx: CassetteContext) => void
+  loadContext: (ctx: PlaybackContext) => void
   play: () => void
   pause: () => void
   stop: () => void
@@ -89,8 +93,10 @@ export const useAudioStore = create<AudioStore>((set, get) => {
   }
 
   const emit = (type: SongEventType, songId: string | null, metadata?: Record<string, unknown>) => {
+    // Analytics are cassette-scoped. Non-cassette sources (profile playlists)
+    // carry no cassetteId, so they don't emit listening events.
     const cid = get().cassetteId
-    if (!cid && !songId) return
+    if (!cid) return
     void logEvent({ type, songId, cassetteId: cid, sessionId: sessionId || null, metadata }).catch(() => {})
   }
 
@@ -295,6 +301,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
   }
 
   return {
+    contextId: null,
     songs: [],
     cassetteId: null,
     concatAudioUrl: null,
@@ -307,15 +314,15 @@ export const useAudioStore = create<AudioStore>((set, get) => {
     volume: 1,
     isMuted: false,
 
-    loadCassette: ctx => {
+    loadContext: ctx => {
       initEngine()
       const audio = getAudio()
       if (!audio || ctx.songs.length === 0) return
 
-      // Idempotent: re-loading the same cassette (e.g. the layout's active-cassette
+      // Idempotent: re-loading the same source (e.g. the layout's active-cassette
       // init firing on every navigation) must not interrupt playback.
       const state = get()
-      if (state.songs.length > 0 && state.cassetteId === ctx.cassetteId) return
+      if (state.songs.length > 0 && state.contextId === ctx.contextId) return
 
       completedSongs.clear()
       playStartLoggedFor = null
@@ -326,6 +333,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
         !!ctx.concatAudioUrl && ctx.songs.every(s => s.startSeconds !== undefined && s.endSeconds !== undefined)
 
       set({
+        contextId: ctx.contextId,
         songs: ctx.songs,
         cassetteId: ctx.cassetteId,
         concatAudioUrl: ctx.concatAudioUrl,

@@ -43,6 +43,8 @@ export interface OwnProfileViewProps {
   city?: string | null
   /** Fan only: upcoming events near the fan's city. */
   nearbyEvents?: EventSummary[]
+  /** The profile's own id — needed to scope its featured-songs playlist. */
+  profileId?: string
   /** Band only: rolas the band can feature (proposals + cassette tracks). */
   featuredCandidates?: FeaturedSongView[]
   /** Band only: curated rolas shown publicly (preview, with inline playback). */
@@ -76,6 +78,7 @@ export default function OwnProfileView({
   sentConnectionsCount = 0,
   mutualIds = [],
   nearbyEvents = [],
+  profileId,
   featuredCandidates = [],
   featuredSongs = [],
   featuredSelected = []
@@ -217,9 +220,12 @@ export default function OwnProfileView({
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
               <div className='flex flex-col items-end space-y-6'>
-                {featuredSongs.length > 0 && (
+                {featuredSongs.length > 0 && profileId && (
                   <div className='w-full'>
-                    <ProfileFeaturedSongs songs={featuredSongs} />
+                    <ProfileFeaturedSongs
+                      songs={featuredSongs}
+                      profileId={profileId}
+                    />
                   </div>
                 )}
 

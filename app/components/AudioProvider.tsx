@@ -13,14 +13,21 @@ interface AudioProviderProps {
 }
 
 export function AudioProvider({ children, songs, cassetteId, concatAudioUrl }: AudioProviderProps) {
-  const loadCassette = useAudioStore(s => s.loadCassette)
+  const loadContext = useAudioStore(s => s.loadContext)
 
   useEffect(() => {
     if (songs.length === 0) return
-    // Idempotent — `loadCassette` no-ops when this cassette is already loaded,
-    // so it won't interrupt playback on navigation.
-    loadCassette({ songs, cassetteId, concatAudioUrl, cassetteActive: true })
-  }, [loadCassette, songs, cassetteId, concatAudioUrl])
+    // Idempotent — `loadContext` no-ops when this source is already loaded, so
+    // it won't interrupt playback on navigation (including a profile rola that
+    // took over the player).
+    loadContext({
+      contextId: `cassette:${cassetteId ?? 'active'}`,
+      songs,
+      cassetteId,
+      concatAudioUrl,
+      cassetteActive: true
+    })
+  }, [loadContext, songs, cassetteId, concatAudioUrl])
 
   return <>{children}</>
 }

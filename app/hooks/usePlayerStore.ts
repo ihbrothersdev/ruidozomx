@@ -26,7 +26,7 @@ export function usePlayerState() {
 export function usePlayerActions() {
   return useAudioStore(
     useShallow(s => ({
-      loadCassette: s.loadCassette,
+      loadContext: s.loadContext,
       play: s.play,
       pause: s.pause,
       stop: s.stop,
@@ -42,6 +42,10 @@ export function usePlayerActions() {
 
 export function usePlayerSongs() {
   return useAudioStore(s => s.songs)
+}
+
+export function usePlaybackContextId() {
+  return useAudioStore(s => s.contextId)
 }
 
 export function useCurrentSong() {

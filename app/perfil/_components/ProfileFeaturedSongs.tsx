@@ -1,39 +1,63 @@
 'use client'
 
-import type { FeaturedSongView } from '@/lib/types'
+import { usePlaybackContextId, usePlayerActions, usePlayerState } from '@/app/hooks/usePlayerStore'
+import type { FeaturedSongView, PlayerSong } from '@/lib/types'
 import { Pause, Play } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo } from 'react'
 
 /**
- * Public profile block: the band's curated rolas. Tracks with a real MP3 play
- * inline (one at a time via a single shared <audio>); the rest fall back to
- * their external link.
+ * Public profile block: the band's curated rolas. Playable tracks (real MP3)
+ * stream through the GLOBAL player engine — pressing play takes over the
+ * persistent bar (pausing the cassette) and keeps playing as the user navigates,
+ * giving bands that aren't on the cassette a real stage. Link-only rolas fall
+ * back to their external link.
  */
-export default function ProfileFeaturedSongs({ songs }: { songs: FeaturedSongView[] }) {
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const [playingKey, setPlayingKey] = useState<string | null>(null)
+export default function ProfileFeaturedSongs({ songs, profileId }: { songs: FeaturedSongView[]; profileId: string }) {
+  const { currentSongId, isPlaying } = usePlayerState()
+  const { loadContext, play, pause, playSong } = usePlayerActions()
+  const contextId = `profile:${profileId}`
+  const isActiveContext = usePlaybackContextId() === contextId
+
+  // The playable subset becomes this profile's playlist for the global engine.
+  // The featured key (`type:id`) is the song id — it never collides with the
+  // cassette's raw uuids, so `currentSongId === key` reliably means "this rola".
+  const playlist = useMemo<PlayerSong[]>(
+    () =>
+      songs
+        .filter(s => s.isPlayable && s.audioUrl)
+        .map((s, i) => ({
+          id: s.key,
+          title: s.title,
+          artist: s.artist,
+          side: 'A',
+          position: i + 1,
+          durationSeconds: 0,
+          audioSrc: s.audioUrl as string
+        })),
+    [songs]
+  )
 
   if (songs.length === 0) return null
 
-  function togglePlay(song: FeaturedSongView) {
-    const audio = audioRef.current
-    if (!audio || !song.audioUrl) return
-    if (playingKey === song.key) {
-      audio.pause()
-      setPlayingKey(null)
+  function handlePlay(key: string) {
+    if (currentSongId === key) {
+      if (isPlaying) pause()
+      else play()
       return
     }
-    // Only (re)load the source when switching tracks — re-assigning the same
-    // `src` would reset currentTime to 0, so resuming the same rola continues
-    // from where it was paused.
-    if (audio.dataset.key !== song.key) {
-      audio.src = song.audioUrl
-      audio.dataset.key = song.key
+    if (isActiveContext) {
+      playSong(key)
+    } else {
+      loadContext({
+        contextId,
+        songs: playlist,
+        cassetteId: null,
+        concatAudioUrl: null,
+        cassetteActive: false,
+        initialSongId: key,
+        autoPlay: true
+      })
     }
-    void audio
-      .play()
-      .then(() => setPlayingKey(song.key))
-      .catch(() => setPlayingKey(null))
   }
 
   return (
@@ -42,7 +66,7 @@ export default function ProfileFeaturedSongs({ songs }: { songs: FeaturedSongVie
 
       <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
         {songs.map(song => {
-          const isPlaying = playingKey === song.key
+          const isThisPlaying = currentSongId === song.key && isPlaying
           return (
             <li
               key={song.key}
@@ -51,11 +75,11 @@ export default function ProfileFeaturedSongs({ songs }: { songs: FeaturedSongVie
               {song.isPlayable ? (
                 <button
                   type='button'
-                  onClick={() => togglePlay(song)}
-                  aria-label={isPlaying ? `Pausar ${song.title}` : `Reproducir ${song.title}`}
+                  onClick={() => handlePlay(song.key)}
+                  aria-label={isThisPlaying ? `Pausar ${song.title}` : `Reproducir ${song.title}`}
                   className='flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white transition-colors hover:bg-red-700'
                 >
-                  {isPlaying ? (
+                  {isThisPlaying ? (
                     <Pause
                       className='h-3.5 w-3.5'
                       fill='currentColor'
@@ -89,16 +113,6 @@ export default function ProfileFeaturedSongs({ songs }: { songs: FeaturedSongVie
           )
         })}
       </ul>
-
-      <audio
-        ref={audioRef}
-        onEnded={e => {
-          // Clear the loaded-track marker so pressing play again restarts it.
-          e.currentTarget.dataset.key = ''
-          setPlayingKey(null)
-        }}
-        hidden
-      />
     </div>
   )
 }

@@ -390,8 +390,11 @@ export default function ProfileView(props: ProfileViewProps) {
         }
         rightColumn={
           <>
-            {props.featuredSongs && props.featuredSongs.length > 0 && (
-              <ProfileFeaturedSongs songs={props.featuredSongs} />
+            {props.featuredSongs && props.featuredSongs.length > 0 && props.profileId && (
+              <ProfileFeaturedSongs
+                songs={props.featuredSongs}
+                profileId={props.profileId}
+              />
             )}
 
             {props.role && (
