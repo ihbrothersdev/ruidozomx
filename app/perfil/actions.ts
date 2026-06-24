@@ -59,7 +59,7 @@ export async function sendProposal(input: SendProposalInput) {
 
   if (error) {
     console.error('Error saving proposal:', error)
-    return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
+    return { error: 'No pudimos enviar tu propuesta. Revisa tu conexión y vuelve a intentar en un momento.' }
   }
 
   // Notify the recipient. Reuses the INTEREST_RECEIVED Loops template for
@@ -324,7 +324,10 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     .gte('created_at', getStartOfWeek())
 
   if (count !== null && count >= 3) {
-    return { error: 'Ya alcanzaste tu límite de 3 propuestas esta semana.' }
+    return {
+      error: 'Ya alcanzaste tu límite de 3 propuestas esta semana. Podrás proponer de nuevo el lunes.',
+      kind: 'limit' as const
+    }
   }
 
   const { error } = await supabase.from('song_proposals').insert({
@@ -339,7 +342,15 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
 
   if (error) {
     console.error('Error saving song proposal:', error)
-    return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
+    // 23505 = unique violation: same user already proposed this exact
+    // (title, artist). Reintentar nunca va a funcionar, así que lo decimos claro.
+    if (error.code === '23505') {
+      return {
+        error: 'Ya habías propuesto esta rola. Si quieres mandar otra, cambia el nombre o la banda.',
+        kind: 'duplicate' as const
+      }
+    }
+    return { error: 'No pudimos guardar tu propuesta. Revisa tu conexión y vuelve a intentar en un momento.' }
   }
 
   // Confirmation email — same template the legacy /proponer-rola form uses.
