@@ -68,7 +68,9 @@ export default function ProponerRolaBandaModal({
     })
     setSending(false)
     if (result.error) {
-      sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
+      const title =
+        result.kind === 'duplicate' ? 'Ya la propusiste' : result.kind === 'limit' ? 'Límite semanal' : 'Error'
+      sileo.error({ title, description: result.error, position: 'top-center', duration: 4000 })
     } else {
       setSent(true)
       setSongName('')
