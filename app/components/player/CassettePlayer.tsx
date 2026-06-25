@@ -62,6 +62,9 @@ export function CassettePlayer({
 }: CassettePlayerProps) {
   const [showModal, setShowModal] = useState(false)
 
+  // Same destination for the cassette artist label and the "Ir al artista" arrow.
+  const artistHref = artistSlug ? `/perfil/${artistSlug}${buildArtistQuery(songId, cassetteId)}` : undefined
+
   function handleProponClick() {
     if (!isAuthenticated) {
       setShowModal(true)
@@ -91,14 +94,18 @@ export function CassettePlayer({
           date={date}
           side={side}
           isPlaying={isPlaying}
+          artistHref={artistHref}
+          artistSlug={artistSlug}
+          songId={songId}
+          cassetteId={cassetteId}
         />
         <DialogBubble isAuthenticated={isAuthenticated} />
 
         {/* "Ir al artista" arrow — replaces the old "Playing" señal, links to
          *  the current song's band profile when it has one. */}
-        {artistSlug && (
+        {artistHref && (
           <TrackedProfileLink
-            href={`/perfil/${artistSlug}${buildArtistQuery(songId, cassetteId)}`}
+            href={artistHref}
             targetProfileSlug={artistSlug}
             songId={songId}
             cassetteId={cassetteId}

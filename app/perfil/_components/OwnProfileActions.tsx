@@ -70,7 +70,6 @@ export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsPro
         onOpenChange={setProponerRolaOpen}
         bandName=''
         showVibes={false}
-        audioRequired={role === 'banda'}
       />
       <ComparteTuEventoModal
         open={publicarEventoOpen}

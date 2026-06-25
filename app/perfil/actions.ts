@@ -1,7 +1,7 @@
 'use server'
 
 import { logEvent } from '@/app/analytics/actions'
-import { extractStorageKey, SONGS_BUCKET } from '@/lib/audio'
+import { audioMetaError, extractStorageKey, proposalStorageKey, SONGS_BUCKET } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
@@ -365,6 +365,105 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     }
   }
 
+  return { success: true }
+}
+
+interface PrepareProposalAudioInput {
+  proposalId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+}
+
+/**
+ * Mint a signed upload URL so the owner can attach an MP3 to one of their
+ * existing proposals that has none yet (e.g. recommended a rola without the
+ * file, or it was created without audio). Mirrors the /proponer-rola flow but
+ * keyed by an existing proposal instead of the weekly-limit gate. Pair with
+ * saveProposalAudio once the browser finishes the upload.
+ */
+export async function prepareProposalAudioUpload(
+  input: PrepareProposalAudioInput
+): Promise<{ ok: true; key: string; token: string; publicUrl: string } | { ok: false; error: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'No has iniciado sesión.' }
+
+  const metaError = audioMetaError(input.fileName, input.fileType, input.fileSize)
+  if (metaError) return { ok: false, error: metaError }
+
+  const { data: proposal } = await supabase
+    .from('song_proposals')
+    .select('user_id, artist, title, audio_url')
+    .eq('id', input.proposalId)
+    .single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { ok: false, error: 'No encontramos esa propuesta.' }
+  }
+  if (proposal.audio_url && extractStorageKey(proposal.audio_url, SONGS_BUCKET)) {
+    return { ok: false, error: 'Esta rola ya tiene un MP3.' }
+  }
+
+  const svc = createServiceClient()
+  const ext = (input.fileName.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = proposalStorageKey({
+    userId: user.id,
+    artist: proposal.artist || 'banda',
+    title: proposal.title || 'rola',
+    ext,
+    rand: crypto.randomUUID().slice(0, 8)
+  })
+
+  const { data, error } = await svc.storage.from(SONGS_BUCKET).createSignedUploadUrl(key, { upsert: true })
+  if (error || !data) return { ok: false, error: error?.message ?? 'No se pudo preparar la subida.' }
+
+  const {
+    data: { publicUrl }
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+
+  return { ok: true, key, token: data.token, publicUrl }
+}
+
+/**
+ * Persist the `audio_url` after the browser uploaded the MP3 to the `songs`
+ * bucket. Verifies ownership in code and writes via the service client — there
+ * is no owner-level UPDATE policy on song_proposals (only admins), and this
+ * keeps the writable surface to just `audio_url`.
+ */
+export async function saveProposalAudio(input: { proposalId: string; audioUrl: string }) {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No has iniciado sesión.' }
+
+  const audioUrl = input.audioUrl?.trim() || ''
+  if (!audioUrl || !extractStorageKey(audioUrl, SONGS_BUCKET)) {
+    return { error: 'El MP3 no es válido.' }
+  }
+
+  const { data: proposal } = await supabase.from('song_proposals').select('user_id').eq('id', input.proposalId).single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { error: 'No encontramos esa propuesta.' }
+  }
+
+  const svc = createServiceClient()
+  const { error } = await svc
+    .from('song_proposals')
+    .update({ audio_url: audioUrl })
+    .eq('id', input.proposalId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[saveProposalAudio]', error)
+    return { error: 'No se pudo guardar el MP3. Intenta de nuevo.' }
+  }
+
+  revalidatePath('/perfil')
   return { success: true }
 }
 

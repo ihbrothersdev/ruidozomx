@@ -9,6 +9,7 @@ import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
 import ProfileFeaturedSongs from './ProfileFeaturedSongs'
+import ProposedSongAudioUpload from './ProposedSongAudioUpload'
 import { ProfileInbox } from './inbox/ProfileInbox'
 
 export interface OwnProfileViewProps {
@@ -465,11 +466,14 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
                 <span className='font-bold break-words text-black uppercase'>{p.title}</span>
                 <span className='text-xs text-black/60'> — {p.artist}</span>
               </div>
-              <span
-                className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
-              >
-                {status.label}
-              </span>
+              <div className='mt-0.5 flex shrink-0 items-center gap-1.5'>
+                {p.hasAudio === false && <ProposedSongAudioUpload proposalId={p.id} />}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
+                >
+                  {status.label}
+                </span>
+              </div>
             </li>
           )
         })}
