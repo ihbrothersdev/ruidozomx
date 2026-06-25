@@ -8,9 +8,23 @@ interface CassetteProps {
   date: string
   side: 'A' | 'B'
   isPlaying?: boolean
+  artistHref?: string
+  artistSlug?: string
+  songId?: string | null
+  cassetteId?: string | null
 }
 
-export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteProps) {
+export function Cassette({
+  songTitle,
+  artist,
+  date,
+  side,
+  isPlaying,
+  artistHref,
+  artistSlug,
+  songId,
+  cassetteId
+}: CassetteProps) {
   return (
     <div
       className='relative mx-auto w-full'
@@ -47,6 +61,10 @@ export function Cassette({ songTitle, artist, date, side, isPlaying }: CassetteP
         songTitle={songTitle}
         artist={artist}
         date={date}
+        artistHref={artistHref}
+        artistSlug={artistSlug}
+        songId={songId}
+        cassetteId={cassetteId}
       />
     </div>
   )

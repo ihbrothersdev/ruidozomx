@@ -1,5 +1,6 @@
 'use client'
 
+import { TrackedProfileLink } from '@/app/components/analytics/TrackedProfileLink'
 import { useCallback, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -8,6 +9,7 @@ import {
   usePlayerActions,
   usePlayerSongs,
   useCurrentSong,
+  usePlaybackContextId,
   usePlayerVolume
 } from '@/app/hooks/usePlayerStore'
 
@@ -17,10 +19,54 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+/** Carries the playing song/cassette into the profile URL so the "Conectar"
+ *  flow there can attribute the interest_click back to this song. */
+function buildArtistQuery(songId?: string | null, cassetteId?: string | null) {
+  const params = new URLSearchParams()
+  if (songId) params.set('song', songId)
+  if (cassetteId) params.set('cassette', cassetteId)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
+}
+
+/** Artist name in the bar: a tracked link to the band profile when one exists,
+ *  plain text otherwise. Used by both the mobile and desktop layouts. */
+function ArtistLabel({
+  artist,
+  artistSlug,
+  href,
+  songId,
+  cassetteId,
+  className
+}: {
+  artist: string
+  artistSlug?: string
+  href?: string
+  songId?: string | null
+  cassetteId?: string | null
+  className: string
+}) {
+  if (!href) return <span className={className}>{artist}</span>
+  return (
+    <TrackedProfileLink
+      href={href}
+      targetProfileSlug={artistSlug}
+      songId={songId}
+      cassetteId={cassetteId}
+      source='player_bar'
+      title={`Ver perfil de ${artist}`}
+      className={`${className} hover:underline`}
+    >
+      {artist}
+    </TrackedProfileLink>
+  )
+}
+
 export function PersistentPlayerBar() {
   const pathname = usePathname()
   const songs = usePlayerSongs()
   const currentSong = useCurrentSong()
+  const contextId = usePlaybackContextId()
   const { isPlaying, progress, elapsedSeconds, duration } = usePlayerState()
   const { play, pause, next, prev, seek, startScrub, endScrub, setVolume, toggleMute } = usePlayerActions()
   const { volume, isMuted } = usePlayerVolume()
@@ -97,6 +143,10 @@ export function PersistentPlayerBar() {
   // since the sidebar is a drawer there.
   const isAdmin = pathname?.startsWith('/admin')
 
+  const artistHref = currentSong?.artistSlug
+    ? `/perfil/${currentSong.artistSlug}${buildArtistQuery(currentSong.id, contextId)}`
+    : undefined
+
   return (
     <div
       className={`fixed right-0 bottom-0 left-0 z-50 border-t border-[#e8e0c8]/20 px-3 md:px-5 ${
@@ -117,9 +167,14 @@ export function PersistentPlayerBar() {
             <span className='block truncate font-[family-name:var(--font-corose)] text-base leading-tight font-semibold text-[#e8e0c8]'>
               {currentSong.title}
             </span>
-            <span className='block truncate font-[family-name:var(--font-corose)] text-xs leading-tight text-[#e8e0c8]/50'>
-              {currentSong.artist}
-            </span>
+            <ArtistLabel
+              artist={currentSong.artist}
+              artistSlug={currentSong.artistSlug}
+              href={artistHref}
+              songId={currentSong.id}
+              cassetteId={contextId}
+              className='block truncate font-[family-name:var(--font-corose)] text-xs leading-tight text-[#e8e0c8]/50'
+            />
           </div>
         )}
 
@@ -236,9 +291,14 @@ export function PersistentPlayerBar() {
               <span className='truncate font-[family-name:var(--font-corose)] text-lg leading-tight text-[#e8e0c8]'>
                 {currentSong.title}
               </span>
-              <span className='truncate font-[family-name:var(--font-corose)] text-base leading-tight text-[#e8e0c8]/50'>
-                {currentSong.artist}
-              </span>
+              <ArtistLabel
+                artist={currentSong.artist}
+                artistSlug={currentSong.artistSlug}
+                href={artistHref}
+                songId={currentSong.id}
+                cassetteId={contextId}
+                className='truncate font-[family-name:var(--font-corose)] text-base leading-tight text-[#e8e0c8]/50'
+              />
             </div>
           )}
         </div>
