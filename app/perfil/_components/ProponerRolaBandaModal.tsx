@@ -17,8 +17,6 @@ interface ProponerRolaBandaModalProps {
   onOpenChange: (open: boolean) => void
   bandName: string
   showVibes?: boolean
-  /** Require the MP3 (true when a band proposes its own material). */
-  audioRequired?: boolean
 }
 
 const VIBES = [
@@ -42,8 +40,7 @@ export default function ProponerRolaBandaModal({
   open,
   onOpenChange,
   bandName,
-  showVibes = true,
-  audioRequired = false
+  showVibes = true
 }: ProponerRolaBandaModalProps) {
   const [artistName, setArtistName] = useState('')
   const [songName, setSongName] = useState('')
@@ -56,11 +53,7 @@ export default function ProponerRolaBandaModal({
 
   const isBandPrefilled = bandName.trim().length > 0
   const artist = isBandPrefilled ? bandName : artistName
-  const canSubmit =
-    songName.trim().length > 0 &&
-    artist.trim().length > 0 &&
-    listenLink.trim().length > 0 &&
-    (!audioRequired || !!audioFile)
+  const canSubmit = songName.trim().length > 0 && artist.trim().length > 0 && listenLink.trim().length > 0
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
@@ -72,7 +65,8 @@ export default function ProponerRolaBandaModal({
     setSending(true)
 
     // When an MP3 is attached, upload it via a signed URL and pass the public
-    // URL along. It's optional unless `audioRequired`.
+    // URL along. Always optional — own material can attach it here or later from
+    // the profile; recommending another band's rola hides the field entirely.
     let audioUrl: string | undefined
     if (audioFile) {
       const prep = await prepareProposalAudioUpload({
@@ -254,28 +248,31 @@ export default function ProponerRolaBandaModal({
                     />
                   </div>
 
-                  {/* MP3 (obligatorio) */}
-                  <div className='space-y-1'>
-                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                      Archivo MP3{audioRequired ? <span className='text-red-600'>*</span> : ' (opcional)'}
-                    </Label>
-                    <div className='flex flex-wrap items-center gap-3'>
-                      <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
-                        Elegir archivo
-                        <input
-                          type='file'
-                          accept='.mp3,audio/mpeg,audio/mp3'
-                          onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
-                          className='hidden'
-                        />
-                      </label>
-                      <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
-                        {audioFile
-                          ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
-                          : 'Sin archivo seleccionado'}
-                      </span>
+                  {/* MP3 — solo cuando es material propio; al recomendar otra
+                      banda no tienes su archivo, así que se oculta. Siempre opcional. */}
+                  {!isBandPrefilled && (
+                    <div className='space-y-1'>
+                      <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                        Archivo MP3 (opcional)
+                      </Label>
+                      <div className='flex flex-wrap items-center gap-3'>
+                        <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
+                          Elegir archivo
+                          <input
+                            type='file'
+                            accept='.mp3,audio/mpeg,audio/mp3'
+                            onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
+                            className='hidden'
+                          />
+                        </label>
+                        <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
+                          {audioFile
+                            ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
+                            : 'Sin archivo seleccionado'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Vibes section — only shown when showVibes is true */}
                   {showVibes && (
