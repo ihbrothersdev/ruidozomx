@@ -463,6 +463,23 @@ export async function saveProposalAudio(input: { proposalId: string; audioUrl: s
     return { error: 'No se pudo guardar el MP3. Intenta de nuevo.' }
   }
 
+  // If the proposal was already accepted onto a cassette, point the cassette
+  // track at the same file so the rola is playable there too. Non-fatal: the
+  // proposal save already succeeded. Cassettes already glued by build-cassette
+  // (concat_audio_url + offsets) need a rebuild before this is audible.
+  const { data: linkedSongs } = await svc.from('songs').select('cassette_id').eq('proposal_id', input.proposalId)
+  if (linkedSongs && linkedSongs.length > 0) {
+    const { error: songError } = await svc
+      .from('songs')
+      .update({ audio_url: audioUrl })
+      .eq('proposal_id', input.proposalId)
+    if (songError) console.error('[saveProposalAudio] linked song update', songError)
+    for (const cid of [...new Set(linkedSongs.map(s => s.cassette_id).filter(Boolean))]) {
+      revalidatePath(`/admin/cassettes/${cid}`)
+    }
+    revalidatePath('/')
+  }
+
   revalidatePath('/perfil')
   return { success: true }
 }
