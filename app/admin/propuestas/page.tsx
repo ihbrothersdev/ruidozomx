@@ -9,8 +9,10 @@ import { formatLongDateMX, formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Music2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { FilterTabs } from './_components/FilterTabs'
 import { InlinePlayer } from './_components/InlinePlayer'
+import { PageJump } from './_components/PageJump'
 import { ProposalActions } from './_components/ProposalActions'
 import { ProposalEmbed } from './_components/ProposalEmbed'
 import { SearchAndDateFilters } from './_components/SearchAndDateFilters'
@@ -25,6 +27,9 @@ interface SearchParams {
   from?: string
   to?: string
   page?: string
+  ok?: string
+  e?: string
+  m?: string
 }
 
 const PAGE_SIZE = 10
@@ -109,8 +114,21 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
     return qs ? `/admin/propuestas?${qs}` : '/admin/propuestas'
   }
 
+  // Overshoot (e.g. accepted the last proposal on the last page): bounce to the
+  // last page that still has rows instead of rendering an empty page, keeping any toast.
+  if (pageNum > totalPages) {
+    const sp = new URLSearchParams(buildListing(totalPages))
+    for (const k of ['ok', 'e', 'm'] as const) {
+      if (params[k]) sp.set(k, params[k]!)
+    }
+    const qs = sp.toString()
+    redirect(qs ? `/admin/propuestas?${qs}` : '/admin/propuestas')
+  }
+
   // Carried by each row's action form so accept/reject returns the admin to this exact page + filters.
   const listing = buildListing(pageNum)
+  // Same filters minus `page`, so the "jump to page" input can append any target page.
+  const baseQuery = buildListing(1)
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-8 sm:py-12'>
@@ -370,12 +388,11 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
             </PagerLink>
             {pageWindow(pageNum, totalPages).map((p, i) =>
               p === 'gap' ? (
-                <span
+                <PageJump
                   key={`gap-${i}`}
-                  className='font-pt-mono flex h-8 w-6 items-center justify-center text-[11px] text-white/25'
-                >
-                  …
-                </span>
+                  totalPages={totalPages}
+                  baseQuery={baseQuery}
+                />
               ) : (
                 <PagerLink
                   key={p}
