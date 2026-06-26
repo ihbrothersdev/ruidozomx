@@ -94,16 +94,23 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
   const totalCount = filteredCount ?? 0
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
-  function buildHref(p: number) {
+  function buildListing(p: number) {
     const sp = new URLSearchParams()
     if (filter !== 'pending') sp.set('f', filter)
     if (search) sp.set('q', search)
     if (from) sp.set('from', from)
     if (to) sp.set('to', to)
     if (p > 1) sp.set('page', String(p))
-    const qs = sp.toString()
+    return sp.toString()
+  }
+
+  function buildHref(p: number) {
+    const qs = buildListing(p)
     return qs ? `/admin/propuestas?${qs}` : '/admin/propuestas'
   }
+
+  // Carried by each row's action form so accept/reject returns the admin to this exact page + filters.
+  const listing = buildListing(pageNum)
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-8 sm:py-12'>
@@ -340,6 +347,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                     status={p.status}
                     cassetteName={target?.name ?? null}
                     occupied={occupied}
+                    listing={listing}
                   />
                 </CardFooter>
               </Card>
@@ -349,20 +357,35 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
       )}
 
       {totalPages > 1 && (
-        <div className='flex items-center justify-between border-t border-white/5 pt-4'>
+        <nav className='flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4'>
           <p className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
             {fromIdx + 1}–{Math.min(pageNum * PAGE_SIZE, totalCount)} de {totalCount}
           </p>
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-1.5'>
             <PagerLink
               href={buildHref(pageNum - 1)}
               disabled={pageNum <= 1}
             >
               <ChevronLeft className='h-4 w-4' />
             </PagerLink>
-            <span className='font-pt-mono text-[11px] tracking-widest text-white/40 uppercase'>
-              {pageNum}/{totalPages}
-            </span>
+            {pageWindow(pageNum, totalPages).map((p, i) =>
+              p === 'gap' ? (
+                <span
+                  key={`gap-${i}`}
+                  className='font-pt-mono flex h-8 w-6 items-center justify-center text-[11px] text-white/25'
+                >
+                  …
+                </span>
+              ) : (
+                <PagerLink
+                  key={p}
+                  href={buildHref(p)}
+                  active={p === pageNum}
+                >
+                  {p}
+                </PagerLink>
+              )
+            )}
             <PagerLink
               href={buildHref(pageNum + 1)}
               disabled={pageNum >= totalPages}
@@ -370,22 +393,59 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
               <ChevronRight className='h-4 w-4' />
             </PagerLink>
           </div>
-        </div>
+        </nav>
       )}
     </div>
   )
 }
 
-function PagerLink({ href, disabled, children }: { href: string; disabled: boolean; children: React.ReactNode }) {
+/** Page numbers to render, with `'gap'` markers where pages are collapsed into an ellipsis. */
+function pageWindow(current: number, total: number): Array<number | 'gap'> {
+  const delta = 4
+  const left = Math.max(2, current - delta)
+  const right = Math.min(total - 1, current + delta)
+  const out: Array<number | 'gap'> = [1]
+  if (left > 2) out.push('gap')
+  for (let p = left; p <= right; p++) out.push(p)
+  if (right < total - 1) out.push('gap')
+  out.push(total)
+  return out
+}
+
+function PagerLink({
+  href,
+  disabled,
+  active,
+  children
+}: {
+  href: string
+  disabled?: boolean
+  active?: boolean
+  children: React.ReactNode
+}) {
   const base =
-    'flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-white/3 text-white/60 transition-colors'
+    'font-pt-mono flex h-8 min-w-8 items-center justify-center rounded border px-2 text-[11px] transition-colors'
+  if (active) {
+    return (
+      <span
+        aria-current='page'
+        className={`${base} border-red-500/40 bg-red-500/20 font-bold text-white`}
+      >
+        {children}
+      </span>
+    )
+  }
   if (disabled) {
-    return <span className={`${base} cursor-not-allowed opacity-30`}>{children}</span>
+    return (
+      <span className={`${base} cursor-not-allowed border-white/10 bg-white/3 text-white/30 opacity-50`}>
+        {children}
+      </span>
+    )
   }
   return (
     <Link
       href={href}
-      className={`${base} hover:bg-white/8 hover:text-white`}
+      className={`${base} border-white/10 bg-white/3 text-white/60 hover:bg-white/8 hover:text-white`}
     >
       {children}
     </Link>

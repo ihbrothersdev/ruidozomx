@@ -29,6 +29,7 @@ interface SlotPickerProps {
   proposalArtist: string
   cassetteName: string
   occupied: OccupiedSlot[]
+  listing: string
   onClose: () => void
 }
 
@@ -41,6 +42,7 @@ export function SlotPicker({
   proposalArtist,
   cassetteName,
   occupied,
+  listing,
   onClose
 }: SlotPickerProps) {
   const [selected, setSelected] = useState<{ side: 'A' | 'B'; position: number } | null>(null)
@@ -196,6 +198,11 @@ export function SlotPicker({
             type='hidden'
             name='position'
             value={selected?.position ?? ''}
+          />
+          <input
+            type='hidden'
+            name='listing'
+            value={listing}
           />
           <DialogFooter className='gap-2'>
             <Button

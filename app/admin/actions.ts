@@ -61,26 +61,36 @@ function backWithSuccess(path: string, code: string, msg?: string) {
 const PROPOSAL_LISTING_PARAMS = ['page', 'f', 'q', 'from', 'to'] as const
 
 /**
- * Redirect back to the proposals list, preserving the page and filters the admin
- * was on. Reads them from the `Referer` so accepting a song on page 5 doesn't
- * bounce back to page 1.
+ * Where on the proposals list the admin was when they triggered the action.
+ * Prefers the `listing` field the form carries (deterministic across the POST);
+ * falls back to the `Referer` so an accept on page 5 doesn't bounce to page 1.
  */
-async function backToProposals(kind: 'ok' | 'e', code: string, msg?: string) {
+async function proposalListing(formData: FormData): Promise<URLSearchParams> {
   const params = new URLSearchParams()
-
-  const referer = (await headers()).get('referer')
-  if (referer) {
-    try {
-      const src = new URL(referer).searchParams
-      for (const key of PROPOSAL_LISTING_PARAMS) {
-        const value = src.get(key)
-        if (value) params.set(key, value)
+  const fromForm = formData.get('listing')
+  let src: URLSearchParams | null = typeof fromForm === 'string' && fromForm ? new URLSearchParams(fromForm) : null
+  if (!src) {
+    const referer = (await headers()).get('referer')
+    if (referer) {
+      try {
+        src = new URL(referer).searchParams
+      } catch {
+        src = null
       }
-    } catch {
-      // Malformed referer — fall back to the bare listing.
     }
   }
+  if (src) {
+    for (const key of PROPOSAL_LISTING_PARAMS) {
+      const value = src.get(key)
+      if (value) params.set(key, value)
+    }
+  }
+  return params
+}
 
+/** Redirect back to the proposals list at `listing`, carrying a toast code. */
+function backToProposals(listing: URLSearchParams, kind: 'ok' | 'e', code: string, msg?: string): never {
+  const params = new URLSearchParams(listing)
   params.set(kind, code)
   if (msg) params.set('m', msg)
   redirect(`/admin/propuestas?${params.toString()}`)
@@ -106,26 +116,27 @@ function audioMetaError(fileName: string, fileType: string, fileSize: number): s
 export async function acceptProposal(formData: FormData) {
   const user = await requireAdmin()
   const svc = createServiceClient()
+  const listing = await proposalListing(formData)
 
   const proposalId = formData.get('proposal_id') as string
   const side = formData.get('side') as 'A' | 'B'
   const position = Number(formData.get('position'))
 
   if (!proposalId || !side || !position) {
-    await backToProposals('e', 'faltan_datos')
+    backToProposals(listing, 'e', 'faltan_datos')
   }
 
   const target = await getTargetCassette()
   if (!target) {
-    await backToProposals('e', 'no_cassette_destino')
+    backToProposals(listing, 'e', 'no_cassette_destino')
   }
 
   const { data: proposal } = await svc.from('song_proposals').select('*').eq('id', proposalId).single()
   if (!proposal) {
-    await backToProposals('e', 'generico', 'Propuesta no encontrada.')
+    backToProposals(listing, 'e', 'generico', 'Propuesta no encontrada.')
   }
   if (proposal!.status !== 'pending') {
-    await backToProposals('e', 'ya_revisada')
+    backToProposals(listing, 'e', 'ya_revisada')
   }
 
   // The proposal's submitter is the band itself: `song_proposals.user_id`
@@ -150,9 +161,9 @@ export async function acceptProposal(formData: FormData) {
 
   if (songError) {
     if (songError.code === '23505') {
-      await backToProposals('e', 'slot_ocupado')
+      backToProposals(listing, 'e', 'slot_ocupado')
     }
-    await backToProposals('e', 'generico', songError.message)
+    backToProposals(listing, 'e', 'generico', songError.message)
   }
 
   await svc
@@ -168,19 +179,20 @@ export async function acceptProposal(formData: FormData) {
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
   revalidatePath(`/admin/cassettes/${target!.id}`)
-  await backToProposals('ok', 'aceptada', `→ ${target!.name ?? 'Cassette'} · Lado ${side} · #${position}`)
+  backToProposals(listing, 'ok', 'aceptada', `→ ${target!.name ?? 'Cassette'} · Lado ${side} · #${position}`)
 }
 
 /** Reject a proposal. If it was previously selected, also remove its song from the cassette. */
 export async function rejectProposal(formData: FormData) {
   const user = await requireAdmin()
   const svc = createServiceClient()
+  const listing = await proposalListing(formData)
 
   const proposalId = formData.get('proposal_id') as string
-  if (!proposalId) await backToProposals('e', 'faltan_datos')
+  if (!proposalId) backToProposals(listing, 'e', 'faltan_datos')
 
   const { data: existing } = await svc.from('song_proposals').select('status').eq('id', proposalId).single()
-  if (!existing) await backToProposals('e', 'generico', 'Propuesta no encontrada.')
+  if (!existing) backToProposals(listing, 'e', 'generico', 'Propuesta no encontrada.')
 
   if (existing!.status === 'accepted') {
     await svc.from('songs').delete().eq('proposal_id', proposalId)
@@ -198,16 +210,17 @@ export async function rejectProposal(formData: FormData) {
 
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
-  await backToProposals('ok', 'rechazada')
+  backToProposals(listing, 'ok', 'rechazada')
 }
 
 /** Re-open a proposal (set back to pending). */
 export async function reopenProposal(formData: FormData) {
   await requireAdmin()
   const svc = createServiceClient()
+  const listing = await proposalListing(formData)
 
   const proposalId = formData.get('proposal_id') as string
-  if (!proposalId) await backToProposals('e', 'faltan_datos')
+  if (!proposalId) backToProposals(listing, 'e', 'faltan_datos')
 
   await svc.from('songs').delete().eq('proposal_id', proposalId)
 
@@ -218,7 +231,7 @@ export async function reopenProposal(formData: FormData) {
 
   revalidatePath('/admin/propuestas')
   revalidatePath('/admin/cassettes')
-  await backToProposals('ok', 'rechazada', 'Propuesta regresada a pendientes.')
+  backToProposals(listing, 'ok', 'rechazada', 'Propuesta regresada a pendientes.')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

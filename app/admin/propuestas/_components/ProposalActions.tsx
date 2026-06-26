@@ -15,6 +15,7 @@ interface ProposalActionsProps {
   status: string
   cassetteName: string | null
   occupied: OccupiedSlot[]
+  listing: string
 }
 
 export function ProposalActions({
@@ -23,7 +24,8 @@ export function ProposalActions({
   proposalArtist,
   status,
   cassetteName,
-  occupied
+  occupied,
+  listing
 }: ProposalActionsProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [rejectOpen, setRejectOpen] = useState(false)
@@ -72,6 +74,7 @@ export function ProposalActions({
             proposalArtist={proposalArtist}
             cassetteName={cassetteName}
             occupied={occupied}
+            listing={listing}
             onClose={() => setPickerOpen(false)}
           />
         )}
@@ -80,6 +83,7 @@ export function ProposalActions({
             proposalId={proposalId}
             proposalTitle={proposalTitle}
             proposalArtist={proposalArtist}
+            listing={listing}
             onClose={() => setRejectOpen(false)}
           />
         )}
@@ -93,6 +97,11 @@ export function ProposalActions({
         type='hidden'
         name='proposal_id'
         value={proposalId}
+      />
+      <input
+        type='hidden'
+        name='listing'
+        value={listing}
       />
       <Button
         type='submit'
