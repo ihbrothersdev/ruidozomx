@@ -114,10 +114,10 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   ] = await Promise.all([
     supabase
       .from('song_proposals')
-      .select('id, title, artist, status, created_at, audio_url')
+      .select('id, title, artist, status, created_at, audio_url, external_link, download_link')
       .eq('user_id', resolvedProfileId)
       .order('created_at', { ascending: false })
-      .limit(3),
+      .limit(50),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId),
     supabase
       .from('events')
@@ -237,6 +237,8 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
     status: 'pending' | 'accepted' | 'rejected'
     created_at: string
     audio_url: string | null
+    external_link: string | null
+    download_link: string | null
   }
   const songProposals = ((songProposalsData as RawSongProposal[] | null) ?? []).map(p => ({
     id: p.id,
@@ -244,7 +246,9 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
     artist: p.artist,
     status: p.status,
     created_at: p.created_at,
-    hasAudio: !!p.audio_url && extractStorageKey(p.audio_url, SONGS_BUCKET) !== null
+    hasAudio: !!p.audio_url && extractStorageKey(p.audio_url, SONGS_BUCKET) !== null,
+    external_link: p.external_link,
+    download_link: p.download_link
   }))
 
   // Bands curate up to 3 rolas to feature on their public profile. Load the

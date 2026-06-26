@@ -10,13 +10,20 @@ import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { sileo } from 'sileo'
 import { prepareProposalAudioUpload } from '@/app/proponer-rola/actions'
 import { audioErrorMessage } from '../audio-errors'
-import { submitSongProposal } from '../actions'
+import { submitSongProposal, updateSongProposal } from '../actions'
 
 interface ProponerRolaBandaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bandName: string
   showVibes?: boolean
+  /** When set, the modal edits this existing proposal instead of creating one. */
+  proposalId?: string
+  initialTitle?: string
+  initialArtist?: string
+  initialListenLink?: string
+  initialDownloadLink?: string
+  initialVibes?: string[]
 }
 
 const VIBES = [
@@ -40,14 +47,21 @@ export default function ProponerRolaBandaModal({
   open,
   onOpenChange,
   bandName,
-  showVibes = true
+  showVibes = true,
+  proposalId,
+  initialTitle,
+  initialArtist,
+  initialListenLink,
+  initialDownloadLink,
+  initialVibes
 }: ProponerRolaBandaModalProps) {
-  const [artistName, setArtistName] = useState('')
-  const [songName, setSongName] = useState('')
-  const [listenLink, setListenLink] = useState('')
-  const [downloadLink, setDownloadLink] = useState('')
+  const isEditing = Boolean(proposalId)
+  const [artistName, setArtistName] = useState(initialArtist ?? '')
+  const [songName, setSongName] = useState(initialTitle ?? '')
+  const [listenLink, setListenLink] = useState(initialListenLink ?? '')
+  const [downloadLink, setDownloadLink] = useState(initialDownloadLink ?? '')
   const [audioFile, setAudioFile] = useState<File | null>(null)
-  const [selectedVibes, setSelectedVibes] = useState<string[]>([])
+  const [selectedVibes, setSelectedVibes] = useState<string[]>(initialVibes ?? [])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
@@ -64,11 +78,11 @@ export default function ProponerRolaBandaModal({
     if (!canSubmit) return
     setSending(true)
 
-    // When an MP3 is attached, upload it via a signed URL and pass the public
-    // URL along. Always optional — own material can attach it here or later from
-    // the profile; recommending another band's rola hides the field entirely.
+    // Create flow only: when an MP3 is attached, upload it via a signed URL and
+    // pass the public URL along. Editing reuses the dedicated audio actions, so
+    // the picker is hidden there.
     let audioUrl: string | undefined
-    if (audioFile) {
+    if (!isEditing && audioFile) {
       const prep = await prepareProposalAudioUpload({
         fileName: audioFile.name,
         fileType: audioFile.type,
@@ -102,14 +116,23 @@ export default function ProponerRolaBandaModal({
       audioUrl = prep.publicUrl
     }
 
-    const result = await submitSongProposal({
-      title: songName,
-      artist,
-      externalLink: listenLink || undefined,
-      downloadLink: downloadLink || undefined,
-      audioUrl,
-      vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
-    })
+    const result = isEditing
+      ? await updateSongProposal({
+          id: proposalId!,
+          title: songName,
+          artist,
+          externalLink: listenLink || undefined,
+          downloadLink: downloadLink || undefined,
+          vibes: showVibes ? selectedVibes : undefined
+        })
+      : await submitSongProposal({
+          title: songName,
+          artist,
+          externalLink: listenLink || undefined,
+          downloadLink: downloadLink || undefined,
+          audioUrl,
+          vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
+        })
     setSending(false)
     if (result.error) {
       sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
@@ -173,9 +196,19 @@ export default function ProponerRolaBandaModal({
 
                 {/* Subtitle */}
                 <p className='font-pt-mono text-md mt-3 text-center leading-tight tracking-wider text-red-600'>
-                  Esta rola se va a la fila de curaduría
-                  <br />
-                  del casete quincenal
+                  {isEditing ? (
+                    <>
+                      Actualiza los datos de tu rola
+                      <br />
+                      mientras sigue en la fila de curaduría
+                    </>
+                  ) : (
+                    <>
+                      Esta rola se va a la fila de curaduría
+                      <br />
+                      del casete quincenal
+                    </>
+                  )}
                 </p>
 
                 {/* Form */}
@@ -249,8 +282,9 @@ export default function ProponerRolaBandaModal({
                   </div>
 
                   {/* MP3 — solo cuando es material propio; al recomendar otra
-                      banda no tienes su archivo, así que se oculta. Siempre opcional. */}
-                  {!isBandPrefilled && (
+                      banda no tienes su archivo, así que se oculta. Siempre opcional.
+                      En edición el MP3 se adjunta desde la lista del perfil. */}
+                  {!isBandPrefilled && !isEditing && (
                     <div className='space-y-1'>
                       <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
                         Archivo MP3 (opcional)
@@ -311,7 +345,7 @@ export default function ProponerRolaBandaModal({
                       disabled={!canSubmit || sending}
                       className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                     >
-                      {sending ? 'Enviando...' : 'Enviar'}
+                      {sending ? (isEditing ? 'Guardando...' : 'Enviando...') : isEditing ? 'Guardar' : 'Enviar'}
                     </button>
                     <button
                       type='button'
