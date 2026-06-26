@@ -19,10 +19,18 @@ interface RejectModalProps {
   proposalTitle: string
   proposalArtist: string
   wasSelected?: boolean
+  listing: string
   onClose: () => void
 }
 
-export function RejectModal({ proposalId, proposalTitle, proposalArtist, wasSelected, onClose }: RejectModalProps) {
+export function RejectModal({
+  proposalId,
+  proposalTitle,
+  proposalArtist,
+  wasSelected,
+  listing,
+  onClose
+}: RejectModalProps) {
   const [submitting, setSubmitting] = useState(false)
 
   return (
@@ -63,6 +71,11 @@ export function RejectModal({ proposalId, proposalTitle, proposalArtist, wasSele
             type='hidden'
             name='proposal_id'
             value={proposalId}
+          />
+          <input
+            type='hidden'
+            name='listing'
+            value={listing}
           />
           <DialogFooter className='mt-2 gap-2'>
             <Button
