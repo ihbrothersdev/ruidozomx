@@ -3,6 +3,7 @@
 import { translateAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { buildLinkHref } from '@/lib/social-links'
 import { ROLES, type RegistrationSource, type Role } from '@/lib/types'
 import { generateSlug } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
@@ -52,10 +53,10 @@ function buildSocialLinks(formData: FormData): Record<string, string> {
   const links: Record<string, string> = {}
 
   const project = getStr(formData, 'project_link')
-  if (project) links.project = project
+  if (project) links.project = buildLinkHref('project', project)
 
   const web = getStr(formData, 'web_link')
-  if (web) links.web = web
+  if (web) links.web = buildLinkHref('web', web)
 
   for (const [key, value] of formData.entries()) {
     if (typeof value !== 'string') continue
@@ -63,7 +64,7 @@ function buildSocialLinks(formData: FormData): Record<string, string> {
     const platform = key.slice('social_'.length)
     if (!platform) continue
     const url = value.trim()
-    if (url) links[platform] = url
+    if (url) links[platform] = buildLinkHref(platform, url)
   }
 
   return links

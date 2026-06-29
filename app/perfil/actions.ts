@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
+import { buildLinkHref } from '@/lib/social-links'
 import type { FeaturedSongSource, Role, UserProposalType } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
@@ -749,12 +750,12 @@ function buildSocialLinks(formData: FormData): Record<string, string> {
     const platform = key.slice('social_'.length)
     if (!platform) continue
     const url = value.trim()
-    if (url) links[platform] = url
+    if (url) links[platform] = buildLinkHref(platform, url)
   }
   const project = getStr(formData, 'project_link')
-  if (project) links.project = project
+  if (project) links.project = buildLinkHref('project', project)
   const web = getStr(formData, 'web_link')
-  if (web) links.web = web
+  if (web) links.web = buildLinkHref('web', web)
   return links
 }
 
