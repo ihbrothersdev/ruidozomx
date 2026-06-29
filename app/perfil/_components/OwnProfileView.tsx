@@ -9,6 +9,7 @@ import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
 import ProfileFeaturedSongs from './ProfileFeaturedSongs'
+import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 import ProposedSongAudioUpload from './ProposedSongAudioUpload'
 import { ProfileInbox } from './inbox/ProfileInbox'
 
@@ -438,9 +439,11 @@ const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; 
  * Songs the user proposed to the cassette — same content as the public
  * profile (title — artist + status badge), shown for any role that has
  * proposed at least one. The count badge shows the all-time total; the list
- * shows the latest few (capped by the page query).
+ * shows them newest-first and scrolls when there are many.
  */
 function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongProposalSummary[]; total: number }) {
+  const [editing, setEditing] = useState<SongProposalSummary | null>(null)
+
   if (role === 'admin' || total === 0) return null
 
   return (
@@ -453,31 +456,58 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
           {total}
         </span>
       </div>
-      <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
+      <ul className='max-h-64 space-y-1.5 overflow-y-auto border-2 border-red-700 px-3 py-2'>
         {songs.map(p => {
           const status = SONG_STATUS_LABEL[p.status]
           return (
             <li
               key={p.id}
-              className='flex items-start gap-2 text-sm'
+              className='flex items-center gap-2 text-sm'
             >
-              <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-              <div className='font-pt-mono min-w-0 flex-1'>
-                <span className='font-bold break-words text-black uppercase'>{p.title}</span>
+              <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+              <span className='font-pt-mono min-w-0 flex-1 truncate'>
+                <span className='font-bold text-black uppercase'>{p.title}</span>
                 <span className='text-xs text-black/60'> — {p.artist}</span>
-              </div>
-              <div className='mt-0.5 flex shrink-0 items-center gap-1.5'>
+              </span>
+              <div className='flex shrink-0 items-center gap-1.5'>
                 {p.hasAudio === false && <ProposedSongAudioUpload proposalId={p.id} />}
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
                 >
                   {status.label}
                 </span>
+                {p.status !== 'accepted' && (
+                  <button
+                    type='button'
+                    onClick={() => setEditing(p)}
+                    className='cursor-pointer text-[10px] font-bold tracking-wider text-red-700 uppercase underline transition-opacity hover:opacity-70'
+                  >
+                    Editar
+                  </button>
+                )}
               </div>
             </li>
           )
         })}
       </ul>
+
+      {editing && (
+        <ProponerRolaBandaModal
+          key={editing.id}
+          open
+          onOpenChange={open => {
+            if (!open) setEditing(null)
+          }}
+          bandName=''
+          showVibes={false}
+          proposalId={editing.id}
+          initialTitle={editing.title}
+          initialArtist={editing.artist}
+          initialListenLink={editing.external_link ?? ''}
+          initialDownloadLink={editing.download_link ?? ''}
+          initialHasAudio={editing.hasAudio}
+        />
+      )}
     </div>
   )
 }

@@ -484,6 +484,76 @@ export async function saveProposalAudio(input: { proposalId: string; audioUrl: s
   return { success: true }
 }
 
+interface UpdateSongProposalInput {
+  id: string
+  title: string
+  artist: string
+  externalLink?: string
+  downloadLink?: string
+  vibes?: string[]
+}
+
+/**
+ * Edit the text fields of one's own proposal. Like saveProposalAudio, there is
+ * no owner-level UPDATE policy on song_proposals — ownership and editability are
+ * checked in code and the write goes through the service client with a narrow
+ * column allow-list (never status / cassette_id / reviewed_*).
+ */
+export async function updateSongProposal(input: UpdateSongProposalInput) {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No has iniciado sesión.' }
+
+  if (!input.id) return { error: 'Propuesta no válida.' }
+  if (!input.title.trim()) return { error: 'El nombre de la rola es obligatorio.' }
+  if (!input.artist.trim()) return { error: 'El nombre de la banda/proyecto es obligatorio.' }
+
+  const { data: proposal } = await supabase.from('song_proposals').select('user_id, status').eq('id', input.id).single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { error: 'No encontramos esa propuesta.' }
+  }
+  // Once accepted the rola is on a cassette — its info is frozen.
+  if (proposal.status === 'accepted') {
+    return { error: 'Esta rola ya fue aceptada y no se puede editar.' }
+  }
+
+  const patch: Record<string, unknown> = {
+    title: input.title.trim(),
+    artist: input.artist.trim(),
+    external_link: input.externalLink?.trim() || null,
+    download_link: input.downloadLink?.trim() || null
+  }
+  // Vibes live in `comment`; only overwrite it when the modal managed them
+  // (showVibes), so editing without the vibes UI doesn't wipe a note.
+  if (input.vibes !== undefined) {
+    patch.comment = input.vibes.length ? input.vibes.join(' / ') : null
+  }
+
+  const svc = createServiceClient()
+  // `.neq('status', 'accepted')` re-checks editability at write time (guards the
+  // gap between the read above and this update).
+  const { error } = await svc
+    .from('song_proposals')
+    .update(patch)
+    .eq('id', input.id)
+    .eq('user_id', user.id)
+    .neq('status', 'accepted')
+
+  if (error) {
+    console.error('[updateSongProposal]', error)
+    if (error.code === '23505') {
+      return { error: 'Ya tienes otra rola con ese nombre y banda. Cambia alguno para guardar.' }
+    }
+    return { error: 'No pudimos actualizar tu propuesta. Intenta de nuevo.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
 // ── Events ──
 
 interface SubmitEventInput {
