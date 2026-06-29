@@ -3,6 +3,7 @@
 import { Input } from '@/app/components/ui/input'
 import { PlatformIcon } from '@/app/components/ui/platform-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { buildLinkHref } from '@/lib/social-links'
 import type { Role } from '@/lib/types'
 
 interface LinksSectionProps {
@@ -35,42 +36,6 @@ const PLATFORM_ORDER = Object.keys(PLATFORM_LABELS)
 
 function getPlatformLabel(platform: string): string {
   return PLATFORM_LABELS[platform] ?? platform
-}
-
-/** Build the proper profile URL for a handle-based platform. */
-const HANDLE_URL: Record<string, (handle: string) => string> = {
-  instagram: h => `https://instagram.com/${h}`,
-  tiktok: h => `https://tiktok.com/@${h}`,
-  twitter: h => `https://x.com/${h}`,
-  facebook: h => `https://facebook.com/${h}`,
-  youtube: h => `https://youtube.com/@${h}`
-}
-
-const KNOWN_DOMAINS = [
-  'instagram.com',
-  'tiktok.com',
-  'twitter.com',
-  'x.com',
-  'facebook.com',
-  'fb.com',
-  'youtube.com',
-  'youtu.be'
-]
-
-/** Turn a stored social value into a working href. Handles full URLs, bare
- * domains, and bare handles (with or without a leading @) for known platforms. */
-function buildLinkHref(platform: string, raw: string): string {
-  const value = raw.trim()
-  if (/^https?:\/\//i.test(value)) return value
-
-  const builder = HANDLE_URL[platform]
-  if (builder) {
-    const lower = value.toLowerCase()
-    const looksLikeUrl = value.includes('/') || KNOWN_DOMAINS.some(d => lower.includes(d))
-    if (!looksLikeUrl) return builder(value.replace(/^@+/, ''))
-  }
-
-  return `https://${value}`
 }
 
 function sortLinks(socialLinks: Record<string, string>): [string, string][] {
