@@ -505,6 +505,7 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
           initialArtist={editing.artist}
           initialListenLink={editing.external_link ?? ''}
           initialDownloadLink={editing.download_link ?? ''}
+          initialHasAudio={editing.hasAudio}
         />
       )}
     </div>

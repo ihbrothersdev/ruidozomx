@@ -10,7 +10,12 @@ import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { sileo } from 'sileo'
 import { prepareProposalAudioUpload } from '@/app/proponer-rola/actions'
 import { audioErrorMessage } from '../audio-errors'
-import { submitSongProposal, updateSongProposal } from '../actions'
+import {
+  prepareProposalAudioUpload as prepareExistingProposalAudio,
+  saveProposalAudio,
+  submitSongProposal,
+  updateSongProposal
+} from '../actions'
 
 interface ProponerRolaBandaModalProps {
   open: boolean
@@ -24,6 +29,8 @@ interface ProponerRolaBandaModalProps {
   initialListenLink?: string
   initialDownloadLink?: string
   initialVibes?: string[]
+  /** Edit mode: whether the proposal already has an uploaded MP3 (hides the picker). */
+  initialHasAudio?: boolean
 }
 
 const VIBES = [
@@ -53,7 +60,8 @@ export default function ProponerRolaBandaModal({
   initialArtist,
   initialListenLink,
   initialDownloadLink,
-  initialVibes
+  initialVibes,
+  initialHasAudio
 }: ProponerRolaBandaModalProps) {
   const isEditing = Boolean(proposalId)
   const [artistName, setArtistName] = useState(initialArtist ?? '')
@@ -68,6 +76,9 @@ export default function ProponerRolaBandaModal({
   const isBandPrefilled = bandName.trim().length > 0
   const artist = isBandPrefilled ? bandName : artistName
   const canSubmit = songName.trim().length > 0 && artist.trim().length > 0 && listenLink.trim().length > 0
+  // Own material only. In edit mode, hide it once the rola has an MP3 — the
+  // backend doesn't allow replacing an existing one.
+  const showAudioField = !isBandPrefilled && (!isEditing || !initialHasAudio)
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
@@ -78,18 +89,25 @@ export default function ProponerRolaBandaModal({
     if (!canSubmit) return
     setSending(true)
 
-    // Create flow only: when an MP3 is attached, upload it via a signed URL and
-    // pass the public URL along. Editing reuses the dedicated audio actions, so
-    // the picker is hidden there.
+    // When an MP3 is attached, upload it via a signed URL. Create and edit use
+    // different actions: create passes the public URL into submitSongProposal;
+    // edit persists it via saveProposalAudio (keyed by the existing proposal).
     let audioUrl: string | undefined
-    if (!isEditing && audioFile) {
-      const prep = await prepareProposalAudioUpload({
-        fileName: audioFile.name,
-        fileType: audioFile.type,
-        fileSize: audioFile.size,
-        artist,
-        title: songName
-      })
+    if (audioFile) {
+      const prep = isEditing
+        ? await prepareExistingProposalAudio({
+            proposalId: proposalId!,
+            fileName: audioFile.name,
+            fileType: audioFile.type,
+            fileSize: audioFile.size
+          })
+        : await prepareProposalAudioUpload({
+            fileName: audioFile.name,
+            fileType: audioFile.type,
+            fileSize: audioFile.size,
+            artist,
+            title: songName
+          })
       if (!prep.ok) {
         setSending(false)
         sileo.error({
@@ -113,7 +131,16 @@ export default function ProponerRolaBandaModal({
         return
       }
 
-      audioUrl = prep.publicUrl
+      if (isEditing) {
+        const saved = await saveProposalAudio({ proposalId: proposalId!, audioUrl: prep.publicUrl })
+        if (saved.error) {
+          setSending(false)
+          sileo.error({ title: 'Error', description: saved.error, position: 'top-center', duration: 4000 })
+          return
+        }
+      } else {
+        audioUrl = prep.publicUrl
+      }
     }
 
     const result = isEditing
@@ -283,8 +310,8 @@ export default function ProponerRolaBandaModal({
 
                   {/* MP3 — solo cuando es material propio; al recomendar otra
                       banda no tienes su archivo, así que se oculta. Siempre opcional.
-                      En edición el MP3 se adjunta desde la lista del perfil. */}
-                  {!isBandPrefilled && !isEditing && (
+                      En edición se oculta si la rola ya tiene MP3 (no se reemplaza). */}
+                  {showAudioField && (
                     <div className='space-y-1'>
                       <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
                         Archivo MP3 (opcional)
