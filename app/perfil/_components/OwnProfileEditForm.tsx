@@ -6,6 +6,8 @@ import { useState, useTransition } from 'react'
 import type { FeaturedSongView, Role } from '@/lib/types'
 import { updateOwnProfile } from '../actions'
 import FeaturedSongsEditor from './FeaturedSongsEditor'
+import ComparteTuEventoModal from './ComparteTuEventoModal'
+import type { EventSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
 import LinksSection from './LinksSection'
 import { resizeAndEncodePhoto } from './photo-utils'
@@ -38,6 +40,8 @@ interface OwnProfileEditFormProps {
   featuredCandidates?: FeaturedSongView[]
   /** Band only: currently featured `type:id` keys, in order. */
   featuredSelected?: string[]
+  /** Published events — bands can edit each one inline from here. */
+  events?: EventSummary[]
   /** Called after a successful save or cancel — host swaps back to the dashboard. */
   onExitEdit: () => void
 }
@@ -69,6 +73,10 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
   const [roleState, setRoleState] = useState<Record<string, unknown>>(() => ({ ...(props.roleProfile ?? {}) }))
   const [activeRole, setActiveRole] = useState<Role | null>(props.role)
   const [featured, setFeatured] = useState<string[]>(props.featuredSelected ?? [])
+  const [editingEvent, setEditingEvent] = useState<EventSummary | null>(null)
+
+  const events = props.events ?? []
+  const canEditEvents = props.role === 'banda'
 
   function updateRoleField(key: string, value: unknown) {
     setRoleState(prev => ({ ...prev, [key]: value }))
@@ -185,7 +193,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
 
             <div className='space-y-6'>
               {/* Photo + identity */}
-              <div className='group flex flex-col items-center gap-5 sm:flex-row sm:items-start'>
+              <div className='flex flex-col items-center gap-5 sm:flex-row sm:items-start'>
                 <ProfilePhoto
                   photoUrl={photoPreview}
                   displayName={displayName}
@@ -235,6 +243,49 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                 />
               )}
 
+              {canEditEvents && (
+                <div className='space-y-2'>
+                  <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
+                    Eventos publicados
+                  </p>
+
+                  {events.length === 0 ? (
+                    <div className='font-pt-mono rounded-md border border-red-700/30 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
+                      Aún no publicas eventos
+                    </div>
+                  ) : (
+                    <ul className='space-y-2'>
+                      {events.map(ev => {
+                        const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })
+                        return (
+                          <li
+                            key={ev.id}
+                            className='flex items-center justify-between gap-3 rounded-md border border-red-700/30 px-3 py-1.5'
+                          >
+                            <div className='font-pt-mono min-w-0 text-sm text-black uppercase'>
+                              <span className='font-bold'>{ev.title}</span>
+                              <span className='text-black/60'> · {dateLabel}</span>
+                              {ev.city && <span className='text-black/60'> · {ev.city}</span>}
+                            </div>
+                            <button
+                              type='button'
+                              onClick={() => setEditingEvent(ev)}
+                              className='font-pt-mono shrink-0 cursor-pointer bg-black px-3 py-1 text-xs font-bold tracking-wider text-white uppercase transition-opacity hover:opacity-80 active:scale-95'
+                            >
+                              Editar
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               {/* Save / Cancel */}
               <div className='flex flex-col items-center gap-3 pt-2'>
                 <div className='flex w-full max-w-70 gap-2'>
@@ -265,6 +316,17 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
           </div>
         </div>
       </div>
+
+      {canEditEvents && (
+        <ComparteTuEventoModal
+          key={editingEvent?.id ?? 'none'}
+          open={!!editingEvent}
+          onOpenChange={open => {
+            if (!open) setEditingEvent(null)
+          }}
+          event={editingEvent}
+        />
+      )}
     </div>
   )
 }

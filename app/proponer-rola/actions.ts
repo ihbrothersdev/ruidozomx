@@ -66,7 +66,10 @@ export async function submitProposal(formData: FormData) {
   }
 
   if (await weeklyLimitReached(supabase, user.id)) {
-    redirect('/proponer-rola?error=' + encodeURIComponent('Ya alcanzaste tu límite de 3 propuestas esta semana.'))
+    redirect(
+      '/proponer-rola?error=' +
+        encodeURIComponent('Ya alcanzaste tu límite de 3 propuestas esta semana. Podrás proponer de nuevo el lunes.')
+    )
   }
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -96,7 +99,12 @@ export async function submitProposal(formData: FormData) {
   })
 
   if (error) {
-    redirect('/proponer-rola?error=' + encodeURIComponent('Error al enviar tu propuesta. Intenta de nuevo.'))
+    // 23505 = unique violation: ya propuso esta misma (rola, banda).
+    const message =
+      error.code === '23505'
+        ? 'Ya habías propuesto esta rola. Si quieres mandar otra, cambia el nombre o la banda.'
+        : 'No pudimos guardar tu propuesta. Revisa tu conexión y vuelve a intentar en un momento.'
+    redirect('/proponer-rola?error=' + encodeURIComponent(message))
   }
 
   if (user.email) {

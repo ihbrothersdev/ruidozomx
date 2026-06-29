@@ -85,8 +85,13 @@ export function AdminToast() {
       }
     }
 
-    router.replace(pathname)
-  }, [errCode, okCode, customMsg, router, pathname])
+    const rest = new URLSearchParams(params.toString())
+    rest.delete('ok')
+    rest.delete('e')
+    rest.delete('m')
+    const qs = rest.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname)
+  }, [errCode, okCode, customMsg, params, router, pathname])
 
   return null
 }

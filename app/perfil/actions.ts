@@ -61,7 +61,7 @@ export async function sendProposal(input: SendProposalInput) {
 
   if (error) {
     console.error('Error saving proposal:', error)
-    return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
+    return { error: 'No pudimos enviar tu propuesta. Revisa tu conexión y vuelve a intentar en un momento.' }
   }
 
   // Notify the recipient. Reuses the INTEREST_RECEIVED Loops template for
@@ -334,7 +334,10 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     .gte('created_at', getStartOfWeek())
 
   if (count !== null && count >= 3) {
-    return { error: 'Ya alcanzaste tu límite de 3 propuestas esta semana.' }
+    return {
+      error: 'Ya alcanzaste tu límite de 3 propuestas esta semana. Podrás proponer de nuevo el lunes.',
+      kind: 'limit' as const
+    }
   }
 
   const { error } = await supabase.from('song_proposals').insert({
@@ -350,7 +353,15 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
 
   if (error) {
     console.error('Error saving song proposal:', error)
-    return { error: 'No se pudo enviar la propuesta. Intenta de nuevo.' }
+    // 23505 = unique violation: same user already proposed this exact
+    // (title, artist). Reintentar nunca va a funcionar, así que lo decimos claro.
+    if (error.code === '23505') {
+      return {
+        error: 'Ya habías propuesto esta rola. Si quieres mandar otra, cambia el nombre o la banda.',
+        kind: 'duplicate' as const
+      }
+    }
+    return { error: 'No pudimos guardar tu propuesta. Revisa tu conexión y vuelve a intentar en un momento.' }
   }
 
   // Confirmation email — same template the legacy /proponer-rola form uses.
@@ -613,6 +624,67 @@ export async function submitEvent(input: SubmitEventInput) {
   if (error) {
     console.error('Error saving event:', error)
     return { error: 'No se pudo enviar el evento. Intenta de nuevo.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
+interface UpdateEventInput extends SubmitEventInput {
+  id: string
+}
+
+export async function updateEvent(input: UpdateEventInput) {
+  const supabase = await createClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  if (!input.id) {
+    return { error: 'Evento no válido.' }
+  }
+  if (!input.title.trim()) {
+    return { error: 'El nombre del evento es obligatorio.' }
+  }
+  if (!input.type.trim()) {
+    return { error: 'El tipo de evento es obligatorio.' }
+  }
+  if (!input.date) {
+    return { error: 'La fecha del evento es obligatoria.' }
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
+    return { error: 'La fecha no es válida.' }
+  }
+
+  // `.eq('profile_id', user.id)` mirrors the `events_update_own` RLS policy and
+  // makes ownership explicit; `.select()` lets us tell "not yours" from a no-op.
+  const { data, error } = await supabase
+    .from('events')
+    .update({
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      event_date: input.date,
+      venue_name: input.venueName?.trim() || null,
+      address: input.address?.trim() || null,
+      city: input.city?.trim() || null,
+      event_type: input.type.trim(),
+      external_link: input.externalLink?.trim() || null
+    })
+    .eq('id', input.id)
+    .eq('profile_id', user.id)
+    .select('id')
+
+  if (error) {
+    console.error('Error updating event:', error)
+    return { error: 'No se pudo actualizar el evento. Intenta de nuevo.' }
+  }
+  if (!data || data.length === 0) {
+    return { error: 'No se encontró el evento o no tienes permiso para editarlo.' }
   }
 
   revalidatePath('/perfil')

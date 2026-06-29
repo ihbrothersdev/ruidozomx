@@ -26,10 +26,10 @@ interface IdentityBlockProps {
 }
 
 const inputCls =
-  'h-auto w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1 font-pt-mono text-sm font-bold uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-1 font-pt-mono text-sm font-bold uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
 
 const smallInputCls =
-  'h-auto w-full rounded-none border-2 border-red-600 bg-transparent px-2 py-1 font-pt-mono text-xs uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-2 py-1 font-pt-mono text-xs uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
 
 const labelCls = 'font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'
 

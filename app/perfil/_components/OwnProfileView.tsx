@@ -105,6 +105,7 @@ export default function OwnProfileView({
         city={city ?? ''}
         featuredCandidates={featuredCandidates}
         featuredSelected={featuredSelected}
+        events={events}
         onExitEdit={() => setIsEditing(false)}
       />
     )

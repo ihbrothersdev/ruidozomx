@@ -13,11 +13,14 @@ import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
-import { submitEvent } from '../actions'
+import { submitEvent, updateEvent } from '../actions'
+import type { EventSummary } from './DynamicModules'
 
 interface ComparteTuEventoModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** When set, the modal edits this published event instead of creating one. */
+  event?: EventSummary | null
 }
 
 const maxDescripcion = 200
@@ -29,16 +32,24 @@ const inputCls =
 const textareaCls =
   'max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none resize-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
 
-export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTuEventoModalProps) {
-  const [tipo, setTipo] = useState('')
-  const [nombre, setNombre] = useState('')
-  const [venue, setVenue] = useState('')
-  const [ciudad, setCiudad] = useState('')
-  const [direccion, setDireccion] = useState('')
-  const [fecha, setFecha] = useState<Date | undefined>(undefined)
+export default function ComparteTuEventoModal({ open, onOpenChange, event = null }: ComparteTuEventoModalProps) {
+  const isEditing = !!event
+
+  // Prefill from the event being edited. `event_date` is a plain YYYY-MM-DD;
+  // append a local-time component so it isn't shifted a day back for viewers
+  // west of UTC. In edit mode the parent remounts this via `key`, so these
+  // initializers re-run for each event.
+  const [tipo, setTipo] = useState(event?.event_type ?? '')
+  const [nombre, setNombre] = useState(event?.title ?? '')
+  const [venue, setVenue] = useState(event?.venue_name ?? '')
+  const [ciudad, setCiudad] = useState(event?.city ?? '')
+  const [direccion, setDireccion] = useState(event?.address ?? '')
+  const [fecha, setFecha] = useState<Date | undefined>(
+    event?.event_date ? new Date(`${event.event_date}T00:00:00`) : undefined
+  )
   const [calendarOpen, setCalendarOpen] = useState(false)
-  const [descripcion, setDescripcion] = useState('')
-  const [links, setLinks] = useState('')
+  const [descripcion, setDescripcion] = useState(event?.description ?? '')
+  const [links, setLinks] = useState(event?.external_link ?? '')
   const [sending, setSending] = useState(false)
 
   const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && !!fecha
@@ -58,7 +69,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
     e.preventDefault()
     if (!canSubmit || !fecha) return
     setSending(true)
-    const result = await submitEvent({
+    const payload = {
       type: tipo,
       title: nombre,
       venueName: venue || undefined,
@@ -67,7 +78,8 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
       date: format(fecha, 'yyyy-MM-dd'),
       description: descripcion || undefined,
       externalLink: links || undefined
-    })
+    }
+    const result = isEditing ? await updateEvent({ id: event.id, ...payload }) : await submitEvent(payload)
     setSending(false)
     if (result.error) {
       sileo.error({ title: 'Error', description: result.error, position: 'top-center', duration: 4000 })
@@ -75,7 +87,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
     }
     sileo.success({
       title: '¡Éxito!',
-      description: 'Tu evento ha sido publicado.',
+      description: isEditing ? 'Tu evento ha sido actualizado.' : 'Tu evento ha sido publicado.',
       position: 'top-center',
       duration: 4000
     })
@@ -92,7 +104,9 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
         className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-2xl'
         showCloseButton={false}
       >
-        <DialogTitle className='sr-only'>Comparte tu evento con la comunidad RU!DOZO</DialogTitle>
+        <DialogTitle className='sr-only'>
+          {isEditing ? 'Edita tu evento publicado' : 'Comparte tu evento con la comunidad RU!DOZO'}
+        </DialogTitle>
 
         <div className='relative'>
           <div className='relative min-h-full'>
@@ -106,14 +120,20 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
 
             {/* Content */}
             <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-              {/* Title image */}
-              <Image
-                src='/assets/comparte-evento-title.png'
-                alt='Comparte tu evento con la comunidad RU!DOZO'
-                width={500}
-                height={80}
-                className='h-auto w-full max-w-78 sm:max-w-100'
-              />
+              {/* Title — image for create, text heading for edit */}
+              {isEditing ? (
+                <h2 className='font-pt-mono text-2xl font-bold tracking-wider text-black uppercase sm:text-3xl'>
+                  Edita tu evento
+                </h2>
+              ) : (
+                <Image
+                  src='/assets/comparte-evento-title.png'
+                  alt='Comparte tu evento con la comunidad RU!DOZO'
+                  width={500}
+                  height={80}
+                  className='h-auto w-full max-w-78 sm:max-w-100'
+                />
+              )}
 
               {/* Form */}
               <form
@@ -260,7 +280,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange }: ComparteTu
                     disabled={!canSubmit || sending}
                     className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                   >
-                    {sending ? 'Enviando...' : 'Enviar'}
+                    {sending ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Enviar'}
                   </button>
                   <button
                     type='button'
