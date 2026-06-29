@@ -375,18 +375,18 @@ export default function DynamicModules(props: DynamicModulesProps) {
                 return (
                   <li
                     key={p.id}
-                    className='flex items-start gap-2 text-sm'
+                    className='flex items-center gap-2 text-sm'
                   >
-                    <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-                    <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+                    <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+                    <div className='font-pt-mono min-w-0 flex-1 truncate'>
                       <span className='font-bold text-black'>{p.title}</span>
-                      <span className='text-xs text-black/60'>— {p.artist}</span>
-                      <span
-                        className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
-                      >
-                        {status.label}
-                      </span>
+                      <span className='text-xs text-black/60'> — {p.artist}</span>
                     </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
+                    >
+                      {status.label}
+                    </span>
                   </li>
                 )
               })}
