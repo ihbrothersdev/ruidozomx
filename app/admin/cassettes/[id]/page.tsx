@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/button'
 import { Card, CardContent } from '@/app/components/ui/card'
 import { Progress } from '@/app/components/ui/progress'
 import { extractStorageKey, isPlayableAudio } from '@/lib/audio'
+import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
 import { createClient } from '@/lib/supabase/server'
 import { formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ArrowLeft, Music2, Sparkles, UploadCloud } from 'lucide-react'
@@ -64,13 +65,16 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
   const missingAudio = cassetteSongs.filter(s => !isPlayableAudio(s.audioUrl))
   const missingAudioCount = missingAudio.length
 
-  // The single concatenated audio (`npm run build-cassette`) must exist and cover
-  // every song before the cassette can be published. Gates the Publicar button.
-  const concatOffsetIds = new Set(((cassette.song_offsets as { song_id: string }[] | null) ?? []).map(o => o.song_id))
-  const concatReady =
-    Boolean(cassette.concat_audio_url) &&
-    cassetteSongs.length > 0 &&
-    cassetteSongs.every(s => concatOffsetIds.has(s.id))
+  // The single concatenated audio (`npm run build-cassette`) must exist and match
+  // the current track order before the cassette can be published. Gates the
+  // Publicar button; goes stale when songs are added, removed, or reordered.
+  const concatReady = isCassetteConcatReady(
+    cassette.concat_audio_url,
+    cassette.song_offsets as SongOffset[] | null,
+    cassetteSongs
+  )
+  // The audio exists but no longer matches the layout — surface the rebuild hint.
+  const concatStale = Boolean(cassette.concat_audio_url) && cassetteSongs.length > 0 && !concatReady
 
   const unorganizedAudioCount = cassetteSongs.filter(s => {
     const key = extractStorageKey(s.audioUrl, SONGS_BUCKET)
@@ -169,6 +173,19 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
               Algunos slots solo tienen un link externo (Spotify/YouTube) y no se pueden reproducir. Sube el MP3 desde
               el ícono <UploadCloud className='inline h-3 w-3 align-middle' /> en cada fila. Sin esto el cassette no se
               puede publicar.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {concatStale && state !== 'archived' && (
+        <Alert className='border-amber-400/30 bg-amber-500/10 text-amber-200'>
+          <AlertCircle />
+          <AlertTitle className='font-pt-mono text-amber-200'>Audio desfasado del orden actual</AlertTitle>
+          <AlertDescription className='font-pt-mono text-amber-300/80'>
+            <p>
+              Reordenaste o cambiaste canciones, así que el audio del cassette ya no coincide. Regéneralo antes de
+              publicar: <code className='text-amber-100'>npm run build-cassette {cassette.id}</code> y recarga.
             </p>
           </AlertDescription>
         </Alert>

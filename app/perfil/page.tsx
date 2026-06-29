@@ -1,3 +1,5 @@
+import { extractStorageKey, SONGS_BUCKET } from '@/lib/audio'
+import { getFeaturedCandidates, getProfileFeaturedSongs } from '@/lib/supabase/featured-songs'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { Role } from '@/lib/types'
@@ -112,10 +114,10 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   ] = await Promise.all([
     supabase
       .from('song_proposals')
-      .select('id, title, artist, status, created_at')
+      .select('id, title, artist, status, created_at, audio_url, external_link, download_link')
       .eq('user_id', resolvedProfileId)
       .order('created_at', { ascending: false })
-      .limit(3),
+      .limit(50),
     supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId),
     supabase
       .from('events')
@@ -225,6 +227,45 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   const receivedProposals = normalizeProposals(receivedProposalsRaw)
   const sentProposals = normalizeProposals(sentProposalsRaw)
 
+  // A proposal "has audio" only when `audio_url` points at a real file in our
+  // `songs` bucket — external links (Spotify/YouTube) don't count, so the owner
+  // can still attach the actual MP3.
+  type RawSongProposal = {
+    id: string
+    title: string
+    artist: string
+    status: 'pending' | 'accepted' | 'rejected'
+    created_at: string
+    audio_url: string | null
+    external_link: string | null
+    download_link: string | null
+  }
+  const songProposals = ((songProposalsData as RawSongProposal[] | null) ?? []).map(p => ({
+    id: p.id,
+    title: p.title,
+    artist: p.artist,
+    status: p.status,
+    created_at: p.created_at,
+    hasAudio: !!p.audio_url && extractStorageKey(p.audio_url, SONGS_BUCKET) !== null,
+    external_link: p.external_link,
+    download_link: p.download_link
+  }))
+
+  // Bands curate up to 3 rolas to feature on their public profile. Load the
+  // candidate pool (own proposals + linked cassette tracks) and the current pick.
+  let featuredCandidates: Awaited<ReturnType<typeof getFeaturedCandidates>> = []
+  let featuredSongs: Awaited<ReturnType<typeof getProfileFeaturedSongs>> = []
+  let featuredSelected: string[] = []
+  if (role === 'banda') {
+    const [candidates, current] = await Promise.all([
+      getFeaturedCandidates(dataClient, resolvedProfileId),
+      getProfileFeaturedSongs(dataClient, resolvedProfileId)
+    ])
+    featuredCandidates = candidates
+    featuredSongs = current
+    featuredSelected = current.map(s => s.key)
+  }
+
   return (
     <OwnProfileView
       displayName={displayName}
@@ -235,7 +276,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
       contact={contact}
       socialLinks={socialLinks}
       roleProfile={roleProfile}
-      songProposals={songProposalsData ?? []}
+      songProposals={songProposals}
       songProposalsCount={songProposalsCount ?? 0}
       events={eventsData ?? []}
       receivedConnections={receivedConnections}
@@ -251,6 +292,10 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
       country={(profile?.country as string | null) ?? null}
       state={(profile?.state as string | null) ?? null}
       city={(profile?.city as string | null) ?? null}
+      profileId={resolvedProfileId}
+      featuredSongs={featuredSongs}
+      featuredCandidates={featuredCandidates}
+      featuredSelected={featuredSelected}
     />
   )
 }

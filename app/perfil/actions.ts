@@ -1,10 +1,12 @@
 'use server'
 
 import { logEvent } from '@/app/analytics/actions'
+import { audioMetaError, extractStorageKey, proposalStorageKey, SONGS_BUCKET } from '@/lib/audio'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
-import type { Role, UserProposalType } from '@/lib/types'
+import type { FeaturedSongSource, Role, UserProposalType } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
@@ -285,6 +287,8 @@ interface SubmitSongProposalInput {
   artist: string
   externalLink?: string
   downloadLink?: string
+  /** Public URL of the MP3 already uploaded to the `songs` bucket (mandatory). */
+  audioUrl?: string
   vibes?: string[]
 }
 
@@ -317,6 +321,12 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     return { error: 'El nombre de la banda/proyecto es obligatorio.' }
   }
 
+  // The MP3 is optional here (this modal also serves recommending another
+  // band's rola). When provided, it must be a file already uploaded to our
+  // bucket — otherwise ignore it so the field can't point at an arbitrary URL.
+  let audioUrl = input.audioUrl?.trim() || ''
+  if (audioUrl && !extractStorageKey(audioUrl, SONGS_BUCKET)) audioUrl = ''
+
   const { count } = await supabase
     .from('song_proposals')
     .select('*', { count: 'exact', head: true })
@@ -336,6 +346,7 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     artist: input.artist.trim(),
     external_link: input.externalLink?.trim() || null,
     download_link: input.downloadLink?.trim() || null,
+    audio_url: audioUrl || null,
     comment: input.vibes?.length ? input.vibes.join(' / ') : null,
     status: 'pending'
   })
@@ -365,6 +376,192 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     }
   }
 
+  return { success: true }
+}
+
+interface PrepareProposalAudioInput {
+  proposalId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+}
+
+/**
+ * Mint a signed upload URL so the owner can attach an MP3 to one of their
+ * existing proposals that has none yet (e.g. recommended a rola without the
+ * file, or it was created without audio). Mirrors the /proponer-rola flow but
+ * keyed by an existing proposal instead of the weekly-limit gate. Pair with
+ * saveProposalAudio once the browser finishes the upload.
+ */
+export async function prepareProposalAudioUpload(
+  input: PrepareProposalAudioInput
+): Promise<{ ok: true; key: string; token: string; publicUrl: string } | { ok: false; error: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'No has iniciado sesión.' }
+
+  const metaError = audioMetaError(input.fileName, input.fileType, input.fileSize)
+  if (metaError) return { ok: false, error: metaError }
+
+  const { data: proposal } = await supabase
+    .from('song_proposals')
+    .select('user_id, artist, title, audio_url')
+    .eq('id', input.proposalId)
+    .single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { ok: false, error: 'No encontramos esa propuesta.' }
+  }
+  if (proposal.audio_url && extractStorageKey(proposal.audio_url, SONGS_BUCKET)) {
+    return { ok: false, error: 'Esta rola ya tiene un MP3.' }
+  }
+
+  const svc = createServiceClient()
+  const ext = (input.fileName.split('.').pop() ?? 'mp3').toLowerCase()
+  const key = proposalStorageKey({
+    userId: user.id,
+    artist: proposal.artist || 'banda',
+    title: proposal.title || 'rola',
+    ext,
+    rand: crypto.randomUUID().slice(0, 8)
+  })
+
+  const { data, error } = await svc.storage.from(SONGS_BUCKET).createSignedUploadUrl(key, { upsert: true })
+  if (error || !data) return { ok: false, error: error?.message ?? 'No se pudo preparar la subida.' }
+
+  const {
+    data: { publicUrl }
+  } = svc.storage.from(SONGS_BUCKET).getPublicUrl(key)
+
+  return { ok: true, key, token: data.token, publicUrl }
+}
+
+/**
+ * Persist the `audio_url` after the browser uploaded the MP3 to the `songs`
+ * bucket. Verifies ownership in code and writes via the service client — there
+ * is no owner-level UPDATE policy on song_proposals (only admins), and this
+ * keeps the writable surface to just `audio_url`.
+ */
+export async function saveProposalAudio(input: { proposalId: string; audioUrl: string }) {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No has iniciado sesión.' }
+
+  const audioUrl = input.audioUrl?.trim() || ''
+  if (!audioUrl || !extractStorageKey(audioUrl, SONGS_BUCKET)) {
+    return { error: 'El MP3 no es válido.' }
+  }
+
+  const { data: proposal } = await supabase.from('song_proposals').select('user_id').eq('id', input.proposalId).single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { error: 'No encontramos esa propuesta.' }
+  }
+
+  const svc = createServiceClient()
+  const { error } = await svc
+    .from('song_proposals')
+    .update({ audio_url: audioUrl })
+    .eq('id', input.proposalId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[saveProposalAudio]', error)
+    return { error: 'No se pudo guardar el MP3. Intenta de nuevo.' }
+  }
+
+  // If the proposal was already accepted onto a cassette, point the cassette
+  // track at the same file so the rola is playable there too. Non-fatal: the
+  // proposal save already succeeded. Cassettes already glued by build-cassette
+  // (concat_audio_url + offsets) need a rebuild before this is audible.
+  const { data: linkedSongs } = await svc.from('songs').select('cassette_id').eq('proposal_id', input.proposalId)
+  if (linkedSongs && linkedSongs.length > 0) {
+    const { error: songError } = await svc
+      .from('songs')
+      .update({ audio_url: audioUrl })
+      .eq('proposal_id', input.proposalId)
+    if (songError) console.error('[saveProposalAudio] linked song update', songError)
+    for (const cid of [...new Set(linkedSongs.map(s => s.cassette_id).filter(Boolean))]) {
+      revalidatePath(`/admin/cassettes/${cid}`)
+    }
+    revalidatePath('/')
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
+interface UpdateSongProposalInput {
+  id: string
+  title: string
+  artist: string
+  externalLink?: string
+  downloadLink?: string
+  vibes?: string[]
+}
+
+/**
+ * Edit the text fields of one's own proposal. Like saveProposalAudio, there is
+ * no owner-level UPDATE policy on song_proposals — ownership and editability are
+ * checked in code and the write goes through the service client with a narrow
+ * column allow-list (never status / cassette_id / reviewed_*).
+ */
+export async function updateSongProposal(input: UpdateSongProposalInput) {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No has iniciado sesión.' }
+
+  if (!input.id) return { error: 'Propuesta no válida.' }
+  if (!input.title.trim()) return { error: 'El nombre de la rola es obligatorio.' }
+  if (!input.artist.trim()) return { error: 'El nombre de la banda/proyecto es obligatorio.' }
+
+  const { data: proposal } = await supabase.from('song_proposals').select('user_id, status').eq('id', input.id).single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { error: 'No encontramos esa propuesta.' }
+  }
+  // Once accepted the rola is on a cassette — its info is frozen.
+  if (proposal.status === 'accepted') {
+    return { error: 'Esta rola ya fue aceptada y no se puede editar.' }
+  }
+
+  const patch: Record<string, unknown> = {
+    title: input.title.trim(),
+    artist: input.artist.trim(),
+    external_link: input.externalLink?.trim() || null,
+    download_link: input.downloadLink?.trim() || null
+  }
+  // Vibes live in `comment`; only overwrite it when the modal managed them
+  // (showVibes), so editing without the vibes UI doesn't wipe a note.
+  if (input.vibes !== undefined) {
+    patch.comment = input.vibes.length ? input.vibes.join(' / ') : null
+  }
+
+  const svc = createServiceClient()
+  // `.neq('status', 'accepted')` re-checks editability at write time (guards the
+  // gap between the read above and this update).
+  const { error } = await svc
+    .from('song_proposals')
+    .update(patch)
+    .eq('id', input.id)
+    .eq('user_id', user.id)
+    .neq('status', 'accepted')
+
+  if (error) {
+    console.error('[updateSongProposal]', error)
+    if (error.code === '23505') {
+      return { error: 'Ya tienes otra rola con ese nombre y banda. Cambia alguno para guardar.' }
+    }
+    return { error: 'No pudimos actualizar tu propuesta. Intenta de nuevo.' }
+  }
+
+  revalidatePath('/perfil')
   return { success: true }
 }
 
@@ -522,6 +719,28 @@ function getArray(formData: FormData, key: string): string[] {
     .filter(Boolean)
 }
 
+/**
+ * Parse the band's featured-songs selection (`featured_songs` = JSON array of
+ * `{type, id}`). Returns `null` when the field is absent (don't touch existing
+ * selection) vs `[]` when the band cleared all picks (wipe).
+ */
+function getFeaturedPicks(formData: FormData): FeaturedPick[] | null {
+  const raw = formData.get('featured_songs')
+  if (typeof raw !== 'string' || !raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    return parsed
+      .filter(
+        (p): p is { type: FeaturedSongSource; id: string } =>
+          p && (p.type === 'proposal' || p.type === 'song') && typeof p.id === 'string'
+      )
+      .map(p => ({ type: p.type, id: p.id }))
+  } catch {
+    return null
+  }
+}
+
 function buildSocialLinks(formData: FormData): Record<string, string> {
   const links: Record<string, string> = {}
   for (const [key, value] of formData.entries()) {
@@ -556,7 +775,10 @@ async function uploadPhotoBase64(
     .upload(filePath, buffer, { contentType: mimeType, upsert: true })
   if (error) return null
   const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
-  return data.publicUrl
+  // The path is fixed (`avatar.webp`, upserted), so the public URL never
+  // changes between uploads — browsers/CDN keep serving the cached old image.
+  // Append the upload time as a version param to bust that cache.
+  return `${data.publicUrl}?v=${Date.now()}`
 }
 
 export async function updateOwnProfile(formData: FormData) {
@@ -640,6 +862,11 @@ export async function updateOwnProfile(formData: FormData) {
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
+  }
+
+  if (nextRole === 'banda') {
+    const picks = getFeaturedPicks(formData)
+    if (picks) await saveFeaturedSongs(supabase, user.id, picks)
   }
 
   revalidatePath('/perfil')
@@ -797,6 +1024,11 @@ export async function updateProfileAsAdmin(targetProfileId: string, formData: Fo
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
+  }
+
+  if (nextRole === 'banda') {
+    const picks = getFeaturedPicks(formData)
+    if (picks) await saveFeaturedSongs(serviceClient, targetProfileId, picks)
   }
 
   if (existing.slug) {

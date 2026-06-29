@@ -1,7 +1,14 @@
+import { TrackedProfileLink } from '@/app/components/analytics/TrackedProfileLink'
+
 interface CassetteLabelsProps {
   songTitle: string
   artist: string
   date: string
+  /** When the artist has a band profile, link the name to it (→ /perfil/[slug]). */
+  artistHref?: string
+  artistSlug?: string
+  songId?: string | null
+  cassetteId?: string | null
 }
 
 function TruncatedLabel({ text, className }: { text: string; className: string }) {
@@ -22,7 +29,18 @@ function TruncatedLabel({ text, className }: { text: string; className: string }
   )
 }
 
-export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps) {
+export function CassetteLabels({
+  songTitle,
+  artist,
+  date,
+  artistHref,
+  artistSlug,
+  songId,
+  cassetteId
+}: CassetteLabelsProps) {
+  const artistClass =
+    'font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
+
   return (
     <>
       <div
@@ -37,10 +55,27 @@ export function CassetteLabels({ songTitle, artist, date }: CassetteLabelsProps)
             />
           </div>
           <div className='relative w-3/4'>
-            <TruncatedLabel
-              text={artist}
-              className='font-corose block w-full truncate text-center text-xs leading-tight text-black uppercase sm:text-xl md:text-2xl'
-            />
+            {artistHref ? (
+              <TrackedProfileLink
+                href={artistHref}
+                targetProfileSlug={artistSlug}
+                songId={songId}
+                cassetteId={cassetteId}
+                source='player'
+                title={`Ver perfil de ${artist}`}
+                className='block w-full'
+              >
+                <TruncatedLabel
+                  text={artist}
+                  className={`${artistClass} hover:underline`}
+                />
+              </TrackedProfileLink>
+            ) : (
+              <TruncatedLabel
+                text={artist}
+                className={artistClass}
+              />
+            )}
           </div>
         </div>
       </div>

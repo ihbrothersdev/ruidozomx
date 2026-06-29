@@ -6,14 +6,31 @@ import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { Label } from '@/app/components/ui/label'
+import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { sileo } from 'sileo'
-import { submitSongProposal } from '../actions'
+import { prepareProposalAudioUpload } from '@/app/proponer-rola/actions'
+import { audioErrorMessage } from '../audio-errors'
+import {
+  prepareProposalAudioUpload as prepareExistingProposalAudio,
+  saveProposalAudio,
+  submitSongProposal,
+  updateSongProposal
+} from '../actions'
 
 interface ProponerRolaBandaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bandName: string
   showVibes?: boolean
+  /** When set, the modal edits this existing proposal instead of creating one. */
+  proposalId?: string
+  initialTitle?: string
+  initialArtist?: string
+  initialListenLink?: string
+  initialDownloadLink?: string
+  initialVibes?: string[]
+  /** Edit mode: whether the proposal already has an uploaded MP3 (hides the picker). */
+  initialHasAudio?: boolean
 }
 
 const VIBES = [
@@ -37,19 +54,31 @@ export default function ProponerRolaBandaModal({
   open,
   onOpenChange,
   bandName,
-  showVibes = true
+  showVibes = true,
+  proposalId,
+  initialTitle,
+  initialArtist,
+  initialListenLink,
+  initialDownloadLink,
+  initialVibes,
+  initialHasAudio
 }: ProponerRolaBandaModalProps) {
-  const [artistName, setArtistName] = useState('')
-  const [songName, setSongName] = useState('')
-  const [listenLink, setListenLink] = useState('')
-  const [downloadLink, setDownloadLink] = useState('')
-  const [selectedVibes, setSelectedVibes] = useState<string[]>([])
+  const isEditing = Boolean(proposalId)
+  const [artistName, setArtistName] = useState(initialArtist ?? '')
+  const [songName, setSongName] = useState(initialTitle ?? '')
+  const [listenLink, setListenLink] = useState(initialListenLink ?? '')
+  const [downloadLink, setDownloadLink] = useState(initialDownloadLink ?? '')
+  const [audioFile, setAudioFile] = useState<File | null>(null)
+  const [selectedVibes, setSelectedVibes] = useState<string[]>(initialVibes ?? [])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
   const isBandPrefilled = bandName.trim().length > 0
   const artist = isBandPrefilled ? bandName : artistName
   const canSubmit = songName.trim().length > 0 && artist.trim().length > 0 && listenLink.trim().length > 0
+  // Own material only. In edit mode, hide it once the rola has an MP3 — the
+  // backend doesn't allow replacing an existing one.
+  const showAudioField = !isBandPrefilled && (!isEditing || !initialHasAudio)
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
@@ -59,17 +88,82 @@ export default function ProponerRolaBandaModal({
     e.preventDefault()
     if (!canSubmit) return
     setSending(true)
-    const result = await submitSongProposal({
-      title: songName,
-      artist,
-      externalLink: listenLink || undefined,
-      downloadLink: downloadLink || undefined,
-      vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
-    })
+
+    // When an MP3 is attached, upload it via a signed URL. Create and edit use
+    // different actions: create passes the public URL into submitSongProposal;
+    // edit persists it via saveProposalAudio (keyed by the existing proposal).
+    let audioUrl: string | undefined
+    if (audioFile) {
+      const prep = isEditing
+        ? await prepareExistingProposalAudio({
+            proposalId: proposalId!,
+            fileName: audioFile.name,
+            fileType: audioFile.type,
+            fileSize: audioFile.size
+          })
+        : await prepareProposalAudioUpload({
+            fileName: audioFile.name,
+            fileType: audioFile.type,
+            fileSize: audioFile.size,
+            artist,
+            title: songName
+          })
+      if (!prep.ok) {
+        setSending(false)
+        sileo.error({
+          title: 'Error',
+          description: audioErrorMessage(prep.error),
+          position: 'top-center',
+          duration: 4000
+        })
+        return
+      }
+
+      const upload = await uploadAudioToSignedUrl(prep.key, prep.token, audioFile)
+      if (!upload.ok) {
+        setSending(false)
+        sileo.error({
+          title: 'Error',
+          description: 'No se pudo subir el MP3. Intenta de nuevo.',
+          position: 'top-center',
+          duration: 4000
+        })
+        return
+      }
+
+      if (isEditing) {
+        const saved = await saveProposalAudio({ proposalId: proposalId!, audioUrl: prep.publicUrl })
+        if (saved.error) {
+          setSending(false)
+          sileo.error({ title: 'Error', description: saved.error, position: 'top-center', duration: 4000 })
+          return
+        }
+      } else {
+        audioUrl = prep.publicUrl
+      }
+    }
+
+    const result = isEditing
+      ? await updateSongProposal({
+          id: proposalId!,
+          title: songName,
+          artist,
+          externalLink: listenLink || undefined,
+          downloadLink: downloadLink || undefined,
+          vibes: showVibes ? selectedVibes : undefined
+        })
+      : await submitSongProposal({
+          title: songName,
+          artist,
+          externalLink: listenLink || undefined,
+          downloadLink: downloadLink || undefined,
+          audioUrl,
+          vibes: showVibes && selectedVibes.length > 0 ? selectedVibes : undefined
+        })
     setSending(false)
     if (result.error) {
-      const title =
-        result.kind === 'duplicate' ? 'Ya la propusiste' : result.kind === 'limit' ? 'Límite semanal' : 'Error'
+      const kind = 'kind' in result ? result.kind : undefined
+      const title = kind === 'duplicate' ? 'Ya la propusiste' : kind === 'limit' ? 'Límite semanal' : 'Error'
       sileo.error({ title, description: result.error, position: 'top-center', duration: 4000 })
     } else {
       setSent(true)
@@ -77,6 +171,7 @@ export default function ProponerRolaBandaModal({
       setListenLink('')
       setDownloadLink('')
       setArtistName('')
+      setAudioFile(null)
       setSelectedVibes([])
       setTimeout(() => {
         setSent(false)
@@ -130,9 +225,19 @@ export default function ProponerRolaBandaModal({
 
                 {/* Subtitle */}
                 <p className='font-pt-mono text-md mt-3 text-center leading-tight tracking-wider text-red-600'>
-                  Esta rola se va a la fila de curaduría
-                  <br />
-                  del casete quincenal
+                  {isEditing ? (
+                    <>
+                      Actualiza los datos de tu rola
+                      <br />
+                      mientras sigue en la fila de curaduría
+                    </>
+                  ) : (
+                    <>
+                      Esta rola se va a la fila de curaduría
+                      <br />
+                      del casete quincenal
+                    </>
+                  )}
                 </p>
 
                 {/* Form */}
@@ -205,6 +310,33 @@ export default function ProponerRolaBandaModal({
                     />
                   </div>
 
+                  {/* MP3 — solo cuando es material propio; al recomendar otra
+                      banda no tienes su archivo, así que se oculta. Siempre opcional.
+                      En edición se oculta si la rola ya tiene MP3 (no se reemplaza). */}
+                  {showAudioField && (
+                    <div className='space-y-1'>
+                      <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                        Archivo MP3 (opcional)
+                      </Label>
+                      <div className='flex flex-wrap items-center gap-3'>
+                        <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
+                          Elegir archivo
+                          <input
+                            type='file'
+                            accept='.mp3,audio/mpeg,audio/mp3'
+                            onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
+                            className='hidden'
+                          />
+                        </label>
+                        <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
+                          {audioFile
+                            ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
+                            : 'Sin archivo seleccionado'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Vibes section — only shown when showVibes is true */}
                   {showVibes && (
                     <div className='space-y-2'>
@@ -242,7 +374,7 @@ export default function ProponerRolaBandaModal({
                       disabled={!canSubmit || sending}
                       className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                     >
-                      {sending ? 'Enviando...' : 'Enviar'}
+                      {sending ? (isEditing ? 'Guardando...' : 'Enviando...') : isEditing ? 'Guardar' : 'Enviar'}
                     </button>
                     <button
                       type='button'

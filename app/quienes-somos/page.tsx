@@ -16,6 +16,17 @@ export default function QuienesSomosPage() {
   const [needsTap, setNeedsTap] = useState(false)
   const [muted, setMuted] = useState(true)
 
+  // The global player bar is hidden here, so drop the body padding that
+  // reserves space for it — otherwise it leaves a blank gap below the manifesto.
+  useEffect(() => {
+    const { body } = document
+    const prev = body.style.paddingBottom
+    body.style.paddingBottom = '0'
+    return () => {
+      body.style.paddingBottom = prev
+    }
+  }, [])
+
   const handleVideoError = useCallback(() => setPhase('manifesto'), [])
 
   const getActiveVideo = useCallback(() => {

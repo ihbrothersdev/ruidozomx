@@ -6,7 +6,7 @@ import { BarChart3, CalendarDays, Disc3, Heart, Inbox, LayoutDashboard, LogOut, 
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface AdminShellProps {
   displayName: string
@@ -27,11 +27,23 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
+  // Admin runs as a fixed-height shell where only the content column scrolls,
+  // so drop the global body padding that reserves space for the floating player
+  // bar — here the sidebar sits above it and the content provides its own gap.
+  useEffect(() => {
+    const { body } = document
+    const prev = body.style.paddingBottom
+    body.style.paddingBottom = '0'
+    return () => {
+      body.style.paddingBottom = prev
+    }
+  }, [])
+
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <div className='relative flex min-h-screen bg-neutral-950 text-white'>
+    <div className='relative flex h-[100dvh] overflow-hidden bg-neutral-950 text-white'>
       {/* Background texture */}
       <div
         className='pointer-events-none fixed inset-0 z-0 opacity-15'
@@ -39,7 +51,7 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
       />
 
       {/* ── Sidebar (desktop) ── */}
-      <aside className='sticky top-0 z-10 hidden h-screen w-64 shrink-0 flex-col self-start overflow-y-auto border-r border-white/5 bg-black/40 md:flex'>
+      <aside className='fixed top-0 left-0 z-40 hidden h-[100dvh] w-64 flex-col overflow-y-auto border-r border-white/5 bg-black/40 md:flex'>
         <SidebarContent
           displayName={displayName}
           photoUrl={photoUrl}
@@ -74,7 +86,7 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
 
       {/* ── Mobile drawer ── */}
       {open && (
-        <div className='fixed inset-0 z-50 md:hidden'>
+        <div className='fixed inset-0 z-[70] md:hidden'>
           <div
             className='absolute inset-0 bg-black/70'
             onClick={() => setOpen(false)}
@@ -102,7 +114,9 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
       )}
 
       {/* ── Main content ── */}
-      <main className='relative z-10 min-w-0 flex-1 pt-16 md:pt-0'>{children}</main>
+      <main className='relative z-10 min-w-0 flex-1 overflow-y-auto pt-16 pb-40 md:pt-0 md:pb-16 md:pl-64'>
+        {children}
+      </main>
     </div>
   )
 }

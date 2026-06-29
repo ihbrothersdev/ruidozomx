@@ -3,8 +3,9 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import type { Role } from '@/lib/types'
+import type { FeaturedSongView, Role } from '@/lib/types'
 import { updateOwnProfile } from '../actions'
+import FeaturedSongsEditor from './FeaturedSongsEditor'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
 import type { EventSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -12,6 +13,16 @@ import LinksSection from './LinksSection'
 import { resizeAndEncodePhoto } from './photo-utils'
 import ProfilePhoto from './ProfilePhoto'
 import ReviewSection from './ReviewSection'
+
+/** Serialize the editor's ordered keys (`type:id`) into the form payload. */
+function serializeFeatured(keys: string[]): string {
+  return JSON.stringify(
+    keys.map(key => {
+      const idx = key.indexOf(':')
+      return { type: key.slice(0, idx), id: key.slice(idx + 1) }
+    })
+  )
+}
 
 interface OwnProfileEditFormProps {
   displayName: string
@@ -25,6 +36,10 @@ interface OwnProfileEditFormProps {
   country?: string
   state?: string
   city?: string
+  /** Band only: rolas the band can feature (proposals + cassette tracks). */
+  featuredCandidates?: FeaturedSongView[]
+  /** Band only: currently featured `type:id` keys, in order. */
+  featuredSelected?: string[]
   /** Published events — bands can edit each one inline from here. */
   events?: EventSummary[]
   /** Called after a successful save or cancel — host swaps back to the dashboard. */
@@ -57,6 +72,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(() => ({ ...(props.socialLinks ?? {}) }))
   const [roleState, setRoleState] = useState<Record<string, unknown>>(() => ({ ...(props.roleProfile ?? {}) }))
   const [activeRole, setActiveRole] = useState<Role | null>(props.role)
+  const [featured, setFeatured] = useState<string[]>(props.featuredSelected ?? [])
   const [editingEvent, setEditingEvent] = useState<EventSummary | null>(null)
 
   const events = props.events ?? []
@@ -93,6 +109,10 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
 
     if (props.role && INDUSTRY_ROLES.includes(props.role) && activeRole) {
       fd.set('role_type', activeRole)
+    }
+
+    if (props.role === 'banda') {
+      fd.set('featured_songs', serializeFeatured(featured))
     }
 
     for (const [key, value] of Object.entries(roleState)) {
@@ -214,6 +234,14 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                 onSocialLinksChange={setSocialLinks}
                 onContactChange={setContact}
               />
+
+              {props.role === 'banda' && (
+                <FeaturedSongsEditor
+                  candidates={props.featuredCandidates ?? []}
+                  selected={featured}
+                  onChange={setFeatured}
+                />
+              )}
 
               {canEditEvents && (
                 <div className='space-y-2'>

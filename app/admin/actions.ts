@@ -1,15 +1,18 @@
 'use server'
 
-import { extractStorageKey, isPlayableAudio, songStorageKey } from '@/lib/audio'
+import {
+  audioMetaError,
+  extractStorageKey,
+  isPlayableAudio,
+  SONGS_BUCKET,
+  songStorageKey
+} from '@/lib/audio'
+import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-
-const SONGS_BUCKET = 'songs'
-const MAX_AUDIO_BYTES = 30 * 1024 * 1024 // 30 MB
-const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/mp4'])
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Guard
@@ -96,15 +99,6 @@ function backToProposals(listing: URLSearchParams, kind: 'ok' | 'e', code: strin
   redirect(`/admin/propuestas?${params.toString()}`)
 }
 
-/** Validates client-reported audio metadata before minting a signed upload URL. */
-function audioMetaError(fileName: string, fileType: string, fileSize: number): string | null {
-  if (!fileName) return 'faltan_datos'
-  if (!Number.isFinite(fileSize) || fileSize <= 0) return 'archivo_vacio'
-  if (fileSize > MAX_AUDIO_BYTES) return 'archivo_muy_grande'
-  if (fileType && !ALLOWED_AUDIO_MIME.has(fileType)) return 'tipo_no_soportado'
-  return null
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Proposals
 // ─────────────────────────────────────────────────────────────────────────────
@@ -155,7 +149,7 @@ export async function acceptProposal(formData: FormData) {
     genre: proposal!.genre,
     side,
     position,
-    audio_url: proposal!.external_link || proposal!.audio_file_path,
+    audio_url: proposal!.audio_url || proposal!.external_link || proposal!.audio_file_path,
     proposal_id: proposal!.id
   })
 
@@ -289,7 +283,7 @@ export async function publishCassette(formData: FormData) {
   const cassetteId = formData.get('cassette_id') as string
   if (!cassetteId) backWithError('/admin/cassettes', 'faltan_datos')
 
-  const { data: tracks } = await svc.from('songs').select('id, audio_url').eq('cassette_id', cassetteId)
+  const { data: tracks } = await svc.from('songs').select('id, audio_url, side, position').eq('cassette_id', cassetteId)
   if (!tracks || tracks.length === 0) {
     backWithError(`/admin/cassettes/${cassetteId}`, 'cassette_vacio')
   }
@@ -304,17 +298,20 @@ export async function publishCassette(formData: FormData) {
   }
 
   // The player streams a single concatenated file (built by `npm run build-cassette`).
-  // Require it to exist and cover every song before publishing, so a cassette never
-  // goes active without its audio (or with a stale offsets table that misses a song).
+  // Require it to exist and match the current track order before publishing, so a
+  // cassette never goes active without its audio \u2014 or with a stale offsets table
+  // that misses a song or no longer matches a reordering.
   const { data: target } = await svc
     .from('cassettes')
     .select('archived, concat_audio_url, song_offsets')
     .eq('id', cassetteId)
     .maybeSingle()
 
-  const offsets = (target?.song_offsets as { song_id: string }[] | null) ?? []
-  const offsetIds = new Set(offsets.map(o => o.song_id))
-  const concatReady = Boolean(target?.concat_audio_url) && tracks!.every(t => offsetIds.has(t.id))
+  const concatReady = isCassetteConcatReady(
+    target?.concat_audio_url,
+    target?.song_offsets as SongOffset[] | null,
+    tracks!.map(t => ({ id: t.id, side: t.side as 'A' | 'B', position: t.position }))
+  )
   if (!concatReady) {
     backWithError(
       `/admin/cassettes/${cassetteId}`,
@@ -407,6 +404,46 @@ export async function updateSongDuration({
   if (error) return { ok: false, error: error.message }
 
   revalidatePath(`/admin/cassettes/${cassetteId}`)
+  return { ok: true }
+}
+
+/**
+ * Move a song to a target (side, position) slot within its own cassette. If the
+ * slot is occupied the two songs swap; if empty the song just moves. The atomic
+ * reassignment (and the unique-slot dance) lives in the `move_song` RPC.
+ *
+ * Reordering desyncs the concatenated audio, so after this the cassette must be
+ * rebuilt (`npm run build-cassette`) before it can be published again — the
+ * publish gate detects the stale order via `isCassetteConcatReady`.
+ */
+export async function moveSong(input: {
+  songId: string
+  cassetteId: string
+  toSide: 'A' | 'B'
+  toPosition: number
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  if (!input.songId || !input.cassetteId) return { ok: false, error: 'faltan_datos' }
+  if (input.toSide !== 'A' && input.toSide !== 'B') return { ok: false, error: 'lado_invalido' }
+  if (!Number.isInteger(input.toPosition) || input.toPosition < 1 || input.toPosition > 14) {
+    return { ok: false, error: 'posicion_invalida' }
+  }
+
+  const { data: song } = await svc.from('songs').select('cassette_id').eq('id', input.songId).maybeSingle()
+  if (!song) return { ok: false, error: 'cancion_no_encontrada' }
+  if (song.cassette_id !== input.cassetteId) return { ok: false, error: 'cassette_mismatch' }
+
+  const { error } = await svc.rpc('move_song', {
+    p_song_id: input.songId,
+    p_to_side: input.toSide,
+    p_to_position: input.toPosition
+  })
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath(`/admin/cassettes/${input.cassetteId}`)
+  revalidatePath('/')
   return { ok: true }
 }
 

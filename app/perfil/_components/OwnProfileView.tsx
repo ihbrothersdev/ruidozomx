@@ -3,11 +3,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ROLE_LABELS, type Role } from '@/lib/types'
+import { ROLE_LABELS, type FeaturedSongView, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
+import ProfileFeaturedSongs from './ProfileFeaturedSongs'
+import ProponerRolaBandaModal from './ProponerRolaBandaModal'
+import ProposedSongAudioUpload from './ProposedSongAudioUpload'
 import { ProfileInbox } from './inbox/ProfileInbox'
 
 export interface OwnProfileViewProps {
@@ -42,6 +45,14 @@ export interface OwnProfileViewProps {
   city?: string | null
   /** Fan only: upcoming events near the fan's city. */
   nearbyEvents?: EventSummary[]
+  /** The profile's own id — needed to scope its featured-songs playlist. */
+  profileId?: string
+  /** Band only: rolas the band can feature (proposals + cassette tracks). */
+  featuredCandidates?: FeaturedSongView[]
+  /** Band only: curated rolas shown publicly (preview, with inline playback). */
+  featuredSongs?: FeaturedSongView[]
+  /** Band only: currently featured `type:id` keys, in order. */
+  featuredSelected?: string[]
 }
 
 export default function OwnProfileView({
@@ -68,7 +79,11 @@ export default function OwnProfileView({
   sentConnections = [],
   sentConnectionsCount = 0,
   mutualIds = [],
-  nearbyEvents = []
+  nearbyEvents = [],
+  profileId,
+  featuredCandidates = [],
+  featuredSongs = [],
+  featuredSelected = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
 
@@ -88,6 +103,8 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
+        featuredCandidates={featuredCandidates}
+        featuredSelected={featuredSelected}
         events={events}
         onExitEdit={() => setIsEditing(false)}
       />
@@ -206,6 +223,15 @@ export default function OwnProfileView({
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
               <div className='flex flex-col items-end space-y-6'>
+                {featuredSongs.length > 0 && profileId && (
+                  <div className='w-full'>
+                    <ProfileFeaturedSongs
+                      songs={featuredSongs}
+                      profileId={profileId}
+                    />
+                  </div>
+                )}
+
                 <div className='w-full'>
                   <LinksSection
                     socialLinks={socialLinks}
@@ -414,43 +440,75 @@ const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; 
  * Songs the user proposed to the cassette — same content as the public
  * profile (title — artist + status badge), shown for any role that has
  * proposed at least one. The count badge shows the all-time total; the list
- * shows the latest few (capped by the page query).
+ * shows them newest-first and scrolls when there are many.
  */
 function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongProposalSummary[]; total: number }) {
+  const [editing, setEditing] = useState<SongProposalSummary | null>(null)
+
   if (role === 'admin' || total === 0) return null
 
   return (
     <div className='space-y-2'>
       <div className='flex items-baseline justify-between gap-3'>
         <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-          Rolas propuestas al casete
+          Rolas propuestas al cassete
         </p>
         <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
           {total}
         </span>
       </div>
-      <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
+      <ul className='max-h-64 space-y-1.5 overflow-y-auto border-2 border-red-700 px-3 py-2'>
         {songs.map(p => {
           const status = SONG_STATUS_LABEL[p.status]
           return (
             <li
               key={p.id}
-              className='flex items-start gap-2 text-sm'
+              className='flex items-center gap-2 text-sm'
             >
-              <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-              <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
+              <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+              <span className='font-pt-mono min-w-0 flex-1 truncate'>
                 <span className='font-bold text-black uppercase'>{p.title}</span>
-                <span className='text-xs text-black/60'>— {p.artist}</span>
+                <span className='text-xs text-black/60'> — {p.artist}</span>
+              </span>
+              <div className='flex shrink-0 items-center gap-1.5'>
+                {p.hasAudio === false && <ProposedSongAudioUpload proposalId={p.id} />}
                 <span
-                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
                 >
                   {status.label}
                 </span>
+                {p.status !== 'accepted' && (
+                  <button
+                    type='button'
+                    onClick={() => setEditing(p)}
+                    className='cursor-pointer text-[10px] font-bold tracking-wider text-red-700 uppercase underline transition-opacity hover:opacity-70'
+                  >
+                    Editar
+                  </button>
+                )}
               </div>
             </li>
           )
         })}
       </ul>
+
+      {editing && (
+        <ProponerRolaBandaModal
+          key={editing.id}
+          open
+          onOpenChange={open => {
+            if (!open) setEditing(null)
+          }}
+          bandName=''
+          showVibes={false}
+          proposalId={editing.id}
+          initialTitle={editing.title}
+          initialArtist={editing.artist}
+          initialListenLink={editing.external_link ?? ''}
+          initialDownloadLink={editing.download_link ?? ''}
+          initialHasAudio={editing.hasAudio}
+        />
+      )}
     </div>
   )
 }
@@ -517,7 +575,7 @@ interface ActivityInboxProps {
  * | Recibiste una propuesta     | All except fan & admin                       |
  * | Publicaste un evento        | banda, venue, agente, promotor, manager      |
  * | Alguien quiere conectar     | All except admin                             |
- * | Rolas propuestas al casete  | All except admin                             |
+ * | Rolas propuestas al cassete  | All except admin                             |
  */
 function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConnectionsCount }: ActivityInboxProps) {
   // fan and admin see no inbox
@@ -527,7 +585,7 @@ function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConn
   // Proveedor publishes "ofertas" instead of "eventos"
   const publishLabel = role === 'proveedor' ? 'Publicaste una oferta' : 'Publicaste un evento'
 
-  // Note: "Rolas propuestas al casete" is rendered as its own ProposedSongs
+  // Note: "Rolas propuestas al cassete" is rendered as its own ProposedSongs
   // section (with the actual songs + status), so it's intentionally NOT here.
   const items = [
     { label: 'Recibiste una propuesta', href: '#propuestas', count: receivedProposalsCount },

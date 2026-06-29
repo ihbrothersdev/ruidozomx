@@ -10,6 +10,10 @@ export interface SongProposalSummary {
   artist: string
   status: 'pending' | 'accepted' | 'rejected'
   created_at: string
+  /** Owner dashboard only: whether the proposal already has an uploaded MP3. */
+  hasAudio?: boolean
+  external_link?: string | null
+  download_link?: string | null
 }
 
 export interface EventSummary {

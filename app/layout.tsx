@@ -1,6 +1,9 @@
+import { getActiveCassetteSongs } from '@/lib/supabase/songs'
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Toaster } from 'sileo'
+import { AudioProvider } from './components/AudioProvider'
+import { PersistentPlayerBar } from './components/player-bar/PersistentPlayerBar'
 import './globals.css'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
@@ -103,20 +106,31 @@ export const viewport: Viewport = {
   maximumScale: 5
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // The live cassette is the global default the persistent bar plays on every
+  // page; individual pages (e.g. an archived cassette on home) can swap it.
+  const { songs, cassetteId, concatAudioUrl } = await getActiveCassetteSongs()
+
   return (
     <html
       lang='es'
       className='h-full'
     >
       <body
-        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen antialiased`}
+        className={`${corose.variable} ${coroseAlt01.variable} ${coroseAlt02.variable} ${thanjhirsBrush.variable} ${babyDoll.variable} ${impactLabel.variable} ${akzidenzGrotesk.variable} min-h-screen pb-40 antialiased md:pb-16`}
       >
-        {children}
+        <AudioProvider
+          songs={songs}
+          cassetteId={cassetteId}
+          concatAudioUrl={concatAudioUrl}
+        >
+          {children}
+          <PersistentPlayerBar />
+        </AudioProvider>
         <Toaster position='top-center' />
       </body>
     </html>
