@@ -63,7 +63,7 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
 
   return (
     <div className='w-full space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Sus rolas</p>
+      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Dale play</p>
 
       <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
         {songs.map(song => {
