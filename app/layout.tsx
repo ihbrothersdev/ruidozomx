@@ -4,7 +4,6 @@ import localFont from 'next/font/local'
 import { Toaster } from 'sileo'
 import { AudioProvider } from './components/AudioProvider'
 import { PersistentPlayerBar } from './components/player-bar/PersistentPlayerBar'
-import { PreventBottomOverscroll } from './components/PreventBottomOverscroll'
 import './globals.css'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
@@ -132,7 +131,6 @@ export default async function RootLayout({
           {children}
           <PersistentPlayerBar />
         </AudioProvider>
-        <PreventBottomOverscroll />
         <Toaster position='top-center' />
       </body>
     </html>
