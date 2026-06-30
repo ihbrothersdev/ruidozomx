@@ -124,13 +124,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Kill the iOS rubber-band bounce so the page can't be dragged past its bounds
-   into empty space below the fixed player bar. Normal scrolling is unaffected. */
-html,
-body {
-  overscroll-behavior-y: none;
-}
-
 @keyframes nowplaying-a {
   0%,
   100% {
