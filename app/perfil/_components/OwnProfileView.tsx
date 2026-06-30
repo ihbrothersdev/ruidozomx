@@ -116,7 +116,7 @@ export default function OwnProfileView({
       {/* Full-screen red background — same asset as the registration form.
           Fixed to the viewport so it also paints behind the player bar and the
           body's bottom padding, avoiding a white gap below the content on mobile. */}
-      <div className='fixed inset-0 z-0'>
+      <div className='own-profile-bg fixed inset-0 z-0'>
         <Image
           src='/assets/registro/formulario/shared/red-back.png'
           alt=''
