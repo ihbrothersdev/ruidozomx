@@ -109,6 +109,13 @@ html {
   background-color: #0a0a0a;
 }
 
+/* The own-profile page has a full-bleed red background; `fixed` elements don't
+   stretch into the iOS overscroll area, so paint the root red there too to keep
+   the rubber-band seamless instead of falling back to the global dark. */
+html:has(.own-profile-bg) {
+  background-color: #c6352d;
+}
+
 body {
   font-family: var(--font-pt-mono), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
