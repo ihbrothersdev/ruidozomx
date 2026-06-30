@@ -112,15 +112,19 @@ export default function OwnProfileView({
   }
 
   return (
-    <div className='relative min-h-screen overflow-hidden'>
-      {/* Full-screen red background — same asset as the registration form. */}
-      <Image
-        src='/assets/registro/formulario/shared/red-back.png'
-        alt=''
-        fill
-        className='object-cover'
-        priority
-      />
+    <div className='relative min-h-screen'>
+      {/* Full-screen red background — same asset as the registration form.
+          Fixed to the viewport so it also paints behind the player bar and the
+          body's bottom padding, avoiding a white gap below the content on mobile. */}
+      <div className='fixed inset-0 z-0'>
+        <Image
+          src='/assets/registro/formulario/shared/red-back.png'
+          alt=''
+          fill
+          className='object-cover'
+          priority
+        />
+      </div>
 
       <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6'>
         {/* Grey folder card (matches the formulario shell). */}
