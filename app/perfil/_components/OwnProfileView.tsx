@@ -370,7 +370,7 @@ function EventsSection({ role, events }: EventsSectionProps) {
       ) : (
         <div className='space-y-2 border-2 border-red-700 px-3 py-2'>
           {events.map(ev => {
-            const dateLabel = new Date(ev.event_date).toLocaleDateString('es-MX', {
+            const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
               day: '2-digit',
               month: 'short',
               year: 'numeric'
