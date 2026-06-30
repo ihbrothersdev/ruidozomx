@@ -96,15 +96,17 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
                 <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
               )}
 
-              <div className='font-pt-mono flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-                <span className='font-bold text-black uppercase'>{song.title}</span>
-                <span className='text-xs text-black/60'>— {song.artist}</span>
+              <div className='font-pt-mono flex min-w-0 flex-1 items-baseline gap-2.5'>
+                <span className='min-w-0 flex-1 truncate'>
+                  <span className='font-bold text-black uppercase'>{song.title}</span>
+                  <span className='text-xs text-black/60'> — {song.artist}</span>
+                </span>
                 {!song.isPlayable && song.externalLink && (
                   <a
                     href={song.externalLink}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='ml-auto text-xs font-bold tracking-wider text-red-600 uppercase underline underline-offset-2 hover:text-red-700'
+                    className='shrink-0 text-xs font-bold tracking-wider text-red-600 uppercase underline underline-offset-2 hover:text-red-700'
                   >
                     Escuchar ↗
                   </a>
