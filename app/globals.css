@@ -110,9 +110,12 @@ html {
 }
 
 /* The own-profile page has a full-bleed red background; `fixed` elements don't
-   stretch into the iOS overscroll area, so paint the root red there too to keep
-   the rubber-band seamless instead of falling back to the global dark. */
-html:has(.own-profile-bg) {
+   stretch into the iOS overscroll area. iOS paints the rubber-band with the
+   root scroller's background, which can be either <html> (top) or <body>
+   (bottom), so paint BOTH red here to keep the bounce seamless top and bottom
+   instead of falling back to dark (<html>) or white (<body>). */
+html:has(.own-profile-bg),
+body:has(.own-profile-bg) {
   background-color: #c6352d;
 }
 
