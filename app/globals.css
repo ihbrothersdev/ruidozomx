@@ -103,6 +103,12 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Match the viewport themeColor so iOS overscroll (rubber-band) reveals a dark
+   area below the fixed player bar instead of the body's white background. */
+html {
+  background-color: #0a0a0a;
+}
+
 body {
   font-family: var(--font-pt-mono), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
