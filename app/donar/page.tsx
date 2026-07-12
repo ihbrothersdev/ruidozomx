@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { TrackedDonationLink } from '../components/analytics/TrackedDonationLink'
 import BackButton from '../components/layout/BackButton'
 
 export default function DonarPage() {
@@ -72,9 +73,11 @@ export default function DonarPage() {
             className='-mx-4 h-auto w-[calc(100%+2rem)] max-w-none sm:mx-auto sm:w-full sm:max-w-md'
           />
 
-          {/* Cooperar → amount-selection page */}
-          <Link
+          {/* Cooperar → amount-selection page (tracks donation_start) */}
+          <TrackedDonationLink
             href='/donar/montos'
+            external={false}
+            event={{ type: 'donation_start' }}
             className='mt-2 inline-block w-full max-w-[280px] transition-transform hover:scale-105 active:scale-95'
           >
             <Image
@@ -84,7 +87,7 @@ export default function DonarPage() {
               height={205}
               className='h-auto w-full'
             />
-          </Link>
+          </TrackedDonationLink>
 
           {/* Volver */}
           <div className='mt-2 self-start'>

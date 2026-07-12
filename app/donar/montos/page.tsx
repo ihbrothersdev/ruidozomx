@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Lock } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { TrackedDonationLink } from '../../components/analytics/TrackedDonationLink'
 import BackButton from '../../components/layout/BackButton'
 
 export const metadata: Metadata = {
@@ -11,17 +12,59 @@ export const metadata: Metadata = {
 
 // One-time amounts. `href` → each amount's Stripe Payment Link.
 const ONE_TIME = [
-  { img: '30mxn.png', alt: '30 MXN (1.50 USD)', href: 'https://buy.stripe.com/dRm8wP6kQc3C2m47v6c3m00' },
-  { img: '50mxn.png', alt: '50 MXN (2.50 USD)', href: 'https://buy.stripe.com/cNibJ1gZu0kUgcUg1Cc3m01' },
-  { img: '100mxn.png', alt: '100 MXN (5.00 USD)', href: 'https://buy.stripe.com/cNicN5fVq0kUaSA02Ec3m03' },
-  { img: '200mxn.png', alt: '200 MXN (10.00 USD)', href: 'https://buy.stripe.com/8x28wP6kQgjS4uceXyc3m04' }
+  {
+    mxn: 30,
+    usd: 1.5,
+    img: '30mxn.png',
+    alt: '30 MXN (1.50 USD)',
+    href: 'https://buy.stripe.com/dRm8wP6kQc3C2m47v6c3m00'
+  },
+  {
+    mxn: 50,
+    usd: 2.5,
+    img: '50mxn.png',
+    alt: '50 MXN (2.50 USD)',
+    href: 'https://buy.stripe.com/cNibJ1gZu0kUgcUg1Cc3m01'
+  },
+  {
+    mxn: 100,
+    usd: 5,
+    img: '100mxn.png',
+    alt: '100 MXN (5.00 USD)',
+    href: 'https://buy.stripe.com/cNicN5fVq0kUaSA02Ec3m03'
+  },
+  {
+    mxn: 200,
+    usd: 10,
+    img: '200mxn.png',
+    alt: '200 MXN (10.00 USD)',
+    href: 'https://buy.stripe.com/8x28wP6kQgjS4uceXyc3m04'
+  }
 ]
 
 // Monthly (recurring) amounts. `href` → each amount's Stripe Payment Link.
 const MONTHLY = [
-  { img: '35.png', alt: '35 MXN al mes (1.75 USD)', href: 'https://buy.stripe.com/8x228r5gMebKf8Q16Ic3m05' },
-  { img: '55.png', alt: '55 MXN al mes (2.75 USD)', href: 'https://buy.stripe.com/bJe00jaB63x6aSA3eQc3m07' },
-  { img: '75.png', alt: '75 MXN al mes (3.75 USD)', href: 'https://buy.stripe.com/3cIeVdaB6d7GbWE7v6c3m06' }
+  {
+    mxn: 35,
+    usd: 1.75,
+    img: '35.png',
+    alt: '35 MXN al mes (1.75 USD)',
+    href: 'https://buy.stripe.com/8x228r5gMebKf8Q16Ic3m05'
+  },
+  {
+    mxn: 55,
+    usd: 2.75,
+    img: '55.png',
+    alt: '55 MXN al mes (2.75 USD)',
+    href: 'https://buy.stripe.com/bJe00jaB63x6aSA3eQc3m07'
+  },
+  {
+    mxn: 75,
+    usd: 3.75,
+    img: '75.png',
+    alt: '75 MXN al mes (3.75 USD)',
+    href: 'https://buy.stripe.com/3cIeVdaB6d7GbWE7v6c3m06'
+  }
 ]
 
 // Custom amount — the donor sets the value on Stripe.
@@ -31,14 +74,16 @@ interface AmountBoxProps {
   href: string
   img: string
   alt: string
+  mxn: number
+  usd: number
+  frequency: 'once' | 'monthly'
 }
 
-function AmountBox({ href, img, alt }: AmountBoxProps) {
+function AmountBox({ href, img, alt, mxn, usd, frequency }: AmountBoxProps) {
   return (
-    <a
+    <TrackedDonationLink
       href={href}
-      target='_blank'
-      rel='noopener noreferrer'
+      event={{ type: 'donation_attempt', frequency, amountMxn: mxn, amountUsd: usd }}
       className='block transition-transform hover:-translate-y-0.5 hover:scale-[1.03] active:translate-y-0 active:scale-100'
     >
       <Image
@@ -48,7 +93,7 @@ function AmountBox({ href, img, alt }: AmountBoxProps) {
         height={224}
         className='h-auto w-full'
       />
-    </a>
+    </TrackedDonationLink>
   )
 }
 
@@ -127,18 +172,18 @@ export default function MontosPage() {
                   <AmountBox
                     key={a.img}
                     {...a}
+                    frequency='once'
                   />
                 ))}
                 {/* Custom amount */}
-                <a
+                <TrackedDonationLink
                   href={OTHER_AMOUNT_HREF}
-                  target='_blank'
-                  rel='noopener noreferrer'
+                  event={{ type: 'donation_attempt', frequency: 'once', metadata: { custom: true } }}
                   className='font-pt-mono block rounded-md border-2 border-dashed border-black bg-[#e5a838]/40 px-4 py-2 text-center text-black transition-all hover:-translate-y-0.5 hover:bg-[#e5a838]/70 active:translate-y-0'
                 >
                   <div className='text-sm leading-tight font-bold tracking-wide uppercase'>Otro monto</div>
                   <div className='text-[11px] text-black/70'>elige tú</div>
-                </a>
+                </TrackedDonationLink>
               </div>
             </div>
 
@@ -174,6 +219,7 @@ export default function MontosPage() {
                   <AmountBox
                     key={a.img}
                     {...a}
+                    frequency='monthly'
                   />
                 ))}
               </div>
