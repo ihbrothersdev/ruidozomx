@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Cassette } from './Cassette'
 import { DialogBubble } from './DialogBubble'
+import { DonationCluster } from './DonationCluster'
 import { ProponRolaModal } from './ProponRolaModal'
 import { TransportControls } from './TransportControls'
 
@@ -142,6 +143,11 @@ export function CassettePlayer({
             {proponButton}
           </button>
         )}
+
+        {/* Desktop: donation cluster, floating below "Propón una rola" */}
+        <div className='absolute -right-25 -bottom-60 hidden w-40 xl:block'>
+          <DonationCluster />
+        </div>
       </div>
 
       {/* Transport controls */}
@@ -178,6 +184,13 @@ export function CassettePlayer({
             {proponButton}
           </button>
         )}
+      </div>
+
+      {/* Mobile/tablet: donation cluster */}
+      <div className='flex justify-center pb-6 xl:hidden'>
+        <div className='w-32'>
+          <DonationCluster />
+        </div>
       </div>
 
       {/* Modal for non-authenticated users */}

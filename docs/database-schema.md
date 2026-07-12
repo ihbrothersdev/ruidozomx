@@ -335,6 +335,32 @@ Key-value store for system-wide settings.
 
 ---
 
+## `donation_events`
+
+Donation-flow intent tracking (not confirmed payments — Stripe owns those). Written
+via the service-role client; RLS enabled with no public policies. Migration:
+`docs/migration-donation-events.sql`.
+
+| Column     | Type          | Nullable | Default           | Notes                                             |
+| ---------- | ------------- | -------- | ----------------- | ------------------------------------------------- |
+| id         | uuid (PK)     | no       | gen_random_uuid() |                                                   |
+| type       | text          | no       |                   | `donation_start` (Cooperar) or `donation_attempt` |
+| user_id    | uuid (FK)     | yes      |                   | `profiles(id)` ON DELETE SET NULL; null if anon   |
+| session_id | text          | yes      |                   | Anonymous localStorage session id                 |
+| frequency  | text          | yes      |                   | `once` or `monthly`                               |
+| amount_mxn | integer       | yes      |                   | null for "otro monto" / the initial click         |
+| amount_usd | numeric(10,2) | yes      |                   |                                                   |
+| metadata   | jsonb         | no       | '{}'              | e.g. `{ "custom": true }` for "otro monto"        |
+| created_at | timestamptz   | no       | now()             |                                                   |
+
+**Indexes**: `(type, created_at DESC)`
+
+> Logged by `logDonationClick` (`app/analytics/actions.ts`) via the
+> `TrackedDonationLink` component: `donation_start` on the `/donar` Cooperar
+> button, `donation_attempt` on each amount in `/donar/montos`.
+
+---
+
 ## Supabase Storage Buckets
 
 | Bucket         | Public | Notes                                  |
