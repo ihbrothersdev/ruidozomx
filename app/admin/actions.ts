@@ -1,12 +1,6 @@
 'use server'
 
-import {
-  audioMetaError,
-  extractStorageKey,
-  isPlayableAudio,
-  SONGS_BUCKET,
-  songStorageKey
-} from '@/lib/audio'
+import { audioMetaError, extractStorageKey, isPlayableAudio, SONGS_BUCKET, songStorageKey } from '@/lib/audio'
 import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -697,7 +691,10 @@ export async function finalizeAddSong(
  */
 export async function migrateCassetteAudioToFolders(
   formData: FormData
-): Promise<{ ok: true; moved: number; skipped: number; failed: number } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; moved: number; skipped: number; failed: number; failures: { track: string; reason: string }[] }
+  | { ok: false; error: string }
+> {
   await requireAdmin()
   const svc = createServiceClient()
 
@@ -709,13 +706,14 @@ export async function migrateCassetteAudioToFolders(
     .select('id, artist, title, audio_url')
     .eq('cassette_id', cassetteId)
   if (tracksError) return { ok: false, error: tracksError.message }
-  if (!tracks || tracks.length === 0) return { ok: true, moved: 0, skipped: 0, failed: 0 }
+  if (!tracks || tracks.length === 0) return { ok: true, moved: 0, skipped: 0, failed: 0, failures: [] }
 
   let moved = 0
   let skipped = 0
-  let failed = 0
+  const failures: { track: string; reason: string }[] = []
 
   for (const track of tracks) {
+    const label = `${track.artist} — ${track.title}`
     const oldKey = extractStorageKey(track.audio_url, SONGS_BUCKET)
     if (!oldKey) {
       skipped++
@@ -730,9 +728,20 @@ export async function migrateCassetteAudioToFolders(
       continue
     }
 
+    // A file already at the destination makes Storage's move fail. Catch it up
+    // front so the admin gets an actionable reason (a stale/duplicate file to
+    // resolve by hand) instead of a silent "falló" with no explanation.
+    const destFolder = newKey.split('/').slice(0, -1).join('/')
+    const destName = newKey.split('/').pop()!
+    const { data: existing } = await svc.storage.from(SONGS_BUCKET).list(destFolder, { search: destName, limit: 1 })
+    if (existing?.some(f => f.name === destName)) {
+      failures.push({ track: label, reason: `ya existe un archivo en ${newKey}` })
+      continue
+    }
+
     const { error: moveError } = await svc.storage.from(SONGS_BUCKET).move(oldKey, newKey)
     if (moveError) {
-      failed++
+      failures.push({ track: label, reason: moveError.message })
       continue
     }
 
@@ -744,7 +753,7 @@ export async function migrateCassetteAudioToFolders(
     if (updateError) {
       // Roll the file back to its original location to keep DB and Storage in sync.
       await svc.storage.from(SONGS_BUCKET).move(newKey, oldKey)
-      failed++
+      failures.push({ track: label, reason: `no se pudo actualizar la URL: ${updateError.message}` })
       continue
     }
 
@@ -753,5 +762,5 @@ export async function migrateCassetteAudioToFolders(
 
   revalidatePath(`/admin/cassettes/${cassetteId}`)
   revalidatePath('/')
-  return { ok: true, moved, skipped, failed }
+  return { ok: true, moved, skipped, failed: failures.length, failures }
 }

@@ -276,11 +276,16 @@ export function MigrateAudioButton({ cassetteId, count }: { cassetteId: string; 
     if (res.failed > 0) parts.push(`${res.failed} falló${res.failed === 1 ? '' : 'n'}`)
 
     if (res.failed > 0) {
+      const detail = res.failures
+        .slice(0, 3)
+        .map(f => `• ${f.track}: ${f.reason}`)
+        .join('\n')
+      const more = res.failures.length > 3 ? `\n…y ${res.failures.length - 3} más` : ''
       sileo.error({
         title: 'Reorganización parcial',
-        description: parts.join(' · '),
+        description: `${parts.join(' · ')}\n${detail}${more}`,
         position: 'top-center',
-        duration: 5000
+        duration: 8000
       })
     } else {
       sileo.success({
