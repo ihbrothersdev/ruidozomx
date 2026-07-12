@@ -2,19 +2,22 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { signout } from '@/app/(auth)/actions'
-import { BarChart3, CalendarDays, Disc3, Heart, Inbox, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
+import { BarChart3, CalendarDays, Disc3, HandCoins, Heart, Inbox, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }
+
 interface AdminShellProps {
   displayName: string
   photoUrl: string | null
+  canViewDonations?: boolean
   children: React.ReactNode
 }
 
-const NAV = [
+const NAV: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/propuestas', label: 'Propuestas', icon: Inbox },
   { href: '/admin/cassettes', label: 'Cassettes', icon: Disc3 },
@@ -23,9 +26,13 @@ const NAV = [
   { href: '/admin/metricas', label: 'Métricas', icon: BarChart3 }
 ]
 
-export function AdminShell({ displayName, photoUrl, children }: AdminShellProps) {
+export function AdminShell({ displayName, photoUrl, canViewDonations = false, children }: AdminShellProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  const navItems: NavItem[] = canViewDonations
+    ? [...NAV, { href: '/admin/donaciones', label: 'Donaciones', icon: HandCoins }]
+    : NAV
 
   // Admin runs as a fixed-height shell where only the content column scrolls,
   // so drop the global body padding that reserves space for the floating player
@@ -56,6 +63,7 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
           displayName={displayName}
           photoUrl={photoUrl}
           isActive={isActive}
+          navItems={navItems}
         />
       </aside>
 
@@ -107,6 +115,7 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
                 displayName={displayName}
                 photoUrl={photoUrl}
                 isActive={isActive}
+                navItems={navItems}
               />
             </div>
           </aside>
@@ -124,11 +133,13 @@ export function AdminShell({ displayName, photoUrl, children }: AdminShellProps)
 function SidebarContent({
   displayName,
   photoUrl,
-  isActive
+  isActive,
+  navItems
 }: {
   displayName: string
   photoUrl: string | null
   isActive: (href: string, exact?: boolean) => boolean
+  navItems: NavItem[]
 }) {
   return (
     <div className='flex h-full flex-col'>
@@ -152,7 +163,7 @@ function SidebarContent({
 
       {/* Nav */}
       <nav className='flex-1 space-y-1 px-3 py-4'>
-        {NAV.map(item => {
+        {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item.href, item.exact)
           return (
