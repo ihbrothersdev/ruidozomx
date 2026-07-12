@@ -26,7 +26,7 @@ export function DonationCluster() {
         alt=''
         width={135}
         height={164}
-        className='animate-jar-shake mt-2 w-[55%]'
+        className='animate-jar-hop mt-2 w-[55%]'
       />
     </Link>
   )

@@ -316,8 +316,36 @@ select:-internal-autofill-previewed {
   animation: jar-shake 3.2s ease-in-out infinite;
 }
 
+/* Coin-jar hop: an excited little jump with squash-and-stretch, like the jar
+   is happy to catch a coin. Pivots from its base. */
+@keyframes jar-hop {
+  0%,
+  68%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  74% {
+    transform: translateY(0) scale(1.07, 0.9);
+  }
+  82% {
+    transform: translateY(-16px) scale(0.94, 1.1);
+  }
+  89% {
+    transform: translateY(0) scale(1.09, 0.9);
+  }
+  95% {
+    transform: translateY(0) scale(0.98, 1.02);
+  }
+}
+
+.animate-jar-hop {
+  transform-origin: center bottom;
+  animation: jar-hop 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-jar-shake {
+  .animate-jar-shake,
+  .animate-jar-hop {
     animation: none;
   }
 }
