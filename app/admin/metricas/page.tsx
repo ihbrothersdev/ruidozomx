@@ -8,16 +8,14 @@ import { CassetteFilter, type CassetteOption } from './_components/CassetteFilte
 import { CassettesTable } from './_components/CassettesTable'
 import { PlaysChart } from './_components/PlaysChart'
 import { SongsTable } from './_components/SongsTable'
-import { TimeFilter, type TimeWindow } from './_components/TimeFilter'
+import { TimeFilter } from './_components/TimeFilter'
 import {
-  aggregateCassetteMetrics,
-  aggregateSongMetrics,
-  buildDailySeries,
   windowToDate,
+  type CassetteMetricRow,
   type CassetteRow,
+  type DailyPoint,
   type SinceWindow,
-  type SongEvent,
-  type SongRow
+  type SongMetricRow
 } from './_lib/aggregations'
 
 export const metadata = {
@@ -86,28 +84,23 @@ export default async function MetricasPage({
   const sinceParam = sinceDate ? sinceDate.toISOString() : null
 
   const svc = createServiceClient()
+  const p_cassette_id = cassetteFilter
 
   // ── Parallel fetches ────────────────────────────────────────────────────
+  // The cassette list only drives the filter dropdown. Every metric comes from
+  // an RPC that aggregates in SQL, so it isn't capped at PostgREST's 1000-row
+  // limit the way pulling raw song_events into JS was (that dropped the newest
+  // cassette entirely — see _lib/aggregations).
   const cassetteListPromise = svc
     .from('cassettes')
     .select('id, name, active, archived, is_next')
     .order('start_date', { ascending: false })
 
-  // songs (filtered by cassette if selected) + their cassette name
-  let songsQuery = svc.from('songs').select('id, title, artist, side, position, cassette_id, cassettes!inner(name)')
-  if (cassetteFilter) songsQuery = songsQuery.eq('cassette_id', cassetteFilter)
-  const songsPromise = songsQuery
-
-  // events within the selected window (and cassette, if any)
-  let eventsQuery = svc.from('song_events').select('id, type, song_id, cassette_id, user_id, session_id, created_at')
-  if (sinceDate) eventsQuery = eventsQuery.gte('created_at', sinceDate.toISOString())
-  if (cassetteFilter) eventsQuery = eventsQuery.eq('cassette_id', cassetteFilter)
-  const eventsPromise = eventsQuery
-
   const [
     cassetteListRes,
-    songsRes,
-    eventsRes,
+    cassetteMetricsRes,
+    songMetricsRes,
+    dailyRes,
     listenersRes,
     proposersRes,
     connectionsRes,
@@ -115,8 +108,9 @@ export default async function MetricasPage({
     activeStatsRes
   ] = await Promise.all([
     cassetteListPromise,
-    songsPromise,
-    eventsPromise,
+    svc.rpc('cassette_metrics', { p_since: sinceParam, p_cassette_id }),
+    svc.rpc('song_metrics', { p_since: sinceParam, p_cassette_id }),
+    svc.rpc('event_daily_series', { p_since: sinceParam, p_cassette_id }),
     svc.rpc('top_listeners', { p_limit: 10, p_since: sinceParam }),
     svc.rpc('top_proposers', { p_limit: 10, p_since: sinceParam }),
     svc.rpc('connection_metrics', { p_since: sinceParam }),
@@ -126,26 +120,21 @@ export default async function MetricasPage({
 
   // ── Normalize ─────────────────────────────────────────────────────────────
   const cassetteList = (cassetteListRes.data ?? []) as CassetteRow[]
-  const songs: SongRow[] = (songsRes.data ?? []).map(s => ({
-    id: s.id,
-    title: s.title,
-    artist: s.artist,
-    side: s.side as 'A' | 'B',
-    position: s.position,
-    cassette_id: s.cassette_id,
-    cassette_name:
-      (Array.isArray(s.cassettes) ? s.cassettes[0]?.name : (s.cassettes as { name?: string } | null)?.name) ??
-      'Sin nombre'
+  const cassetteMetrics = (cassetteMetricsRes.data ?? []) as CassetteMetricRow[]
+  const songMetrics = (songMetricsRes.data ?? []) as SongMetricRow[]
+  const dailyRaw = (dailyRes.data ?? []) as {
+    day: string
+    plays: number
+    auth_plays: number
+    completes: number
+    sessions: number
+  }[]
+  const daily: DailyPoint[] = dailyRaw.map(d => ({
+    date: d.day,
+    plays: d.plays,
+    completes: d.completes,
+    sessions: d.sessions
   }))
-  const events = (eventsRes.data ?? []) as SongEvent[]
-
-  // ── Aggregate ────────────────────────────────────────────────────────────
-  const songMetrics = aggregateSongMetrics(songs, events)
-  const cassetteMetrics = aggregateCassetteMetrics(
-    cassetteFilter ? cassetteList.filter(c => c.id === cassetteFilter) : cassetteList,
-    events
-  )
-  const daily = buildDailySeries(events, since)
 
   // These RPCs respect the time window (p_since) but not the cassette filter.
   const topListeners = (listenersRes.data ?? []) as ListenerRow[]
@@ -169,9 +158,9 @@ export default async function MetricasPage({
     ? (cassetteOptions.find(c => c.id === cassetteFilter)?.name ?? 'Cassette seleccionado')
     : null
 
-  const totalPlays = events.filter(e => e.type === 'play_start').length
-  const totalAuthPlays = events.filter(e => e.type === 'play_start' && e.user_id).length
-  const totalSessionsStarted = events.filter(e => e.type === 'cassette_session_start').length
+  const totalPlays = dailyRaw.reduce((sum, d) => sum + d.plays, 0)
+  const totalAuthPlays = dailyRaw.reduce((sum, d) => sum + d.auth_plays, 0)
+  const totalSessionsStarted = dailyRaw.reduce((sum, d) => sum + d.sessions, 0)
   const activeStats = ((activeStatsRes.data ?? [])[0] ?? {
     active_users: 0,
     listeners: 0,
@@ -207,8 +196,8 @@ export default async function MetricasPage({
             . Haz clic en una canción para ver el detalle de oyentes.
           </p>
           <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
-            Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados es
-            global. Las conexiones entre perfiles viven en su propia pestaña.
+            Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados
+            es global. Las conexiones entre perfiles viven en su propia pestaña.
           </p>
         </div>
         <div className='flex flex-wrap items-center gap-3'>
@@ -235,41 +224,41 @@ export default async function MetricasPage({
           Resumen del periodo
         </h2>
         <div className='grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5'>
-        <BigStat
-          label='Reproducciones'
-          value={totalPlays.toLocaleString('es-MX')}
-          sub={`${totalAuthPlays.toLocaleString('es-MX')} con sesión`}
-          icon={Play}
-          accent='red'
-        />
-        <BigStat
-          label='Sesiones cassette'
-          value={totalSessionsStarted.toLocaleString('es-MX')}
-          sub='Inicios de player'
-          icon={Headphones}
-          accent='blue'
-        />
-        <BigStat
-          label='Conexiones'
-          value={connections.total_interests.toLocaleString('es-MX')}
-          sub={`+${connections.total_user_proposals} mensajes`}
-          icon={Heart}
-          accent='pink'
-        />
-        <BigStat
-          label='Usuarios activos'
-          value={activeStats.active_users.toLocaleString('es-MX')}
-          sub={`${onlyProposers} solo sugieren · ${bothActive} ambos · ${onlyListeners} solo oyen`}
-          icon={Users}
-          accent='emerald'
-        />
-        <BigStat
-          label='Eventos publicados'
-          value={publishedEvents.toLocaleString('es-MX')}
-          sub='Global · ignora filtros'
-          icon={CalendarDays}
-          accent='amber'
-        />
+          <BigStat
+            label='Reproducciones'
+            value={totalPlays.toLocaleString('es-MX')}
+            sub={`${totalAuthPlays.toLocaleString('es-MX')} con sesión`}
+            icon={Play}
+            accent='red'
+          />
+          <BigStat
+            label='Sesiones cassette'
+            value={totalSessionsStarted.toLocaleString('es-MX')}
+            sub='Inicios de player'
+            icon={Headphones}
+            accent='blue'
+          />
+          <BigStat
+            label='Conexiones'
+            value={connections.total_interests.toLocaleString('es-MX')}
+            sub={`+${connections.total_user_proposals} mensajes`}
+            icon={Heart}
+            accent='pink'
+          />
+          <BigStat
+            label='Usuarios activos'
+            value={activeStats.active_users.toLocaleString('es-MX')}
+            sub={`${onlyProposers} solo sugieren · ${bothActive} ambos · ${onlyListeners} solo oyen`}
+            icon={Users}
+            accent='emerald'
+          />
+          <BigStat
+            label='Eventos publicados'
+            value={publishedEvents.toLocaleString('es-MX')}
+            sub='Global · ignora filtros'
+            icon={CalendarDays}
+            accent='amber'
+          />
         </div>
       </section>
 
@@ -367,39 +356,39 @@ export default async function MetricasPage({
               {topProposers.map((p, i) => {
                 const reviewed = Number(p.accepted) + Number(p.rejected)
                 return (
-                <Card
-                  key={p.user_id}
-                  className='gap-0 border-white/10 bg-white/3 py-0'
-                >
-                  <CardContent className='flex items-center gap-3 p-3'>
-                    <span className='font-baby-doll w-6 shrink-0 text-center text-2xl text-white/30'>{i + 1}</span>
-                    <ProfileAvatar
-                      photo={p.photo_url}
-                      name={p.display_name ?? 'Usuario'}
-                    />
-                    <div className='min-w-0 flex-1'>
-                      <Link
-                        href={p.slug ? `/perfil/${p.slug}` : '#'}
-                        className='font-pt-mono truncate text-xs font-bold text-white hover:text-red-300'
-                      >
-                        {p.display_name ?? 'Usuario'}
-                      </Link>
-                      <p className='font-pt-mono text-[10px] text-white/40'>
-                        <span className='text-emerald-400'>{p.accepted} ✓</span>
-                        {' · '}
-                        <span className='text-white/30'>{p.rejected} ✗</span>
-                        {' · '}
-                        <span className='text-amber-400'>{p.pending} ⏳</span>
-                      </p>
-                    </div>
-                    <div className='text-right'>
-                      <p className='font-baby-doll text-xl font-bold text-emerald-400'>{p.total_proposals}</p>
-                      <p className='font-pt-mono text-[9px] tracking-widest text-white/30 uppercase'>
-                        {reviewed > 0 ? `${Number(p.acceptance_rate)}% de ${reviewed} rev.` : 'Sin revisar'}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <Card
+                    key={p.user_id}
+                    className='gap-0 border-white/10 bg-white/3 py-0'
+                  >
+                    <CardContent className='flex items-center gap-3 p-3'>
+                      <span className='font-baby-doll w-6 shrink-0 text-center text-2xl text-white/30'>{i + 1}</span>
+                      <ProfileAvatar
+                        photo={p.photo_url}
+                        name={p.display_name ?? 'Usuario'}
+                      />
+                      <div className='min-w-0 flex-1'>
+                        <Link
+                          href={p.slug ? `/perfil/${p.slug}` : '#'}
+                          className='font-pt-mono truncate text-xs font-bold text-white hover:text-red-300'
+                        >
+                          {p.display_name ?? 'Usuario'}
+                        </Link>
+                        <p className='font-pt-mono text-[10px] text-white/40'>
+                          <span className='text-emerald-400'>{p.accepted} ✓</span>
+                          {' · '}
+                          <span className='text-white/30'>{p.rejected} ✗</span>
+                          {' · '}
+                          <span className='text-amber-400'>{p.pending} ⏳</span>
+                        </p>
+                      </div>
+                      <div className='text-right'>
+                        <p className='font-baby-doll text-xl font-bold text-emerald-400'>{p.total_proposals}</p>
+                        <p className='font-pt-mono text-[9px] tracking-widest text-white/30 uppercase'>
+                          {reviewed > 0 ? `${Number(p.acceptance_rate)}% de ${reviewed} rev.` : 'Sin revisar'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )
               })}
             </ul>
