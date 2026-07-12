@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { AdminShell } from './_components/AdminShell'
 import { AdminToast } from './_components/AdminToast'
+import { canViewDonations } from './donaciones/_lib/access'
 
 export const metadata = {
   title: 'Admin · Ruidozo MX'
@@ -28,6 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <AdminShell
       displayName={profile.display_name ?? 'Admin'}
       photoUrl={profile.photo_url ?? null}
+      canViewDonations={canViewDonations(user.id)}
     >
       <Suspense>
         <AdminToast />
