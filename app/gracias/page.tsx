@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Confetti } from '../components/Confetti'
 import BackButton from '../components/layout/BackButton'
 
 export const metadata: Metadata = {
@@ -16,6 +17,9 @@ export default function GraciasPage() {
         className='fixed inset-0 z-0 bg-white bg-cover bg-center bg-no-repeat'
         style={{ backgroundImage: "url('/assets/thankyou/background.png')" }}
       />
+
+      {/* Celebration confetti */}
+      <Confetti />
 
       <div className='relative z-10 flex min-h-screen flex-col'>
         {/* Logo — centered on mobile, left on desktop */}
