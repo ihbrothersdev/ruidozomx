@@ -288,3 +288,36 @@ select:-internal-autofill-previewed {
     background-color 9999s ease-in-out 0s,
     color 9999s ease-in-out 0s;
 }
+
+/* Coin-jar shake: a quick wiggle every few seconds to draw the eye, pivoting
+   from the jar's base like it's being tapped. */
+@keyframes jar-shake {
+  0%,
+  85%,
+  100% {
+    transform: rotate(0deg);
+  }
+  88% {
+    transform: rotate(-7deg);
+  }
+  91% {
+    transform: rotate(6deg);
+  }
+  94% {
+    transform: rotate(-4deg);
+  }
+  97% {
+    transform: rotate(2deg);
+  }
+}
+
+.animate-jar-shake {
+  transform-origin: center bottom;
+  animation: jar-shake 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-jar-shake {
+    animation: none;
+  }
+}

@@ -12,21 +12,21 @@ export function DonationCluster() {
         alt='Ayuda a mantener vivo este espacio'
         width={276}
         height={166}
-        className='w-full rotate-2'
+        className='w-full'
       />
       <Image
         src='/assets/donations/arrow.png'
         alt=''
         width={58}
         height={61}
-        className='-mt-1 w-[28%]'
+        className='-mt-2 w-[28%]'
       />
       <Image
         src='/assets/donations/jar.png'
         alt=''
         width={135}
         height={164}
-        className='-mt-1 w-[55%]'
+        className='animate-jar-shake mt-2 w-[55%]'
       />
     </Link>
   )
