@@ -212,8 +212,8 @@ function CassetteRow({ cassette, songCount }: { cassette: CassetteRowData; songC
             <p className='font-pt-mono mt-1 text-[11px] text-white/40'>
               {songCount}/{Math.max(26, songCount)} slots
               {cassette.curator_name && ` · ${cassette.curator_name}`}
-              {' · creado '}
-              {formatShortDateMX(cassette.created_at)}
+              {' · '}
+              {formatShortDateMX(cassette.start_date)} — {formatShortDateMX(cassette.end_date)}
             </p>
           </div>
           <ChevronRight className='h-4 w-4 text-white/30 transition-transform group-hover:translate-x-1' />
