@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/app/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { formatShortDateMX } from '@/lib/utils'
 import { Archive, ChevronRight, Disc3, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -10,7 +11,7 @@ export default async function AdminCassettesPage() {
 
   const { data: cassettes } = await supabase
     .from('cassettes')
-    .select('id, name, start_date, end_date, active, archived, is_next, curator_name, total_plays, created_at')
+    .select('id, name, start_date, end_date, active, archived, is_next, curator_name, created_at')
     .order('active', { ascending: false })
     .order('is_next', { ascending: false })
     .order('archived', { ascending: true })
@@ -23,6 +24,16 @@ export default async function AdminCassettesPage() {
     for (const r of songRows ?? []) {
       songsByCassette[r.cassette_id] = (songsByCassette[r.cassette_id] ?? 0) + 1
     }
+  }
+
+  // cassettes.total_plays is a dead denormalized column (DEFAULT 0, nothing
+  // maintains it). Get real counts from the SQL aggregate, which also sidesteps
+  // PostgREST's 1000-row cap on raw song_events.
+  const svc = createServiceClient()
+  const { data: cassetteMetrics } = await svc.rpc('cassette_metrics', { p_since: null, p_cassette_id: null })
+  const playsByCassette: Record<string, number> = {}
+  for (const m of (cassetteMetrics ?? []) as { cassette_id: string; total_plays: number }[]) {
+    playsByCassette[m.cassette_id] = Number(m.total_plays)
   }
 
   const active = cassettes?.find(c => c.active)
@@ -54,6 +65,7 @@ export default async function AdminCassettesPage() {
           icon={Disc3}
           cassette={active}
           songCount={active ? (songsByCassette[active.id] ?? 0) : 0}
+          plays={active ? (playsByCassette[active.id] ?? 0) : 0}
         />
         <FeaturedCard
           title='Siguiente'
@@ -62,6 +74,7 @@ export default async function AdminCassettesPage() {
           icon={Sparkles}
           cassette={next}
           songCount={next ? (songsByCassette[next.id] ?? 0) : 0}
+          plays={next ? (playsByCassette[next.id] ?? 0) : 0}
         />
       </section>
 
@@ -121,7 +134,6 @@ type CassetteRowData = {
   archived: boolean
   is_next: boolean
   curator_name: string | null
-  total_plays: number
   created_at: string
 }
 
@@ -131,7 +143,8 @@ function FeaturedCard({
   accent,
   icon: Icon,
   cassette,
-  songCount
+  songCount,
+  plays
 }: {
   title: string
   subtitle: string
@@ -139,6 +152,7 @@ function FeaturedCard({
   icon: React.ComponentType<{ className?: string }>
   cassette: CassetteRowData | undefined
   songCount: number
+  plays: number
 }) {
   const accentCls = accent === 'red' ? 'border-red-500/30 bg-red-500/10' : 'border-amber-400/30 bg-amber-500/10'
   const iconCls = accent === 'red' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'
@@ -191,7 +205,7 @@ function FeaturedCard({
                 Curador: <strong className='text-white/80'>{cassette.curator_name}</strong>
               </span>
             )}
-            <span>{cassette.total_plays} plays</span>
+            <span>{plays.toLocaleString('es-MX')} plays</span>
           </div>
         </Link>
       </CardContent>
