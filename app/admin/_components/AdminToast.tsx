@@ -43,6 +43,15 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
   }
 }
 
+// admin-surface (#f5efe1) — the toast blob is a filled SVG, so the kraft paper
+// look comes through `fill`; ink/border/shadow polish rides on the text styles.
+const TOAST_FILL = '#f5efe1'
+
+const TOAST_TEXT = {
+  title: '!font-pt-mono !text-admin-ink !text-xs !font-bold !uppercase !tracking-[0.12em]',
+  description: '!font-pt-mono !text-admin-ink-soft !text-[12px] !leading-relaxed'
+}
+
 const SUCCESS_MESSAGES: Record<string, { title: string; description?: string }> = {
   aceptada: { title: 'Propuesta aceptada', description: 'La canción quedó asignada al cassette.' },
   rechazada: { title: 'Propuesta rechazada' },
@@ -71,7 +80,13 @@ export function AdminToast() {
         title: mapped.title,
         description: customMsg ?? mapped.description,
         position: 'top-center',
-        duration: 5000
+        duration: 5000,
+        fill: TOAST_FILL,
+        roundness: 6,
+        styles: {
+          ...TOAST_TEXT,
+          badge: '!text-admin-red [--sileo-tone-bg:rgba(199,53,46,0.16)]'
+        }
       })
     } else if (okCode) {
       const mapped = SUCCESS_MESSAGES[okCode]
@@ -80,7 +95,13 @@ export function AdminToast() {
           title: mapped.title,
           description: customMsg ?? mapped.description,
           position: 'top-center',
-          duration: 4000
+          duration: 4000,
+          fill: TOAST_FILL,
+          roundness: 6,
+          styles: {
+            ...TOAST_TEXT,
+            badge: '!text-admin-olive [--sileo-tone-bg:rgba(86,127,36,0.16)]'
+          }
         })
       }
     }

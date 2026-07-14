@@ -1,7 +1,8 @@
-import { Card, CardContent } from '@/app/components/ui/card'
 import { createServiceClient } from '@/lib/supabase/service'
-import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
+import { EmptyState, LabelTag, PageHeader, Paper, SectionHeading, Stamp, StatCard } from './_components/kit'
 
 export default async function AdminDashboardPage() {
   const supabase = createServiceClient()
@@ -57,31 +58,30 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-10 px-4 py-8 sm:px-8 sm:py-12'>
-      <header>
-        <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Panel</p>
-        <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-          Dashboard
-        </h1>
-        <p className='font-pt-mono mt-2 max-w-xl text-sm text-white/40'>
-          Resumen del estado de la trinchera. Cura y publica el cassette siguiente, revisa las propuestas que llegan, y
-          sigue cómo se mueve la comunidad en métricas y conexiones.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow='Trinchera · Panel'
+        title='Dashboard'
+        description='El estado de la trinchera de un vistazo. Cura y publica el cassette siguiente, revisa las propuestas que llegan, y sigue cómo se mueve la comunidad.'
+      />
 
       {/* ── Cassettes ── */}
-      <section className='space-y-3'>
-        <SectionLabel>Cassettes</SectionLabel>
-        <div className='grid gap-4 md:grid-cols-2'>
+      <section className='space-y-4'>
+        <SectionHeading
+          icon={Disc3}
+          title='Cassettes'
+          description='Uno suena, uno se arma.'
+        />
+        <div className='grid gap-5 md:grid-cols-2'>
           <CassettePanel
             tone='active'
-            label='Activo'
+            label='Cassette activo'
             name={activeCassette?.name ?? '—'}
             filled={activeFilled}
             empty={!activeCassette}
           />
           <CassettePanel
             tone='next'
-            label='Siguiente'
+            label='Cassette siguiente'
             name={nextCassette?.name ?? 'Sin definir'}
             filled={nextFilled}
             empty={!nextCassette}
@@ -90,107 +90,146 @@ export default async function AdminDashboardPage() {
       </section>
 
       {/* ── Operación ── */}
-      <section className='space-y-3'>
-        <SectionLabel>Operación</SectionLabel>
-        <div className='grid gap-4 md:grid-cols-2'>
+      <section className='space-y-4'>
+        <SectionHeading
+          icon={Inbox}
+          title='Operación'
+          description='Lo que pide tu atención.'
+        />
+        <div className='grid gap-5 md:grid-cols-2'>
           <Link
             href='/admin/propuestas'
-            className='group block'
+            className='group block h-full'
           >
-            <Card className='h-full gap-0 border-emerald-400/20 bg-emerald-500/[0.06] py-0 transition-colors hover:bg-emerald-500/10'>
-              <CardContent className='flex h-full items-center gap-4 p-5'>
-                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300'>
-                  <Inbox className='h-5 w-5' />
-                </div>
+            <Paper
+              tone='gold'
+              className='admin-press flex h-full flex-col justify-center gap-3.5 p-5'
+            >
+              <div className='flex items-center gap-4'>
+                <span className='flex h-14 w-14 shrink-0 items-center justify-center border-2 border-admin-gold text-admin-gold'>
+                  <Inbox className='h-7 w-7' />
+                </span>
                 <div className='min-w-0 flex-1'>
-                  <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
+                  <p className='font-pt-mono text-[10px] font-bold tracking-[0.2em] text-admin-ink-soft uppercase'>
                     Propuestas pendientes
                   </p>
-                  <p className='font-baby-doll mt-1 text-3xl leading-none font-bold text-white'>{pendingCount ?? 0}</p>
-                  <p className='font-pt-mono mt-1 text-xs text-white/40'>de {totalProposals ?? 0} totales</p>
+                  <p className='font-baby-doll mt-0.5 flex items-baseline gap-2 leading-none text-admin-ink'>
+                    <span className='text-5xl font-bold'>{pendingCount ?? 0}</span>
+                    <span className='font-pt-mono text-sm text-admin-ink-faint'>/ {totalProposals ?? 0} totales</span>
+                  </p>
                 </div>
-                <ArrowRight className='h-4 w-4 shrink-0 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-emerald-300' />
-              </CardContent>
-            </Card>
+                <div className='flex shrink-0 flex-col items-end gap-2'>
+                  {(pendingCount ?? 0) > 0 && <Stamp tone='gold'>Revisar</Stamp>}
+                  <ArrowRight className='h-5 w-5 text-admin-ink/40 transition-transform group-hover:translate-x-1' />
+                </div>
+              </div>
+              <div className='h-1.5 w-full overflow-hidden bg-admin-ink/12'>
+                <div
+                  className='h-full bg-admin-gold'
+                  style={{ width: `${totalProposals ? Math.round(((pendingCount ?? 0) / totalProposals) * 100) : 0}%` }}
+                />
+              </div>
+            </Paper>
           </Link>
 
           <Link
             href='/admin/eventos'
-            className='group block'
+            className='group block h-full'
           >
-            <Card className='h-full gap-0 border-white/10 bg-white/[0.03] py-0 transition-colors hover:bg-white/[0.06]'>
-              <CardContent className='p-5'>
-                <div className='flex items-center justify-between'>
-                  <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
-                    Eventos
-                  </p>
-                  <CalendarDays className='h-4 w-4 text-white/40' />
-                </div>
-                <div className='mt-3 flex items-center gap-6'>
+            <Paper className='admin-press flex h-full flex-col justify-center gap-3.5 p-5'>
+              <div className='flex items-center gap-4'>
+                <span className='flex h-14 w-14 shrink-0 items-center justify-center border-2 border-admin-ink text-admin-ink'>
+                  <CalendarDays className='h-7 w-7' />
+                </span>
+                <div className='flex flex-1 items-center gap-6'>
                   <Figure
                     value={publishedEvents ?? 0}
                     label='Publicados'
                   />
-                  <div className='h-8 w-px bg-white/10' />
+                  <div className='h-9 w-0.5 bg-admin-ink/15' />
                   <Figure
                     value={upcomingEvents ?? 0}
                     label='Próximos'
-                    accent
+                    tone='red'
                   />
                 </div>
-              </CardContent>
-            </Card>
+                <ArrowRight className='h-5 w-5 shrink-0 text-admin-ink/40 transition-transform group-hover:translate-x-1' />
+              </div>
+              <p className='font-pt-mono text-[10px] tracking-[0.15em] text-admin-ink-faint uppercase'>
+                Agenda de la escena · solo lectura
+              </p>
+            </Paper>
           </Link>
         </div>
       </section>
 
       {/* ── Comunidad ── */}
-      <section className='space-y-3'>
-        <SectionLabel>Comunidad</SectionLabel>
-        <Card className='gap-0 border-white/10 bg-white/[0.03] py-0'>
-          <CardContent className='flex flex-wrap items-center gap-x-10 gap-y-5 p-5'>
-            <Figure
-              value={totalUsers ?? 0}
-              label='Usuarios'
+      <section className='space-y-4'>
+        <SectionHeading
+          icon={Users}
+          title='Comunidad'
+          description='La escena, en números.'
+        />
+        <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
+          <StatCard
+            label='Usuarios'
+            value={(totalUsers ?? 0).toLocaleString('es-MX')}
+            sub='En la trinchera'
+            icon={Users}
+            tone='ink'
+          />
+          <StatCard
+            label='Bandas'
+            value={(totalBands ?? 0).toLocaleString('es-MX')}
+            sub='Perfiles de banda'
+            icon={Disc3}
+            tone='ink'
+          />
+          <Link
+            href='/admin/conexiones'
+            className='group block'
+          >
+            <StatCardLink
+              label='Conexiones'
+              value={totalConnections.toLocaleString('es-MX')}
+              sub={`${totalInterests ?? 0} intereses · ${totalMessages ?? 0} mensajes`}
             />
-            <div className='h-8 w-px bg-white/10' />
-            <Figure
-              value={totalBands ?? 0}
-              label='Bandas'
-            />
-            <div className='h-8 w-px bg-white/10' />
-            <Link
-              href='/admin/conexiones'
-              className='group flex items-center gap-2'
-            >
-              <Figure
-                value={totalConnections}
-                label='Conexiones'
-              />
-              <ArrowRight className='h-4 w-4 text-white/20 transition-all group-hover:translate-x-0.5 group-hover:text-red-400' />
-            </Link>
-            <p className='font-pt-mono ml-auto text-right text-[11px] text-white/30'>
-              {totalInterests ?? 0} intereses · {totalMessages ?? 0} mensajes directos
-            </p>
-          </CardContent>
-        </Card>
+          </Link>
+        </div>
       </section>
     </div>
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>{children}</h2>
-}
-
-function Figure({ value, label, accent }: { value: number; label: string; accent?: boolean }) {
+function Figure({ value, label, tone }: { value: number; label: string; tone?: 'red' }) {
   return (
     <div>
-      <p className={`font-baby-doll text-3xl leading-none font-bold ${accent ? 'text-emerald-300' : 'text-white'}`}>
+      <p
+        className={cn(
+          'font-baby-doll text-3xl leading-none font-bold',
+          tone === 'red' ? 'text-admin-red' : 'text-admin-ink'
+        )}
+      >
         {value.toLocaleString('es-MX')}
       </p>
-      <p className='font-pt-mono mt-1.5 text-[10px] tracking-widest text-white/40 uppercase'>{label}</p>
+      <p className='font-pt-mono text-admin-ink-faint mt-1.5 text-[10px] tracking-[0.15em] uppercase'>{label}</p>
     </div>
+  )
+}
+
+function StatCardLink({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <Paper
+      tone='red'
+      className='admin-press flex h-full flex-col p-4'
+    >
+      <div className='flex items-start justify-between gap-2'>
+        <p className='font-pt-mono text-admin-ink-soft text-[10px] font-bold tracking-[0.2em] uppercase'>{label}</p>
+        <ArrowRight className='text-admin-red h-4 w-4 transition-transform group-hover:translate-x-1' />
+      </div>
+      <p className='font-baby-doll text-admin-ink mt-2 text-4xl leading-none font-bold'>{value}</p>
+      <p className='font-pt-mono text-admin-ink-faint mt-auto pt-2 text-[11px]'>{sub}</p>
+    </Paper>
   )
 }
 
@@ -208,50 +247,76 @@ function CassettePanel({
   empty: boolean
 }) {
   const cap = Math.max(26, filled)
-  const pct = Math.round((filled / cap) * 100)
-  const card =
-    tone === 'active'
-      ? 'border-red-500/20 bg-red-500/[0.06] hover:bg-red-500/10'
-      : 'border-amber-400/20 bg-amber-500/[0.06] hover:bg-amber-500/10'
-  const bar = tone === 'active' ? 'bg-red-500' : 'bg-amber-400'
+  const segments = 26
+  const lit = Math.min(segments, Math.round((filled / cap) * segments))
+  const paperTone = tone === 'active' ? 'red' : 'gold'
+  const meterColor = tone === 'active' ? 'bg-admin-red' : 'bg-admin-gold'
   const Icon = tone === 'active' ? Disc3 : Sparkles
 
   return (
     <Link
       href='/admin/cassettes'
-      className='block'
+      className='block h-full'
     >
-      <Card className={`h-full gap-0 border py-0 transition-colors ${card}`}>
-        <CardContent className='p-5'>
-          <div className='flex items-center justify-between'>
-            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>
-              Cassette {label}
+      <Paper
+        tone={paperTone}
+        className='admin-press flex h-full flex-col p-5'
+      >
+        <div className='flex items-center justify-between'>
+          <LabelTag tone={tone === 'active' ? 'red' : 'gold'}>{label}</LabelTag>
+          <Icon className={cn('h-4 w-4', tone === 'active' ? 'text-admin-red' : 'text-admin-gold')} />
+        </div>
+
+        {/* Cassette body */}
+        <div className='border-admin-ink bg-admin-paper mt-4 flex items-center gap-4 border-2 px-4 py-3'>
+          <Reel spin={tone === 'active' && !empty} />
+          <div className='min-w-0 flex-1 text-center'>
+            <p className='font-baby-doll text-admin-ink truncate text-2xl leading-none font-bold uppercase'>{name}</p>
+            <p className='font-pt-mono text-admin-ink-faint mt-1 text-[9px] tracking-[0.2em] uppercase'>
+              {tone === 'active' ? 'Side A · suena en la home' : 'Recibe propuestas'}
             </p>
-            <Icon className='h-4 w-4 text-white/40' />
           </div>
-          <p className='font-baby-doll mt-3 truncate text-3xl font-bold text-white uppercase'>{name}</p>
-          {empty ? (
-            <p className='font-pt-mono mt-4 text-xs text-white/40'>
-              {tone === 'active' ? 'Ninguno activo' : 'Crea uno en Cassettes'}
-            </p>
-          ) : (
-            <div className='mt-4'>
-              <div className='mb-1.5 flex items-center justify-between'>
-                <span className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>
-                  {filled}/{cap} slots
-                </span>
-                <span className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>{pct}%</span>
-              </div>
-              <div className='h-1.5 w-full overflow-hidden rounded-full bg-white/10'>
-                <div
-                  className={`h-full rounded-full ${bar}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <Reel spin={tone === 'active' && !empty} />
+        </div>
+
+        {/* Slot meter — always rendered (empty shows a 0/26 bar) so the active
+            and next cards stay structurally identical and equal height. */}
+        <div className='mt-4 flex flex-1 flex-col justify-end'>
+          <div className='mb-1.5 flex items-center justify-between'>
+            <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.15em] uppercase'>
+              {empty ? (tone === 'active' ? 'Ninguno activo' : 'Crea uno en Cassettes') : `${filled}/${cap} slots`}
+            </span>
+            {!empty && (
+              <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.15em] uppercase'>
+                {Math.round((filled / cap) * 100)}%
+              </span>
+            )}
+          </div>
+          <div
+            className='flex gap-[2px]'
+            aria-hidden
+          >
+            {Array.from({ length: segments }).map((_, i) => (
+              <span
+                key={i}
+                className={cn('h-2.5 flex-1', i < lit ? meterColor : 'bg-admin-ink/12')}
+              />
+            ))}
+          </div>
+        </div>
+      </Paper>
     </Link>
+  )
+}
+
+function Reel({ spin }: { spin: boolean }) {
+  return (
+    <span className='border-admin-ink bg-admin-surface relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2'>
+      <span className={cn('border-admin-ink/40 absolute inset-1.5 rounded-full border', spin && 'admin-reel-spin')}>
+        <span className='bg-admin-ink/40 absolute top-1/2 left-0 h-[1.5px] w-full -translate-y-1/2' />
+        <span className='bg-admin-ink/40 absolute top-0 left-1/2 h-full w-[1.5px] -translate-x-1/2' />
+        <span className='bg-admin-ink absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full' />
+      </span>
+    </span>
   )
 }

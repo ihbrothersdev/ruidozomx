@@ -1,7 +1,3 @@
-import { Alert, AlertDescription, AlertTitle } from '@/app/components/ui/alert'
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import { Card, CardContent } from '@/app/components/ui/card'
 import { Progress } from '@/app/components/ui/progress'
 import { extractStorageKey, isPlayableAudio } from '@/lib/audio'
 import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
@@ -13,6 +9,8 @@ import { notFound } from 'next/navigation'
 import { AddSongModal } from '../_components/AddSongModal'
 import { CassetteSides, type CassetteSong } from '../_components/CassetteSides'
 import { DeleteButton, MarkAsNextButton, MigrateAudioButton, PublishButton } from '../_components/CassetteActions'
+import { AdminButton, EmptyState, LabelTag, Notice, Paper, Stamp } from '../../_components/kit'
+import type { Tone } from '../../_components/kit'
 
 const SONGS_BUCKET = 'songs'
 
@@ -98,36 +96,37 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
         : 'draft'
 
   const stateBadge = {
-    active: { label: 'ACTIVO', cls: 'bg-red-500/30 text-red-200' },
-    next: { label: 'SIGUIENTE', cls: 'bg-amber-500/30 text-amber-200' },
-    draft: { label: 'BORRADOR', cls: 'bg-white/10 text-white/60' },
-    archived: { label: 'ARCHIVADO', cls: 'bg-neutral-700 text-neutral-300' }
+    active: { label: 'ACTIVO', tone: 'red' as Tone },
+    next: { label: 'SIGUIENTE', tone: 'gold' as Tone },
+    draft: { label: 'BORRADOR', tone: 'ink' as Tone },
+    archived: { label: 'ARCHIVADO', tone: 'ink' as Tone }
   }[state]
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-8 sm:py-12'>
-      <Button
+      <AdminButton
         asChild
         variant='ghost'
         size='sm'
-        className='font-pt-mono w-fit text-xs text-white/40 hover:bg-transparent hover:text-white'
+        className='w-fit'
       >
         <Link href='/admin/cassettes'>
           <ArrowLeft className='h-3.5 w-3.5' />
           Volver a cassettes
         </Link>
-      </Button>
+      </AdminButton>
 
       <header className='flex flex-wrap items-start justify-between gap-4'>
         <div className='min-w-0'>
-          <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Cassette</p>
-          <h1 className='font-baby-doll mt-1 truncate text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
+          <LabelTag tone='red'>Cassette</LabelTag>
+          <h1 className='font-baby-doll text-admin-ink mt-3 truncate text-4xl leading-[0.85] font-bold tracking-wide uppercase sm:text-6xl'>
             {cassette.name}
           </h1>
-          <div className='font-pt-mono mt-3 flex flex-wrap items-center gap-3 text-xs text-white/50'>
-            <Badge className={`tracking-widest ${stateBadge.cls}`}>{stateBadge.label}</Badge>
+          <div className='bg-admin-red mt-2 h-[3px] w-24' />
+          <div className='font-pt-mono text-admin-ink-soft mt-3 flex flex-wrap items-center gap-3 text-xs'>
+            <Stamp tone={stateBadge.tone}>{stateBadge.label}</Stamp>
             <span>
-              <strong className='text-white'>{total}</strong>/{Math.max(26, total)} slots
+              <strong className='text-admin-ink'>{total}</strong>/{Math.max(26, total)} slots
             </span>
             {cassette.curator_name && <span>Curador: {cassette.curator_name}</span>}
             <span>
@@ -163,145 +162,143 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
       </header>
 
       {missingAudioCount > 0 && state !== 'archived' && (
-        <Alert className='border-amber-400/30 bg-amber-500/10 text-amber-200'>
-          <UploadCloud />
-          <AlertTitle className='font-pt-mono text-amber-200'>
-            {missingAudioCount} canción{missingAudioCount === 1 ? '' : 'es'} sin MP3
-          </AlertTitle>
-          <AlertDescription className='font-pt-mono text-amber-300/80'>
-            <p>
-              Algunos slots solo tienen un link externo (Spotify/YouTube) y no se pueden reproducir. Sube el MP3 desde
-              el ícono <UploadCloud className='inline h-3 w-3 align-middle' /> en cada fila. Sin esto el cassette no se
-              puede publicar.
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Notice
+          tone='gold'
+          icon={UploadCloud}
+          title={`${missingAudioCount} canción${missingAudioCount === 1 ? '' : 'es'} sin MP3`}
+        >
+          <p>
+            Algunos slots solo tienen un link externo (Spotify/YouTube) y no se pueden reproducir. Sube el MP3 desde el
+            ícono <UploadCloud className='inline h-3 w-3 align-middle' /> en cada fila. Sin esto el cassette no se puede
+            publicar.
+          </p>
+        </Notice>
       )}
 
       {concatStale && state !== 'archived' && (
-        <Alert className='border-amber-400/30 bg-amber-500/10 text-amber-200'>
-          <AlertCircle />
-          <AlertTitle className='font-pt-mono text-amber-200'>Audio desfasado del orden actual</AlertTitle>
-          <AlertDescription className='font-pt-mono text-amber-300/80'>
-            <p>
-              Reordenaste o cambiaste canciones, así que el audio del cassette ya no coincide. Regéneralo antes de
-              publicar: <code className='text-amber-100'>npm run build-cassette {cassette.id}</code> y recarga.
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Notice
+          tone='gold'
+          icon={AlertCircle}
+          title='Audio desfasado del orden actual'
+        >
+          <p>
+            Reordenaste o cambiaste canciones, así que el audio del cassette ya no coincide. Regéneralo antes de
+            publicar: <code className='bg-admin-paper-deep text-admin-ink px-1'>npm run build-cassette {cassette.id}</code>{' '}
+            y recarga.
+          </p>
+        </Notice>
       )}
 
       {unorganizedAudioCount > 0 && state !== 'archived' && (
-        <Alert className='border-white/10 bg-white/3 text-white/70'>
-          <Music2 />
-          <AlertTitle className='font-pt-mono text-white'>
-            {unorganizedAudioCount} archivo{unorganizedAudioCount === 1 ? '' : 's'} en la raíz del bucket
-          </AlertTitle>
-          <AlertDescription className='font-pt-mono text-white/60'>
-            <p className='mb-3'>
-              Estos MP3s viven en <code className='text-white/80'>songs/</code> directamente. Los puedes reorganizar a{' '}
-              <code className='text-white/80'>songs/{cassette.id.slice(0, 8)}…/artista-titulo.mp3</code> con un solo
-              clic. Es seguro: mueve los archivos y actualiza las URLs atómicamente.
-            </p>
+        <Notice
+          tone='ink'
+          icon={Music2}
+          title={`${unorganizedAudioCount} archivo${unorganizedAudioCount === 1 ? '' : 's'} en la raíz del bucket`}
+          action={
             <MigrateAudioButton
               cassetteId={cassette.id}
               count={unorganizedAudioCount}
             />
-          </AlertDescription>
-        </Alert>
+          }
+        >
+          <p>
+            Estos MP3s viven en <code className='bg-admin-paper-deep text-admin-ink px-1'>songs/</code> directamente. Los
+            puedes reorganizar a{' '}
+            <code className='bg-admin-paper-deep text-admin-ink px-1'>
+              songs/{cassette.id.slice(0, 8)}…/artista-titulo.mp3
+            </code>{' '}
+            con un solo clic. Es seguro: mueve los archivos y actualiza las URLs atómicamente.
+          </p>
+        </Notice>
       )}
 
       {state === 'next' && total < 26 && (
-        <Alert className='border-amber-400/20 bg-amber-500/5 text-amber-300'>
-          <Sparkles />
-          <AlertTitle className='font-pt-mono text-amber-200'>Recibiendo propuestas</AlertTitle>
-          <AlertDescription className='font-pt-mono text-amber-300/80'>
-            <p>
-              Las propuestas que aceptes en{' '}
-              <Link
-                href='/admin/propuestas'
-                className='underline hover:text-amber-200'
-              >
-                Propuestas
-              </Link>{' '}
-              caerán aquí.
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Notice
+          tone='gold'
+          icon={Sparkles}
+          title='Recibiendo propuestas'
+        >
+          <p>
+            Las propuestas que aceptes en{' '}
+            <Link
+              href='/admin/propuestas'
+              className='text-admin-ink underline'
+            >
+              Propuestas
+            </Link>{' '}
+            caerán aquí.
+          </p>
+        </Notice>
       )}
 
       {state === 'draft' && (
-        <Alert className='border-white/10 bg-white/3 text-white/70'>
-          <AlertDescription className='font-pt-mono text-white/60'>
-            <p>
-              Este cassette es un <strong className='text-white'>borrador</strong>. Márcalo como siguiente para empezar
-              a recibir propuestas aceptadas, o publícalo directo si ya tiene canciones.
-            </p>
-          </AlertDescription>
-        </Alert>
+        <Notice tone='ink'>
+          <p>
+            Este cassette es un <strong className='text-admin-ink'>borrador</strong>. Márcalo como siguiente para empezar
+            a recibir propuestas aceptadas, o publícalo directo si ya tiene canciones.
+          </p>
+        </Notice>
       )}
 
       {total > 0 && (
-        <Card className={`border ${overLimit ? 'border-red-500/40 bg-red-500/10' : 'border-white/10 bg-white/3'}`}>
-          <CardContent className='space-y-3'>
-            <div className='flex flex-wrap items-baseline justify-between gap-2'>
-              <div>
-                <p className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>
-                  Duración total
-                </p>
-                <p
-                  className={`font-baby-doll mt-1 text-3xl font-bold tracking-wider uppercase ${
-                    overLimit ? 'text-red-300' : 'text-white'
-                  }`}
-                >
-                  {formatTime(sumKnown)}
-                  <span className='ml-2 text-base text-white/30'>/ {formatTime(limitSeconds)}</span>
-                </p>
-              </div>
-              <div className='text-right'>
-                <p className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>
-                  {knownCount}/{total} con duración
-                </p>
-                {unknownCount > 0 && (
-                  <p className='font-pt-mono text-[10px] text-amber-300/80'>{unknownCount} sin duración (no cuenta)</p>
-                )}
-              </div>
-            </div>
-
-            <Progress
-              value={pct}
-              className={`h-2 bg-white/5 *:data-[slot=progress-indicator]:transition-all ${
-                overLimit
-                  ? '*:data-[slot=progress-indicator]:bg-red-500'
-                  : pct > 90
-                    ? '*:data-[slot=progress-indicator]:bg-amber-500'
-                    : '*:data-[slot=progress-indicator]:bg-emerald-500'
-              }`}
-            />
-
-            {overLimit && (
-              <p className='font-pt-mono text-[11px] text-red-300'>
-                ⚠ El cassette excede el límite de {durationLimitMinutes} min por {formatTime(sumKnown - limitSeconds)}.
+        <Paper
+          tone={overLimit ? 'red' : undefined}
+          className='space-y-3 p-5'
+        >
+          <div className='flex flex-wrap items-baseline justify-between gap-2'>
+            <div>
+              <p className='font-pt-mono text-admin-ink-soft text-[10px] font-bold tracking-[0.3em] uppercase'>
+                Duración total
               </p>
-            )}
-          </CardContent>
-        </Card>
+              <p
+                className={`font-baby-doll mt-1 text-3xl font-bold tracking-wider uppercase ${
+                  overLimit ? 'text-admin-red' : 'text-admin-ink'
+                }`}
+              >
+                {formatTime(sumKnown)}
+                <span className='text-admin-ink-faint ml-2 text-base'>/ {formatTime(limitSeconds)}</span>
+              </p>
+            </div>
+            <div className='text-right'>
+              <p className='font-pt-mono text-admin-ink-soft text-[10px] tracking-widest uppercase'>
+                {knownCount}/{total} con duración
+              </p>
+              {unknownCount > 0 && (
+                <p className='font-pt-mono text-admin-gold text-[10px]'>{unknownCount} sin duración (no cuenta)</p>
+              )}
+            </div>
+          </div>
+
+          <Progress
+            value={pct}
+            className={`bg-admin-ink/12 h-2 *:data-[slot=progress-indicator]:transition-all ${
+              overLimit
+                ? '*:data-[slot=progress-indicator]:bg-admin-red'
+                : pct > 90
+                  ? '*:data-[slot=progress-indicator]:bg-admin-gold'
+                  : '*:data-[slot=progress-indicator]:bg-admin-olive'
+            }`}
+          />
+
+          {overLimit && (
+            <p className='font-pt-mono text-admin-red text-[11px]'>
+              ⚠ El cassette excede el límite de {durationLimitMinutes} min por {formatTime(sumKnown - limitSeconds)}.
+            </p>
+          )}
+        </Paper>
       )}
 
       {state === 'active' && total > 0 && (
-        <Alert
-          variant='destructive'
-          className='border-red-500/30 bg-red-500/10 text-red-200'
+        <Notice
+          tone='red'
+          icon={AlertCircle}
+          title='Editando cassette activo'
         >
-          <AlertCircle />
-          <AlertTitle className='font-pt-mono text-red-200'>Editando cassette activo</AlertTitle>
-          <AlertDescription className='font-pt-mono text-red-200/80'>
-            <p>
-              Cualquier cambio de duración o canción que quites impactará lo que la gente está escuchando ahora mismo en
-              la home.
-            </p>
-          </AlertDescription>
-        </Alert>
+          <p>
+            Cualquier cambio de duración o canción que quites impactará lo que la gente está escuchando ahora mismo en
+            la home.
+          </p>
+        </Notice>
       )}
 
       <CassetteSides
@@ -311,21 +308,16 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
       />
 
       {total === 0 && (
-        <Card className='border-dashed border-white/10 bg-transparent py-12'>
-          <CardContent className='text-center'>
-            <Music2 className='mx-auto mb-3 h-8 w-8 text-white/20' />
-            <p className='font-pt-mono text-sm text-white/40'>
-              Cassette vacío. Acepta propuestas en{' '}
-              <Link
-                href='/admin/propuestas'
-                className='underline hover:text-white'
-              >
-                Propuestas
-              </Link>{' '}
-              para llenarlo.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={Music2}>
+          Cassette vacío. Acepta propuestas en{' '}
+          <Link
+            href='/admin/propuestas'
+            className='text-admin-ink underline'
+          >
+            Propuestas
+          </Link>{' '}
+          para llenarlo.
+        </EmptyState>
       )}
     </div>
   )

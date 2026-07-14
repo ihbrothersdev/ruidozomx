@@ -2,7 +2,7 @@
 
 import { finalizeSongAudio, prepareSongAudioUpload } from '@/app/admin/actions'
 import { type AdminError, ErrorModal } from '@/app/admin/_components/ErrorModal'
-import { Button } from '@/app/components/ui/button'
+import { AdminButton } from '@/app/admin/_components/kit'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import { Loader2, UploadCloud } from 'lucide-react'
@@ -82,8 +82,8 @@ export function UploadAudioButton({
   }
 
   const tone = playable
-    ? 'text-emerald-400/60 hover:bg-emerald-500/10 hover:text-emerald-300'
-    : 'text-amber-300 hover:bg-amber-500/10 hover:text-amber-200'
+    ? 'text-admin-olive hover:bg-admin-olive/12 hover:text-admin-olive'
+    : 'text-admin-gold hover:bg-admin-gold/15 hover:text-admin-gold'
   const tip = playable ? 'Reemplazar el MP3' : 'Subir el MP3 (este slot solo tiene un link externo)'
 
   return (
@@ -98,18 +98,18 @@ export function UploadAudioButton({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
+            <AdminButton
               type='button'
               variant='ghost'
-              size='icon-sm'
+              size='icon'
               disabled={pending}
               onClick={() => inputRef.current?.click()}
-              className={`transition-colors ${tone} ${pending ? 'animate-pulse' : ''}`}
+              className={`h-8 w-8 transition-colors ${tone} ${pending ? 'animate-pulse' : ''}`}
             >
               {pending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <UploadCloud className='h-3.5 w-3.5' />}
-            </Button>
+            </AdminButton>
           </TooltipTrigger>
-          <TooltipContent>{tip}</TooltipContent>
+          <TooltipContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink'>{tip}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <ErrorModal

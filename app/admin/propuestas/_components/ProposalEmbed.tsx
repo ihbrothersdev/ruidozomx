@@ -9,14 +9,14 @@ function DriveEmbed({ fileId }: { fileId: string }) {
       href={`https://drive.google.com/file/d/${fileId}/view`}
       target='_blank'
       rel='noopener noreferrer'
-      className='group flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 transition-all hover:border-white/20 hover:bg-white/[0.06]'
+      className='group flex items-center gap-3 border-2 border-admin-ink bg-admin-surface px-4 py-3 transition-colors hover:bg-admin-paper-deep'
     >
-      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20 ring-inset'>
-        <Music2 className='h-4 w-4 text-amber-300' />
+      <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-2 border-admin-ink bg-admin-gold/15 text-admin-gold'>
+        <Music2 className='h-4 w-4' />
       </div>
       <div className='min-w-0 flex-1'>
-        <p className='font-pt-mono text-sm font-bold text-white'>Audio en Drive</p>
-        <p className='font-pt-mono text-[10px] tracking-wide text-white/40'>Abrir y reproducir ↗</p>
+        <p className='font-pt-mono text-sm font-bold text-admin-ink'>Audio en Drive</p>
+        <p className='font-pt-mono text-[10px] tracking-wide text-admin-ink-soft'>Abrir y reproducir ↗</p>
       </div>
       <svg
         viewBox='0 0 24 24'
@@ -25,7 +25,7 @@ function DriveEmbed({ fileId }: { fileId: string }) {
         strokeWidth='2'
         strokeLinecap='round'
         strokeLinejoin='round'
-        className='h-4 w-4 shrink-0 text-white/30 transition-colors group-hover:text-white/60'
+        className='h-4 w-4 shrink-0 text-admin-ink-faint transition-colors group-hover:text-admin-ink-soft'
       >
         <path d='M7 17L17 7M9 7h8v8' />
       </svg>
@@ -33,7 +33,10 @@ function DriveEmbed({ fileId }: { fileId: string }) {
   )
 }
 
-/** Wrap an iframe in a dark, clipped container so service-rendered corners blend with the card */
+/** Wrap an iframe in a dark "screen" inset. The iframe itself is rounded (not
+ *  just the container): services like YouTube render their player with rounded
+ *  corners on a white page, and a parent's border-radius does NOT clip an iframe
+ *  — so without rounding the iframe element, its white page corners poke out. */
 function EmbedFrame({
   height,
   src,
@@ -49,7 +52,7 @@ function EmbedFrame({
 }) {
   return (
     <div
-      className='overflow-hidden rounded-xl bg-neutral-900'
+      className='overflow-hidden rounded-[14px] border-2 border-admin-ink bg-neutral-900'
       style={{ height }}
     >
       <iframe
@@ -58,7 +61,7 @@ function EmbedFrame({
         allowFullScreen={allowFullScreen}
         sandbox={sandbox}
         loading='lazy'
-        className='block h-full w-full'
+        className='block h-full w-full rounded-[14px]'
         style={{ border: 0 }}
       />
     </div>
@@ -88,24 +91,26 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
     )
   }
 
-  // Spotify track (with optional intl-XX prefix)
+  // Spotify (track/album/playlist). Height 80 is Spotify's compact player, which
+  // fills full-width; a taller frame (the old 152) exposes the embed page's own
+  // white background below the player — that was the white-corners bug.
   const spotifyMatch = url.match(/open\.spotify\.com\/(?:intl-\w+\/)?track\/(\w+)/)
   if (spotifyMatch) {
     return (
       <EmbedFrame
-        height={152}
+        height={80}
         src={`https://open.spotify.com/embed/track/${spotifyMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
       />
     )
   }
 
-  // Spotify album (with optional intl-XX prefix)
+  // Spotify album (with optional intl-XX prefix). Same compact 80px player.
   const spotifyAlbumMatch = url.match(/open\.spotify\.com\/(?:intl-\w+\/)?album\/(\w+)/)
   if (spotifyAlbumMatch) {
     return (
       <EmbedFrame
-        height={152}
+        height={80}
         src={`https://open.spotify.com/embed/album/${spotifyAlbumMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
       />
@@ -117,7 +122,7 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
   if (spotifyPlaylistMatch) {
     return (
       <EmbedFrame
-        height={152}
+        height={80}
         src={`https://open.spotify.com/embed/playlist/${spotifyPlaylistMatch[1]}?theme=0`}
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
       />
@@ -167,7 +172,7 @@ function tryEmbed(url?: string | null): React.ReactNode | null {
         href={url}
         target='_blank'
         rel='noopener noreferrer'
-        className='font-pt-mono inline-flex items-center gap-1.5 rounded-sm bg-[#1da0c3]/10 px-3 py-2 text-xs font-bold text-[#1da0c3] transition-colors hover:bg-[#1da0c3]/20'
+        className='font-pt-mono inline-flex items-center gap-1.5 rounded-sm border-2 border-admin-ink bg-admin-blue/12 px-3 py-2 text-xs font-bold text-admin-blue transition-colors hover:bg-admin-blue/20'
       >
         <span>▶</span> Escuchar en Bandcamp ↗
       </a>

@@ -18,11 +18,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/app/components/ui/alert-dialog'
-import { Button } from '@/app/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { Disc3, FolderTree, Loader2, Sparkles, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { sileo } from 'sileo'
+import { AdminButton } from '@/app/admin/_components/kit'
+
+const DIALOG_CONTENT = 'border-2 border-admin-ink bg-admin-surface text-admin-ink admin-hard'
+const DIALOG_TITLE = 'font-baby-doll text-admin-ink text-xl tracking-wider uppercase'
+const DIALOG_DESC = 'font-pt-mono text-admin-ink-soft'
+const TOOLTIP_CLS = 'border-2 border-admin-ink bg-admin-surface text-admin-ink'
 
 export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
   return (
@@ -32,15 +37,15 @@ export function MarkAsNextButton({ cassetteId }: { cassetteId: string }) {
         name='cassette_id'
         value={cassetteId}
       />
-      <Button
+      <AdminButton
         type='submit'
         size='lg'
         variant='outline'
-        className='font-pt-mono border-amber-400/40 bg-amber-500/10 text-xs tracking-wide text-amber-200 uppercase hover:bg-amber-500/20 hover:text-amber-100'
+        className='border-admin-gold text-admin-gold'
       >
         <Sparkles className='h-3.5 w-3.5' />
         Marcar como siguiente
-      </Button>
+      </AdminButton>
     </form>
   )
 }
@@ -80,17 +85,18 @@ export function PublishButton({
         <Tooltip>
           <TooltipTrigger asChild>
             <span tabIndex={0}>
-              <Button
+              <AdminButton
                 disabled
                 size='lg'
-                className='font-pt-mono cursor-not-allowed bg-red-600/30 text-xs tracking-wide text-white/60 uppercase'
+                variant='primary'
+                className='cursor-not-allowed'
               >
                 <Disc3 className='h-3.5 w-3.5' />
                 {label}
-              </Button>
+              </AdminButton>
             </span>
           </TooltipTrigger>
-          <TooltipContent>{blockMsg}</TooltipContent>
+          <TooltipContent className={TOOLTIP_CLS}>{blockMsg}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )
@@ -99,26 +105,26 @@ export function PublishButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
+        <AdminButton
           size='lg'
-          className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500'
+          variant='primary'
         >
           <Disc3 className='h-3.5 w-3.5' />
           {label}
-        </Button>
+        </AdminButton>
       </AlertDialogTrigger>
-      <AlertDialogContent className='border-white/10 bg-neutral-900 text-white'>
+      <AlertDialogContent className={DIALOG_CONTENT}>
         <AlertDialogHeader>
-          <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>{dialogTitle}</AlertDialogTitle>
-          <AlertDialogDescription className='font-pt-mono text-white/60'>{dialogBody}</AlertDialogDescription>
+          <AlertDialogTitle className={DIALOG_TITLE}>{dialogTitle}</AlertDialogTitle>
+          <AlertDialogDescription className={DIALOG_DESC}>{dialogBody}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className='font-pt-mono border-white/10 bg-transparent text-white/70 hover:bg-white/5 hover:text-white'>
+          <AlertDialogCancel className='font-pt-mono border-2 border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'>
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => formRef.current?.requestSubmit()}
-            className='font-pt-mono bg-red-600 text-white uppercase hover:bg-red-500'
+            className='font-pt-mono border-2 border-admin-ink bg-admin-red text-admin-surface uppercase hover:bg-admin-red'
           >
             {dialogConfirm}
           </AlertDialogAction>
@@ -145,33 +151,31 @@ export function DeleteButton({ cassetteId, hasSongs }: { cassetteId: string; has
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
+        <AdminButton
           size='lg'
           variant='outline'
-          className='font-pt-mono border-white/10 bg-transparent text-xs tracking-wide text-white/50 uppercase hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300'
+          className='text-admin-ink-soft hover:border-admin-red hover:text-admin-red'
         >
           <Trash2 className='h-3.5 w-3.5' />
           Eliminar
-        </Button>
+        </AdminButton>
       </AlertDialogTrigger>
-      <AlertDialogContent className='border-white/10 bg-neutral-900 text-white'>
+      <AlertDialogContent className={DIALOG_CONTENT}>
         <AlertDialogHeader>
-          <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>
-            Eliminar cassette
-          </AlertDialogTitle>
-          <AlertDialogDescription className='font-pt-mono text-white/60'>
+          <AlertDialogTitle className={DIALOG_TITLE}>Eliminar cassette</AlertDialogTitle>
+          <AlertDialogDescription className={DIALOG_DESC}>
             {hasSongs
               ? 'Se borrarán sus canciones y las propuestas regresarán a pendientes. Esta acción no se puede deshacer.'
               : 'El cassette está vacío. Se eliminará permanentemente.'}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className='font-pt-mono border-white/10 bg-transparent text-white/70 hover:bg-white/5 hover:text-white'>
+          <AlertDialogCancel className='font-pt-mono border-2 border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'>
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => formRef.current?.requestSubmit()}
-            className='font-pt-mono bg-red-600 text-white uppercase hover:bg-red-500'
+            className='font-pt-mono border-2 border-admin-ink bg-admin-red text-admin-surface uppercase hover:bg-admin-red'
           >
             Sí, eliminar
           </AlertDialogAction>
@@ -201,35 +205,33 @@ export function RemoveSongButton({ songId, cassetteId }: { songId: string; casse
         <Tooltip>
           <TooltipTrigger asChild>
             <AlertDialogTrigger asChild>
-              <Button
+              <AdminButton
                 type='button'
                 variant='ghost'
-                size='icon-sm'
-                className='text-white/40 transition-colors hover:bg-red-500/20 hover:text-red-300'
+                size='icon'
+                className='text-admin-ink-soft hover:bg-admin-red/15 h-8 w-8 hover:text-admin-red'
               >
                 <Trash2 className='h-3.5 w-3.5' />
-              </Button>
+              </AdminButton>
             </AlertDialogTrigger>
           </TooltipTrigger>
-          <TooltipContent>Quitar del cassette y regresar a pendientes</TooltipContent>
+          <TooltipContent className={TOOLTIP_CLS}>Quitar del cassette y regresar a pendientes</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <AlertDialogContent className='border-white/10 bg-neutral-900 text-white'>
+      <AlertDialogContent className={DIALOG_CONTENT}>
         <AlertDialogHeader>
-          <AlertDialogTitle className='font-baby-doll text-xl tracking-wider uppercase'>
-            Quitar canción
-          </AlertDialogTitle>
-          <AlertDialogDescription className='font-pt-mono text-white/60'>
+          <AlertDialogTitle className={DIALOG_TITLE}>Quitar canción</AlertDialogTitle>
+          <AlertDialogDescription className={DIALOG_DESC}>
             Su propuesta regresará a pendientes y podrás volver a colocarla en otro slot.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className='font-pt-mono border-white/10 bg-transparent text-white/70 hover:bg-white/5 hover:text-white'>
+          <AlertDialogCancel className='font-pt-mono border-2 border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'>
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => formRef.current?.requestSubmit()}
-            className='font-pt-mono bg-red-600 text-white uppercase hover:bg-red-500'
+            className='font-pt-mono border-2 border-admin-ink bg-admin-red text-admin-surface uppercase hover:bg-admin-red'
           >
             Sí, quitar
           </AlertDialogAction>
@@ -298,16 +300,15 @@ export function MigrateAudioButton({ cassetteId, count }: { cassetteId: string; 
   }
 
   return (
-    <Button
+    <AdminButton
       type='button'
       onClick={onClick}
       disabled={pending}
       variant='outline'
       size='sm'
-      className='font-pt-mono border-white/20 bg-white/5 text-xs tracking-wide text-white uppercase hover:bg-white/10'
     >
       {pending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <FolderTree className='h-3.5 w-3.5' />}
       Reorganizar {count} archivo{count === 1 ? '' : 's'}
-    </Button>
+    </AdminButton>
   )
 }

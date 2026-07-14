@@ -1,7 +1,7 @@
 'use client'
 
-import { Card, CardContent } from '@/app/components/ui/card'
-import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { EmptyState, Paper, Stamp } from '@/app/admin/_components/kit'
+import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Unplug } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -45,7 +45,7 @@ export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
 
   return (
     <div className='space-y-3'>
-      <div className='flex items-center gap-1 self-start rounded-md border border-white/10 bg-white/3 p-0.5'>
+      <div className='flex flex-wrap items-center gap-2'>
         <FilterTab
           active={kind === 'all'}
           onClick={() => selectKind('all')}
@@ -67,11 +67,7 @@ export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className='border-dashed border-white/10 bg-transparent py-10'>
-          <CardContent className='font-pt-mono text-center text-xs text-white/30'>
-            Aún no hay conexiones de este tipo.
-          </CardContent>
-        </Card>
+        <EmptyState icon={Unplug}>Aún no hay conexiones de este tipo.</EmptyState>
       ) : (
         <>
           <ul className='space-y-2'>
@@ -84,8 +80,8 @@ export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
           </ul>
 
           {filtered.length > PAGE_SIZE && (
-            <div className='flex items-center justify-between border-t border-white/5 pt-2'>
-              <span className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
+            <div className='border-admin-ink/15 flex items-center justify-between border-t pt-2'>
+              <span className='font-pt-mono text-admin-ink-faint text-[10px] tracking-widest uppercase'>
                 {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
               </span>
               <div className='flex items-center gap-1'>
@@ -95,7 +91,7 @@ export function ConnectionsList({ edges }: { edges: ConnectionEdge[] }) {
                 >
                   <ChevronLeft className='h-3.5 w-3.5' />
                 </PagerButton>
-                <span className='font-pt-mono px-1 text-[10px] tracking-widest text-white/40 uppercase'>
+                <span className='font-pt-mono text-admin-ink-soft px-1 text-[10px] tracking-widest uppercase'>
                   {safePage + 1}/{totalPages}
                 </span>
                 <PagerButton
@@ -118,8 +114,10 @@ function FilterTab({ children, active, onClick }: { children: React.ReactNode; a
     <button
       type='button'
       onClick={onClick}
-      className={`font-pt-mono cursor-pointer rounded px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
-        active ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
+      className={`font-pt-mono border-admin-ink cursor-pointer border-2 px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
+        active
+          ? 'bg-admin-red text-admin-surface admin-hard-sm'
+          : 'bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'
       }`}
     >
       {children}
@@ -132,50 +130,55 @@ function ConnectionRow({ edge }: { edge: ConnectionEdge }) {
   const date = new Date(edge.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
 
   return (
-    <Card
-      className={`gap-0 py-0 ${edge.mutual ? 'border-teal-400/30 bg-teal-500/[0.06]' : 'border-white/10 bg-white/3'}`}
+    <Paper
+      tone={edge.mutual ? 'olive' : undefined}
+      className='p-3'
     >
-      <CardContent className='flex flex-wrap items-center gap-x-3 gap-y-2 p-3'>
+      <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         <ConnectionParty profile={edge.from} />
         {edge.mutual ? (
-          <ArrowLeftRight className='h-3.5 w-3.5 shrink-0 text-teal-300' />
+          <ArrowLeftRight className='text-admin-olive h-3.5 w-3.5 shrink-0' />
         ) : (
-          <ArrowRight className='h-3.5 w-3.5 shrink-0 text-white/30' />
+          <ArrowRight className='text-admin-ink-faint h-3.5 w-3.5 shrink-0' />
         )}
         <ConnectionParty profile={edge.to} />
         <div className='ml-auto flex shrink-0 items-center gap-2'>
           {edge.mutual ? (
-            <span className='font-pt-mono rounded bg-teal-500/15 px-2 py-0.5 text-[9px] font-bold tracking-widest text-teal-200 uppercase'>
+            <Stamp
+              tone='olive'
+              rotate={false}
+              className='text-[9px]'
+            >
               Mutua
-            </span>
+            </Stamp>
           ) : null}
-          <span
-            className={`font-pt-mono rounded px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase ${
-              isInterest ? 'bg-pink-500/10 text-pink-300' : 'bg-blue-500/10 text-blue-300'
-            }`}
+          <Stamp
+            tone={isInterest ? 'red' : 'blue'}
+            rotate={false}
+            className='text-[9px]'
           >
             {isInterest ? 'Interés' : 'Mensaje'}
-          </span>
-          <span className='font-pt-mono text-[10px] text-white/30'>{date}</span>
+          </Stamp>
+          <span className='font-pt-mono text-admin-ink-faint text-[10px]'>{date}</span>
         </div>
         {edge.mutual && edge.mutualMessages?.length ? (
           <div className='w-full space-y-1'>
             {edge.mutualMessages.map((m, i) => (
               <p
                 key={i}
-                className='font-pt-mono line-clamp-2 text-[11px] break-words text-white/40'
+                className='font-pt-mono text-admin-ink-soft line-clamp-2 text-[11px] break-words'
               >
-                <span className='font-bold text-white/55'>{m.name}</span>
-                <span className='text-white/30'> · {fmtDateTime(m.at)}</span>
+                <span className='text-admin-ink font-bold'>{m.name}</span>
+                <span className='text-admin-ink-faint'> · {fmtDateTime(m.at)}</span>
                 {m.text ? `: ${m.text}` : ''}
               </p>
             ))}
           </div>
         ) : edge.detail ? (
-          <p className='font-pt-mono line-clamp-2 w-full text-[11px] break-words text-white/40'>{edge.detail}</p>
+          <p className='font-pt-mono text-admin-ink-soft line-clamp-2 w-full text-[11px] break-words'>{edge.detail}</p>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </Paper>
   )
 }
 
@@ -188,7 +191,7 @@ function ConnectionParty({ profile }: { profile: ConnectionProfile }) {
       />
       <Link
         href={profile.slug ? `/perfil/${profile.slug}` : '#'}
-        className='font-pt-mono truncate text-xs font-bold text-white hover:text-red-300'
+        className='font-pt-mono text-admin-ink hover:text-admin-red truncate text-xs font-bold'
       >
         {profile.name}
       </Link>
@@ -208,7 +211,7 @@ function ProfileAvatar({ photo, name }: { photo: string | null; name: string }) 
     )
   }
   return (
-    <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs font-bold text-white/50'>
+    <div className='border-admin-ink bg-admin-surface text-admin-ink-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold'>
       {name.charAt(0).toUpperCase()}
     </div>
   )
@@ -228,7 +231,7 @@ function PagerButton({
       type='button'
       disabled={disabled}
       onClick={onClick}
-      className='flex h-7 w-7 cursor-pointer items-center justify-center rounded border border-white/10 bg-white/3 text-white/60 transition-colors hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white/3'
+      className='border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep disabled:hover:bg-admin-surface flex h-7 w-7 cursor-pointer items-center justify-center border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-30'
     >
       {children}
     </button>

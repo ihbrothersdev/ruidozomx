@@ -2,7 +2,7 @@
 
 import { finalizeAddSong, prepareAddSong, searchBandasByName } from '@/app/admin/actions'
 import { type AdminError, ErrorModal } from '@/app/admin/_components/ErrorModal'
-import { Button } from '@/app/components/ui/button'
+import { AdminButton } from '@/app/admin/_components/kit'
 import {
   Dialog,
   DialogContent,
@@ -224,23 +224,26 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
         onOpenChange={onOpenChange}
       >
         <DialogTrigger asChild>
-          <Button
+          <AdminButton
+            variant='primary'
             size='lg'
             disabled={cassetteFull}
-            className='font-pt-mono bg-red-600 text-xs tracking-wide text-white uppercase hover:bg-red-500 disabled:opacity-40'
+            className='text-xs tracking-wide disabled:opacity-40'
           >
             <Plus className='h-4 w-4' />
             {cassetteFull ? 'Cassette lleno' : 'Agregar canción'}
-          </Button>
+          </AdminButton>
         </DialogTrigger>
 
-        <DialogContent className='border-white/10 bg-neutral-900 text-white sm:max-w-lg'>
+        <DialogContent className='admin-hard border-2 border-admin-ink bg-admin-surface text-admin-ink sm:max-w-lg'>
           <DialogHeader className='text-left'>
-            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>Nueva canción</p>
-            <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
+            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-admin-red uppercase'>
+              Nueva canción
+            </p>
+            <DialogTitle className='font-baby-doll text-2xl tracking-wider text-admin-ink uppercase'>
               Agregar al cassette
             </DialogTitle>
-            <DialogDescription className='font-pt-mono text-xs text-white/40'>
+            <DialogDescription className='font-pt-mono text-xs text-admin-ink-soft'>
               La canción se sube directo al bucket de audio y queda lista para reproducir.
             </DialogDescription>
           </DialogHeader>
@@ -279,17 +282,17 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
 
             <div className='grid gap-4 sm:grid-cols-2'>
               <div className='space-y-1.5'>
-                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                  Lado <span className='ml-1 text-red-400'>*</span>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-admin-ink-soft uppercase'>
+                  Lado <span className='ml-1 text-admin-red'>*</span>
                 </Label>
                 <Select
                   value={side}
                   onValueChange={v => resetForSide(v as Side)}
                 >
-                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                  <SelectTrigger className='font-pt-mono border-2 border-admin-ink bg-admin-paper text-sm text-admin-ink'>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
+                  <SelectContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink'>
                     <SelectItem
                       value='A'
                       disabled={!sideAFree}
@@ -307,18 +310,18 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
               </div>
 
               <div className='space-y-1.5'>
-                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                  Posición <span className='ml-1 text-red-400'>*</span>
+                <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-admin-ink-soft uppercase'>
+                  Posición <span className='ml-1 text-admin-red'>*</span>
                 </Label>
                 <Select
                   value={position}
                   onValueChange={setPosition}
                   disabled={noFreeSlots}
                 >
-                  <SelectTrigger className='font-pt-mono border-white/10 bg-white/3 text-sm text-white'>
+                  <SelectTrigger className='font-pt-mono border-2 border-admin-ink bg-admin-paper text-sm text-admin-ink'>
                     <SelectValue placeholder={noFreeSlots ? 'Lado lleno' : 'Elige #'} />
                   </SelectTrigger>
-                  <SelectContent className='border-white/10 bg-neutral-900 text-white'>
+                  <SelectContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink'>
                     {availablePositions.map(p => (
                       <SelectItem
                         key={p}
@@ -333,17 +336,17 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
             </div>
 
             <div className='space-y-1.5'>
-              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'>
-                Archivo de audio <span className='ml-1 text-red-400'>*</span>
+              <Label className='font-pt-mono text-[10px] font-bold tracking-widest text-admin-ink-soft uppercase'>
+                Archivo de audio <span className='ml-1 text-admin-red'>*</span>
               </Label>
-              <label className='font-pt-mono flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/3 px-3 py-3 text-xs text-white/60 transition-colors hover:border-white/30 hover:text-white'>
+              <label className='font-pt-mono flex cursor-pointer items-center gap-3 border-2 border-dashed border-admin-ink/40 bg-admin-paper px-3 py-3 text-xs text-admin-ink-soft transition-colors hover:border-admin-ink hover:text-admin-ink'>
                 <input
                   type='file'
                   accept='audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4'
                   className='hidden'
                   onChange={onFileChange}
                 />
-                {file ? <Music2 className='h-4 w-4 text-emerald-400' /> : <UploadCloud className='h-4 w-4' />}
+                {file ? <Music2 className='h-4 w-4 text-admin-olive' /> : <UploadCloud className='h-4 w-4' />}
                 <span className='truncate'>{file ? file.name : 'MP3, WAV o M4A (máx. 30 MB)'}</span>
               </label>
             </div>
@@ -356,23 +359,24 @@ export function AddSongModal({ cassetteId, occupied }: { cassetteId: string; occ
               onChange={setDurationInput}
             />
 
-            <DialogFooter className='gap-2 border-t border-white/5 pt-4'>
-              <Button
+            <DialogFooter className='gap-2 border-t border-admin-ink/15 pt-4'>
+              <AdminButton
                 type='button'
                 variant='ghost'
                 onClick={() => setOpen(false)}
-                className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
+                className='text-xs tracking-wider'
               >
                 Cancelar
-              </Button>
-              <Button
+              </AdminButton>
+              <AdminButton
                 type='submit'
+                variant='primary'
                 disabled={submitting || !position || !file || !artist.trim()}
-                className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500 disabled:opacity-40'
+                className='text-xs tracking-wider disabled:opacity-40'
               >
                 {submitting && <Loader2 className='mr-1 h-3.5 w-3.5 animate-spin' />}
                 {submitting ? 'Subiendo…' : 'Agregar canción'}
-              </Button>
+              </AdminButton>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -426,9 +430,9 @@ function BandaAutocomplete({
     <div className='space-y-1.5'>
       <Label
         htmlFor='add-song-artist'
-        className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'
+        className='font-pt-mono text-[10px] font-bold tracking-widest text-admin-ink-soft uppercase'
       >
-        Banda / artista <span className='ml-1 text-red-400'>*</span>
+        Banda / artista <span className='ml-1 text-admin-red'>*</span>
       </Label>
       <div className='relative'>
         <Input
@@ -444,22 +448,22 @@ function BandaAutocomplete({
           }}
           autoComplete='off'
           required
-          className='font-pt-mono border-white/10 bg-white/3 pr-9 text-sm text-white placeholder:text-white/30 focus-visible:border-red-500/50 focus-visible:ring-red-500/20'
+          className='font-pt-mono border-2 border-admin-ink bg-admin-paper pr-9 text-sm text-admin-ink placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-admin-red/20'
         />
         <span className='pointer-events-none absolute top-1/2 right-3 -translate-y-1/2'>
           {selected ? (
-            <CheckCircle2 className='h-4 w-4 text-emerald-400' />
+            <CheckCircle2 className='h-4 w-4 text-admin-olive' />
           ) : loading ? (
-            <Loader2 className='h-4 w-4 animate-spin text-white/30' />
+            <Loader2 className='h-4 w-4 animate-spin text-admin-ink-faint' />
           ) : (
-            <Search className='h-4 w-4 text-white/30' />
+            <Search className='h-4 w-4 text-admin-ink-faint' />
           )}
         </span>
 
         {showDropdown && (
-          <div className='absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-white/10 bg-neutral-900 shadow-xl'>
+          <div className='admin-hard-sm absolute z-50 mt-1 max-h-60 w-full overflow-y-auto border-2 border-admin-ink bg-admin-surface'>
             {results.length === 0 && !loading && (
-              <p className='font-pt-mono px-3 py-2 text-[11px] text-white/40'>
+              <p className='font-pt-mono px-3 py-2 text-[11px] text-admin-ink-soft'>
                 Sin coincidencias. Se guardará como texto libre.
               </p>
             )}
@@ -472,7 +476,7 @@ function BandaAutocomplete({
                   onSelect(banda)
                   setOpen(false)
                 }}
-                className='flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white/5'
+                className='flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-admin-surface-2/60'
               >
                 {banda.photoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -482,23 +486,23 @@ function BandaAutocomplete({
                     className='h-7 w-7 shrink-0 rounded-full object-cover'
                   />
                 ) : (
-                  <span className='font-pt-mono flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white/60'>
+                  <span className='font-pt-mono flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-admin-ink/10 text-[10px] font-bold text-admin-ink-soft'>
                     {banda.displayName.charAt(0).toUpperCase()}
                   </span>
                 )}
-                <span className='font-pt-mono truncate text-xs text-white'>{banda.displayName}</span>
-                <span className='font-pt-mono ml-auto shrink-0 text-[10px] text-white/30'>@{banda.slug}</span>
+                <span className='font-pt-mono truncate text-xs text-admin-ink'>{banda.displayName}</span>
+                <span className='font-pt-mono ml-auto shrink-0 text-[10px] text-admin-ink-faint'>@{banda.slug}</span>
               </button>
             ))}
           </div>
         )}
       </div>
       {selected ? (
-        <p className='font-pt-mono text-[10px] text-emerald-400/80'>
-          Vinculado a perfil de <strong className='text-emerald-300'>{selected.displayName}</strong>.
+        <p className='font-pt-mono text-[10px] text-admin-olive'>
+          Vinculado a perfil de <strong className='text-admin-olive'>{selected.displayName}</strong>.
         </p>
       ) : (
-        <p className='font-pt-mono text-[10px] text-white/30'>
+        <p className='font-pt-mono text-[10px] text-admin-ink-faint'>
           Si la banda tiene perfil en Ruidozo, selecciónala. Si no, se guarda como texto libre.
         </p>
       )}
@@ -527,10 +531,10 @@ function Field({
     <div className='space-y-1.5'>
       <Label
         htmlFor={`add-song-${name}`}
-        className='font-pt-mono text-[10px] font-bold tracking-widest text-white/50 uppercase'
+        className='font-pt-mono text-[10px] font-bold tracking-widest text-admin-ink-soft uppercase'
       >
         {label}
-        {required && <span className='ml-1 text-red-400'>*</span>}
+        {required && <span className='ml-1 text-admin-red'>*</span>}
       </Label>
       <Input
         id={`add-song-${name}`}
@@ -540,7 +544,7 @@ function Field({
         required={required}
         value={value}
         onChange={onChange ? e => onChange(e.target.value) : undefined}
-        className='font-pt-mono border-white/10 bg-white/3 text-sm text-white placeholder:text-white/30 focus-visible:border-red-500/50 focus-visible:ring-red-500/20'
+        className='font-pt-mono border-2 border-admin-ink bg-admin-paper text-sm text-admin-ink placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-admin-red/20'
       />
     </div>
   )
