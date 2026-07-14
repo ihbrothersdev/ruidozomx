@@ -32,16 +32,16 @@ export function CassetteFilter({ options, selected }: { options: CassetteOption[
 
   return (
     <div className='flex items-center gap-2'>
-      <span className='font-pt-mono text-[10px] tracking-[0.25em] text-white/40 uppercase'>Cassette</span>
+      <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.25em] uppercase'>Cassette</span>
       <Select
         value={selected}
         onValueChange={onChange}
         disabled={pending}
       >
-        <SelectTrigger className='font-pt-mono h-8 w-[220px] border-white/10 bg-white/3 text-xs text-white'>
+        <SelectTrigger className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink h-8 w-[220px] border-2 text-xs'>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className='border-white/10 bg-neutral-900 text-white'>
+        <SelectContent className='border-admin-ink bg-admin-surface text-admin-ink border-2'>
           <SelectItem value='all'>Todos los cassettes</SelectItem>
           {options.map(o => (
             <SelectItem

@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { LabelTag, PageHeader } from '../_components/kit'
 import { EventsList, type EventItem } from './_components/EventsList'
 
 export const metadata = {
@@ -46,19 +47,17 @@ export default async function EventosPage() {
 
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
-      <header>
-        <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Agenda</p>
-        <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-          Eventos
-        </h1>
-        <p className='font-pt-mono mt-2 max-w-2xl text-sm text-white/40'>
-          Tocadas, convocatorias y fechas que publican las bandas. Solo lectura.
-        </p>
-        <p className='font-pt-mono mt-2 text-[11px] tracking-widest text-white/30 uppercase'>
-          {publishedCount} publicados
-          {cancelledCount > 0 ? ` · ${cancelledCount} cancelados` : ''}
-        </p>
-      </header>
+      <PageHeader
+        eyebrow='Agenda'
+        title='Eventos'
+        description='Tocadas, convocatorias y fechas que publican las bandas. Solo lectura.'
+        action={
+          <LabelTag tone='ink'>
+            {publishedCount} publicados
+            {cancelledCount > 0 ? ` · ${cancelledCount} cancelados` : ''}
+          </LabelTag>
+        }
+      />
 
       <EventsList
         events={events}

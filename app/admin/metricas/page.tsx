@@ -1,9 +1,7 @@
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
-import { Card, CardContent } from '@/app/components/ui/card'
-import { Separator } from '@/app/components/ui/separator'
 import { createServiceClient } from '@/lib/supabase/service'
 import { BarChart3, CalendarDays, Headphones, Heart, LineChart, Music2, Play, Send, Users } from 'lucide-react'
 import Link from 'next/link'
+import { EmptyState, Notice, PageHeader, Paper, SectionHeading, StatCard } from '../_components/kit'
 import { CassetteFilter, type CassetteOption } from './_components/CassetteFilter'
 import { CassettesTable } from './_components/CassettesTable'
 import { PlaysChart } from './_components/PlaysChart'
@@ -179,91 +177,90 @@ export default async function MetricasPage({
 
   return (
     <div className='mx-auto w-full max-w-7xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
-      <header className='flex flex-wrap items-end justify-between gap-4'>
-        <div>
-          <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Métricas de comunidad</p>
-          <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-            Métricas
-          </h1>
-          <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
-            Cómo conecta la gente con el contenido · <strong className='text-white'>{WINDOW_LABEL[since]}</strong>
+      <PageHeader
+        eyebrow='Trinchera · Métricas'
+        title='Métricas'
+        description={
+          <>
+            Cómo conecta la gente con el contenido · <strong className='text-admin-ink'>{WINDOW_LABEL[since]}</strong>
             {selectedCassetteName ? (
               <>
                 {' · '}
-                <strong className='text-white'>{selectedCassetteName}</strong>
+                <strong className='text-admin-ink'>{selectedCassetteName}</strong>
               </>
             ) : null}
             . Haz clic en una canción para ver el detalle de oyentes.
-          </p>
-          <p className='font-pt-mono mt-1 text-[11px] text-white/30'>
-            Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados
-            es global. Las conexiones entre perfiles viven en su propia pestaña.
-          </p>
-        </div>
-        <div className='flex flex-wrap items-center gap-3'>
-          <TimeFilter selected={since} />
-          <CassetteFilter
-            options={cassetteOptions}
-            selected={cassetteFilter ?? 'all'}
-          />
-        </div>
-      </header>
+            <span className='text-admin-ink-faint mt-2 block text-[11px]'>
+              Usuarios activos, conexiones y los tops respetan el filtro de días (no el de cassette). Eventos publicados
+              es global. Las conexiones entre perfiles viven en su propia pestaña.
+            </span>
+          </>
+        }
+        action={
+          <div className='flex flex-wrap items-center gap-3'>
+            <TimeFilter selected={since} />
+            <CassetteFilter
+              options={cassetteOptions}
+              selected={cassetteFilter ?? 'all'}
+            />
+          </div>
+        }
+      />
 
       {!hasAnyData && (
-        <Alert className='border-amber-400/20 bg-amber-500/5 text-amber-200'>
-          <AlertDescription className='font-pt-mono text-amber-200'>
-            {cassetteFilter || since !== 'all'
-              ? 'No hay eventos registrados con esos filtros. Prueba ampliando el rango o cambiando el cassette.'
-              : 'Aún no hay eventos registrados. Los plays, sesiones y clicks empezarán a aparecer aquí en cuanto la gente interactúe con el cassette activo.'}
-          </AlertDescription>
-        </Alert>
+        <Notice tone='gold'>
+          {cassetteFilter || since !== 'all'
+            ? 'No hay eventos registrados con esos filtros. Prueba ampliando el rango o cambiando el cassette.'
+            : 'Aún no hay eventos registrados. Los plays, sesiones y clicks empezarán a aparecer aquí en cuanto la gente interactúe con el cassette activo.'}
+        </Notice>
       )}
 
       <section className='space-y-3'>
-        <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>
-          Resumen del periodo
-        </h2>
+        <SectionHeading
+          icon={BarChart3}
+          title='Resumen del periodo'
+        />
         <div className='grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5'>
-          <BigStat
+          <StatCard
             label='Reproducciones'
             value={totalPlays.toLocaleString('es-MX')}
             sub={`${totalAuthPlays.toLocaleString('es-MX')} con sesión`}
             icon={Play}
-            accent='red'
+            tone='red'
           />
-          <BigStat
+          <StatCard
             label='Sesiones cassette'
             value={totalSessionsStarted.toLocaleString('es-MX')}
             sub='Inicios de player'
             icon={Headphones}
-            accent='blue'
+            tone='blue'
           />
-          <BigStat
+          <StatCard
             label='Conexiones'
             value={connections.total_interests.toLocaleString('es-MX')}
             sub={`+${connections.total_user_proposals} mensajes`}
             icon={Heart}
-            accent='pink'
+            tone='magenta'
           />
-          <BigStat
+          <StatCard
             label='Usuarios activos'
             value={activeStats.active_users.toLocaleString('es-MX')}
             sub={`${onlyProposers} solo sugieren · ${bothActive} ambos · ${onlyListeners} solo oyen`}
             icon={Users}
-            accent='emerald'
+            tone='olive'
           />
-          <BigStat
+          <StatCard
             label='Eventos publicados'
             value={publishedEvents.toLocaleString('es-MX')}
             sub='Global · ignora filtros'
             icon={CalendarDays}
-            accent='amber'
+            tone='gold'
           />
         </div>
       </section>
 
       <section>
-        <SectionHeader
+        <SectionHeading
           icon={LineChart}
           title='Evolución temporal'
           description='Plays, completes y sesiones por día. Cambia el rango arriba.'
@@ -271,10 +268,10 @@ export default async function MetricasPage({
         <PlaysChart data={daily} />
       </section>
 
-      <Separator className='bg-white/5' />
+      <div className='admin-sprocket' />
 
       <section>
-        <SectionHeader
+        <SectionHeading
           icon={Headphones}
           title='Sesiones por cassette'
           description='Cuánta gente arranca el player y cuántas terminan la sesión. Click en encabezado para ordenar.'
@@ -283,7 +280,7 @@ export default async function MetricasPage({
       </section>
 
       <section>
-        <SectionHeader
+        <SectionHeading
           icon={Music2}
           title='Top canciones'
           description='Click en una fila para ver oyentes y desglose de eventos. Filtra por lado o busca por banda/título.'
@@ -296,22 +293,21 @@ export default async function MetricasPage({
 
       <section className='grid gap-6 lg:grid-cols-2'>
         <div>
-          <SectionHeader
+          <SectionHeading
             icon={Headphones}
             title='Top fans (oyentes con sesión)'
             description='Quién escucha más, y qué canciones repiten.'
           />
           {topListeners.length === 0 ? (
-            <EmptyCard text='Aún no hay plays con sesión iniciada.' />
+            <EmptyState icon={Headphones}>Aún no hay plays con sesión iniciada.</EmptyState>
           ) : (
             <ul className='space-y-2'>
               {topListeners.map((l, i) => (
-                <Card
-                  key={l.user_id}
-                  className='gap-0 border-white/10 bg-white/3 py-0'
-                >
-                  <CardContent className='flex items-center gap-3 p-3'>
-                    <span className='font-baby-doll w-6 shrink-0 text-center text-2xl text-white/30'>{i + 1}</span>
+                <li key={l.user_id}>
+                  <Paper className='flex items-center gap-3 p-3'>
+                    <span className='font-baby-doll text-admin-ink-faint w-6 shrink-0 text-center text-2xl'>
+                      {i + 1}
+                    </span>
                     <ProfileAvatar
                       photo={l.photo_url}
                       name={l.display_name ?? 'Usuario'}
@@ -319,11 +315,11 @@ export default async function MetricasPage({
                     <div className='min-w-0 flex-1'>
                       <Link
                         href={l.slug ? `/perfil/${l.slug}` : '#'}
-                        className='font-pt-mono truncate text-xs font-bold text-white hover:text-red-300'
+                        className='font-pt-mono text-admin-ink hover:text-admin-red truncate text-xs font-bold'
                       >
                         {l.display_name ?? 'Usuario'}
                       </Link>
-                      <p className='font-pt-mono text-[10px] text-white/40'>
+                      <p className='font-pt-mono text-admin-ink-soft text-[10px]'>
                         {l.unique_songs} {l.unique_songs === 1 ? 'rola distinta' : 'rolas distintas'}
                         {l.most_played_count && l.most_played_count > 1
                           ? ` · la más escuchada, ${l.most_played_count} veces`
@@ -331,37 +327,36 @@ export default async function MetricasPage({
                       </p>
                     </div>
                     <div className='text-right'>
-                      <p className='font-baby-doll text-xl font-bold text-red-400'>
+                      <p className='font-baby-doll text-admin-red text-xl font-bold'>
                         {l.total_plays.toLocaleString('es-MX')}
                       </p>
-                      <p className='font-pt-mono text-[9px] tracking-widest text-white/30 uppercase'>plays</p>
+                      <p className='font-pt-mono text-admin-ink-faint text-[9px] tracking-widest uppercase'>plays</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Paper>
+                </li>
               ))}
             </ul>
           )}
         </div>
 
         <div>
-          <SectionHeader
+          <SectionHeading
             icon={Send}
             title='Top sugerencias'
             description='Quién manda más rolas y cuántas se aceptan.'
           />
           {topProposers.length === 0 ? (
-            <EmptyCard text='Aún no hay propuestas registradas.' />
+            <EmptyState icon={Send}>Aún no hay propuestas registradas.</EmptyState>
           ) : (
             <ul className='space-y-2'>
               {topProposers.map((p, i) => {
                 const reviewed = Number(p.accepted) + Number(p.rejected)
                 return (
-                  <Card
-                    key={p.user_id}
-                    className='gap-0 border-white/10 bg-white/3 py-0'
-                  >
-                    <CardContent className='flex items-center gap-3 p-3'>
-                      <span className='font-baby-doll w-6 shrink-0 text-center text-2xl text-white/30'>{i + 1}</span>
+                  <li key={p.user_id}>
+                    <Paper className='flex items-center gap-3 p-3'>
+                      <span className='font-baby-doll text-admin-ink-faint w-6 shrink-0 text-center text-2xl'>
+                        {i + 1}
+                      </span>
                       <ProfileAvatar
                         photo={p.photo_url}
                         name={p.display_name ?? 'Usuario'}
@@ -369,26 +364,26 @@ export default async function MetricasPage({
                       <div className='min-w-0 flex-1'>
                         <Link
                           href={p.slug ? `/perfil/${p.slug}` : '#'}
-                          className='font-pt-mono truncate text-xs font-bold text-white hover:text-red-300'
+                          className='font-pt-mono text-admin-ink hover:text-admin-red truncate text-xs font-bold'
                         >
                           {p.display_name ?? 'Usuario'}
                         </Link>
-                        <p className='font-pt-mono text-[10px] text-white/40'>
-                          <span className='text-emerald-400'>{p.accepted} ✓</span>
+                        <p className='font-pt-mono text-admin-ink-soft text-[10px]'>
+                          <span className='text-admin-olive'>{p.accepted} ✓</span>
                           {' · '}
-                          <span className='text-white/30'>{p.rejected} ✗</span>
+                          <span className='text-admin-ink-faint'>{p.rejected} ✗</span>
                           {' · '}
-                          <span className='text-amber-400'>{p.pending} ⏳</span>
+                          <span className='text-admin-gold'>{p.pending} ⏳</span>
                         </p>
                       </div>
                       <div className='text-right'>
-                        <p className='font-baby-doll text-xl font-bold text-emerald-400'>{p.total_proposals}</p>
-                        <p className='font-pt-mono text-[9px] tracking-widest text-white/30 uppercase'>
+                        <p className='font-baby-doll text-admin-olive text-xl font-bold'>{p.total_proposals}</p>
+                        <p className='font-pt-mono text-admin-ink-faint text-[9px] tracking-widest uppercase'>
                           {reviewed > 0 ? `${Number(p.acceptance_rate)}% de ${reviewed} rev.` : 'Sin revisar'}
                         </p>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </Paper>
+                  </li>
                 )
               })}
             </ul>
@@ -399,80 +394,6 @@ export default async function MetricasPage({
   )
 }
 
-function BigStat({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  accent
-}: {
-  label: string
-  value: string
-  sub: string
-  icon: typeof BarChart3
-  accent: 'red' | 'blue' | 'pink' | 'emerald' | 'amber'
-}) {
-  const a = {
-    red: { card: 'border-red-500/20 bg-red-500/[0.06] hover:bg-red-500/10', badge: 'bg-red-500/15 text-red-300' },
-    blue: { card: 'border-blue-500/20 bg-blue-500/[0.06] hover:bg-blue-500/10', badge: 'bg-blue-500/15 text-blue-300' },
-    pink: { card: 'border-pink-500/20 bg-pink-500/[0.06] hover:bg-pink-500/10', badge: 'bg-pink-500/15 text-pink-300' },
-    emerald: {
-      card: 'border-emerald-400/20 bg-emerald-500/[0.06] hover:bg-emerald-500/10',
-      badge: 'bg-emerald-500/15 text-emerald-300'
-    },
-    amber: {
-      card: 'border-amber-400/20 bg-amber-500/[0.06] hover:bg-amber-500/10',
-      badge: 'bg-amber-500/15 text-amber-300'
-    }
-  }[accent]
-  return (
-    <Card className={`h-full gap-0 border py-0 transition-colors ${a.card}`}>
-      <CardContent className='flex h-full flex-col p-5'>
-        <div className='flex items-start justify-between gap-2'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>{label}</p>
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.badge}`}>
-            <Icon className='h-5 w-5' />
-          </div>
-        </div>
-        <p className='font-baby-doll mt-3 text-4xl leading-none font-bold tracking-wider text-white uppercase'>
-          {value}
-        </p>
-        <p className='font-pt-mono mt-auto pt-2 text-[11px] text-white/40'>{sub}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function SectionHeader({
-  icon: Icon,
-  title,
-  description
-}: {
-  icon: typeof BarChart3
-  title: string
-  description: string
-}) {
-  return (
-    <div className='mb-3 flex items-start gap-3'>
-      <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/60'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <div>
-        <h2 className='font-pt-mono text-sm font-bold tracking-wider text-white uppercase'>{title}</h2>
-        <p className='font-pt-mono text-[11px] text-white/40'>{description}</p>
-      </div>
-    </div>
-  )
-}
-
-function EmptyCard({ text }: { text: string }) {
-  return (
-    <Card className='border-dashed border-white/10 bg-transparent py-10'>
-      <CardContent className='font-pt-mono text-center text-xs text-white/30'>{text}</CardContent>
-    </Card>
-  )
-}
-
 function ProfileAvatar({ photo, name }: { photo: string | null; name: string }) {
   if (photo) {
     return (
@@ -480,12 +401,12 @@ function ProfileAvatar({ photo, name }: { photo: string | null; name: string }) 
       <img
         src={photo}
         alt={name}
-        className='h-9 w-9 shrink-0 rounded-full object-cover'
+        className='border-admin-ink h-9 w-9 shrink-0 rounded-full border-2 object-cover'
       />
     )
   }
   return (
-    <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs font-bold text-white/50'>
+    <div className='border-admin-ink bg-admin-surface-2 text-admin-ink-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold'>
       {name.charAt(0).toUpperCase()}
     </div>
   )

@@ -1,8 +1,5 @@
 'use client'
 
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import { Card, CardContent } from '@/app/components/ui/card'
 import { Input } from '@/app/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
 import {
@@ -17,6 +14,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { AdminButton } from '../../_components/kit'
 import type { SinceWindow, SongMetricRow } from '../_lib/aggregations'
 import { SongDetailDialog } from './SongDetailDialog'
 
@@ -122,57 +120,57 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
   }
 
   return (
-    <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
-      <CardContent className='space-y-3 p-3'>
-        <div className='flex flex-wrap items-center gap-2'>
-          <div className='relative min-w-[220px] flex-1'>
-            <Search className='pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-white/30' />
-            <Input
-              value={search}
-              onChange={e => {
-                setSearch(e.target.value)
-                setPage(0)
-              }}
-              placeholder='Buscar artista, título o cassette…'
-              className='font-pt-mono h-8 border-white/10 bg-white/3 pl-9 text-xs text-white placeholder:text-white/30'
-            />
-          </div>
-
-          <div className='flex items-center gap-1 rounded-md border border-white/10 bg-white/3 p-0.5'>
-            {(['all', 'A', 'B'] as const).map(s => (
-              <button
-                key={s}
-                type='button'
-                onClick={() => {
-                  setSide(s)
-                  setPage(0)
-                }}
-                className={`font-pt-mono cursor-pointer rounded px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
-                  side === s ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
-                }`}
-              >
-                {s === 'all' ? 'A+B' : `Lado ${s}`}
-              </button>
-            ))}
-          </div>
-
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={exportCsv}
-            disabled={filtered.length === 0}
-            className='font-pt-mono h-8 text-[10px] tracking-widest text-white/60 uppercase hover:bg-white/5 hover:text-white'
-          >
-            <Download className='h-3 w-3' />
-            CSV ({filtered.length})
-          </Button>
+    <div className='admin-card space-y-3 overflow-hidden p-3'>
+      <div className='flex flex-wrap items-center gap-2'>
+        <div className='relative min-w-[220px] flex-1'>
+          <Search className='text-admin-ink-faint pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2' />
+          <Input
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value)
+              setPage(0)
+            }}
+            placeholder='Buscar artista, título o cassette…'
+            className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink placeholder:text-admin-ink-faint h-8 border-2 pl-9 text-xs'
+          />
         </div>
 
-        <div className='-mx-3 overflow-x-auto'>
-          <Table>
-            <TableHeader>
-              <TableRow className='border-white/5 bg-white/3 hover:bg-white/3'>
+        <div className='flex items-center gap-1'>
+          {(['all', 'A', 'B'] as const).map(s => (
+            <button
+              key={s}
+              type='button'
+              onClick={() => {
+                setSide(s)
+                setPage(0)
+              }}
+              className={`font-pt-mono border-admin-ink cursor-pointer border-2 px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase transition-colors ${
+                side === s
+                  ? 'bg-admin-red text-admin-surface admin-hard-sm'
+                  : 'bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'
+              }`}
+            >
+              {s === 'all' ? 'A+B' : `Lado ${s}`}
+            </button>
+          ))}
+        </div>
+
+        <AdminButton
+          type='button'
+          variant='ghost'
+          size='sm'
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+        >
+          <Download className='h-3 w-3' />
+          CSV ({filtered.length})
+        </AdminButton>
+      </div>
+
+      <div className='-mx-3 overflow-x-auto'>
+        <Table>
+          <TableHeader>
+            <TableRow className='border-admin-ink hover:bg-admin-paper-deep bg-admin-paper-deep border-b-2'>
                 <SortableTh
                   active={sort.key === 'artist'}
                   dir={sort.dir}
@@ -242,7 +240,7 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className='font-pt-mono py-8 text-center text-xs text-white/30'
+                    className='font-pt-mono text-admin-ink-faint py-8 text-center text-xs'
                   >
                     Sin coincidencias.
                   </TableCell>
@@ -252,26 +250,23 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
                   <TableRow
                     key={s.song_id}
                     onClick={() => setDetailSongId(s.song_id)}
-                    className='cursor-pointer border-white/5 hover:bg-white/5'
+                    className='border-admin-ink/15 hover:bg-admin-surface-2/60 cursor-pointer border-b'
                   >
                     <Td>
                       <div className='flex items-center gap-2'>
                         <span
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${
-                            s.side === 'A' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
+                          className={`border-admin-ink inline-flex h-5 w-5 items-center justify-center border text-[10px] font-bold ${
+                            s.side === 'A' ? 'bg-admin-red text-admin-surface' : 'bg-admin-blue text-admin-surface'
                           }`}
                         >
                           {s.side}
                         </span>
-                        <Badge
-                          variant='secondary'
-                          className='font-pt-mono bg-white/5 text-[9px] tracking-widest text-white/40 uppercase'
-                        >
+                        <span className='font-pt-mono text-admin-ink-soft border-admin-ink/15 border px-1 text-[9px] tracking-widest uppercase'>
                           #{s.track_position}
-                        </Badge>
+                        </span>
                         <div className='min-w-0'>
-                          <p className='truncate font-bold text-white'>{s.artist}</p>
-                          <p className='truncate text-[10px] text-white/40'>{s.title}</p>
+                          <p className='text-admin-ink truncate font-bold'>{s.artist}</p>
+                          <p className='text-admin-ink-faint truncate text-[10px]'>{s.title}</p>
                         </div>
                       </div>
                     </Td>
@@ -279,7 +274,7 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
                       <Link
                         href={`/admin/cassettes/${s.cassette_id}`}
                         onClick={e => e.stopPropagation()}
-                        className='inline-flex items-center gap-1 text-white/60 hover:text-white'
+                        className='text-admin-ink-soft hover:text-admin-ink inline-flex items-center gap-1'
                       >
                         {s.cassette_name}
                         <ExternalLink className='h-3 w-3' />
@@ -294,7 +289,7 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
                     <Td align='right'>{s.plays_authenticated.toLocaleString('es-MX')}</Td>
                     <Td align='right'>{s.unique_listeners.toLocaleString('es-MX')}</Td>
                     <Td align='right'>
-                      {Number(s.completion_rate)}%<span className='ml-1 text-white/30'>({s.completes})</span>
+                      {Number(s.completion_rate)}%<span className='text-admin-ink-faint ml-1'>({s.completes})</span>
                     </Td>
                     <Td align='right'>{s.profile_clicks.toLocaleString('es-MX')}</Td>
                     <Td align='right'>{s.interest_clicks.toLocaleString('es-MX')}</Td>
@@ -306,8 +301,8 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
         </div>
 
         {filtered.length > PAGE_SIZE && (
-          <div className='flex items-center justify-between border-t border-white/5 pt-2'>
-            <span className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
+          <div className='border-admin-ink/15 flex items-center justify-between border-t pt-2'>
+            <span className='font-pt-mono text-admin-ink-faint text-[10px] tracking-widest uppercase'>
               {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
             </span>
             <div className='flex items-center gap-1'>
@@ -317,7 +312,7 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
               >
                 <ChevronLeft className='h-3.5 w-3.5' />
               </PagerButton>
-              <span className='font-pt-mono px-1 text-[10px] tracking-widest text-white/40 uppercase'>
+              <span className='font-pt-mono text-admin-ink-soft px-1 text-[10px] tracking-widest uppercase'>
                 {safePage + 1}/{totalPages}
               </span>
               <PagerButton
@@ -329,7 +324,6 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
             </div>
           </div>
         )}
-      </CardContent>
 
       <SongDetailDialog
         songId={detailSongId}
@@ -339,7 +333,7 @@ export function SongsTable({ rows, since }: { rows: SongMetricRow[]; since: Sinc
           if (!open) setDetailSongId(null)
         }}
       />
-    </Card>
+    </div>
   )
 }
 
@@ -359,8 +353,8 @@ function SortableTh({
   const Icon = !active ? ArrowUpDown : dir === 'desc' ? ArrowDown : ArrowUp
   return (
     <TableHead
-      className={`font-pt-mono cursor-pointer text-[10px] tracking-widest uppercase select-none hover:bg-white/3 ${
-        active ? 'text-white' : 'text-white/50'
+      className={`font-pt-mono hover:bg-admin-paper-deep cursor-pointer px-4 py-2 text-[10px] font-bold tracking-[0.18em] uppercase select-none ${
+        active ? 'text-admin-red' : 'text-admin-ink'
       } ${align === 'right' ? 'text-right' : 'text-left'}`}
       onClick={onClick}
     >
@@ -375,8 +369,8 @@ function SortableTh({
 function Td({ children, align, bold }: { children: React.ReactNode; align?: 'right'; bold?: boolean }) {
   return (
     <TableCell
-      className={`font-pt-mono text-xs text-white/80 ${align === 'right' ? 'text-right' : 'text-left'} ${
-        bold ? 'font-bold text-white' : ''
+      className={`font-pt-mono text-admin-ink text-xs ${align === 'right' ? 'text-right tabular-nums' : 'text-left'} ${
+        bold ? 'font-bold' : ''
       }`}
     >
       {children}
@@ -398,7 +392,7 @@ function PagerButton({
       type='button'
       disabled={disabled}
       onClick={onClick}
-      className='flex h-7 w-7 cursor-pointer items-center justify-center rounded border border-white/10 bg-white/3 text-white/60 transition-colors hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white/3'
+      className='border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep flex h-7 w-7 cursor-pointer items-center justify-center border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-30'
     >
       {children}
     </button>

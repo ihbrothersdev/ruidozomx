@@ -1,8 +1,7 @@
 'use client'
 
 import { rejectProposal } from '@/app/admin/actions'
-import { Alert, AlertDescription } from '@/app/components/ui/alert'
-import { Button } from '@/app/components/ui/button'
+import { AdminButton, Notice } from '@/app/admin/_components/kit'
 import {
   Dialog,
   DialogContent,
@@ -38,29 +37,30 @@ export function RejectModal({
       open
       onOpenChange={open => !open && onClose()}
     >
-      <DialogContent className='border-red-500/20 bg-neutral-900 text-white sm:max-w-md'>
+      <DialogContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink admin-hard sm:max-w-md'>
         <DialogHeader>
           <div className='flex items-start gap-4'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-400'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-admin-ink bg-admin-red/12 text-admin-red'>
               <AlertTriangle className='h-5 w-5' />
             </div>
             <div className='min-w-0 flex-1 text-left'>
-              <DialogTitle className='font-baby-doll text-xl tracking-wider text-white uppercase'>
+              <DialogTitle className='font-baby-doll text-xl tracking-wider text-admin-ink uppercase'>
                 Rechazar propuesta
               </DialogTitle>
-              <DialogDescription className='font-pt-mono mt-1 text-xs text-white/50'>
-                <span className='font-bold text-white/80'>{proposalArtist}</span> — {proposalTitle}
+              <DialogDescription className='font-pt-mono mt-1 text-xs text-admin-ink-soft'>
+                <span className='font-bold text-admin-ink'>{proposalArtist}</span> — {proposalTitle}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {wasSelected && (
-          <Alert className='border-amber-500/20 bg-amber-500/10 text-amber-300'>
-            <AlertDescription className='font-pt-mono text-[11px] text-amber-300'>
-              Esta propuesta ya estaba en un cassette. Al rechazarla también será removida del cassette.
-            </AlertDescription>
-          </Alert>
+          <Notice
+            tone='gold'
+            icon={AlertTriangle}
+          >
+            Esta propuesta ya estaba en un cassette. Al rechazarla también será removida del cassette.
+          </Notice>
         )}
 
         <form
@@ -78,21 +78,20 @@ export function RejectModal({
             value={listing}
           />
           <DialogFooter className='mt-2 gap-2'>
-            <Button
+            <AdminButton
               type='button'
               variant='ghost'
               onClick={onClose}
-              className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
             >
               Cancelar
-            </Button>
-            <Button
+            </AdminButton>
+            <AdminButton
               type='submit'
+              variant='primary'
               disabled={submitting}
-              className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500'
             >
               {submitting ? 'Rechazando…' : 'Sí, rechazar'}
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,15 +1,12 @@
-import { Alert, AlertDescription, AlertTitle } from '@/app/components/ui/alert'
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/app/components/ui/card'
-import { Separator } from '@/app/components/ui/separator'
 import { createClient } from '@/lib/supabase/server'
 import type { ProposalStatus } from '@/lib/types'
-import { formatLongDateMX, formatShortDateMX } from '@/lib/utils'
+import { cn, formatLongDateMX, formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Music2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { AdminButton, EmptyState, LabelTag, Notice, PageHeader, Paper, Stamp } from '../_components/kit'
+import type { Tone } from '../_components/kit'
 import { FilterTabs } from './_components/FilterTabs'
 import { InlinePlayer } from './_components/InlinePlayer'
 import { PageJump } from './_components/PageJump'
@@ -34,11 +31,11 @@ interface SearchParams {
 
 const PAGE_SIZE = 10
 
-const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
-  pending: { label: 'Pendiente', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
-  in_review: { label: 'En revisión', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
-  accepted: { label: 'Aceptada', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
-  rejected: { label: 'Rechazada', cls: 'bg-white/10 text-white/50 border-white/15' }
+const STATUS_STAMP: Record<ProposalStatus, { label: string; tone: Tone }> = {
+  pending: { label: 'Pendiente', tone: 'gold' },
+  in_review: { label: 'En revisión', tone: 'blue' },
+  accepted: { label: 'Aceptada', tone: 'olive' },
+  rejected: { label: 'Rechazada', tone: 'ink' }
 }
 
 export default async function AdminProposalsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -132,179 +129,138 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-8 sm:py-12'>
-      <header>
-        <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Curaduría</p>
-        <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-          Propuestas
-        </h1>
-      </header>
+      <PageHeader
+        eyebrow='Curaduría'
+        title='Propuestas'
+      />
 
       {target ? (
-        <Card
-          className={`gap-2 border py-5 ${
-            targetState === 'active' ? 'border-red-500/30 bg-red-500/10' : 'border-amber-400/30 bg-amber-500/10'
-          }`}
+        <Paper
+          tone={targetState === 'active' ? 'red' : 'gold'}
+          className='flex flex-wrap items-center justify-between gap-3 p-5'
         >
-          <CardContent className='flex flex-wrap items-center justify-between gap-3'>
-            <div className='min-w-0'>
-              <p className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>
-                Aceptando para
-              </p>
-              <p className='font-baby-doll mt-1 flex items-center gap-2 truncate text-2xl font-bold text-white uppercase'>
-                {target.name}
-                <Badge
-                  className={`tracking-widest ${
-                    targetState === 'active' ? 'bg-red-500/30 text-red-200' : 'bg-amber-500/30 text-amber-200'
-                  }`}
-                >
-                  {targetState === 'active' ? 'ACTIVO · SUENA AHORA' : 'SIGUIENTE'}
-                </Badge>
-              </p>
-              <p className='font-pt-mono mt-2 text-xs text-white/50'>
-                <strong className='text-white'>{occupied.length}</strong>/{Math.max(26, occupied.length)} slots ocupados
-              </p>
-            </div>
+          <div className='min-w-0'>
+            <p className='font-pt-mono text-admin-ink-faint text-[10px] font-bold tracking-[0.3em] uppercase'>
+              Aceptando para
+            </p>
+            <p className='font-baby-doll text-admin-ink mt-1 flex items-center gap-2 truncate text-2xl font-bold uppercase'>
+              {target.name}
+              <Stamp tone={targetState === 'active' ? 'red' : 'gold'}>
+                {targetState === 'active' ? 'ACTIVO · SUENA AHORA' : 'SIGUIENTE'}
+              </Stamp>
+            </p>
+            <p className='font-pt-mono text-admin-ink-soft mt-2 text-xs'>
+              <strong className='text-admin-ink'>{occupied.length}</strong>/{Math.max(26, occupied.length)} slots
+              ocupados
+            </p>
+          </div>
 
-            {targetState === 'active' && (
-              <Alert className='max-w-md border-amber-400/30 bg-black/30 text-amber-300'>
-                <AlertCircle />
-                <AlertTitle className='font-pt-mono text-[11px] tracking-wide text-amber-200'>
-                  Cassette activo
-                </AlertTitle>
-                <AlertDescription className='font-pt-mono text-[11px] text-amber-300/80'>
-                  <p>
-                    Estás metiendo rolas al que está sonando. Crea uno nuevo en{' '}
-                    <Link
-                      href='/admin/cassettes'
-                      className='underline hover:text-amber-200'
-                    >
-                      Cassettes
-                    </Link>{' '}
-                    y márcalo como siguiente.
-                  </p>
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+          {targetState === 'active' && (
+            <Notice
+              tone='gold'
+              icon={AlertCircle}
+              title='Cassette activo'
+              className='max-w-md'
+            >
+              <p>
+                Estás metiendo rolas al que está sonando. Crea uno nuevo en{' '}
+                <Link
+                  href='/admin/cassettes'
+                  className='text-admin-gold underline hover:text-admin-ink'
+                >
+                  Cassettes
+                </Link>{' '}
+                y márcalo como siguiente.
+              </p>
+            </Notice>
+          )}
+        </Paper>
       ) : (
-        <Alert className='border-amber-400/30 bg-amber-500/10 text-amber-200'>
-          <AlertCircle />
-          <AlertTitle className='font-pt-mono text-amber-200'>No hay cassette destino</AlertTitle>
-          <AlertDescription className='font-pt-mono mt-2 flex items-center gap-3 text-amber-200/80'>
-            <span>Crea uno primero para empezar a aceptar propuestas.</span>
-            <Button
+        <Notice
+          tone='gold'
+          icon={AlertCircle}
+          title='No hay cassette destino'
+          action={
+            <AdminButton
               asChild
+              variant='solid'
               size='sm'
-              className='bg-amber-500 text-black hover:bg-amber-400'
             >
               <Link href='/admin/cassettes'>
                 <Music2 className='h-3.5 w-3.5' />
                 Ir a Cassettes
               </Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
+            </AdminButton>
+          }
+        >
+          Crea uno primero para empezar a aceptar propuestas.
+        </Notice>
       )}
 
       <FilterTabs counts={counts} />
       <SearchAndDateFilters />
 
       {!proposals || proposals.length === 0 ? (
-        <Card className='border-dashed border-white/10 bg-transparent py-16'>
-          <CardContent className='font-pt-mono text-center text-white/30'>
-            {filter === 'pending'
-              ? 'No hay propuestas pendientes. ✓'
-              : filter === 'accepted'
-                ? 'Aún no hay propuestas aceptadas.'
-                : filter === 'rejected'
-                  ? 'Aún no hay propuestas rechazadas.'
-                  : 'No hay propuestas todavía.'}
-          </CardContent>
-        </Card>
+        <EmptyState>
+          {filter === 'pending'
+            ? 'No hay propuestas pendientes. ✓'
+            : filter === 'accepted'
+              ? 'Aún no hay propuestas aceptadas.'
+              : filter === 'rejected'
+                ? 'Aún no hay propuestas rechazadas.'
+                : 'No hay propuestas todavía.'}
+        </EmptyState>
       ) : (
         <div className='space-y-3'>
           {proposals.map(p => {
             const proposer = p.profiles as { display_name?: string; slug?: string; photo_url?: string } | null
-            const status = STATUS_BADGE[p.status as ProposalStatus] ?? STATUS_BADGE.pending
+            const status = STATUS_STAMP[p.status as ProposalStatus] ?? STATUS_STAMP.pending
             return (
-              <Card
+              <Paper
                 key={p.id}
-                className={`gap-0 overflow-hidden border bg-white/4 py-0 ${
-                  p.status === 'rejected' ? 'border-white/5 opacity-60' : 'border-white/10'
-                }`}
+                className={cn('overflow-hidden p-0', p.status === 'rejected' && 'opacity-60')}
               >
-                <CardContent className='space-y-4 p-5 sm:p-6'>
+                <div className='space-y-4 p-5 sm:p-6'>
                   <div className='flex items-start justify-between gap-4'>
                     <div className='min-w-0 flex-1'>
                       <div className='flex flex-wrap items-center gap-2'>
-                        <h3 className='font-pt-mono text-base font-bold text-white'>
-                          {p.title || p.artist || <span className='text-white/40 italic'>Sin título</span>}
+                        <h3 className='font-pt-mono text-admin-ink text-base font-bold'>
+                          {p.title || p.artist || <span className='text-admin-ink-faint italic'>Sin título</span>}
                         </h3>
-                        <Badge
-                          variant='outline'
-                          className={`font-pt-mono tracking-widest uppercase ${status.cls}`}
-                        >
-                          {status.label}
-                        </Badge>
+                        <Stamp tone={status.tone}>{status.label}</Stamp>
                       </div>
 
                       <div className='mt-3 flex flex-wrap items-center gap-2'>
-                        {p.genre && (
-                          <Badge
-                            variant='secondary'
-                            className='font-pt-mono bg-white/10 text-[11px] text-white/50'
-                          >
-                            {p.genre}
-                          </Badge>
-                        )}
+                        {p.genre && <LabelTag>{p.genre}</LabelTag>}
                         {p.external_link && (
-                          <Button
-                            asChild
-                            variant='link'
-                            size='xs'
-                            className='font-pt-mono h-auto p-0 text-[11px] font-bold text-red-400 hover:text-red-300'
+                          <a
+                            href={p.external_link}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='font-pt-mono text-admin-red hover:text-admin-ink inline-flex items-center gap-1 text-[11px] font-bold transition-colors'
                           >
-                            <a
-                              href={p.external_link}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              Link público <ExternalLink className='h-3 w-3' />
-                            </a>
-                          </Button>
+                            Link público <ExternalLink className='h-3 w-3' />
+                          </a>
                         )}
                         {p.download_link && (
-                          <Button
-                            asChild
-                            variant='link'
-                            size='xs'
-                            className='font-pt-mono h-auto p-0 text-[11px] font-bold text-red-400 hover:text-red-300'
+                          <a
+                            href={p.download_link}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='font-pt-mono text-admin-red hover:text-admin-ink inline-flex items-center gap-1 text-[11px] font-bold transition-colors'
                           >
-                            <a
-                              href={p.download_link}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              Link de descarga <ExternalLink className='h-3 w-3' />
-                            </a>
-                          </Button>
+                            Link de descarga <ExternalLink className='h-3 w-3' />
+                          </a>
                         )}
                         {p.audio_file_path && (
-                          <Button
-                            asChild
-                            variant='link'
-                            size='xs'
-                            className='font-pt-mono h-auto p-0 text-[11px] font-bold text-red-400 hover:text-red-300'
+                          <a
+                            href={p.audio_file_path}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='font-pt-mono text-admin-red hover:text-admin-ink inline-flex items-center gap-1 text-[11px] font-bold transition-colors'
                           >
-                            <a
-                              href={p.audio_file_path}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              Descargar <ExternalLink className='h-3 w-3' />
-                            </a>
-                          </Button>
+                            Descargar <ExternalLink className='h-3 w-3' />
+                          </a>
                         )}
                       </div>
                     </div>
@@ -324,13 +280,13 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                           )}
                           <Link
                             href={`/perfil/${proposer.slug ?? ''}`}
-                            className='font-pt-mono text-xs font-bold text-white/60 transition-colors hover:text-white'
+                            className='font-pt-mono text-admin-ink-soft hover:text-admin-ink text-xs font-bold transition-colors'
                           >
                             {proposer.display_name ?? 'Usuario'}
                           </Link>
                         </div>
                       )}
-                      <p className='font-pt-mono text-[10px] text-white/20'>{formatLongDateMX(p.created_at)}</p>
+                      <p className='font-pt-mono text-admin-ink-faint text-[10px]'>{formatLongDateMX(p.created_at)}</p>
                     </div>
                   </div>
 
@@ -346,16 +302,16 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                   </div>
 
                   {p.comment && (
-                    <blockquote className='font-pt-mono border-l-2 border-white/10 pl-3 text-xs text-white/40 italic'>
+                    <blockquote className='font-pt-mono border-admin-ink/15 text-admin-ink-soft border-l-2 pl-3 text-xs italic'>
                       &ldquo;{p.comment}&rdquo;
                     </blockquote>
                   )}
-                </CardContent>
+                </div>
 
-                <Separator className='bg-white/5' />
+                <div className='bg-admin-ink/15 h-px' />
 
-                <CardFooter className='flex flex-col gap-3 bg-white/2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
-                  <p className='font-pt-mono text-[10px] text-white/30'>
+                <div className='bg-admin-surface-2/60 flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
+                  <p className='font-pt-mono text-admin-ink-faint text-[10px]'>
                     {p.reviewed_at ? `Revisada el ${formatShortDateMX(p.reviewed_at)}` : 'Pendiente de revisión'}
                   </p>
                   <ProposalActions
@@ -367,16 +323,16 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
                     occupied={occupied}
                     listing={listing}
                   />
-                </CardFooter>
-              </Card>
+                </div>
+              </Paper>
             )
           })}
         </div>
       )}
 
       {totalPages > 1 && (
-        <nav className='flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4'>
-          <p className='font-pt-mono text-[10px] tracking-widest text-white/30 uppercase'>
+        <nav className='border-admin-ink/15 flex flex-wrap items-center justify-between gap-3 border-t pt-4'>
+          <p className='font-pt-mono text-admin-ink-faint text-[10px] tracking-widest uppercase'>
             {fromIdx + 1}–{Math.min(pageNum * PAGE_SIZE, totalCount)} de {totalCount}
           </p>
           <div className='flex flex-wrap items-center gap-1.5'>
@@ -441,12 +397,12 @@ function PagerLink({
   children: React.ReactNode
 }) {
   const base =
-    'font-pt-mono flex h-8 min-w-8 items-center justify-center rounded border px-2 text-[11px] transition-colors'
+    'font-pt-mono flex h-8 min-w-8 items-center justify-center border-2 border-admin-ink px-2 text-[11px] font-bold uppercase tracking-wide transition-colors'
   if (active) {
     return (
       <span
         aria-current='page'
-        className={`${base} border-red-500/40 bg-red-500/20 font-bold text-white`}
+        className={`${base} admin-hard-sm bg-admin-red text-admin-surface`}
       >
         {children}
       </span>
@@ -454,15 +410,13 @@ function PagerLink({
   }
   if (disabled) {
     return (
-      <span className={`${base} cursor-not-allowed border-white/10 bg-white/3 text-white/30 opacity-50`}>
-        {children}
-      </span>
+      <span className={`${base} bg-admin-surface text-admin-ink-faint cursor-not-allowed opacity-50`}>{children}</span>
     )
   }
   return (
     <Link
       href={href}
-      className={`${base} border-white/10 bg-white/3 text-white/60 hover:bg-white/8 hover:text-white`}
+      className={`${base} bg-admin-surface text-admin-ink hover:bg-admin-paper-deep`}
     >
       {children}
     </Link>

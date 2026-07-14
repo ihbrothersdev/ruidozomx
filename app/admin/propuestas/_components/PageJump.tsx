@@ -27,7 +27,7 @@ export function PageJump({ totalPages, baseQuery }: { totalPages: number; baseQu
         onClick={() => setEditing(true)}
         aria-label='Ir a una página'
         title='Ir a una página'
-        className='font-pt-mono flex h-8 w-6 items-center justify-center text-[11px] text-white/25 transition-colors hover:text-white/70'
+        className='font-pt-mono text-admin-ink-faint hover:text-admin-ink flex h-8 w-6 items-center justify-center text-[11px] transition-colors'
       >
         …
       </button>
@@ -55,7 +55,7 @@ export function PageJump({ totalPages, baseQuery }: { totalPages: number; baseQu
         setValue('')
       }}
       placeholder='#'
-      className='font-pt-mono h-8 w-12 [appearance:textfield] rounded border border-red-500/40 bg-white/5 text-center text-[11px] text-white outline-none [&::-webkit-inner-spin-button]:appearance-none'
+      className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink h-8 w-12 [appearance:textfield] border-2 text-center text-[11px] outline-none [&::-webkit-inner-spin-button]:appearance-none'
     />
   )
 }

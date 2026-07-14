@@ -1,12 +1,11 @@
 'use client'
 
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
-import { Card, CardContent } from '@/app/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
 import { ArrowDown, ArrowUp, ArrowUpDown, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { AdminButton, Stamp } from '../../_components/kit'
+import type { Tone } from '../../_components/kit'
 import type { CassetteMetricRow } from '../_lib/aggregations'
 
 export type { CassetteMetricRow }
@@ -74,26 +73,24 @@ export function CassettesTable({ rows }: { rows: CassetteMetricRow[] }) {
   }
 
   return (
-    <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
-      <CardContent className='space-y-3 p-3'>
-        <div className='flex items-center justify-end'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={exportCsv}
-            disabled={rows.length === 0}
-            className='font-pt-mono h-8 text-[10px] tracking-widest text-white/60 uppercase hover:bg-white/5 hover:text-white'
-          >
-            <Download className='h-3 w-3' />
-            CSV ({rows.length})
-          </Button>
-        </div>
+    <div className='admin-card space-y-3 overflow-hidden p-3'>
+      <div className='flex items-center justify-end'>
+        <AdminButton
+          type='button'
+          variant='ghost'
+          size='sm'
+          onClick={exportCsv}
+          disabled={rows.length === 0}
+        >
+          <Download className='h-3 w-3' />
+          CSV ({rows.length})
+        </AdminButton>
+      </div>
 
-        <div className='-mx-3 overflow-x-auto'>
-          <Table>
-            <TableHeader>
-              <TableRow className='border-white/5 bg-white/3 hover:bg-white/3'>
+      <div className='-mx-3 overflow-x-auto'>
+        <Table>
+          <TableHeader>
+            <TableRow className='border-admin-ink hover:bg-admin-paper-deep bg-admin-paper-deep border-b-2'>
                 <SortableTh
                   active={sort.key === 'cassette_name'}
                   dir={sort.dir}
@@ -156,7 +153,7 @@ export function CassettesTable({ rows }: { rows: CassetteMetricRow[] }) {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className='font-pt-mono py-8 text-center text-xs text-white/30'
+                    className='font-pt-mono text-admin-ink-faint py-8 text-center text-xs'
                   >
                     No hay cassettes registrados.
                   </TableCell>
@@ -165,17 +162,17 @@ export function CassettesTable({ rows }: { rows: CassetteMetricRow[] }) {
                 sorted.map(c => (
                   <TableRow
                     key={c.cassette_id}
-                    className='border-white/5 hover:bg-white/2'
+                    className='border-admin-ink/15 hover:bg-admin-surface-2/60 border-b'
                   >
                     <Td>
                       <Link
                         href={`/admin/cassettes/${c.cassette_id}`}
-                        className='font-pt-mono inline-flex items-center gap-2 text-xs font-bold text-white hover:text-red-300'
+                        className='font-pt-mono text-admin-ink hover:text-admin-red inline-flex items-center gap-2 text-xs font-bold'
                       >
                         {c.cassette_name}
-                        {c.active && <StateBadge color='red'>Activo</StateBadge>}
-                        {c.is_next && <StateBadge color='amber'>Siguiente</StateBadge>}
-                        {c.archived && <StateBadge color='neutral'>Archivado</StateBadge>}
+                        {c.active && <StateStamp tone='red'>Activo</StateStamp>}
+                        {c.is_next && <StateStamp tone='gold'>Siguiente</StateStamp>}
+                        {c.archived && <StateStamp tone='ink'>Archivado</StateStamp>}
                       </Link>
                     </Td>
                     <Td
@@ -195,8 +192,7 @@ export function CassettesTable({ rows }: { rows: CassetteMetricRow[] }) {
             </TableBody>
           </Table>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   )
 }
 
@@ -216,8 +212,8 @@ function SortableTh({
   const Icon = !active ? ArrowUpDown : dir === 'desc' ? ArrowDown : ArrowUp
   return (
     <TableHead
-      className={`font-pt-mono cursor-pointer text-[10px] tracking-widest uppercase select-none hover:bg-white/3 ${
-        active ? 'text-white' : 'text-white/50'
+      className={`font-pt-mono hover:bg-admin-paper-deep cursor-pointer px-4 py-2 text-[10px] font-bold tracking-[0.18em] uppercase select-none ${
+        active ? 'text-admin-red' : 'text-admin-ink'
       } ${align === 'right' ? 'text-right' : 'text-left'}`}
       onClick={onClick}
     >
@@ -232,8 +228,8 @@ function SortableTh({
 function Td({ children, align, bold }: { children: React.ReactNode; align?: 'right'; bold?: boolean }) {
   return (
     <TableCell
-      className={`font-pt-mono text-xs text-white/80 ${align === 'right' ? 'text-right' : 'text-left'} ${
-        bold ? 'font-bold text-white' : ''
+      className={`font-pt-mono text-admin-ink text-xs ${align === 'right' ? 'text-right tabular-nums' : 'text-left'} ${
+        bold ? 'font-bold' : ''
       }`}
     >
       {children}
@@ -241,19 +237,14 @@ function Td({ children, align, bold }: { children: React.ReactNode; align?: 'rig
   )
 }
 
-function StateBadge({ children, color }: { children: React.ReactNode; color: 'red' | 'amber' | 'neutral' }) {
-  const cls = {
-    red: 'bg-red-500/20 text-red-300',
-    amber: 'bg-amber-500/20 text-amber-300',
-    neutral: 'bg-white/10 text-white/50'
-  }[color]
+function StateStamp({ children, tone }: { children: React.ReactNode; tone: Tone }) {
   return (
-    <Badge
-      variant='secondary'
-      className={`font-pt-mono ml-2 text-[9px] font-bold tracking-widest uppercase ${cls}`}
+    <Stamp
+      tone={tone}
+      className='ml-2'
     >
       {children}
-    </Badge>
+    </Stamp>
   )
 }
 

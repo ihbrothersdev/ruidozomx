@@ -105,12 +105,12 @@ function PlayerInner({ url }: { url: string }) {
   const label = isDirectAudio ? 'Reproducir audio' : 'Intentar reproducir'
 
   return (
-    <div className='flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3'>
+    <div className='flex items-center gap-3 rounded-lg border-2 border-admin-ink bg-admin-surface px-4 py-3'>
       {/* Play / Pause / Loading button */}
       <button
         onClick={handlePlay}
         disabled={state === 'loading'}
-        className='flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white transition-colors hover:bg-red-500 disabled:cursor-wait disabled:opacity-60'
+        className='admin-press flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-admin-ink bg-admin-red text-admin-surface disabled:cursor-wait disabled:opacity-60'
         title={label}
       >
         {state === 'loading' ? (
@@ -171,31 +171,31 @@ function PlayerInner({ url }: { url: string }) {
       <div className='min-w-0 flex-1'>
         {state === 'error' ? (
           <div className='space-y-1'>
-            <p className='font-pt-mono text-[11px] text-white/30'>No se puede reproducir desde aquí</p>
+            <p className='font-pt-mono text-[11px] text-admin-ink-faint'>No se puede reproducir desde aquí</p>
             <a
               href={url}
               target='_blank'
               rel='noopener noreferrer'
-              className='font-pt-mono inline-block text-[11px] text-red-400 underline hover:text-red-300'
+              className='font-pt-mono inline-block text-[11px] text-admin-red underline hover:text-admin-red'
             >
               Abrir link directamente ↗
             </a>
           </div>
         ) : state === 'idle' ? (
-          <p className='font-pt-mono text-[11px] text-white/40'>{label}</p>
+          <p className='font-pt-mono text-[11px] text-admin-ink-soft'>{label}</p>
         ) : (
           <>
             <div
-              className='cursor-pointer rounded-full bg-white/10 p-0.5'
+              className='cursor-pointer rounded-full bg-admin-ink/15 p-0.5'
               onClick={handleSeek}
             >
               <div
-                className='h-1 rounded-full bg-red-500 transition-all duration-150'
+                className='h-1 rounded-full bg-admin-red transition-all duration-150'
                 style={{ width: `${Math.max(0.5, progress * 100)}%` }}
               />
             </div>
             {duration > 0 && (
-              <div className='font-pt-mono mt-1 flex justify-between text-[10px] text-white/25'>
+              <div className='font-pt-mono mt-1 flex justify-between text-[10px] text-admin-ink-faint'>
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>

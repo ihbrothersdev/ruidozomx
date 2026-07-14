@@ -1,7 +1,7 @@
 'use client'
 
 import { moveSong, updateSongDuration } from '@/app/admin/actions'
-import { Card, CardContent } from '@/app/components/ui/card'
+import { Paper } from '@/app/admin/_components/kit'
 import { Input } from '@/app/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { isPlayableAudio } from '@/lib/audio'
@@ -158,12 +158,12 @@ function PreviewButton({ songId, url, playable }: { songId: string; url: string 
             disabled={disabled}
             onClick={() => url && ctx?.toggle(songId, url)}
             aria-label={label}
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
               disabled
-                ? 'cursor-not-allowed bg-white/5 text-white/20'
+                ? 'border-admin-ink/20 text-admin-ink-faint cursor-not-allowed'
                 : isActive
-                  ? 'bg-red-600 text-white hover:bg-red-500'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                  ? 'border-admin-ink bg-admin-red text-admin-surface admin-hard-sm'
+                  : 'border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'
             }`}
           >
             {status === 'loading' ? (
@@ -263,11 +263,11 @@ export function CassetteSides({
         </section>
         <DragOverlay dropAnimation={null}>
           {activeSong ? (
-            <div className='flex items-center gap-2 rounded-lg border border-red-500/40 bg-neutral-900/95 px-3 py-2 shadow-xl shadow-black/40'>
-              <GripVertical className='h-3.5 w-3.5 text-white/40' />
+            <div className='border-admin-ink bg-admin-surface admin-hard flex items-center gap-2 rounded-lg border-2 px-3 py-2'>
+              <GripVertical className='text-admin-ink-faint h-3.5 w-3.5' />
               <div className='min-w-0'>
-                <p className='font-pt-mono truncate text-xs font-bold text-white'>{activeSong.artist}</p>
-                <p className='font-pt-mono truncate text-[10px] text-white/40'>{activeSong.title}</p>
+                <p className='font-pt-mono text-admin-ink truncate text-xs font-bold'>{activeSong.artist}</p>
+                <p className='font-pt-mono text-admin-ink-soft truncate text-[10px]'>{activeSong.title}</p>
               </div>
             </div>
           ) : null}
@@ -290,39 +290,46 @@ function SideCard({
   canRemove: boolean
   activeId: string | null
 }) {
-  const sideCls = side === 'A' ? 'border-red-500/20 bg-red-500/[0.03]' : 'border-blue-500/20 bg-blue-500/[0.03]'
-  const badgeCls = side === 'A' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
+  const tone = side === 'A' ? 'red' : 'blue'
+  const tabCls =
+    side === 'A' ? 'bg-admin-red text-admin-surface' : 'bg-admin-blue text-admin-surface'
   // Sides normally cap at 13, but one may hold more (e.g. Cassette 3 has 14 on A).
   // Render as many slots as the highest occupied position so nothing is hidden.
   const count = songs.reduce((m, s) => Math.max(m, s.position), SIZE)
 
   return (
-    <Card className={`gap-4 border py-5 ${sideCls}`}>
-      <CardContent>
-        <div className='mb-4 flex items-center gap-2'>
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${badgeCls}`}>
-            {side}
-          </div>
-          <p className='font-pt-mono text-[11px] font-bold tracking-widest text-white/60 uppercase'>
-            Lado {side} · {songs.length}/{count}
+    <Paper
+      tone={tone}
+      className='p-5'
+    >
+      <div className='border-admin-ink/15 mb-4 flex items-center gap-3 border-b-2 border-dashed pb-3'>
+        <div
+          className={`border-admin-ink font-baby-doll admin-hard-sm flex h-9 w-9 items-center justify-center border-2 text-xl leading-none font-bold ${tabCls}`}
+        >
+          {side}
+        </div>
+        <div>
+          <p className='font-pt-mono text-admin-ink text-[11px] font-bold tracking-[0.2em] uppercase'>Lado {side}</p>
+          <p className='font-pt-mono text-admin-ink-soft text-[10px] tracking-wide tabular-nums uppercase'>
+            {songs.length}/{count} tracks
           </p>
         </div>
+      </div>
 
-        <ol className='space-y-1'>
-          {Array.from({ length: count }, (_, i) => i + 1).map(pos => (
-            <Slot
-              key={pos}
-              side={side}
-              position={pos}
-              song={songs.find(s => s.position === pos) ?? null}
-              cassetteId={cassetteId}
-              canRemove={canRemove}
-              activeId={activeId}
-            />
-          ))}
-        </ol>
-      </CardContent>
-    </Card>
+      <ol className='space-y-1'>
+        {Array.from({ length: count }, (_, i) => i + 1).map(pos => (
+          <Slot
+            key={pos}
+            side={side}
+            position={pos}
+            song={songs.find(s => s.position === pos) ?? null}
+            cassetteId={cassetteId}
+            canRemove={canRemove}
+            activeId={activeId}
+          />
+        ))}
+      </ol>
+    </Paper>
   )
 }
 
@@ -354,10 +361,10 @@ function Slot({
       <li
         ref={setNodeRef}
         className={`font-pt-mono flex items-center gap-3 rounded-lg border border-dashed px-2.5 py-2 text-[11px] transition-colors sm:px-3 ${
-          dropTarget ? 'border-red-400/60 bg-red-400/10 text-white/40' : 'border-white/5 text-white/20'
+          dropTarget ? 'border-admin-red bg-admin-red/12 text-admin-ink-soft' : 'border-admin-ink/15 text-admin-ink-faint'
         }`}
       >
-        <span className='w-5 text-right'>#{position}</span>
+        <span className='w-5 text-right tabular-nums'>#{position}</span>
         <span className='italic'>{dropTarget ? 'soltar aquí' : 'vacío'}</span>
       </li>
     )
@@ -367,7 +374,7 @@ function Slot({
     <li
       ref={setNodeRef}
       className={`rounded-lg border transition-colors ${
-        dropTarget ? 'border-red-400/60 bg-red-400/10' : 'border-white/10 bg-white/4'
+        dropTarget ? 'border-admin-red bg-admin-red/12' : 'border-admin-ink/20 bg-admin-surface'
       }`}
     >
       <SongRow
@@ -410,14 +417,16 @@ function SongRow({
           ref={setActivatorNodeRef}
           type='button'
           aria-label='Arrastrar para reordenar'
-          className='flex h-6 w-4 shrink-0 cursor-grab touch-none items-center justify-center text-white/25 transition-colors hover:text-white/60 active:cursor-grabbing'
+          className='text-admin-ink-faint hover:text-admin-ink flex h-6 w-4 shrink-0 cursor-grab touch-none items-center justify-center transition-colors active:cursor-grabbing'
           {...listeners}
           {...attributes}
         >
           <GripVertical className='h-3.5 w-3.5' />
         </button>
       )}
-      <span className='font-pt-mono w-5 shrink-0 text-right text-[11px] text-white/40'>#{position}</span>
+      <span className='font-pt-mono text-admin-ink w-5 shrink-0 text-right text-[11px] font-bold tabular-nums'>
+        #{position}
+      </span>
       <PreviewButton
         songId={song.id}
         url={song.audioUrl}
@@ -425,13 +434,13 @@ function SongRow({
       />
       <div className='min-w-0 flex-1'>
         <div className='flex items-center gap-1.5'>
-          <p className='font-pt-mono truncate text-xs font-bold text-white'>{song.artist}</p>
+          <p className='font-pt-mono text-admin-ink truncate text-xs font-bold'>{song.artist}</p>
           <AudioStatusDot
             playable={playable}
             hasAny={!!song.audioUrl}
           />
         </div>
-        <p className='font-pt-mono truncate text-[10px] text-white/40'>{song.title}</p>
+        <p className='font-pt-mono text-admin-ink-soft truncate text-[10px]'>{song.title}</p>
       </div>
       {/* Controls cluster — wraps under the title on narrow screens. */}
       <div className='ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2'>
@@ -442,7 +451,7 @@ function SongRow({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className='font-pt-mono inline-flex w-11 items-center justify-end gap-1 text-[10px] text-white/40'>
+              <span className='font-pt-mono text-admin-ink-soft inline-flex w-11 items-center justify-end gap-1 text-[10px] tabular-nums'>
                 <Play className='h-2.5 w-2.5 fill-current' />
                 {song.plays.toLocaleString('es-MX')}
               </span>
@@ -471,7 +480,7 @@ function SongRow({
 }
 
 function AudioStatusDot({ playable, hasAny }: { playable: boolean; hasAny: boolean }) {
-  const tone = playable ? 'bg-emerald-400' : hasAny ? 'bg-amber-400' : 'bg-white/20'
+  const tone = playable ? 'bg-admin-olive' : hasAny ? 'bg-admin-gold' : 'bg-admin-ink/25'
   const label = playable
     ? 'MP3 reproducible'
     : hasAny
@@ -575,7 +584,7 @@ function DurationCell({ song, cassetteId }: { song: CassetteSong; cassetteId: st
           }
         }}
         placeholder='3:42'
-        className='font-pt-mono h-7 w-16 rounded border-white/20 bg-black/40 px-1.5 py-0.5 text-[10px] text-white focus-visible:border-red-500/50 focus-visible:ring-red-500/20'
+        className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-admin-red/20 h-7 w-16 rounded border-2 px-1.5 py-0.5 text-[10px]'
       />
     )
   }
@@ -587,12 +596,12 @@ function DurationCell({ song, cassetteId }: { song: CassetteSong; cassetteId: st
           <button
             type='button'
             onClick={() => setEditing(true)}
-            className={`font-pt-mono w-14 rounded px-1.5 py-0.5 text-right text-[10px] transition-colors ${
+            className={`font-pt-mono w-14 rounded px-1.5 py-0.5 text-right text-[10px] tabular-nums transition-colors ${
               error
-                ? 'text-red-400 hover:bg-red-500/10'
+                ? 'text-admin-red hover:bg-admin-red/10'
                 : seconds
-                  ? 'text-white/60 hover:bg-white/10 hover:text-white'
-                  : 'text-white/20 hover:bg-white/10 hover:text-white/60'
+                  ? 'text-admin-ink-soft hover:bg-admin-ink/10 hover:text-admin-ink'
+                  : 'text-admin-ink-faint hover:bg-admin-ink/10 hover:text-admin-ink-soft'
             } ${saving ? 'animate-pulse' : ''}`}
           >
             {seconds ? formatTime(seconds) : '—'}

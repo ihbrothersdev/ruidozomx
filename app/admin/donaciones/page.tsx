@@ -1,7 +1,6 @@
-import { Card, CardContent } from '@/app/components/ui/card'
-import { Separator } from '@/app/components/ui/separator'
 import { createServiceClient } from '@/lib/supabase/service'
-import { BarChart3, Coins, MousePointerClick, Percent, Repeat, Users, Wallet } from 'lucide-react'
+import { Coins, MousePointerClick, Percent, Repeat, Users, Wallet } from 'lucide-react'
+import { EmptyState, PageHeader, Paper, SectionHeading, StatCard } from '../_components/kit'
 import { DonationsTable, type DonorInfo } from './_components/DonationsTable'
 import { TimeFilter } from './_components/TimeFilter'
 import { requireDonationViewer } from './_lib/access'
@@ -58,75 +57,77 @@ export default async function DonacionesPage({ searchParams }: { searchParams: P
 
   return (
     <div className='mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
-      <header className='flex flex-wrap items-end justify-between gap-4'>
-        <div>
-          <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Cooperacha</p>
-          <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-            Donaciones
-          </h1>
-          <p className='font-pt-mono mt-2 max-w-2xl text-xs text-white/50'>
-            Intentos de cooperación · <strong className='text-white'>{WINDOW_LABEL[since]}</strong>. Esto es{' '}
-            <strong className='text-white'>intención</strong>, no pagos confirmados — Stripe es la fuente de verdad de
-            lo que realmente se cobra.
-          </p>
-        </div>
-        <TimeFilter selected={since} />
-      </header>
+      <PageHeader
+        eyebrow='Cooperacha'
+        title='Donaciones'
+        description={
+          <>
+            Intentos de cooperación · <strong className='text-admin-ink'>{WINDOW_LABEL[since]}</strong>. Esto es{' '}
+            <strong className='text-admin-ink'>intención</strong>, no pagos confirmados — Stripe es la fuente de verdad
+            de lo que realmente se cobra.
+          </>
+        }
+        action={<TimeFilter selected={since} />}
+      />
 
       {!hasData ? (
-        <Card className='border-dashed border-white/10 bg-transparent py-12'>
-          <CardContent className='font-pt-mono text-center text-xs text-white/30'>
-            Aún no hay intentos de donación en este rango. Aparecerán aquí cuando alguien abra “Cooperar” o elija un
-            monto.
-          </CardContent>
-        </Card>
+        <EmptyState>
+          Aún no hay intentos de donación en este rango. Aparecerán aquí cuando alguien abra “Cooperar” o elija un
+          monto.
+        </EmptyState>
       ) : (
         <>
-          <section className='space-y-3'>
-            <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>Embudo</h2>
+          <section className='space-y-4'>
+            <SectionHeading
+              icon={Percent}
+              title='Embudo'
+              description='Del click a la elección de monto.'
+            />
             <div className='grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5'>
-              <BigStat
+              <StatCard
                 label='Aperturas'
                 value={s.starts.toLocaleString('es-MX')}
                 sub='Clicks en “Cooperar”'
                 icon={MousePointerClick}
-                accent='blue'
+                tone='blue'
               />
-              <BigStat
+              <StatCard
                 label='Eligieron monto'
                 value={s.attempts.toLocaleString('es-MX')}
                 sub={`${s.customAttempts} “otro monto”`}
                 icon={Coins}
-                accent='emerald'
+                tone='olive'
               />
-              <BigStat
+              <StatCard
                 label='Conversión'
                 value={`${s.conversionRate}%`}
                 sub='Apertura → monto'
                 icon={Percent}
-                accent='amber'
+                tone='gold'
               />
-              <BigStat
+              <StatCard
                 label='Mensuales'
                 value={s.monthlyAttempts.toLocaleString('es-MX')}
                 sub={`${s.onceAttempts} únicas`}
                 icon={Repeat}
-                accent='pink'
+                tone='magenta'
               />
-              <BigStat
+              <StatCard
                 label='Con sesión'
                 value={s.authedAttempts.toLocaleString('es-MX')}
                 sub={`${s.anonAttempts} anónimos · ${s.uniqueUsers} usuarios`}
                 icon={Users}
-                accent='red'
+                tone='red'
               />
             </div>
           </section>
 
-          <section className='space-y-3'>
-            <h2 className='font-pt-mono text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase'>
-              Intención de cooperación
-            </h2>
+          <section className='space-y-4'>
+            <SectionHeading
+              icon={Coins}
+              title='Intención de cooperación'
+              description='Montos de intención, no cobros. La conversión real depende de Stripe.'
+            />
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
               <IntentCard
                 label='Puntual'
@@ -140,15 +141,12 @@ export default async function DonacionesPage({ searchParams }: { searchParams: P
                 accent
               />
             </div>
-            <p className='font-pt-mono text-[11px] text-white/30'>
-              Montos de intención, no cobros. La conversión real depende de Stripe.
-            </p>
           </section>
 
-          <Separator className='bg-white/5' />
+          <div className='admin-sprocket' />
 
           <section>
-            <SectionHeader
+            <SectionHeading
               icon={Wallet}
               title='Montos elegidos'
               description='Qué opciones se tocan más al abrir Stripe Checkout.'
@@ -159,21 +157,23 @@ export default async function DonacionesPage({ searchParams }: { searchParams: P
                   key={a.key}
                   className='flex items-center gap-3'
                 >
-                  <span className='font-pt-mono w-28 shrink-0 text-xs text-white/70'>{a.label}</span>
-                  <div className='h-5 flex-1 overflow-hidden rounded bg-white/5'>
+                  <span className='font-pt-mono text-admin-ink-soft w-28 shrink-0 text-xs'>{a.label}</span>
+                  <div className='bg-admin-ink/12 h-5 flex-1 overflow-hidden'>
                     <div
-                      className={`h-full rounded ${a.frequency === 'monthly' ? 'bg-pink-500/40' : 'bg-emerald-500/40'}`}
+                      className={`h-full ${a.frequency === 'monthly' ? 'bg-admin-magenta' : 'bg-admin-olive'}`}
                       style={{ width: `${Math.round((a.count / maxAmountCount) * 100)}%` }}
                     />
                   </div>
-                  <span className='font-pt-mono w-8 shrink-0 text-right text-xs font-bold text-white'>{a.count}</span>
+                  <span className='font-pt-mono text-admin-ink w-8 shrink-0 text-right text-xs font-bold tabular-nums'>
+                    {a.count}
+                  </span>
                 </div>
               ))}
             </div>
           </section>
 
           <section>
-            <SectionHeader
+            <SectionHeading
               icon={Coins}
               title='Intentos recientes'
               description={`Últimos ${Math.min(RECENT_LIMIT, events.length)} eventos del flujo, del más reciente al más antiguo.`}
@@ -189,84 +189,17 @@ export default async function DonacionesPage({ searchParams }: { searchParams: P
   )
 }
 
-function BigStat({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  accent
-}: {
-  label: string
-  value: string
-  sub: string
-  icon: typeof BarChart3
-  accent: 'red' | 'blue' | 'pink' | 'emerald' | 'amber'
-}) {
-  const a = {
-    red: { card: 'border-red-500/20 bg-red-500/[0.06] hover:bg-red-500/10', badge: 'bg-red-500/15 text-red-300' },
-    blue: { card: 'border-blue-500/20 bg-blue-500/[0.06] hover:bg-blue-500/10', badge: 'bg-blue-500/15 text-blue-300' },
-    pink: { card: 'border-pink-500/20 bg-pink-500/[0.06] hover:bg-pink-500/10', badge: 'bg-pink-500/15 text-pink-300' },
-    emerald: {
-      card: 'border-emerald-400/20 bg-emerald-500/[0.06] hover:bg-emerald-500/10',
-      badge: 'bg-emerald-500/15 text-emerald-300'
-    },
-    amber: {
-      card: 'border-amber-400/20 bg-amber-500/[0.06] hover:bg-amber-500/10',
-      badge: 'bg-amber-500/15 text-amber-300'
-    }
-  }[accent]
-  return (
-    <Card className={`h-full gap-0 border py-0 transition-colors ${a.card}`}>
-      <CardContent className='flex h-full flex-col p-5'>
-        <div className='flex items-start justify-between gap-2'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>{label}</p>
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.badge}`}>
-            <Icon className='h-5 w-5' />
-          </div>
-        </div>
-        <p className='font-baby-doll mt-3 text-4xl leading-none font-bold tracking-wider text-white uppercase'>
-          {value}
-        </p>
-        <p className='font-pt-mono mt-auto pt-2 text-[11px] text-white/40'>{sub}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
 function IntentCard({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: boolean }) {
   return (
-    <Card
-      className={`gap-0 border py-0 ${accent ? 'border-pink-500/20 bg-pink-500/[0.06]' : 'border-white/10 bg-white/3'}`}
+    <Paper
+      tone={accent ? 'magenta' : undefined}
+      className='p-5'
     >
-      <CardContent className='p-5'>
-        <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase'>{label}</p>
-        <p className='font-baby-doll mt-2 text-4xl leading-none font-bold tracking-wider text-white uppercase'>
-          {value} <span className='text-lg text-white/40'>MXN</span>
-        </p>
-        <p className='font-pt-mono mt-2 text-[11px] text-white/40'>{sub}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function SectionHeader({
-  icon: Icon,
-  title,
-  description
-}: {
-  icon: typeof BarChart3
-  title: string
-  description: string
-}) {
-  return (
-    <div className='mb-3 flex items-start gap-3'>
-      <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/60'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <div>
-        <h2 className='font-pt-mono text-sm font-bold tracking-wider text-white uppercase'>{title}</h2>
-        <p className='font-pt-mono text-[11px] text-white/40'>{description}</p>
-      </div>
-    </div>
+      <p className='font-pt-mono text-admin-ink-soft text-[10px] font-bold tracking-[0.25em] uppercase'>{label}</p>
+      <p className='font-baby-doll text-admin-ink mt-2 text-4xl leading-none font-bold tracking-wider uppercase'>
+        {value} <span className='text-admin-ink-faint text-lg'>MXN</span>
+      </p>
+      <p className='font-pt-mono text-admin-ink-faint mt-2 text-[11px]'>{sub}</p>
+    </Paper>
   )
 }
