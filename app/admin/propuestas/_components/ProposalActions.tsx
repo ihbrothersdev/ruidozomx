@@ -1,7 +1,7 @@
 'use client'
 
 import { reopenProposal } from '@/app/admin/actions'
-import { Button } from '@/app/components/ui/button'
+import { AdminButton } from '@/app/admin/_components/kit'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { Check, RotateCcw, X } from 'lucide-react'
 import { useState } from 'react'
@@ -32,14 +32,14 @@ export function ProposalActions({
 
   if (status === 'pending') {
     const acceptBtn = (
-      <Button
+      <AdminButton
         onClick={() => setPickerOpen(true)}
         disabled={!cassetteName}
-        className='font-pt-mono bg-green-600 text-xs font-bold tracking-wide text-white uppercase hover:bg-green-500 disabled:bg-white/5 disabled:text-white/30'
+        className='bg-admin-olive text-admin-surface'
       >
         <Check className='h-3.5 w-3.5' />
         Aceptar
-      </Button>
+      </AdminButton>
     )
 
     return (
@@ -53,18 +53,19 @@ export function ProposalActions({
                 <TooltipTrigger asChild>
                   <span tabIndex={0}>{acceptBtn}</span>
                 </TooltipTrigger>
-                <TooltipContent>No hay cassette destino. Marca uno como &quot;siguiente&quot;.</TooltipContent>
+                <TooltipContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink'>
+                  No hay cassette destino. Marca uno como &quot;siguiente&quot;.
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
-          <Button
-            variant='outline'
+          <AdminButton
+            variant='danger'
             onClick={() => setRejectOpen(true)}
-            className='font-pt-mono border-red-500/30 bg-transparent text-xs font-bold tracking-wide text-red-300 uppercase hover:bg-red-500/10 hover:text-red-200'
           >
             <X className='h-3.5 w-3.5' />
             Rechazar
-          </Button>
+          </AdminButton>
         </div>
 
         {pickerOpen && cassetteName && (
@@ -103,15 +104,14 @@ export function ProposalActions({
         name='listing'
         value={listing}
       />
-      <Button
+      <AdminButton
         type='submit'
-        variant='outline'
+        variant='ghost'
         size='sm'
-        className='font-pt-mono border-white/10 bg-transparent text-[11px] tracking-wider text-white/50 uppercase hover:bg-white/5 hover:text-white'
       >
         <RotateCcw className='h-3 w-3' />
         Re-abrir
-      </Button>
+      </AdminButton>
     </form>
   )
 }

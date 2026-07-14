@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent } from '@/app/components/ui/card'
 import {
   ChartContainer,
   ChartLegend,
@@ -10,6 +9,7 @@ import {
   type ChartConfig
 } from '@/app/components/ui/chart'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { EmptyState, Paper } from '../../_components/kit'
 import type { DailyPoint } from '../_lib/aggregations'
 
 function fmtShort(iso: string): string {
@@ -21,15 +21,15 @@ function fmtShort(iso: string): string {
 const chartConfig = {
   plays: {
     label: 'Plays',
-    color: '#f87171'
+    color: '#c7352e'
   },
   completes: {
     label: 'Completes',
-    color: '#34d399'
+    color: '#567f24'
   },
   sessions: {
     label: 'Sesiones',
-    color: '#60a5fa'
+    color: '#1c7f9e'
   }
 } satisfies ChartConfig
 
@@ -45,18 +45,12 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
   )
 
   if (totals.plays + totals.completes + totals.sessions === 0) {
-    return (
-      <Card className='border-dashed border-white/10 bg-transparent py-10'>
-        <CardContent className='font-pt-mono text-center text-xs text-white/30'>
-          Sin eventos en el rango seleccionado.
-        </CardContent>
-      </Card>
-    )
+    return <EmptyState>Sin eventos en el rango seleccionado.</EmptyState>
   }
 
   return (
-    <Card className='gap-0 overflow-hidden border-white/10 bg-white/2 py-0'>
-      <CardContent className='p-4'>
+    <Paper className='overflow-hidden p-4'>
+      <div>
         <div className='mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1'>
           <TotalChip
             color={chartConfig.plays.color}
@@ -141,30 +135,31 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
             </defs>
             <CartesianGrid
               strokeDasharray='3 3'
-              stroke='rgba(255,255,255,0.05)'
+              stroke='rgba(23,19,13,0.12)'
               vertical={false}
             />
             <XAxis
               dataKey='date'
               tickFormatter={fmtShort}
-              stroke='rgba(255,255,255,0.3)'
-              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(255,255,255,0.6)' }}
+              stroke='rgba(23,19,13,0.3)'
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(23,19,13,0.55)' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              stroke='rgba(255,255,255,0.3)'
-              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(255,255,255,0.6)' }}
+              stroke='rgba(23,19,13,0.3)'
+              tick={{ fontSize: 10, fontFamily: 'var(--font-pt-mono)', fill: 'rgba(23,19,13,0.55)' }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
             />
             <ChartTooltip
-              cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+              cursor={{ stroke: 'rgba(23,19,13,0.2)' }}
               content={
                 <ChartTooltipContent
                   indicator='dot'
                   labelFormatter={iso => fmtShort(String(iso))}
+                  className='border-admin-ink !bg-admin-surface text-admin-ink'
                 />
               }
             />
@@ -189,11 +184,11 @@ export function PlaysChart({ data }: { data: DailyPoint[] }) {
               strokeWidth={2}
               fill='url(#fill-plays)'
             />
-            <ChartLegend content={<ChartLegendContent className='text-white/60' />} />
+            <ChartLegend content={<ChartLegendContent className='text-admin-ink-soft' />} />
           </AreaChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </Paper>
   )
 }
 
@@ -204,8 +199,8 @@ function TotalChip({ color, label, value }: { color: string; label: string; valu
         className='h-2 w-2 rounded-full'
         style={{ background: color }}
       />
-      <span className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>{label}</span>
-      <span className='font-pt-mono text-xs font-bold text-white'>{value.toLocaleString('es-MX')}</span>
+      <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-widest uppercase'>{label}</span>
+      <span className='font-pt-mono text-admin-ink text-xs font-bold'>{value.toLocaleString('es-MX')}</span>
     </div>
   )
 }

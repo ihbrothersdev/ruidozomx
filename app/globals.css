@@ -101,6 +101,24 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* ── Admin "mesa de control" palette — a printed-fanzine control desk.
+     Riso-ink accents on warm kraft paper; scoped to /admin via .admin-root. ── */
+  --color-admin-paper: #e5dcc4;
+  --color-admin-paper-deep: #d6c9a9;
+  --color-admin-surface: #f5efe1;
+  --color-admin-surface-2: #ece3cf;
+  --color-admin-ink: #17130d;
+  --color-admin-ink-soft: #574d3b;
+  --color-admin-ink-faint: #8a7d63;
+  --color-admin-line: #17130d;
+  --color-admin-red: #c7352e;
+  --color-admin-red-deep: #97231b;
+  --color-admin-blue: #1c7f9e;
+  --color-admin-gold: #b1791a;
+  --color-admin-olive: #567f24;
+  --color-admin-magenta: #b23a6f;
+  --color-admin-orange: #e0521f;
 }
 
 /* Match the viewport themeColor so iOS overscroll (rubber-band) reveals a dark
@@ -383,5 +401,136 @@ select:-internal-autofill-previewed {
 @media (prefers-reduced-motion: reduce) {
   .confetti-piece {
     display: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ADMIN · MESA DE CONTROL
+   A 180° reskin of /admin: from dark SaaS to a printed-fanzine control desk.
+   Warm kraft paper, hard ink borders, offset shadows, riso-ink accents,
+   rubber stamps and cassette-label records. All scoped under .admin-root so
+   the public site is untouched.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.admin-root {
+  color: var(--color-admin-ink);
+  background-color: var(--color-admin-paper);
+  /* Warm paper: kraft base + faint fibre grain from crossed hairline gradients. */
+  background-image:
+    repeating-linear-gradient(0deg, rgba(23, 19, 13, 0.022) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(23, 19, 13, 0.02) 0 1px, transparent 1px 5px),
+    radial-gradient(circle at 20% 12%, rgba(199, 53, 46, 0.05), transparent 45%),
+    radial-gradient(circle at 85% 88%, rgba(28, 127, 158, 0.05), transparent 45%);
+}
+
+/* Paper record: an index card / receipt. Hard ink edge, printed offset shadow. */
+.admin-card {
+  background-color: var(--color-admin-surface);
+  border: 2px solid var(--color-admin-line);
+  box-shadow: 4px 4px 0 0 var(--color-admin-ink);
+}
+.admin-card-flat {
+  background-color: var(--color-admin-surface);
+  border: 1.5px solid var(--color-admin-line);
+}
+.admin-hard {
+  box-shadow: 4px 4px 0 0 var(--color-admin-ink);
+}
+.admin-hard-sm {
+  box-shadow: 2px 2px 0 0 var(--color-admin-ink);
+}
+.admin-hard-red {
+  box-shadow: 4px 4px 0 0 var(--color-admin-red);
+}
+/* Press-in interaction: the card "prints down" onto the desk on hover/press. */
+.admin-press {
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+}
+.admin-press:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 3px 3px 0 0 var(--color-admin-ink);
+}
+.admin-press:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--color-admin-ink);
+}
+
+/* Halftone dot field — the riso/newsprint texture, laid over accent panels. */
+.admin-halftone {
+  background-image: radial-gradient(var(--color-admin-ink) 22%, transparent 23%);
+  background-size: 5px 5px;
+}
+
+/* Dymo / label-maker strip: embossed black tag for eyebrows and section tags. */
+.admin-dymo {
+  display: inline-block;
+  background-color: var(--color-admin-ink);
+  color: var(--color-admin-paper);
+  font-family: var(--font-pt-mono), monospace;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(245, 239, 225, 0.25);
+}
+
+/* Rubber stamp: outlined, ink-bleed, slightly rotated verdict mark. */
+.admin-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-pt-mono), monospace;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  padding: 0.15em 0.5em;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px currentColor;
+  opacity: 0.92;
+}
+
+/* Sprocket rule — the perforated tape edge used as a divider. */
+.admin-sprocket {
+  height: 8px;
+  background-image: radial-gradient(circle, var(--color-admin-ink) 0 2px, transparent 2.4px);
+  background-size: 12px 8px;
+  background-position: center;
+  background-repeat: repeat-x;
+  opacity: 0.32;
+}
+
+/* Cassette reel — spins while the active cassette is "playing". */
+@keyframes admin-reel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.admin-reel-spin {
+  animation: admin-reel 3.2s linear infinite;
+}
+
+/* VU meter fill: segmented level bar for metrics. */
+.admin-vu {
+  background-image: repeating-linear-gradient(
+    90deg,
+    currentColor 0 6px,
+    transparent 6px 9px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-reel-spin {
+    animation: none;
+  }
+  .admin-press:hover,
+  .admin-press:active {
+    transform: none;
   }
 }

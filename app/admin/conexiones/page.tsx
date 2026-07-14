@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/app/components/ui/card'
+import { PageHeader, SectionHeading, StatCard } from '@/app/admin/_components/kit'
 import { createServiceClient } from '@/lib/supabase/service'
 import { Heart } from 'lucide-react'
 import { ConnectionsList, type ConnectionEdge, type ConnectionProfile } from './_components/ConnectionsList'
@@ -128,71 +128,49 @@ export default async function ConexionesPage() {
 
   return (
     <div className='mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-8 sm:py-12'>
-      <header>
-        <p className='font-pt-mono text-xs tracking-[0.3em] text-red-400/70 uppercase'>Comunidad</p>
-        <h1 className='font-baby-doll mt-1 text-4xl font-bold tracking-wider text-white uppercase sm:text-5xl'>
-          Conexiones
-        </h1>
-        <p className='font-pt-mono mt-2 max-w-2xl text-sm text-white/40'>
-          Solicitudes de &quot;Conectar&quot; y mensajes directos entre perfiles. Quién busca a quién, y qué se están
-          diciendo.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow='Comunidad'
+        title='Conexiones'
+        description='Solicitudes de "Conectar" y mensajes directos entre perfiles. Quién busca a quién, y qué se están diciendo.'
+      />
 
       <section className='grid grid-cols-2 gap-3 sm:grid-cols-3'>
-        <SmallStat
+        <StatCard
           label='Total solicitudes'
-          value={connections.total_interests}
+          value={connections.total_interests.toLocaleString('es-MX')}
+          tone='red'
         />
-        <SmallStat
+        <StatCard
           label='Quién las envía'
-          value={connections.unique_interest_givers}
+          value={connections.unique_interest_givers.toLocaleString('es-MX')}
         />
-        <SmallStat
+        <StatCard
           label='Quién las recibe'
-          value={connections.unique_interest_receivers}
+          value={connections.unique_interest_receivers.toLocaleString('es-MX')}
         />
-        <SmallStat
+        <StatCard
           label='Mensajes directos'
-          value={connections.total_user_proposals}
+          value={connections.total_user_proposals.toLocaleString('es-MX')}
+          tone='blue'
         />
-        <SmallStat
+        <StatCard
           label='Quién manda mensajes'
-          value={connections.unique_proposers}
+          value={connections.unique_proposers.toLocaleString('es-MX')}
         />
-        <SmallStat
+        <StatCard
           label='Quién los recibe'
-          value={connections.unique_proposed_to}
+          value={connections.unique_proposed_to.toLocaleString('es-MX')}
         />
       </section>
 
       <section>
-        <div className='mb-3 flex items-start gap-3'>
-          <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/60'>
-            <Heart className='h-4 w-4' />
-          </div>
-          <div>
-            <h2 className='font-pt-mono text-sm font-bold tracking-wider text-white uppercase'>
-              Quién se conecta con quién
-            </h2>
-            <p className='font-pt-mono text-[11px] text-white/40'>
-              Las conexiones mutuas (↔) van primero; el resto, del más reciente al más antiguo. Filtra por tipo arriba.
-            </p>
-          </div>
-        </div>
+        <SectionHeading
+          icon={Heart}
+          title='Quién se conecta con quién'
+          description='Las conexiones mutuas (↔) van primero; el resto, del más reciente al más antiguo. Filtra por tipo arriba.'
+        />
         <ConnectionsList edges={connectionEdges} />
       </section>
     </div>
-  )
-}
-
-function SmallStat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card className='gap-1 border-white/10 bg-white/3 py-3'>
-      <CardContent className='px-3'>
-        <p className='font-pt-mono text-[10px] tracking-widest text-white/40 uppercase'>{label}</p>
-        <p className='font-baby-doll mt-1 text-2xl font-bold text-white'>{value.toLocaleString('es-MX')}</p>
-      </CardContent>
-    </Card>
   )
 }

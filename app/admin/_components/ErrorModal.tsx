@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/app/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   DialogTitle
 } from '@/app/components/ui/dialog'
 import { AlertTriangle } from 'lucide-react'
+import { AdminButton, LabelTag } from '@/app/admin/_components/kit'
 
 export type AdminError = {
   title?: string
@@ -31,32 +31,32 @@ export function ErrorModal({ error, onClose }: { error: AdminError | null; onClo
         if (!open) onClose()
       }}
     >
-      <DialogContent className='border-red-500/30 bg-neutral-900 text-white sm:max-w-md'>
+      <DialogContent className='admin-hard border-2 border-admin-ink bg-admin-surface text-admin-ink sm:max-w-md'>
         <DialogHeader className='text-left'>
-          <div className='mb-1 flex items-center gap-2 text-red-400'>
+          <div className='mb-1 flex items-center gap-2 text-admin-red'>
             <AlertTriangle className='h-5 w-5' />
-            <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] uppercase'>Error</p>
+            <LabelTag tone='red'>Error</LabelTag>
           </div>
-          <DialogTitle className='font-baby-doll text-2xl tracking-wider text-white uppercase'>
+          <DialogTitle className='font-baby-doll text-2xl tracking-wider text-admin-ink uppercase'>
             {error?.title ?? 'Algo salió mal'}
           </DialogTitle>
-          <DialogDescription className='font-pt-mono text-sm text-white/70'>{error?.message}</DialogDescription>
+          <DialogDescription className='font-pt-mono text-sm text-admin-ink-soft'>{error?.message}</DialogDescription>
         </DialogHeader>
 
         {error?.detail && (
-          <pre className='max-h-40 overflow-auto rounded-md border border-white/10 bg-black/40 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-white/50'>
+          <pre className='max-h-40 overflow-auto border-2 border-admin-ink bg-admin-paper-deep p-3 font-pt-mono text-[11px] leading-relaxed whitespace-pre-wrap text-admin-ink-soft'>
             {error.detail}
           </pre>
         )}
 
         <DialogFooter>
-          <Button
+          <AdminButton
             type='button'
+            variant='primary'
             onClick={onClose}
-            className='font-pt-mono bg-red-600 text-xs tracking-wider text-white uppercase hover:bg-red-500'
           >
             Entendido
-          </Button>
+          </AdminButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,8 +1,7 @@
 'use client'
 
 import { acceptProposal } from '@/app/admin/actions'
-import { Badge } from '@/app/components/ui/badge'
-import { Button } from '@/app/components/ui/button'
+import { AdminButton, LabelTag } from '@/app/admin/_components/kit'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/app/components/ui/dialog'
-import { Separator } from '@/app/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
@@ -68,21 +66,21 @@ export function SlotPicker({
       open
       onOpenChange={open => !open && onClose()}
     >
-      <DialogContent className='gap-0 overflow-hidden border-white/10 bg-neutral-900 p-0 text-white sm:max-w-2xl'>
-        <DialogHeader className='space-y-1 px-6 py-5 text-left'>
-          <p className='font-pt-mono text-[10px] font-bold tracking-[0.25em] text-red-400 uppercase'>
-            Asignar slot · {cassetteName}
-          </p>
-          <DialogTitle className='font-baby-doll truncate text-2xl tracking-wider text-white uppercase'>
+      <DialogContent className='gap-0 overflow-hidden border-2 border-admin-ink bg-admin-surface p-0 text-admin-ink admin-hard sm:max-w-2xl'>
+        <DialogHeader className='space-y-1.5 px-6 py-5 text-left'>
+          <LabelTag tone='red'>Asignar slot · {cassetteName}</LabelTag>
+          <DialogTitle className='font-baby-doll truncate text-2xl tracking-wider text-admin-ink uppercase'>
             {proposalArtist}
           </DialogTitle>
-          <DialogDescription className='font-pt-mono truncate text-xs text-white/40'>{proposalTitle}</DialogDescription>
+          <DialogDescription className='font-pt-mono truncate text-xs text-admin-ink-soft'>
+            {proposalTitle}
+          </DialogDescription>
         </DialogHeader>
 
-        <Separator className='bg-white/5' />
+        <div className='admin-sprocket' />
 
-        <div className='bg-white/2 px-6 py-3'>
-          <Button
+        <div className='bg-admin-surface-2 px-6 py-3'>
+          <AdminButton
             type='button'
             variant='outline'
             size='sm'
@@ -90,49 +88,43 @@ export function SlotPicker({
               const free = findFirstFree()
               if (free) setSelected(free)
             }}
-            className='font-pt-mono border-white/10 bg-white/5 text-[11px] tracking-wider text-white/70 uppercase hover:bg-white/10 hover:text-white'
           >
             <Sparkles className='h-3 w-3' />
             Auto-asignar siguiente libre
-          </Button>
+          </AdminButton>
         </div>
 
-        <Separator className='bg-white/5' />
+        <div className='admin-sprocket' />
 
         <div className='space-y-6 px-6 py-5'>
           {SIDES.map(side => (
             <div key={side}>
               <div className='mb-2 flex items-center gap-2'>
                 <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                    side === 'A' ? 'bg-red-600/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-admin-ink text-xs font-bold ${
+                    side === 'A' ? 'bg-admin-red/12 text-admin-red' : 'bg-admin-blue/12 text-admin-blue'
                   }`}
                 >
                   {side}
                 </div>
-                <p className='font-pt-mono text-[11px] font-bold tracking-widest text-white/50 uppercase'>
+                <p className='font-pt-mono text-[11px] font-bold tracking-widest text-admin-ink-soft uppercase'>
                   Lado {side}
                 </p>
-                <Badge
-                  variant='secondary'
-                  className='font-pt-mono bg-white/5 text-[10px] text-white/40'
-                >
-                  {occupied.filter(o => o.side === side).length}/13
-                </Badge>
+                <LabelTag>{occupied.filter(o => o.side === side).length}/13</LabelTag>
               </div>
               <div className='grid grid-cols-7 gap-1.5 sm:grid-cols-13'>
                 <TooltipProvider>
                   {POSITIONS.map(pos => {
                     const occ = isOccupied(side, pos)
                     const isSelected = selected?.side === side && selected.position === pos
-                    const cls = `font-pt-mono flex h-12 flex-col items-center justify-center rounded-lg border text-[11px] font-bold transition-all ${
+                    const cls = `font-pt-mono flex h-12 flex-col items-center justify-center rounded-sm border-2 text-[11px] font-bold transition-all ${
                       occ
-                        ? 'cursor-not-allowed border-white/5 bg-white/5 text-white/30'
+                        ? 'cursor-not-allowed border-admin-ink/15 bg-admin-ink/8 text-admin-ink-faint'
                         : isSelected
                           ? side === 'A'
-                            ? 'border-red-500 bg-red-500/30 text-white shadow-[0_0_0_2px_rgba(239,68,68,0.3)]'
-                            : 'border-blue-500 bg-blue-500/30 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.3)]'
-                          : 'cursor-pointer border-white/10 bg-white/3 text-white/50 hover:border-white/30 hover:bg-white/10 hover:text-white'
+                            ? 'border-admin-ink bg-admin-red text-admin-surface admin-hard-sm'
+                            : 'border-admin-ink bg-admin-blue text-admin-surface admin-hard-sm'
+                          : 'cursor-pointer border-admin-ink bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'
                     }`
                     const btn = (
                       <button
@@ -149,7 +141,7 @@ export function SlotPicker({
                     return (
                       <Tooltip key={pos}>
                         <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent className='border-2 border-admin-ink bg-admin-surface text-admin-ink'>
                           <span className='font-pt-mono text-[11px]'>
                             <strong>{occ.artist}</strong> — {occ.title}
                           </span>
@@ -165,11 +157,11 @@ export function SlotPicker({
 
         {selected && (
           <>
-            <Separator className='bg-white/5' />
-            <div className='bg-green-500/5 px-6 py-3'>
-              <p className='font-pt-mono text-[11px] text-white/60'>
+            <div className='admin-sprocket' />
+            <div className='bg-admin-olive/12 px-6 py-3'>
+              <p className='font-pt-mono text-[11px] text-admin-ink-soft'>
                 Insertar en{' '}
-                <span className='font-bold text-white'>
+                <span className='font-bold text-admin-ink'>
                   Lado {selected.side} · Posición #{selected.position}
                 </span>
               </p>
@@ -177,12 +169,12 @@ export function SlotPicker({
           </>
         )}
 
-        <Separator className='bg-white/5' />
+        <div className='admin-sprocket' />
 
         <form
           action={acceptProposal}
           onSubmit={() => setSubmitting(true)}
-          className='bg-white/2 px-6 py-4'
+          className='bg-admin-surface-2 px-6 py-4'
         >
           <input
             type='hidden'
@@ -205,21 +197,20 @@ export function SlotPicker({
             value={listing}
           />
           <DialogFooter className='gap-2'>
-            <Button
+            <AdminButton
               type='button'
               variant='ghost'
               onClick={onClose}
-              className='font-pt-mono text-xs tracking-wider text-white/60 uppercase hover:bg-white/5 hover:text-white'
             >
               Cancelar
-            </Button>
-            <Button
+            </AdminButton>
+            <AdminButton
               type='submit'
               disabled={!selected || submitting}
-              className='font-pt-mono bg-green-600 text-xs tracking-wider text-white uppercase hover:bg-green-500'
+              className='bg-admin-olive text-admin-surface'
             >
               {submitting ? 'Guardando…' : 'Aceptar y asignar'}
-            </Button>
+            </AdminButton>
           </DialogFooter>
         </form>
       </DialogContent>

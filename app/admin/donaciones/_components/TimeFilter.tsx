@@ -28,10 +28,10 @@ export function TimeFilter({ selected }: { selected: TimeWindow }) {
 
   return (
     <div className='flex items-center gap-2'>
-      <span className='font-pt-mono text-[10px] tracking-[0.25em] text-white/40 uppercase'>Rango</span>
+      <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.25em] uppercase'>Rango</span>
       <div
         role='radiogroup'
-        className={`flex h-8 items-center gap-0.5 rounded-md border border-white/10 bg-white/3 p-0.5 ${pending ? 'opacity-60' : ''}`}
+        className={`flex items-center gap-1.5 ${pending ? 'opacity-60' : ''}`}
       >
         {OPTIONS.map(o => (
           <button
@@ -41,8 +41,10 @@ export function TimeFilter({ selected }: { selected: TimeWindow }) {
             aria-checked={selected === o.value}
             onClick={() => onClick(o.value)}
             disabled={pending}
-            className={`font-pt-mono cursor-pointer rounded px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
-              selected === o.value ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/70'
+            className={`font-pt-mono cursor-pointer border-2 border-admin-ink px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors ${
+              selected === o.value
+                ? 'bg-admin-red text-admin-surface admin-hard-sm'
+                : 'bg-admin-surface text-admin-ink hover:bg-admin-paper-deep'
             }`}
           >
             {o.label}
