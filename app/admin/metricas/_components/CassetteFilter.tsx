@@ -31,14 +31,14 @@ export function CassetteFilter({ options, selected }: { options: CassetteOption[
   }
 
   return (
-    <div className='flex items-center gap-2'>
-      <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.25em] uppercase'>Cassette</span>
+    <div className='flex w-full items-center gap-2 sm:w-auto'>
+      <span className='font-pt-mono text-admin-ink-soft shrink-0 text-[10px] tracking-[0.25em] uppercase'>Cassette</span>
       <Select
         value={selected}
         onValueChange={onChange}
         disabled={pending}
       >
-        <SelectTrigger className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink h-8 w-[220px] border-2 text-xs'>
+        <SelectTrigger className='font-pt-mono border-admin-ink bg-admin-paper text-admin-ink h-8 min-w-0 flex-1 border-2 text-xs sm:w-[220px] sm:flex-none'>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className='border-admin-ink bg-admin-surface text-admin-ink border-2'>

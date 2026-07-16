@@ -31,7 +31,7 @@ export function PageHeader({
           <p className='font-pt-mono text-admin-ink-soft mt-3 max-w-2xl text-sm leading-relaxed'>{description}</p>
         )}
       </div>
-      {action && <div className='shrink-0'>{action}</div>}
+      {action && <div className='w-full sm:w-auto sm:shrink-0'>{action}</div>}
     </header>
   )
 }
