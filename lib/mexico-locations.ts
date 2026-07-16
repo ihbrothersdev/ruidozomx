@@ -91,6 +91,7 @@ const ARGENTINA: Record<string, string[]> = {
   Misiones: ['Posadas', 'Puerto Iguazú'],
   Neuquén: ['Neuquén', 'Bariloche'],
   Corrientes: ['Corrientes'],
+  Formosa: ['Formosa', 'Clorinda'],
   'Entre Ríos': ['Paraná', 'Concordia'],
   Jujuy: ['San Salvador de Jujuy'],
   Chubut: ['Comodoro Rivadavia', 'Puerto Madryn'],
