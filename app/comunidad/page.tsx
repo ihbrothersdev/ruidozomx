@@ -1,7 +1,20 @@
 import { Header } from '@/app/components/layout/Header'
+import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { CommunityGrid } from './_components/CommunityGrid'
 import type { CommunityProfile } from './types'
+
+type ProfileRow = {
+  id: string
+  display_name: string
+  slug: string
+  photo_url: string | null
+  role: Role
+  city: string | null
+  state: string | null
+  country: string | null
+  bio: string | null
+}
 
 export const metadata: Metadata = {
   title: 'Comunidad',
@@ -28,14 +41,22 @@ export default async function ComunidadPage() {
       role = (userProfile?.role as string) || null
     }
 
-    // Fetch all active community profiles
-    const { data: dbProfiles } = await supabase
-      .from('profiles')
-      .select('id, display_name, slug, photo_url, role, city, state, country, bio')
-      .eq('active', true)
-      .order('created_at', { ascending: false })
+    // Fetch all active community profiles, paginating past PostgREST's 1000-row cap
+    const BATCH = 1000
+    const dbProfiles: ProfileRow[] = []
+    for (let from = 0; ; from += BATCH) {
+      const { data: batch } = await supabase
+        .from('profiles')
+        .select('id, display_name, slug, photo_url, role, city, state, country, bio')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .range(from, from + BATCH - 1)
+      if (!batch?.length) break
+      dbProfiles.push(...batch)
+      if (batch.length < BATCH) break
+    }
 
-    if (dbProfiles) {
+    if (dbProfiles.length) {
       profiles = dbProfiles.map(p => ({
         id: p.id,
         display_name: p.display_name,
