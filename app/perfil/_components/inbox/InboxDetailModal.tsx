@@ -1,5 +1,6 @@
 'use client'
 
+import { LabelTag } from '@/app/admin/_components/kit'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { ROLE_LABELS, type Role } from '@/lib/types'
 import Link from 'next/link'
@@ -40,7 +41,7 @@ export function InboxDetailModal({ open, onOpenChange, other, message, date, bad
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className='border-2 border-black bg-white p-0 shadow-[6px_6px_0_0_rgba(0,0,0,1)] sm:max-w-md'
+        className='admin-hard border-admin-ink bg-admin-surface text-admin-ink border-2 p-0 sm:max-w-md'
         showCloseButton
       >
         <DialogTitle className='sr-only'>{name}</DialogTitle>
@@ -53,20 +54,18 @@ export function InboxDetailModal({ open, onOpenChange, other, message, date, bad
             />
             <div className='flex min-w-0 flex-1 flex-col gap-1'>
               <div className='flex flex-wrap items-center gap-2'>
-                <span className='font-impact-label text-xl font-bold tracking-wider text-black uppercase'>{name}</span>
-                {other.role && (
-                  <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
-                    {ROLE_LABELS[other.role]}
-                  </span>
-                )}
+                <span className='font-impact-label text-admin-ink text-xl font-bold tracking-wider uppercase'>
+                  {name}
+                </span>
+                {other.role && <LabelTag>{ROLE_LABELS[other.role]}</LabelTag>}
                 {badge}
               </div>
-              <span className='font-pt-mono text-[11px] text-black/50'>{date}</span>
+              <span className='font-pt-mono text-admin-ink-faint text-[11px]'>{date}</span>
             </div>
           </div>
 
           {message && (
-            <div className='font-pt-mono mt-4 max-h-60 overflow-y-auto border-l-2 border-red-700 pl-3 text-sm leading-relaxed whitespace-pre-wrap text-black/80'>
+            <div className='font-pt-mono border-admin-red text-admin-ink-soft mt-4 max-h-60 overflow-y-auto border-l-2 pl-3 text-sm leading-relaxed whitespace-pre-wrap'>
               {message}
             </div>
           )}
@@ -74,7 +73,7 @@ export function InboxDetailModal({ open, onOpenChange, other, message, date, bad
           {other.slug && (
             <Link
               href={`/perfil/${other.slug}`}
-              className='font-pt-mono mt-4 inline-block text-sm font-bold tracking-wider text-red-700 uppercase underline underline-offset-2 transition-colors hover:text-red-800'
+              className='font-pt-mono text-admin-red hover:text-admin-red/70 mt-4 inline-block text-sm font-bold tracking-wider uppercase underline underline-offset-2 transition-colors'
             >
               Ver perfil
             </Link>

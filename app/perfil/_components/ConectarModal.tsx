@@ -8,6 +8,7 @@ import { Checkbox } from '@/app/components/ui/checkbox'
 import { getAnonSessionId } from '@/lib/analytics/session'
 import { sileo } from 'sileo'
 import { sendInterest } from '../actions'
+import { AdminButton } from '@/app/admin/_components/kit'
 
 interface ConectarModalProps {
   open: boolean
@@ -67,104 +68,84 @@ export default function ConectarModal({ open, onOpenChange, profileId, profileNa
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-2xl'
+        className='admin-hard max-h-[90vh] overflow-y-auto border-2 border-admin-ink bg-admin-surface p-0 text-admin-ink sm:max-w-lg'
         showCloseButton={false}
       >
         <DialogTitle className='sr-only'>Conectar</DialogTitle>
 
-        <div className='relative'>
-          {sent ? (
-            <div className='flex items-center justify-center p-6'>
-              <Image
-                src='/assets/success-conectar.png'
-                alt='Conexión enviada'
-                width={500}
-                height={400}
-                className='h-auto w-full max-w-md'
-              />
-            </div>
-          ) : (
-            <div className='relative min-h-full'>
-              <Image
-                src='/assets/membrete-background.png'
-                alt=''
-                width={600}
-                height={500}
-                className='absolute inset-0 h-full w-full object-fill'
-              />
+        {sent ? (
+          <div className='flex items-center justify-center p-6'>
+            <Image
+              src='/assets/success-conectar.png'
+              alt='Conexión enviada'
+              width={500}
+              height={400}
+              className='h-auto w-full max-w-md'
+            />
+          </div>
+        ) : (
+          <div className='flex flex-col p-6 sm:p-8'>
+            <h2 className='font-baby-doll text-4xl text-admin-ink'>Conectar</h2>
 
-              {/* Content */}
-              <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-                {/* Title image */}
-                <Image
-                  src='/assets/conectar-title.png'
-                  alt='Conectar'
-                  width={315}
-                  height={57}
-                  className='h-auto w-full max-w-43 sm:max-w-40'
-                />
+            {/* Sub */}
+            <p className='font-pt-mono mt-3 text-sm tracking-wider text-admin-ink-soft'>
+              Sub: &ldquo;Para: <span className='font-bold text-admin-ink'>{profileName}</span>&rdquo;
+            </p>
 
-                {/* Motivo section */}
-                <div className='mt-6 w-full space-y-3'>
-                  {/* Sub */}
-                  <p className='font-pt-mono mt-2 text-sm tracking-wider text-black'>
-                    Sub: &ldquo;Para: <span className='font-bold'>{profileName}</span>&rdquo;
-                  </p>
+            {/* Description */}
+            <p className='font-pt-mono mt-2 text-xs leading-relaxed tracking-wider text-admin-red'>
+              Dejas tu interés y el perfil
+              <br />
+              decide si te abre canal
+            </p>
 
-                  {/* Description */}
-                  <p className='font-pt-mono mt-2 ml-12 text-xs leading-relaxed tracking-wider text-red-600'>
-                    Dejas tu interés y el perfil
-                    <br />
-                    decide si te abre canal
-                  </p>
+            {/* Motivo section */}
+            <div className='mt-6 w-full space-y-3'>
+              <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>Motivo</p>
 
-                  <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Motivo</p>
-
-                  <div className='flex flex-col gap-2'>
-                    {MOTIVOS.map(motivo => (
-                      <div
-                        key={motivo}
-                        className='flex items-center gap-2'
-                      >
-                        <Checkbox
-                          id={`motivo-${motivo}`}
-                          checked={selectedMotivos.includes(motivo)}
-                          onCheckedChange={checked => {
-                            setSelectedMotivos(prev => (checked ? [...prev, motivo] : prev.filter(m => m !== motivo)))
-                          }}
-                          className='h-4 w-4 rounded-none border-1 border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
-                        />
-                        <Label
-                          htmlFor={`motivo-${motivo}`}
-                          className='font-pt-mono cursor-pointer text-xs font-bold tracking-wider text-black uppercase'
-                        >
-                          {motivo}
-                        </Label>
-                      </div>
-                    ))}
+              <div className='flex flex-col gap-2'>
+                {MOTIVOS.map(motivo => (
+                  <div
+                    key={motivo}
+                    className='flex items-center gap-2'
+                  >
+                    <Checkbox
+                      id={`motivo-${motivo}`}
+                      checked={selectedMotivos.includes(motivo)}
+                      onCheckedChange={checked => {
+                        setSelectedMotivos(prev => (checked ? [...prev, motivo] : prev.filter(m => m !== motivo)))
+                      }}
+                      className='h-4 w-4 rounded-none border-2 border-admin-ink data-[state=checked]:border-admin-red data-[state=checked]:bg-admin-red data-[state=checked]:text-admin-surface'
+                    />
+                    <Label
+                      htmlFor={`motivo-${motivo}`}
+                      className='font-pt-mono cursor-pointer text-xs font-bold tracking-wider text-admin-ink uppercase'
+                    >
+                      {motivo}
+                    </Label>
                   </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className='mt-6 flex justify-end gap-3'>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={selectedMotivos.length === 0 || sending}
-                    className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-                  >
-                    {sending ? 'Enviando...' : 'Enviar'}
-                  </button>
-                  <button
-                    onClick={() => onOpenChange(false)}
-                    className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
-                  >
-                    Cancelar
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Action buttons */}
+            <div className='mt-6 flex justify-end gap-3'>
+              <AdminButton
+                variant='solid'
+                onClick={handleSubmit}
+                disabled={selectedMotivos.length === 0 || sending}
+              >
+                {sending ? 'Enviando...' : 'Enviar'}
+              </AdminButton>
+              <AdminButton
+                variant='primary'
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </AdminButton>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

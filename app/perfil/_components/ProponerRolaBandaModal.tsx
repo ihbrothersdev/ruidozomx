@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { AdminButton } from '@/app/admin/_components/kit'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Checkbox } from '@/app/components/ui/checkbox'
@@ -48,7 +49,7 @@ const VIBES = [
 ]
 
 const inputCls =
-  'h-auto max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'h-auto max-w-full rounded-none border-2 border-admin-ink bg-admin-paper px-3 py-1.5 font-pt-mono text-sm text-admin-ink shadow-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
 export default function ProponerRolaBandaModal({
   open,
@@ -186,76 +187,59 @@ export default function ProponerRolaBandaModal({
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-2xl'
+        className='admin-hard max-h-[90vh] overflow-y-auto border-2 border-admin-ink bg-admin-surface p-0 text-admin-ink sm:max-w-2xl'
         showCloseButton={false}
       >
         <DialogTitle className='sr-only'>Proponer rola de esta banda</DialogTitle>
 
-        <div className='relative'>
-          {sent ? (
-            <div className='flex items-center justify-center p-6'>
-              <Image
-                src='/assets/success-propon-rola.png'
-                alt='Rola propuesta'
-                width={500}
-                height={400}
-                className='h-auto w-full max-w-md'
-              />
-            </div>
-          ) : (
-            <div className='relative min-h-full'>
-              <Image
-                src='/assets/membrete-background.png'
-                alt=''
-                width={600}
-                height={500}
-                className='absolute inset-0 h-full w-full object-fill'
-              />
+        {sent ? (
+          <div className='flex items-center justify-center p-6'>
+            <Image
+              src='/assets/success-propon-rola.png'
+              alt='Rola propuesta'
+              width={500}
+              height={400}
+              className='h-auto w-full max-w-md'
+            />
+          </div>
+        ) : (
+          <div className='flex flex-col p-6 sm:p-8'>
+            {/* Title */}
+            <h2 className='font-baby-doll text-4xl text-admin-ink'>Propón una rola</h2>
 
-              {/* Content */}
-              <div className='relative z-10 flex flex-col items-center pt-4 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-                {/* Title image */}
-                <Image
-                  src='/assets/proponer-rola-sm.png'
-                  alt='Propón una rola'
-                  width={315}
-                  height={57}
-                  className='h-auto w-full max-w-64 sm:max-w-72'
-                />
+            {/* Subtitle */}
+            <p className='font-pt-mono text-md mt-3 leading-tight tracking-wider text-admin-red'>
+              {isEditing ? (
+                <>
+                  Actualiza los datos de tu rola
+                  <br />
+                  mientras sigue en la fila de curaduría
+                </>
+              ) : (
+                <>
+                  Esta rola se va a la fila de curaduría
+                  <br />
+                  del casete quincenal
+                </>
+              )}
+            </p>
 
-                {/* Subtitle */}
-                <p className='font-pt-mono text-md mt-3 text-center leading-tight tracking-wider text-red-600'>
-                  {isEditing ? (
-                    <>
-                      Actualiza los datos de tu rola
-                      <br />
-                      mientras sigue en la fila de curaduría
-                    </>
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className='mt-5 w-full space-y-4'
+            >
+              {/* Banda/Proyecto */}
+              <div className='space-y-1'>
+                <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                  {isBandPrefilled ? (
+                    `Banda/Proyecto: ${bandName}`
                   ) : (
                     <>
-                      Esta rola se va a la fila de curaduría
-                      <br />
-                      del casete quincenal
+                      Banda/Proyecto<span className='text-admin-red'>*</span>
                     </>
                   )}
-                </p>
-
-                {/* Form */}
-                <form
-                  onSubmit={handleSubmit}
-                  className='mt-5 w-full space-y-4'
-                >
-                  {/* Banda/Proyecto */}
-                  <div className='space-y-1'>
-                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                      {isBandPrefilled ? (
-                        `Banda/Proyecto: ${bandName}`
-                      ) : (
-                        <>
-                          Banda/Proyecto<span className='text-red-600'>*</span>
-                        </>
-                      )}
-                    </Label>
+                </Label>
                     {!isBandPrefilled && (
                       <Input
                         value={artistName}
@@ -269,8 +253,8 @@ export default function ProponerRolaBandaModal({
 
                   {/* Nombre de la rola */}
                   <div className='space-y-1'>
-                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                      Nombre de la rola<span className='text-red-600'>*</span>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                      Nombre de la rola<span className='text-admin-red'>*</span>
                     </Label>
                     <Input
                       value={songName}
@@ -283,8 +267,8 @@ export default function ProponerRolaBandaModal({
 
                   {/* Link de escucha */}
                   <div className='space-y-1'>
-                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                      Link de escucha<span className='text-red-600'>*</span>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                      Link de escucha<span className='text-admin-red'>*</span>
                     </Label>
                     <Input
                       value={listenLink}
@@ -298,7 +282,7 @@ export default function ProponerRolaBandaModal({
 
                   {/* Link de descarga (opcional) */}
                   <div className='space-y-1'>
-                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                    <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
                       Link de descarga
                     </Label>
                     <Input
@@ -315,11 +299,11 @@ export default function ProponerRolaBandaModal({
                       En edición se oculta si la rola ya tiene MP3 (no se reemplaza). */}
                   {showAudioField && (
                     <div className='space-y-1'>
-                      <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
                         Archivo MP3 (opcional)
                       </Label>
                       <div className='flex flex-wrap items-center gap-3'>
-                        <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
+                        <label className='font-pt-mono admin-press cursor-pointer border-2 border-admin-ink bg-admin-surface px-3 py-1.5 text-xs font-bold tracking-wider text-admin-ink uppercase transition-colors hover:bg-admin-paper-deep'>
                           Elegir archivo
                           <input
                             type='file'
@@ -328,7 +312,7 @@ export default function ProponerRolaBandaModal({
                             className='hidden'
                           />
                         </label>
-                        <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
+                        <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-admin-ink-soft'>
                           {audioFile
                             ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
                             : 'Sin archivo seleccionado'}
@@ -340,7 +324,7 @@ export default function ProponerRolaBandaModal({
                   {/* Vibes section — only shown when showVibes is true */}
                   {showVibes && (
                     <div className='space-y-2'>
-                      <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
                         ¿Qué te vibra?
                       </p>
                       <div className='flex flex-col gap-1.5'>
@@ -353,11 +337,11 @@ export default function ProponerRolaBandaModal({
                               id={`vibe-${vibe}`}
                               checked={selectedVibes.includes(vibe)}
                               onCheckedChange={() => toggleVibe(vibe)}
-                              className='h-4 w-4 rounded-none border-1 border-red-600 data-[state=checked]:border-red-600 data-[state=checked]:bg-red-600'
+                              className='h-4 w-4 rounded-none border-2 border-admin-ink data-[state=checked]:border-admin-red data-[state=checked]:bg-admin-red data-[state=checked]:text-admin-surface'
                             />
                             <Label
                               htmlFor={`vibe-${vibe}`}
-                              className='font-pt-mono cursor-pointer text-xs tracking-wider text-black'
+                              className='font-pt-mono cursor-pointer text-xs tracking-wider text-admin-ink'
                             >
                               {vibe}
                             </Label>
@@ -369,26 +353,24 @@ export default function ProponerRolaBandaModal({
 
                   {/* Action buttons */}
                   <div className='mt-5 flex items-center gap-3'>
-                    <button
+                    <AdminButton
                       type='submit'
+                      variant='solid'
                       disabled={!canSubmit || sending}
-                      className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                     >
                       {sending ? (isEditing ? 'Guardando...' : 'Enviando...') : isEditing ? 'Guardar' : 'Enviar'}
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
                       type='button'
+                      variant='primary'
                       onClick={() => onOpenChange(false)}
-                      className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
                     >
                       Cancelar
-                    </button>
+                    </AdminButton>
                   </div>
                 </form>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

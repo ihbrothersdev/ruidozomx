@@ -1,5 +1,6 @@
 'use client'
 
+import { AdminButton } from '@/app/admin/_components/kit'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { sileo } from 'sileo'
@@ -60,34 +61,38 @@ export default function ProposalActions({ proposalId, displayName, direction, st
     <div className='mt-1 flex flex-wrap gap-2'>
       {direction === 'received' && (
         <>
-          <button
+          <AdminButton
             type='button'
+            variant='primary'
+            size='sm'
             onClick={handleAccept}
             disabled={isPending}
-            className='font-pt-mono cursor-pointer rounded-sm bg-green-600 px-3 py-1 text-[11px] font-bold tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-green-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
+            className='bg-admin-olive text-admin-surface'
           >
             Aceptar
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
             type='button'
+            variant='danger'
+            size='sm'
             onClick={() => setConfirmReject(true)}
             disabled={isPending}
-            className='font-pt-mono cursor-pointer rounded-sm border border-red-600 px-3 py-1 text-[11px] font-bold tracking-wider whitespace-nowrap text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
           >
             Rechazar
-          </button>
+          </AdminButton>
         </>
       )}
 
       {direction === 'sent' && (
-        <button
+        <AdminButton
           type='button'
+          variant='danger'
+          size='sm'
           onClick={() => setConfirmWithdraw(true)}
           disabled={isPending}
-          className='font-pt-mono cursor-pointer rounded-sm border border-red-600 px-3 py-1 text-[11px] font-bold tracking-wider whitespace-nowrap text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
         >
           Retirar
-        </button>
+        </AdminButton>
       )}
 
       <ConfirmActionModal

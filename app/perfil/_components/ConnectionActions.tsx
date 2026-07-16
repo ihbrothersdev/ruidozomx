@@ -1,5 +1,6 @@
 'use client'
 
+import { AdminButton } from '@/app/admin/_components/kit'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { sileo } from 'sileo'
@@ -35,23 +36,25 @@ export default function ConnectionActions({ profileId, displayName, direction, i
   return (
     <div className='mt-1 flex flex-wrap gap-2'>
       {direction === 'received' && !isMutual && (
-        <button
+        <AdminButton
           type='button'
+          variant='solid'
+          size='sm'
           onClick={() => setConectarOpen(true)}
-          className='font-pt-mono cursor-pointer rounded-sm bg-black px-3 py-1 text-[11px] font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95'
         >
           Conectar de vuelta
-        </button>
+        </AdminButton>
       )}
 
       {direction === 'sent' && (
-        <button
+        <AdminButton
           type='button'
+          variant='danger'
+          size='sm'
           onClick={() => setConfirmOpen(true)}
-          className='font-pt-mono cursor-pointer rounded-sm border border-red-600 px-3 py-1 text-[11px] font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white active:scale-95'
         >
           Retirar
-        </button>
+        </AdminButton>
       )}
 
       <ConectarModal

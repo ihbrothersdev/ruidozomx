@@ -26,12 +26,17 @@ interface IdentityBlockProps {
 }
 
 const inputCls =
-  'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-1 font-pt-mono text-sm font-bold uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
+  'h-auto w-full border-2 border-admin-ink bg-admin-paper px-3 py-1 font-pt-mono text-sm font-bold uppercase tracking-wider text-admin-ink shadow-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
 const smallInputCls =
-  'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-2 py-1 font-pt-mono text-xs uppercase tracking-wider text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
+  'h-auto w-full border-2 border-admin-ink bg-admin-paper px-2 py-1 font-pt-mono text-xs uppercase tracking-wider text-admin-ink shadow-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
-const labelCls = 'font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'
+const labelCls = 'font-pt-mono text-[11px] font-bold tracking-wider text-admin-ink-soft uppercase'
+
+const toggleCls =
+  'font-pt-mono cursor-pointer border-2 border-admin-ink px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors'
+const toggleOnCls = 'bg-admin-red text-admin-surface'
+const toggleOffCls = 'bg-admin-surface text-admin-ink-faint hover:text-admin-ink'
 
 const INDUSTRY_ROLES: Role[] = ['manager', 'promotor', 'agente']
 
@@ -69,7 +74,9 @@ export default function IdentityBlock({
           className={inputCls + ' text-lg'}
         />
       ) : (
-        <h1 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>{displayName}</h1>
+        <h1 className='font-baby-doll text-3xl leading-none font-bold tracking-wide text-admin-ink uppercase'>
+          {displayName}
+        </h1>
       )}
 
       {editing ? (
@@ -88,7 +95,9 @@ export default function IdentityBlock({
           />
         </div>
       ) : (
-        location && <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>{location}</p>
+        location && (
+          <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>{location}</p>
+        )
       )}
 
       {role && (
@@ -105,12 +114,7 @@ export default function IdentityBlock({
                       type='button'
                       onClick={() => onRoleChange(r)}
                       aria-pressed={isOn}
-                      className={
-                        'font-pt-mono cursor-pointer rounded-sm px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ' +
-                        (isOn
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'bg-black/10 text-black/40 hover:bg-black/20 hover:text-black/60')
-                      }
+                      className={toggleCls + ' ' + (isOn ? toggleOnCls : toggleOffCls)}
                     >
                       {ROLE_LABELS[r]}
                     </button>
@@ -119,7 +123,7 @@ export default function IdentityBlock({
               </div>
             </div>
           ) : (
-            <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+            <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
               Rol: {ROLE_LABELS[role] ?? role}
             </p>
           )}
@@ -138,7 +142,9 @@ export default function IdentityBlock({
             />
           </div>
         ) : alias ? (
-          <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Alias público: {alias}</p>
+          <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+            Alias público: {alias}
+          </p>
         ) : null)}
 
       {role === 'banda' &&
@@ -153,7 +159,7 @@ export default function IdentityBlock({
             />
           </div>
         ) : genre ? (
-          <p className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+          <p className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
             Género principal: {genre}
           </p>
         ) : null)}
@@ -172,7 +178,7 @@ export default function IdentityBlock({
       )}
 
       {role === 'banda' && (
-        <p className='font-pt-mono mt-2 text-sm font-bold tracking-wider text-black uppercase'>Disponible para:</p>
+        <p className='font-pt-mono mt-2 text-sm font-bold tracking-wider text-admin-ink uppercase'>Disponible para:</p>
       )}
 
       {role && (hasEditableFields || editing) && (

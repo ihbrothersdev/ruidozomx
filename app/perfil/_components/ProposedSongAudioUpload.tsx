@@ -61,12 +61,12 @@ export default function ProposedSongAudioUpload({ proposalId }: { proposalId: st
   return (
     <label
       title={error ?? 'Subir MP3'}
-      className={`font-pt-mono shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase transition-colors ${
+      className={`font-pt-mono shrink-0 border-2 px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase transition-colors ${
         busy
-          ? 'cursor-wait border-red-700/40 text-red-700/60'
+          ? 'cursor-wait border-admin-ink/40 text-admin-ink-faint'
           : error
-            ? 'cursor-pointer border-red-700 bg-red-700 text-white'
-            : 'cursor-pointer border-red-700 text-red-700 hover:bg-red-700 hover:text-white'
+            ? 'cursor-pointer border-admin-ink bg-admin-red text-admin-surface'
+            : 'cursor-pointer border-admin-ink text-admin-red hover:bg-admin-red hover:text-admin-surface'
       }`}
     >
       {label}

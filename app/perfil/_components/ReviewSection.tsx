@@ -1,5 +1,6 @@
 'use client'
 
+import { Paper } from '@/app/admin/_components/kit'
 import { Textarea } from '@/app/components/ui/textarea'
 import type { Role } from '@/lib/types'
 
@@ -15,8 +16,11 @@ export default function ReviewSection({ bio, role, editing = false, onBioChange 
 
   return (
     <div className='flex flex-1 flex-col'>
-      <h2 className='font-pt-mono text-lg tracking-wider text-black uppercase'>{title}</h2>
-      <div className={`mt-2 min-h-62 flex-1 border p-4 ${editing ? 'border-red-700/30' : 'border-red-500'}`}>
+      <h2 className='font-pt-mono text-admin-ink text-lg tracking-wider uppercase'>{title}</h2>
+      <Paper
+        tone='red'
+        className='mt-2 min-h-62 flex-1 p-4'
+      >
         {editing ? (
           <Textarea
             value={bio ?? ''}
@@ -24,16 +28,16 @@ export default function ReviewSection({ bio, role, editing = false, onBioChange 
             maxLength={600}
             rows={8}
             placeholder='600 caractéres máximo'
-            className='font-pt-mono w-full resize-none border-0 bg-transparent p-0 text-sm text-black uppercase shadow-none placeholder:text-black/30 focus-visible:ring-0'
+            className='font-pt-mono text-admin-ink placeholder:text-admin-ink-faint w-full resize-none border-0 bg-transparent p-0 text-sm uppercase shadow-none focus-visible:ring-0'
           />
         ) : bio ? (
-          <p className='font-pt-mono text-sm text-black uppercase'>
+          <p className='font-pt-mono text-admin-ink text-sm uppercase'>
             {bio.length > 600 ? bio.slice(0, 600) + '…' : bio}
           </p>
         ) : (
-          <p className='mt-2 text-sm tracking-wider text-black uppercase'>No agregaste descripción :(</p>
+          <p className='text-admin-ink mt-2 text-sm tracking-wider uppercase'>No agregaste descripción :(</p>
         )}
-      </div>
+      </Paper>
     </div>
   )
 }

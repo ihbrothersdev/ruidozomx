@@ -23,10 +23,10 @@ export default function EditableChip({ label, name, value, onChange }: EditableC
         onClick={() => onChange(!value)}
         aria-pressed={value}
         className={
-          'font-pt-mono cursor-pointer rounded-sm px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ' +
+          'font-pt-mono cursor-pointer border-2 border-admin-ink px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ' +
           (value
-            ? 'bg-red-600 text-white hover:bg-red-700'
-            : 'bg-black/10 text-black/40 hover:bg-black/20 hover:text-black/60')
+            ? 'bg-admin-red text-admin-surface'
+            : 'bg-admin-surface text-admin-ink-faint hover:text-admin-ink')
         }
       >
         {label}

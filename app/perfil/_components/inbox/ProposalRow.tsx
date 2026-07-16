@@ -1,5 +1,6 @@
 'use client'
 
+import { LabelTag, Stamp, type Tone } from '@/app/admin/_components/kit'
 import { ROLE_LABELS } from '@/lib/types'
 import { useState } from 'react'
 import type { UserProposalSummary } from '../DynamicModules'
@@ -13,6 +14,13 @@ interface ProposalRowProps {
   direction: 'received' | 'sent'
 }
 
+const STATUS_TONE: Record<UserProposalSummary['status'], Tone> = {
+  pending: 'gold',
+  accepted: 'olive',
+  rejected: 'red',
+  withdrawn: 'ink'
+}
+
 /** A single proposal summary; clicking it opens the detail modal. */
 export function ProposalRow({ proposal, direction }: ProposalRowProps) {
   const [open, setOpen] = useState(false)
@@ -20,13 +28,7 @@ export function ProposalRow({ proposal, direction }: ProposalRowProps) {
   const name = other.display_name || 'Perfil'
   const date = formatInboxDate(proposal.created_at)
   const status = PROPOSAL_STATUS_LABEL[proposal.status]
-  const badge = (
-    <span
-      className={`font-pt-mono rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
-    >
-      {status.label}
-    </span>
-  )
+  const badge = <Stamp tone={STATUS_TONE[proposal.status]}>{status.label}</Stamp>
 
   return (
     <li>
@@ -41,16 +43,12 @@ export function ProposalRow({ proposal, direction }: ProposalRowProps) {
         />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
           <div className='flex flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-            <span className='font-pt-mono font-bold text-black uppercase'>{name}</span>
-            {other.role && (
-              <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
-                {ROLE_LABELS[other.role]}
-              </span>
-            )}
+            <span className='font-pt-mono font-bold text-admin-ink uppercase'>{name}</span>
+            {other.role && <LabelTag>{ROLE_LABELS[other.role]}</LabelTag>}
             {badge}
           </div>
-          <span className='font-pt-mono line-clamp-1 text-xs text-black/70'>{proposal.message}</span>
-          <span className='font-pt-mono text-[11px] text-black/50'>{date}</span>
+          <span className='font-pt-mono line-clamp-1 text-xs text-admin-ink-soft'>{proposal.message}</span>
+          <span className='font-pt-mono text-[11px] text-admin-ink-faint'>{date}</span>
         </div>
       </button>
 

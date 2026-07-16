@@ -1,6 +1,7 @@
 'use client'
 
 import { logEvent } from '@/app/analytics/actions'
+import { AdminButton } from '@/app/admin/_components/kit'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { PlatformIcon } from '@/app/components/ui/platform-icon'
 import { getAnonSessionId } from '@/lib/analytics/session'
@@ -77,121 +78,104 @@ export default function CompartirModal({ open, onOpenChange, source, songId, cas
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-4xl'
+        className='admin-hard max-h-[90vh] overflow-y-auto border-2 border-admin-ink bg-admin-surface p-0 text-admin-ink sm:max-w-4xl'
         showCloseButton={false}
       >
         <DialogTitle className='sr-only'>Compartir</DialogTitle>
 
-        <div className='relative'>
-          {/* Membrete background */}
-          <Image
-            src='/assets/membrete-background.png'
-            alt=''
-            width={600}
-            height={500}
-            className='absolute inset-0 h-full w-full object-fill'
-          />
+        {/* Content */}
+        <div className='flex flex-col items-center px-8 py-8'>
+          <h2 className='font-baby-doll text-4xl text-admin-ink'>Compartir</h2>
 
-          {/* Content */}
-          <div className='relative z-10 flex flex-col items-center px-8 pt-4 pb-6'>
-            {/* Title image */}
-            <Image
-              src='/assets/compartir/title.png'
-              alt='Compartir'
-              width={428}
-              height={54}
-              className='h-auto w-full max-w-72'
-            />
-
-            {/* Share icons row + URL */}
-            <div className='mt-4 flex flex-col items-center gap-2 text-center'>
-              <div className='flex items-center gap-3'>
-                <button
-                  onClick={handleShare}
-                  aria-label='Compartir'
-                  title='Compartir'
-                  className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-red-600 text-red-600 transition-colors hover:bg-red-600 hover:text-white'
-                >
-                  <Share2 className='h-4 w-4' />
-                </button>
-                {platforms.map(p => (
-                  <a
-                    key={p.key}
-                    href={p.href}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    aria-label={`Compartir en ${p.label}`}
-                    title={p.label}
-                    onClick={() => trackShare(p.key)}
-                    className='flex h-9 w-9 items-center justify-center rounded-full border-2 border-black text-black transition-colors hover:bg-black hover:text-white'
-                  >
-                    <PlatformIcon
-                      platform={p.key}
-                      className='h-4 w-4'
-                    />
-                  </a>
-                ))}
-                <button
-                  onClick={handleCopy}
-                  aria-label={copied ? 'Copiado' : 'Copiar link'}
-                  title={copied ? 'Copiado' : 'Copiar link'}
-                  className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-black text-black transition-colors hover:bg-black hover:text-white'
-                >
-                  <Copy className='h-4 w-4' />
-                </button>
-              </div>
-              <p className='font-pt-mono text-xs tracking-wider text-black/70'>
-                {copied ? '¡Link copiado!' : shareUrl}
-              </p>
-            </div>
-
-            {/* Images section */}
-            <div className='mt-4 flex items-end justify-center gap-4 sm:gap-6'>
-              {/* Post */}
-              <div className='flex flex-col items-center gap-2'>
-                <Image
-                  src='/assets/compartir/post.png'
-                  alt='Post para compartir'
-                  width={1080}
-                  height={1350}
-                  className='h-auto w-28 sm:w-40 lg:w-52'
-                />
+          {/* Share icons row + URL */}
+          <div className='mt-4 flex flex-col items-center gap-2 text-center'>
+            <div className='flex items-center gap-3'>
+              <button
+                onClick={handleShare}
+                aria-label='Compartir'
+                title='Compartir'
+                className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-admin-red text-admin-red transition-colors hover:bg-admin-red hover:text-admin-surface'
+              >
+                <Share2 className='h-4 w-4' />
+              </button>
+              {platforms.map(p => (
                 <a
-                  href='/assets/compartir/post.png'
-                  download='ruidozo-post.png'
-                  className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-black uppercase underline-offset-2 transition-opacity hover:underline'
+                  key={p.key}
+                  href={p.href}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  aria-label={`Compartir en ${p.label}`}
+                  title={p.label}
+                  onClick={() => trackShare(p.key)}
+                  className='flex h-9 w-9 items-center justify-center rounded-full border-2 border-admin-ink text-admin-ink transition-colors hover:bg-admin-ink hover:text-admin-paper'
                 >
-                  Descargar Post
+                  <PlatformIcon
+                    platform={p.key}
+                    className='h-4 w-4'
+                  />
                 </a>
-              </div>
-
-              {/* Reel / Stories */}
-              <div className='flex flex-col items-center gap-2'>
-                <Image
-                  src='/assets/compartir/reel.png'
-                  alt='Reel para compartir'
-                  width={1080}
-                  height={1920}
-                  className='h-auto w-28 sm:w-40 lg:w-52'
-                />
-                <a
-                  href='/assets/compartir/reel.png'
-                  download='ruidozo-reel.png'
-                  className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-black uppercase underline-offset-2 transition-opacity hover:underline'
-                >
-                  Descargar Reel/Stories
-                </a>
-              </div>
+              ))}
+              <button
+                onClick={handleCopy}
+                aria-label={copied ? 'Copiado' : 'Copiar link'}
+                title={copied ? 'Copiado' : 'Copiar link'}
+                className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-admin-ink text-admin-ink transition-colors hover:bg-admin-ink hover:text-admin-paper'
+              >
+                <Copy className='h-4 w-4' />
+              </button>
             </div>
-
-            {/* Cancel button */}
-            <button
-              onClick={() => onOpenChange(false)}
-              className='font-pt-mono mt-3 cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
-            >
-              Cancelar
-            </button>
+            <p className='font-pt-mono text-xs tracking-wider text-admin-ink-soft'>
+              {copied ? '¡Link copiado!' : shareUrl}
+            </p>
           </div>
+
+          {/* Images section */}
+          <div className='mt-6 flex items-end justify-center gap-4 sm:gap-6'>
+            {/* Post */}
+            <div className='flex flex-col items-center gap-2'>
+              <Image
+                src='/assets/compartir/post.png'
+                alt='Post para compartir'
+                width={1080}
+                height={1350}
+                className='h-auto w-28 border-2 border-admin-ink sm:w-40 lg:w-52'
+              />
+              <a
+                href='/assets/compartir/post.png'
+                download='ruidozo-post.png'
+                className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-admin-ink uppercase underline-offset-2 transition-opacity hover:underline'
+              >
+                Descargar Post
+              </a>
+            </div>
+
+            {/* Reel / Stories */}
+            <div className='flex flex-col items-center gap-2'>
+              <Image
+                src='/assets/compartir/reel.png'
+                alt='Reel para compartir'
+                width={1080}
+                height={1920}
+                className='h-auto w-28 border-2 border-admin-ink sm:w-40 lg:w-52'
+              />
+              <a
+                href='/assets/compartir/reel.png'
+                download='ruidozo-reel.png'
+                className='font-pt-mono cursor-pointer text-[10px] font-bold tracking-wider text-admin-ink uppercase underline-offset-2 transition-opacity hover:underline'
+              >
+                Descargar Reel/Stories
+              </a>
+            </div>
+          </div>
+
+          {/* Cancel button */}
+          <AdminButton
+            variant='primary'
+            onClick={() => onOpenChange(false)}
+            className='mt-6'
+          >
+            Cancelar
+          </AdminButton>
         </div>
       </DialogContent>
     </Dialog>

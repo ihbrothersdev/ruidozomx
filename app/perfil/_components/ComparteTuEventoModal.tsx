@@ -13,6 +13,7 @@ import { Textarea } from '@/app/components/ui/textarea'
 import { Label } from '@/app/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
+import { AdminButton } from '@/app/admin/_components/kit'
 import { submitEvent, updateEvent } from '../actions'
 import type { EventSummary } from './DynamicModules'
 
@@ -27,10 +28,10 @@ const maxDescripcion = 200
 const TIPOS_EVENTO = ['Tocada', 'Convocatoria', 'Fecha disponible']
 
 const inputCls =
-  'w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'w-full rounded-none border-2 border-admin-ink bg-admin-paper px-3 py-1.5 font-pt-mono text-sm text-admin-ink shadow-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
 const textareaCls =
-  'max-w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none resize-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'max-w-full rounded-none border-2 border-admin-ink bg-admin-paper px-3 py-1.5 font-pt-mono text-sm text-admin-ink shadow-none resize-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
 export default function ComparteTuEventoModal({ open, onOpenChange, event = null }: ComparteTuEventoModalProps) {
   const isEditing = !!event
@@ -101,55 +102,35 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        className='max-h-[90vh] overflow-y-auto border-none bg-transparent p-0 shadow-none sm:max-w-2xl'
+        className='admin-hard max-h-[90vh] overflow-y-auto border-2 border-admin-ink bg-admin-surface p-0 text-admin-ink sm:max-w-2xl'
         showCloseButton={false}
       >
         <DialogTitle className='sr-only'>
           {isEditing ? 'Edita tu evento publicado' : 'Comparte tu evento con la comunidad RU!DOZO'}
         </DialogTitle>
 
-        <div className='relative'>
-          <div className='relative min-h-full'>
-            <Image
-              src='/assets/membrete-background.png'
-              alt=''
-              width={600}
-              height={800}
-              className='absolute inset-0 h-full w-full object-fill'
-            />
+        {/* Content */}
+        <div className='flex flex-col p-6 sm:p-8'>
+          {/* Title */}
+          <h2 className='font-baby-doll text-4xl text-admin-ink'>
+            {isEditing ? 'Edita tu evento' : 'Comparte tu evento'}
+          </h2>
 
-            {/* Content */}
-            <div className='relative z-10 flex flex-col pt-6 pr-6 pb-6 pl-15 sm:pr-10 sm:pl-28'>
-              {/* Title — image for create, text heading for edit */}
-              {isEditing ? (
-                <h2 className='font-pt-mono text-2xl font-bold tracking-wider text-black uppercase sm:text-3xl'>
-                  Edita tu evento
-                </h2>
-              ) : (
-                <Image
-                  src='/assets/comparte-evento-title.png'
-                  alt='Comparte tu evento con la comunidad RU!DOZO'
-                  width={500}
-                  height={80}
-                  className='h-auto w-full max-w-78 sm:max-w-100'
-                />
-              )}
-
-              {/* Form */}
-              <form
-                onSubmit={handleSubmit}
-                className='mt-5 w-full space-y-4'
-              >
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            className='mt-5 w-full space-y-4'
+          >
                 {/* Tipo — dropdown */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Tipo<span className='text-red-600'>*</span>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                    Tipo<span className='text-admin-red'>*</span>
                   </Label>
                   <Select
                     value={tipo}
                     onValueChange={setTipo}
                   >
-                    <SelectTrigger className='font-pt-mono w-full rounded-none border-2 border-red-600 bg-transparent text-sm text-black shadow-none focus-visible:border-red-800 focus-visible:ring-0'>
+                    <SelectTrigger className='font-pt-mono w-full rounded-none border-2 border-admin-ink bg-admin-paper text-sm text-admin-ink shadow-none focus-visible:border-admin-red focus-visible:ring-0'>
                       <SelectValue placeholder='Selecciona tipo' />
                     </SelectTrigger>
                     <SelectContent>
@@ -167,8 +148,8 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
                 {/* Nombre del evento */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Nombre del evento<span className='text-red-600'>*</span>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                    Nombre del evento<span className='text-admin-red'>*</span>
                   </Label>
                   <Input
                     value={nombre}
@@ -180,7 +161,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
                 {/* Lugar */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Lugar</Label>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>Lugar</Label>
                   <div className='space-y-2'>
                     <div className='flex gap-2'>
                       <Input
@@ -207,8 +188,8 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
                 {/* Fecha */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-                    Fecha<span className='text-red-600'>*</span>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
+                    Fecha<span className='text-admin-red'>*</span>
                   </Label>
                   <Popover
                     open={calendarOpen}
@@ -218,11 +199,11 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
                       <button
                         type='button'
                         className={`${inputCls} flex items-center justify-between text-left ${
-                          fecha ? 'text-black' : 'text-black/30'
+                          fecha ? 'text-admin-ink' : 'text-admin-ink-faint'
                         }`}
                       >
                         {fecha ? format(fecha, "d 'de' MMMM 'de' yyyy", { locale: es }) : 'Selecciona una fecha'}
-                        <CalendarIcon className='ml-2 size-4 shrink-0 text-red-600' />
+                        <CalendarIcon className='ml-2 size-4 shrink-0 text-admin-red' />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -246,7 +227,7 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
                 {/* Descripción del evento */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>
                     Descripción del evento
                   </Label>
                   <Textarea
@@ -257,14 +238,14 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
                     rows={5}
                     className={textareaCls}
                   />
-                  <p className='font-pt-mono text-right text-[10px] tracking-wider text-black/40'>
+                  <p className='font-pt-mono text-right text-[10px] tracking-wider text-admin-ink-faint'>
                     {descripcion.length}/{maxDescripcion}
                   </p>
                 </div>
 
                 {/* Links */}
                 <div className='space-y-1'>
-                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>Links</Label>
+                  <Label className='font-pt-mono text-sm font-bold tracking-wider text-admin-ink uppercase'>Links</Label>
                   <Input
                     value={links}
                     onChange={e => setLinks(e.target.value)}
@@ -275,24 +256,22 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
                 {/* Action buttons */}
                 <div className='mt-6 flex justify-end gap-3'>
-                  <button
+                  <AdminButton
                     type='submit'
+                    variant='solid'
                     disabled={!canSubmit || sending}
-                    className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                   >
                     {sending ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Enviar'}
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
                     type='button'
+                    variant='primary'
                     onClick={() => onOpenChange(false)}
-                    className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
                   >
                     Cancelar
-                  </button>
+                  </AdminButton>
                 </div>
-              </form>
-            </div>
-          </div>
+          </form>
         </div>
       </DialogContent>
     </Dialog>

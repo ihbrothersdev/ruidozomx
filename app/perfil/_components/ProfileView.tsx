@@ -1,5 +1,6 @@
 'use client'
 
+import { AdminButton } from '@/app/admin/_components/kit'
 import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import type { FeaturedSongView, Role } from '@/lib/types'
 import { useRouter } from 'next/navigation'
@@ -320,25 +321,29 @@ export default function ProfileView(props: ProfileViewProps) {
         bottomSection={
           <div className='flex flex-col items-center gap-4'>
             <div className='flex w-70 gap-2'>
-              <button
+              <AdminButton
                 type='button'
+                variant='primary'
+                size='lg'
                 onClick={handleSave}
                 disabled={isPending}
-                className='font-impact-label flex-1 cursor-pointer border-red-700 bg-red-600 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
+                className='flex-1'
               >
                 {isPending ? 'Guardando…' : 'Guardar'}
-              </button>
-              <button
+              </AdminButton>
+              <AdminButton
                 type='button'
+                variant='solid'
+                size='lg'
                 onClick={cancelEdit}
                 disabled={isPending}
-                className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60'
+                className='flex-1'
               >
                 Cancelar
-              </button>
+              </AdminButton>
             </div>
             {error && (
-              <p className='font-pt-mono w-70 bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
+              <p className='font-pt-mono border-2 border-admin-ink bg-admin-red/12 w-70 px-3 py-2 text-xs font-bold tracking-wider text-admin-red uppercase'>
                 {error}
               </p>
             )}
@@ -443,59 +448,69 @@ export default function ProfileView(props: ProfileViewProps) {
               <div className='flex w-70 flex-col gap-2'>
                 <div className='flex gap-2'>
                   {canEdit && (
-                    <button
+                    <AdminButton
                       type='button'
+                      variant='solid'
+                      size='lg'
                       onClick={startEdit}
-                      className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+                      className='flex-1'
                     >
                       Editar
-                    </button>
+                    </AdminButton>
                   )}
                   {canDelete && (
-                    <button
+                    <AdminButton
                       type='button'
+                      variant='primary'
+                      size='lg'
                       onClick={() => setAdminModal('delete')}
                       disabled={isPending}
-                      className='font-impact-label flex-1 cursor-pointer border-red-800 bg-red-700 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60'
+                      className='flex-1'
                     >
                       Eliminar
-                    </button>
+                    </AdminButton>
                   )}
                 </div>
                 {canConfirm && (
                   <div className='flex flex-col gap-2'>
-                    <button
+                    <AdminButton
                       type='button'
+                      variant='outline'
+                      size='lg'
                       onClick={() => setAdminModal('confirm')}
                       disabled={isPending}
-                      className='font-impact-label block w-full cursor-pointer border-2 border-black bg-white px-3 py-1 text-center text-xl font-bold tracking-wider text-black uppercase transition-colors hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-60'
+                      className='w-full'
                     >
                       Confirmar cuenta
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
                       type='button'
+                      variant='ghost'
+                      size='sm'
                       onClick={handleResendEmail}
                       disabled={isPending}
-                      className='font-pt-mono block w-full cursor-pointer px-3 py-1 text-center text-[11px] font-bold tracking-widest text-black/60 uppercase underline-offset-2 transition-colors hover:text-black hover:underline disabled:cursor-not-allowed disabled:opacity-60'
+                      className='text-admin-ink-soft w-full'
                     >
                       O reenviar correo de confirmación
-                    </button>
+                    </AdminButton>
                   </div>
                 )}
                 {error && (
-                  <p className='font-pt-mono bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
+                  <p className='font-pt-mono border-2 border-admin-ink bg-admin-red/12 px-3 py-2 text-xs font-bold tracking-wider text-admin-red uppercase'>
                     {error}
                   </p>
                 )}
               </div>
             ) : props.isOwnProfile ? (
-              <button
+              <AdminButton
                 type='button'
+                variant='solid'
+                size='lg'
                 onClick={startEdit}
-                className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80'
+                className='w-70'
               >
                 Editar perfil
-              </button>
+              </AdminButton>
             ) : null}
             <UltimaActividad lastActivityAt={props.lastActivityAt ?? null} />
           </div>

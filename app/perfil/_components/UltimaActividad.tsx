@@ -25,9 +25,9 @@ function formatRelative(date: Date): string {
 export default function UltimaActividad({ lastActivityAt }: UltimaActividadProps) {
   if (!lastActivityAt) {
     return (
-      <div className='border-t border-black/10 pt-6'>
-        <h2 className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
-          Última actividad: <span className='font-normal text-black/60'>Sin actividad reciente</span>
+      <div className='border-admin-ink/15 border-t pt-6'>
+        <h2 className='font-pt-mono text-admin-ink text-sm font-bold tracking-wider uppercase'>
+          Última actividad: <span className='text-admin-ink-soft font-normal'>Sin actividad reciente</span>
         </h2>
       </div>
     )
@@ -47,10 +47,10 @@ export default function UltimaActividad({ lastActivityAt }: UltimaActividadProps
 
   return (
     <div className='pt-2'>
-      <h2 className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+      <h2 className='font-pt-mono text-admin-ink text-sm font-bold tracking-wider uppercase'>
         Última actividad:{' '}
         <span
-          className='font-normal text-black/60'
+          className='text-admin-ink-soft font-normal'
           title={absolute}
         >
           {relative}

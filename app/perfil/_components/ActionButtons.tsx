@@ -1,5 +1,6 @@
 'use client'
 
+import { AdminButton } from '@/app/admin/_components/kit'
 import type { Role } from '@/lib/types'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
@@ -54,20 +55,24 @@ export default function ActionButtons({
     <div className='flex flex-col items-center space-y-3 lg:items-start'>
       {showProposalAndConnect && (
         <>
-          <button
+          <AdminButton
+            variant='solid'
+            size='lg'
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setEnviarPropuestaOpen(true)}
             disabled={isProposalDisabled}
-            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
+            className='w-70 justify-start'
           >
             {isProposalDisabled ? 'Propuesta enviada' : 'Enviar propuesta'}
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
+            variant='solid'
+            size='lg'
             onClick={!isLoggedIn ? () => redirect('/iniciar-sesion') : () => setConectarOpen(true)}
             disabled={isInterestDisabled}
-            className='font-impact-label block w-70 cursor-pointer border-black bg-black px-3 py-1 text-left text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50'
+            className='w-70 justify-start'
           >
             {isInterestDisabled ? 'Conexión enviada' : 'Conectar'}
-          </button>
+          </AdminButton>
           <EnviarPropuestaModal
             open={enviarPropuestaOpen}
             onOpenChange={setEnviarPropuestaOpen}
@@ -124,13 +129,14 @@ export default function ActionButtons({
                   className='h-auto w-full max-w-64 sm:max-w-72'
                 />
               </button>
-              <button
-                type='button'
+              <AdminButton
+                variant='solid'
+                size='lg'
                 onClick={() => setCompartirEventoOpen(true)}
-                className='font-impact-label block w-fit cursor-pointer border-black bg-black px-4 py-2 text-left text-xl font-bold tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-black/80'
+                className='w-70 justify-start whitespace-nowrap'
               >
                 Publicar fecha o convocatoria
-              </button>
+              </AdminButton>
               <ComparteTuEventoModal
                 open={compartirEventoOpen}
                 onOpenChange={setCompartirEventoOpen}
