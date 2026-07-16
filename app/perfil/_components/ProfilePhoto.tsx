@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 interface ProfilePhotoProps {
   photoUrl: string | null
   displayName: string
@@ -14,35 +12,25 @@ export default function ProfilePhoto({ photoUrl, displayName, editable = false, 
   const initial = displayName.charAt(0).toUpperCase() || '?'
 
   const frame = (
-    <>
-      <Image
-        src='/assets/registro/formulario/shared/marco-foto.png'
-        alt='Marco de foto'
-        fill
-        className='object-contain'
-      />
-      <div className='absolute inset-x-[4%] top-[12%] bottom-[14%] overflow-hidden'>
-        {photoUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={photoUrl}
-            alt={displayName}
-            className='h-full w-full object-cover'
-          />
-        ) : (
-          <div className='flex h-full w-full items-center justify-center bg-[#e8b4a8]'>
-            <span className='font-baby-doll text-4xl font-bold text-black/40 uppercase'>{initial}</span>
-          </div>
-        )}
-        {editable && (
-          <div className='pointer-events-none absolute inset-0 flex items-end justify-center bg-black/0 pb-2 opacity-0 transition-opacity group-hover/photo:bg-black/40 group-hover/photo:opacity-100'>
-            <span className='font-pt-mono rounded-sm bg-black/70 px-2 py-1 text-[10px] font-bold tracking-wider text-white uppercase'>
-              Cambiar
-            </span>
-          </div>
-        )}
-      </div>
-    </>
+    <div className='admin-hard relative h-full w-full overflow-hidden border-2 border-admin-ink bg-admin-surface'>
+      {photoUrl ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={photoUrl}
+          alt={displayName}
+          className='h-full w-full object-cover'
+        />
+      ) : (
+        <div className='flex h-full w-full items-center justify-center bg-admin-surface-2'>
+          <span className='font-baby-doll text-5xl font-bold text-admin-ink-faint uppercase'>{initial}</span>
+        </div>
+      )}
+      {editable && (
+        <div className='pointer-events-none absolute inset-0 flex items-end justify-center pb-2 opacity-0 transition-opacity group-hover/photo:bg-admin-ink/40 group-hover/photo:opacity-100'>
+          <span className='admin-dymo px-2 py-1 text-[10px] leading-none'>Cambiar</span>
+        </div>
+      )}
+    </div>
   )
 
   if (!editable) {

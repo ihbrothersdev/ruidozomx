@@ -6,12 +6,12 @@ export function PersonAvatar({ photoUrl, name }: { photoUrl: string | null; name
       <img
         src={photoUrl}
         alt={name}
-        className='h-9 w-9 shrink-0 rounded-full border border-red-700/40 object-cover'
+        className='h-9 w-9 shrink-0 rounded-full border-2 border-admin-ink object-cover'
       />
     )
   }
   return (
-    <span className='font-pt-mono flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-700/40 bg-red-700/10 text-xs font-bold text-red-700'>
+    <span className='font-pt-mono text-admin-ink flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-admin-ink bg-admin-surface-2 text-xs font-bold'>
       {name.trim().charAt(0).toUpperCase() || '?'}
     </span>
   )

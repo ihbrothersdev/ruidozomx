@@ -21,11 +21,15 @@ export default function ProfileLayout({
   floatingNav,
   singleColumn = false
 }: ProfileLayoutProps) {
+  // `admin-root` is the shared "Mesa de Control" paper theme (kraft base, ink
+  // text, riso grain). Reused here to bring the profile into the same fanzine
+  // control-desk language as /admin.
   return (
-    <div className='relative min-h-screen'>
+    <div className='admin-root relative min-h-screen'>
       <div
-        className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
-        style={{ backgroundImage: "url('/assets/registro/explicacion-rol/shared/fondo.png')" }}
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-0 opacity-[0.12] mix-blend-multiply'
+        style={{ backgroundImage: "url('/assets/membrete-background.png')", backgroundSize: 'cover' }}
       />
 
       <div className='relative z-10 mx-auto max-w-5xl px-4 py-8'>

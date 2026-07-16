@@ -1,6 +1,6 @@
+import { Paper } from '@/app/admin/_components/kit'
 import type { InterestSummary } from '../DynamicModules'
 import { ConnectionRow } from './ConnectionRow'
-import { SECTION_LABEL, SECTION_LIST } from './shared'
 
 interface ConnectionsSectionProps {
   title: string
@@ -16,22 +16,24 @@ interface ConnectionsSectionProps {
 export function ConnectionsSection({ title, count, connections, direction, mutualSet }: ConnectionsSectionProps) {
   return (
     <div className='space-y-2'>
-      <p className={SECTION_LABEL}>
-        {title} · {count}
+      <p className='font-pt-mono text-admin-ink text-sm font-bold tracking-wider uppercase'>
+        {title} <span className='text-admin-ink-soft'>· {count}</span>
       </p>
       {connections.length === 0 ? (
-        <p className='font-pt-mono text-sm text-black/45 italic'>Nada por ahora</p>
+        <p className='font-pt-mono text-admin-ink-faint text-sm italic'>Nada por ahora</p>
       ) : (
-        <ul className={SECTION_LIST}>
-          {connections.map(c => (
-            <ConnectionRow
-              key={c.id}
-              connection={c}
-              direction={direction}
-              isMutual={mutualSet.has(c.otherProfile.id)}
-            />
-          ))}
-        </ul>
+        <Paper className='p-3'>
+          <ul className='space-y-3'>
+            {connections.map(c => (
+              <ConnectionRow
+                key={c.id}
+                connection={c}
+                direction={direction}
+                isMutual={mutualSet.has(c.otherProfile.id)}
+              />
+            ))}
+          </ul>
+        </Paper>
       )}
     </div>
   )

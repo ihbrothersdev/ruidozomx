@@ -1,5 +1,6 @@
 'use client'
 
+import { LabelTag, Paper } from '@/app/admin/_components/kit'
 import { usePlaybackContextId, usePlayerActions, usePlayerState } from '@/app/hooks/usePlayerStore'
 import type { FeaturedSongView, PlayerSong } from '@/lib/types'
 import { Pause, Play } from 'lucide-react'
@@ -63,59 +64,64 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
 
   return (
     <div className='w-full space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Dale play</p>
+      <LabelTag tone='red'>Dale play</LabelTag>
 
-      <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
-        {songs.map(song => {
-          const isThisPlaying = currentSongId === song.key && isPlaying
-          return (
-            <li
-              key={song.key}
-              className='flex items-center gap-2.5 text-sm'
-            >
-              {song.isPlayable ? (
-                <button
-                  type='button'
-                  onClick={() => handlePlay(song.key)}
-                  aria-label={isThisPlaying ? `Pausar ${song.title}` : `Reproducir ${song.title}`}
-                  className='flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white transition-colors hover:bg-red-700'
-                >
-                  {isThisPlaying ? (
-                    <Pause
-                      className='h-3.5 w-3.5'
-                      fill='currentColor'
-                    />
-                  ) : (
-                    <Play
-                      className='h-3.5 w-3.5 translate-x-[1px]'
-                      fill='currentColor'
-                    />
-                  )}
-                </button>
-              ) : (
-                <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-              )}
-
-              <div className='font-pt-mono flex min-w-0 flex-1 items-baseline gap-2.5'>
-                <span className='min-w-0 flex-1 truncate'>
-                  <span className='font-bold text-black uppercase'>{song.title}</span>
-                  <span className='text-xs text-black/60'> — {song.artist}</span>
-                </span>
-                {!song.isPlayable && song.externalLink && (
-                  <a
-                    href={song.externalLink}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='shrink-0 text-xs font-bold tracking-wider text-red-600 uppercase underline underline-offset-2 hover:text-red-700'
+      <Paper
+        tone='red'
+        className='space-y-1.5 px-3 py-2.5'
+      >
+        <ul className='space-y-1.5'>
+          {songs.map(song => {
+            const isThisPlaying = currentSongId === song.key && isPlaying
+            return (
+              <li
+                key={song.key}
+                className='flex items-center gap-2.5 text-sm'
+              >
+                {song.isPlayable ? (
+                  <button
+                    type='button'
+                    onClick={() => handlePlay(song.key)}
+                    aria-label={isThisPlaying ? `Pausar ${song.title}` : `Reproducir ${song.title}`}
+                    className='admin-press flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center border-2 border-admin-ink bg-admin-red text-admin-surface'
                   >
-                    Escuchar ↗
-                  </a>
+                    {isThisPlaying ? (
+                      <Pause
+                        className='h-3.5 w-3.5'
+                        fill='currentColor'
+                      />
+                    ) : (
+                      <Play
+                        className='h-3.5 w-3.5 translate-x-[1px]'
+                        fill='currentColor'
+                      />
+                    )}
+                  </button>
+                ) : (
+                  <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-admin-red' />
                 )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+
+                <div className='font-pt-mono flex min-w-0 flex-1 items-baseline gap-2.5'>
+                  <span className='min-w-0 flex-1 truncate'>
+                    <span className='font-bold text-admin-ink uppercase'>{song.title}</span>
+                    <span className='text-xs text-admin-ink-faint'> — {song.artist}</span>
+                  </span>
+                  {!song.isPlayable && song.externalLink && (
+                    <a
+                      href={song.externalLink}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='shrink-0 text-xs font-bold tracking-wider text-admin-red uppercase underline underline-offset-2 hover:text-admin-red/70'
+                    >
+                      Escuchar ↗
+                    </a>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </Paper>
     </div>
   )
 }

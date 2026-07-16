@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AdminButton } from '@/app/admin/_components/kit'
 import type { InterestSummary, UserProposalSummary } from '../DynamicModules'
 import { ConnectionsSection } from './ConnectionsSection'
 import { ProposalsSection } from './ProposalsSection'
@@ -64,7 +65,7 @@ export function ProfileInbox({
   const mutualSet = new Set(mutualIds)
 
   return (
-    <div className='mt-8 border-t-2 border-dashed border-red-700/40 pt-8'>
+    <div className='border-admin-ink/25 mt-8 border-t-2 border-dashed pt-8'>
       <div className='flex flex-wrap gap-2'>
         {hasConn && (
           <TabButton
@@ -141,21 +142,20 @@ function TabButton({
   onClick: () => void
 }) {
   return (
-    <button
+    <AdminButton
       id={id}
       type='button'
       onClick={onClick}
       aria-pressed={active}
-      className={`font-pt-mono flex cursor-pointer scroll-mt-24 items-center gap-2 border-2 px-4 py-2 text-sm font-bold tracking-wider uppercase transition-colors ${
-        active ? 'border-red-700 bg-red-700 text-white' : 'border-red-700/40 text-red-700 hover:bg-red-700/10'
-      }`}
+      variant={active ? 'primary' : 'outline'}
+      className='scroll-mt-24'
     >
       {label}
       <span
-        className={`rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-white text-red-700' : 'bg-red-700/15 text-red-700'}`}
+        className={`font-pt-mono rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? 'bg-admin-surface text-admin-red' : 'bg-admin-ink/12 text-admin-ink-soft'}`}
       >
         {count}
       </span>
-    </button>
+    </AdminButton>
   )
 }

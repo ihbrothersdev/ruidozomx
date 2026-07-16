@@ -1,8 +1,9 @@
 'use client'
 
-import Image from 'next/image'
+import { CalendarDays } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { AdminButton, EmptyState, Notice, PageHeader, Paper, SectionHeading } from '@/app/admin/_components/kit'
 import type { FeaturedSongView, Role } from '@/lib/types'
 import { updateOwnProfile } from '../actions'
 import FeaturedSongsEditor from './FeaturedSongsEditor'
@@ -49,12 +50,12 @@ interface OwnProfileEditFormProps {
 const INDUSTRY_ROLES: Role[] = ['manager', 'promotor', 'agente']
 
 /**
- * Inline edit form for the private profile. Keeps the red-folder dashboard
- * shell (red background + grey folder + logo) and turns the user's data into
- * editable fields using the same building blocks the public ProfileView uses
- * (ProfilePhoto, IdentityBlock, ReviewSection, LinksSection). Saving goes
- * through `updateOwnProfile`; the role itself is locked server-side (only
- * industry sub-roles can switch via `role_type`).
+ * Inline edit form for the private profile. Renders on the Mesa de Control
+ * paper shell and turns the user's data into editable fields using the same
+ * building blocks the public ProfileView uses (ProfilePhoto, IdentityBlock,
+ * ReviewSection, LinksSection). Saving goes through `updateOwnProfile`; the
+ * role itself is locked server-side (only industry sub-roles can switch via
+ * `role_type`).
  */
 export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
   const router = useRouter()
@@ -139,180 +140,147 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
   }
 
   return (
-    <div className='relative min-h-screen overflow-hidden'>
-      {/* Full-screen red background — same asset as the dashboard. */}
-      <Image
-        src='/assets/registro/formulario/shared/red-back.png'
-        alt=''
-        fill
-        className='object-cover'
-        priority
+    <div className='admin-root relative min-h-screen'>
+      <div
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-0 opacity-[0.12] mix-blend-multiply'
+        style={{ backgroundImage: "url('/assets/membrete-background.png')", backgroundSize: 'cover' }}
       />
 
-      <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6'>
-        {/* Grey folder card (matches the formulario shell). */}
-        <div className='relative w-full overflow-hidden'>
-          {/* Mobile: simple rectangular background */}
-          <Image
-            src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
-            alt=''
-            fill
-            className='object-cover lg:hidden'
-          />
-          {/* Desktop: rectangular grey texture with a FIXED-height tab cut at the
-              top-right (clip-path, px not %), so the notch doesn't stretch as the
-              form grows and content never lands on the cut. */}
-          <div
-            className='absolute inset-0 hidden lg:block'
-            style={{ clipPath: 'polygon(0 0, 50% 0, 50% 64px, 100% 64px, 100% 100%, 0 100%)' }}
-          >
-            <Image
-              src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
-              alt=''
-              fill
-              className='object-cover'
+      <div className='relative z-10 mx-auto max-w-2xl px-4 py-8'>
+        <PageHeader
+          eyebrow='Ficha propia'
+          title='Editar perfil'
+        />
+
+        <div className='mt-8 space-y-6'>
+          {/* Photo + identity */}
+          <Paper className='flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start sm:p-6'>
+            <ProfilePhoto
+              photoUrl={photoPreview}
+              displayName={displayName}
+              editable
+              onPhotoSelected={handlePhotoSelected}
             />
-          </div>
+            <IdentityBlock
+              role={activeRole}
+              displayName={displayName}
+              location={props.location}
+              roleProfile={roleState}
+              editing
+              country={country}
+              state={stateField}
+              city={city}
+              onDisplayNameChange={setDisplayName}
+              onCountryChange={setCountry}
+              onStateChange={setStateField}
+              onCityChange={setCity}
+              onRoleFieldChange={updateRoleField}
+              onRoleChange={setActiveRole}
+            />
+          </Paper>
 
-          {/* Top decoration: rayo on the right corner */}
-          <Image
-            src='/assets/registro/formulario/shared/rayo.png'
-            alt=''
-            width={80}
-            height={120}
-            className='absolute right-3 z-10 h-10 w-auto'
+          <ReviewSection
+            bio={bio}
+            role={activeRole}
+            editing
+            onBioChange={setBio}
           />
 
-          <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-12 lg:pb-12'>
-            {/* Header row: logo */}
-            <div className='mb-6 flex items-center justify-between gap-4 lg:mb-8'>
-              <h1 className='font-pt-mono text-xl font-bold tracking-wider text-red-700 uppercase sm:text-2xl'>
-                Editar perfil
-              </h1>
-            </div>
+          <LinksSection
+            socialLinks={socialLinks}
+            contact={contact}
+            role={activeRole}
+            editing
+            variant='private'
+            onSocialLinksChange={setSocialLinks}
+            onContactChange={setContact}
+          />
 
-            <div className='space-y-6'>
-              {/* Photo + identity */}
-              <div className='flex flex-col items-center gap-5 sm:flex-row sm:items-start'>
-                <ProfilePhoto
-                  photoUrl={photoPreview}
-                  displayName={displayName}
-                  editable
-                  onPhotoSelected={handlePhotoSelected}
-                />
-                <IdentityBlock
-                  role={activeRole}
-                  displayName={displayName}
-                  location={props.location}
-                  roleProfile={roleState}
-                  editing
-                  country={country}
-                  state={stateField}
-                  city={city}
-                  onDisplayNameChange={setDisplayName}
-                  onCountryChange={setCountry}
-                  onStateChange={setStateField}
-                  onCityChange={setCity}
-                  onRoleFieldChange={updateRoleField}
-                  onRoleChange={setActiveRole}
-                />
-              </div>
+          {props.role === 'banda' && (
+            <FeaturedSongsEditor
+              candidates={props.featuredCandidates ?? []}
+              selected={featured}
+              onChange={setFeatured}
+            />
+          )}
 
-              <ReviewSection
-                bio={bio}
-                role={activeRole}
-                editing
-                onBioChange={setBio}
+          {canEditEvents && (
+            <div>
+              <SectionHeading
+                icon={CalendarDays}
+                title='Eventos publicados'
               />
 
-              <LinksSection
-                socialLinks={socialLinks}
-                contact={contact}
-                role={activeRole}
-                editing
-                variant='private'
-                onSocialLinksChange={setSocialLinks}
-                onContactChange={setContact}
-              />
-
-              {props.role === 'banda' && (
-                <FeaturedSongsEditor
-                  candidates={props.featuredCandidates ?? []}
-                  selected={featured}
-                  onChange={setFeatured}
-                />
-              )}
-
-              {canEditEvents && (
+              {events.length === 0 ? (
+                <EmptyState icon={CalendarDays}>Aún no publicas eventos</EmptyState>
+              ) : (
                 <div className='space-y-2'>
-                  <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-                    Eventos publicados
-                  </p>
-
-                  {events.length === 0 ? (
-                    <div className='font-pt-mono rounded-md border border-red-700/30 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
-                      Aún no publicas eventos
-                    </div>
-                  ) : (
-                    <ul className='space-y-2'>
-                      {events.map(ev => {
-                        const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })
-                        return (
-                          <li
-                            key={ev.id}
-                            className='flex items-center justify-between gap-3 rounded-md border border-red-700/30 px-3 py-1.5'
-                          >
-                            <div className='font-pt-mono min-w-0 text-sm text-black uppercase'>
-                              <span className='font-bold'>{ev.title}</span>
-                              <span className='text-black/60'> · {dateLabel}</span>
-                              {ev.city && <span className='text-black/60'> · {ev.city}</span>}
-                            </div>
-                            <button
-                              type='button'
-                              onClick={() => setEditingEvent(ev)}
-                              className='font-pt-mono shrink-0 cursor-pointer bg-black px-3 py-1 text-xs font-bold tracking-wider text-white uppercase transition-opacity hover:opacity-80 active:scale-95'
-                            >
-                              Editar
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
+                  {events.map(ev => {
+                    const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric'
+                    })
+                    return (
+                      <Paper
+                        key={ev.id}
+                        flat
+                        className='flex items-center justify-between gap-3 px-3 py-2'
+                      >
+                        <div className='font-pt-mono min-w-0 text-sm text-admin-ink uppercase'>
+                          <span className='font-bold'>{ev.title}</span>
+                          <span className='text-admin-ink-faint'> · {dateLabel}</span>
+                          {ev.city && <span className='text-admin-ink-faint'> · {ev.city}</span>}
+                        </div>
+                        <AdminButton
+                          type='button'
+                          variant='solid'
+                          size='sm'
+                          onClick={() => setEditingEvent(ev)}
+                        >
+                          Editar
+                        </AdminButton>
+                      </Paper>
+                    )
+                  })}
                 </div>
               )}
-
-              {/* Save / Cancel */}
-              <div className='flex flex-col items-center gap-3 pt-2'>
-                <div className='flex w-full max-w-70 gap-2'>
-                  <button
-                    type='button'
-                    onClick={handleSave}
-                    disabled={isPending}
-                    className='font-impact-label flex-1 cursor-pointer border-red-700 bg-red-600 px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60'
-                  >
-                    {isPending ? 'Guardando…' : 'Guardar'}
-                  </button>
-                  <button
-                    type='button'
-                    onClick={props.onExitEdit}
-                    disabled={isPending}
-                    className='font-impact-label flex-1 cursor-pointer border-black bg-black px-3 py-1 text-center text-xl font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60'
-                  >
-                    Cancelar
-                  </button>
-                </div>
-                {error && (
-                  <p className='font-pt-mono w-full max-w-70 bg-red-600/10 px-3 py-2 text-xs font-bold tracking-wider text-red-700 uppercase'>
-                    {error}
-                  </p>
-                )}
-              </div>
             </div>
+          )}
+
+          {/* Save / Cancel */}
+          <div className='flex flex-col items-center gap-3 pt-2'>
+            <div className='flex w-full max-w-70 gap-2'>
+              <AdminButton
+                type='button'
+                variant='primary'
+                size='lg'
+                onClick={handleSave}
+                disabled={isPending}
+                className='flex-1'
+              >
+                {isPending ? 'Guardando…' : 'Guardar'}
+              </AdminButton>
+              <AdminButton
+                type='button'
+                variant='solid'
+                size='lg'
+                onClick={props.onExitEdit}
+                disabled={isPending}
+                className='flex-1'
+              >
+                Cancelar
+              </AdminButton>
+            </div>
+            {error && (
+              <Notice
+                tone='red'
+                className='w-full max-w-70'
+              >
+                {error}
+              </Notice>
+            )}
           </div>
         </div>
       </div>

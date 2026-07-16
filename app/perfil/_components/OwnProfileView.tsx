@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { LabelTag, Paper, Stamp, type Tone } from '@/app/admin/_components/kit'
 import { ROLE_LABELS, type FeaturedSongView, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import LinksSection from './LinksSection'
@@ -112,176 +113,143 @@ export default function OwnProfileView({
   }
 
   return (
-    <div className='relative min-h-screen'>
-      {/* Full-screen red background — same asset as the registration form.
-          Fixed to the viewport so it also paints behind the player bar and the
-          body's bottom padding, avoiding a white gap below the content on mobile. */}
-      <div className='own-profile-bg fixed inset-0 z-0'>
-        <Image
-          src='/assets/registro/formulario/shared/red-back.png'
-          alt=''
-          fill
-          className='object-cover'
-          priority
-        />
-      </div>
+    <div className='admin-root relative min-h-screen'>
+      {/* Riso grain — the same kraft-paper membrete wash used across Mesa de Control. */}
+      <div
+        aria-hidden
+        className='pointer-events-none fixed inset-0 z-0 opacity-[0.12] mix-blend-multiply'
+        style={{ backgroundImage: "url('/assets/membrete-background.png')", backgroundSize: 'cover' }}
+      />
 
-      <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6'>
-        {/* Grey folder card (matches the formulario shell). */}
-        <div className='relative w-full overflow-hidden'>
-          {/* Mobile: simple rectangular background */}
-          <Image
-            src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
-            alt=''
-            fill
-            className='object-cover lg:hidden'
-          />
-          {/* Desktop: rectangular grey texture with a FIXED-height tab cut at the
-              top-right (clip-path, px not %), so the notch doesn't stretch as the
-              content grows. */}
-          <div
-            className='absolute inset-0 hidden lg:block'
-            style={{ clipPath: 'polygon(0 0, 50% 0, 50% 64px, 100% 64px, 100% 100%, 0 100%)' }}
+      <div className='relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-8 sm:px-6'>
+        {/* Masthead: framed photo + name + logo. */}
+        <header className='mb-8 flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:text-left'>
+            <PolaroidCard
+              photoUrl={photoUrl}
+              displayName={displayName}
+            />
+            <div className='min-w-0'>
+              <LabelTag tone='red'>{role ? ROLE_LABELS[role] : 'Perfil'}</LabelTag>
+              <h1 className='font-baby-doll mt-3 text-4xl leading-[0.85] font-bold tracking-wide text-admin-ink uppercase sm:text-5xl'>
+                {displayName}
+              </h1>
+              <div className='mt-2 h-[3px] w-24 bg-admin-red' />
+            </div>
+          </div>
+          <Link
+            href='/'
+            aria-label='Ir al inicio'
+            className='transition-transform hover:scale-105'
           >
             <Image
-              src='/assets/registro/formulario/shared/folder-grey-back-mobile.png'
-              alt=''
-              fill
-              className='object-cover'
+              src='/assets/logo.png'
+              alt='Ruidozo'
+              width={380}
+              height={183}
+              className='h-12 w-auto sm:h-16 lg:h-20'
+              priority
+            />
+          </Link>
+        </header>
+
+        {/* Mobile only: action buttons right below the user photo/logo */}
+        <div className='mb-6 flex justify-center lg:hidden'>
+          <OwnProfileActions
+            role={role}
+            onEdit={() => setIsEditing(true)}
+          />
+        </div>
+
+        <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
+          {/* Left column */}
+          <div className='space-y-6'>
+            <DataFields
+              displayName={displayName}
+              location={location}
+              role={role}
+              bio={bio}
+            />
+
+            <ActivityInbox
+              role={role}
+              receivedProposalsCount={receivedProposalsCount}
+              eventsCount={events.length}
+              receivedConnectionsCount={receivedConnectionsCount}
+            />
+
+            <EventsSection
+              role={role}
+              events={events}
+            />
+
+            <ServicesSection
+              role={role}
+              roleProfile={roleProfile ?? null}
+            />
+
+            <ProposedSongs
+              role={role}
+              songs={songProposals}
+              total={songProposalsCount}
             />
           </div>
 
-          {/* Top decoration: rayo on the right corner */}
-          <Image
-            src='/assets/registro/formulario/shared/rayo.png'
-            alt=''
-            width={80}
-            height={120}
-            className='absolute right-3 z-10 h-10 w-auto'
-          />
-
-          <div className='relative z-10 px-6 pt-8 pb-6 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 lg:pt-12 lg:pb-12'>
-            {/* Header: stacked & centered on mobile; broche left + logo right on sm+ */}
-            <div className='mb-6 flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:mb-8'>
-              <PolaroidCard
-                photoUrl={photoUrl}
-                displayName={displayName}
-              />
-              <Link
-                href='/'
-                aria-label='Ir al inicio'
-                className='transition-transform hover:scale-105'
-              >
-                <Image
-                  src='/assets/logo.png'
-                  alt='Ruidozo'
-                  width={380}
-                  height={183}
-                  className='h-12 w-auto sm:h-16 lg:h-20'
-                  priority
+          {/* Right column — centered on mobile, right-aligned on lg+ */}
+          <div className='flex flex-col items-end space-y-6'>
+            {featuredSongs.length > 0 && profileId && (
+              <div className='w-full'>
+                <ProfileFeaturedSongs
+                  songs={featuredSongs}
+                  profileId={profileId}
                 />
-              </Link>
+              </div>
+            )}
+
+            <div className='w-full'>
+              <LinksSection
+                socialLinks={socialLinks}
+                contact={contact}
+                variant='private'
+              />
             </div>
 
-            {/* Mobile only: action buttons right below the user photo/logo */}
-            <div className='mb-6 flex justify-center lg:hidden'>
+            <div className='hidden lg:block'>
               <OwnProfileActions
                 role={role}
                 onEdit={() => setIsEditing(true)}
               />
             </div>
 
-            <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
-              {/* Left column */}
-              <div className='space-y-6'>
-                <DataFields
-                  displayName={displayName}
-                  location={location}
-                  role={role}
-                  bio={bio}
-                />
-
-                <ActivityInbox
-                  role={role}
-                  receivedProposalsCount={receivedProposalsCount}
-                  eventsCount={events.length}
-                  receivedConnectionsCount={receivedConnectionsCount}
-                />
-
-                <EventsSection
-                  role={role}
-                  events={events}
-                />
-
-                <ServicesSection
-                  role={role}
-                  roleProfile={roleProfile ?? null}
-                />
-
-                <ProposedSongs
-                  role={role}
-                  songs={songProposals}
-                  total={songProposalsCount}
-                />
-              </div>
-
-              {/* Right column — centered on mobile, right-aligned on lg+ */}
-              <div className='flex flex-col items-end space-y-6'>
-                {featuredSongs.length > 0 && profileId && (
-                  <div className='w-full'>
-                    <ProfileFeaturedSongs
-                      songs={featuredSongs}
-                      profileId={profileId}
-                    />
-                  </div>
-                )}
-
-                <div className='w-full'>
-                  <LinksSection
-                    socialLinks={socialLinks}
-                    contact={contact}
-                    variant='private'
-                  />
-                </div>
-
-                <div className='hidden lg:block'>
-                  <OwnProfileActions
-                    role={role}
-                    onEdit={() => setIsEditing(true)}
-                  />
-                </div>
-
-                <RoleModules
-                  role={role}
-                  roleProfile={roleProfile ?? null}
-                />
-
-                <FanFavorites
-                  role={role}
-                  roleProfile={roleProfile ?? null}
-                />
-
-                {/* <FanNearbyEvents
-                  role={role}
-                  events={nearbyEvents}
-                /> */}
-              </div>
-            </div>
-
-            {/* Full-width inbox: connections + proposals received/sent. */}
-            <ProfileInbox
-              receivedConnections={receivedConnections}
-              sentConnections={sentConnections}
-              receivedProposals={receivedProposals}
-              sentProposals={sentProposals}
-              receivedConnectionsCount={receivedConnectionsCount}
-              sentConnectionsCount={sentConnectionsCount}
-              receivedProposalsCount={receivedProposalsCount}
-              sentProposalsCount={sentProposalsCount}
-              mutualIds={mutualIds}
+            <RoleModules
+              role={role}
+              roleProfile={roleProfile ?? null}
             />
+
+            <FanFavorites
+              role={role}
+              roleProfile={roleProfile ?? null}
+            />
+
+            {/* <FanNearbyEvents
+              role={role}
+              events={nearbyEvents}
+            /> */}
           </div>
         </div>
+
+        {/* Full-width inbox: connections + proposals received/sent. */}
+        <ProfileInbox
+          receivedConnections={receivedConnections}
+          sentConnections={sentConnections}
+          receivedProposals={receivedProposals}
+          sentProposals={sentProposals}
+          receivedConnectionsCount={receivedConnectionsCount}
+          sentConnectionsCount={sentConnectionsCount}
+          receivedProposalsCount={receivedProposalsCount}
+          sentProposalsCount={sentProposalsCount}
+          mutualIds={mutualIds}
+        />
       </div>
     </div>
   )
@@ -291,8 +259,8 @@ export default function OwnProfileView({
 
 // ── Right-column modules ────────────────────────────────────────────────────
 
-const MODULE_LABEL = 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
-const MODULE_BOX = 'font-pt-mono w-full border-2 border-red-700 px-3 py-2 text-sm tracking-wider text-black uppercase'
+const FIELD_LABEL = 'font-pt-mono text-[11px] font-bold tracking-[0.15em] text-admin-ink-soft uppercase'
+const VALUE_TEXT = 'font-pt-mono text-sm tracking-wide text-admin-ink uppercase'
 
 function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Record<string, unknown> | null }) {
   if (!role || !roleProfile) return null
@@ -332,14 +300,22 @@ function RoleModules({ role, roleProfile }: { role: Role | null; roleProfile: Re
       {modules.map(mod => (
         <div
           key={mod.title}
-          className='space-y-1'
+          className='space-y-2'
         >
-          <p className={MODULE_LABEL}>{mod.title}</p>
-          <div className={MODULE_BOX}>
+          <LabelTag tone='red'>{mod.title}</LabelTag>
+          <Paper
+            flat
+            className='space-y-1 px-3 py-2'
+          >
             {mod.values.map((v, i) => (
-              <div key={i}>{v}</div>
+              <div
+                key={i}
+                className={VALUE_TEXT}
+              >
+                {v}
+              </div>
             ))}
-          </div>
+          </Paper>
         </div>
       ))}
     </div>
@@ -363,16 +339,22 @@ function EventsSection({ role, events }: EventsSectionProps) {
       id='eventos'
       className='scroll-mt-24 space-y-2'
     >
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Eventos publicados</p>
+      <LabelTag tone='red'>Eventos publicados</LabelTag>
 
       {events.length === 0 ? (
-        <>
-          <div className='font-pt-mono border-2 border-red-700 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
+        <Paper
+          flat
+          className='px-3 py-2'
+        >
+          <p className='font-pt-mono text-sm tracking-wide text-admin-ink-faint uppercase'>
             Este perfil no publica fechas aún
-          </div>
-        </>
+          </p>
+        </Paper>
       ) : (
-        <div className='space-y-2 border-2 border-red-700 px-3 py-2'>
+        <Paper
+          flat
+          className='space-y-2 px-3 py-2'
+        >
           {events.map(ev => {
             const dateLabel = new Date(`${ev.event_date}T00:00:00`).toLocaleDateString('es-MX', {
               day: '2-digit',
@@ -382,16 +364,16 @@ function EventsSection({ role, events }: EventsSectionProps) {
             return (
               <div
                 key={ev.id}
-                className='font-pt-mono text-sm text-black uppercase'
+                className='font-pt-mono text-sm text-admin-ink uppercase'
               >
                 <span className='font-bold'>{ev.title}</span>
-                <span className='text-black/60'> · {dateLabel}</span>
-                {ev.city && <span className='text-black/60'> · {ev.city}</span>}
-                {ev.event_type && <span className='text-black/60'> · {ev.event_type}</span>}
+                <span className='text-admin-ink-faint'> · {dateLabel}</span>
+                {ev.city && <span className='text-admin-ink-faint'> · {ev.city}</span>}
+                {ev.event_type && <span className='text-admin-ink-faint'> · {ev.event_type}</span>}
               </div>
             )
           })}
-        </div>
+        </Paper>
       )}
     </div>
   )
@@ -409,23 +391,31 @@ function ServicesSection({ role, roleProfile }: { role: Role | null; roleProfile
 
   return (
     <div className='space-y-2'>
-      <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Servicios publicados</p>
+      <LabelTag tone='red'>Servicios publicados</LabelTag>
 
       {services.length === 0 ? (
-        <div className='font-pt-mono border-2 border-red-700 px-3 py-1.5 text-sm tracking-wider text-black/60 uppercase'>
-          Este perfil no publica servicios aún
-        </div>
+        <Paper
+          flat
+          className='px-3 py-2'
+        >
+          <p className='font-pt-mono text-sm tracking-wide text-admin-ink-faint uppercase'>
+            Este perfil no publica servicios aún
+          </p>
+        </Paper>
       ) : (
-        <div className='space-y-1 border-2 border-red-700 px-3 py-2'>
+        <Paper
+          flat
+          className='space-y-1 px-3 py-2'
+        >
           {services.map((s, i) => (
             <div
               key={i}
-              className='font-pt-mono text-sm text-black uppercase'
+              className={VALUE_TEXT}
             >
               {s}
             </div>
           ))}
-        </div>
+        </Paper>
       )}
     </div>
   )
@@ -434,10 +424,10 @@ function ServicesSection({ role, roleProfile }: { role: Role | null; roleProfile
 // ── Fan-only sections ────────────────────────────────────────────────────────
 
 /** Fan (left): their proposed songs shown as a box, empty box if none. */
-const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: string }> = {
-  pending: { label: 'Pendiente', cls: 'bg-black/10 text-black/70' },
-  accepted: { label: 'Aceptada', cls: 'bg-green-600/15 text-green-700' },
-  rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
+const SONG_STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; tone: Tone }> = {
+  pending: { label: 'Pendiente', tone: 'gold' },
+  accepted: { label: 'Aceptada', tone: 'olive' },
+  rejected: { label: 'No incluida', tone: 'ink' }
 }
 
 /**
@@ -453,48 +443,50 @@ function ProposedSongs({ role, songs, total }: { role: Role | null; songs: SongP
 
   return (
     <div className='space-y-2'>
-      <div className='flex items-baseline justify-between gap-3'>
-        <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>
-          Rolas propuestas al cassete
-        </p>
-        <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
-          {total}
-        </span>
+      <div className='flex items-center justify-between gap-3'>
+        <LabelTag tone='red'>Rolas propuestas al cassete</LabelTag>
+        <LabelTag>{total}</LabelTag>
       </div>
-      <ul className='max-h-64 space-y-1.5 overflow-y-auto border-2 border-red-700 px-3 py-2'>
-        {songs.map(p => {
-          const status = SONG_STATUS_LABEL[p.status]
-          return (
-            <li
-              key={p.id}
-              className='flex items-center gap-2 text-sm'
-            >
-              <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
-              <span className='font-pt-mono min-w-0 flex-1 truncate'>
-                <span className='font-bold text-black uppercase'>{p.title}</span>
-                <span className='text-xs text-black/60'> — {p.artist}</span>
-              </span>
-              <div className='flex shrink-0 items-center gap-1.5'>
-                {p.hasAudio === false && <ProposedSongAudioUpload proposalId={p.id} />}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider whitespace-nowrap uppercase ${status.cls}`}
-                >
-                  {status.label}
+      <Paper
+        flat
+        className='max-h-64 overflow-y-auto px-3 py-2'
+      >
+        <ul className='space-y-1.5'>
+          {songs.map(p => {
+            const status = SONG_STATUS_LABEL[p.status]
+            return (
+              <li
+                key={p.id}
+                className='flex items-center gap-2 text-sm'
+              >
+                <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-admin-red' />
+                <span className='font-pt-mono min-w-0 flex-1 truncate'>
+                  <span className='font-bold text-admin-ink uppercase'>{p.title}</span>
+                  <span className='text-xs text-admin-ink-faint'> — {p.artist}</span>
                 </span>
-                {p.status !== 'accepted' && (
-                  <button
-                    type='button'
-                    onClick={() => setEditing(p)}
-                    className='cursor-pointer text-[10px] font-bold tracking-wider text-red-700 uppercase underline transition-opacity hover:opacity-70'
+                <div className='flex shrink-0 items-center gap-1.5'>
+                  {p.hasAudio === false && <ProposedSongAudioUpload proposalId={p.id} />}
+                  <Stamp
+                    tone={status.tone}
+                    rotate={false}
                   >
-                    Editar
-                  </button>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+                    {status.label}
+                  </Stamp>
+                  {p.status !== 'accepted' && (
+                    <button
+                      type='button'
+                      onClick={() => setEditing(p)}
+                      className='cursor-pointer font-pt-mono text-[10px] font-bold tracking-wider text-admin-red uppercase underline transition-opacity hover:opacity-70'
+                    >
+                      Editar
+                    </button>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </Paper>
 
       {editing && (
         <ProponerRolaBandaModal
@@ -525,13 +517,21 @@ function FanFavorites({ role, roleProfile }: { role: Role | null; roleProfile: R
   const list = Array.isArray(raw) ? (raw as string[]).filter(Boolean) : []
 
   return (
-    <div className='w-full space-y-1'>
-      <p className={MODULE_LABEL}>Bandas o proyectos que le gustan</p>
-      <div className={MODULE_BOX + ' min-h-24 space-y-1'}>
+    <div className='w-full space-y-2'>
+      <LabelTag tone='red'>Bandas o proyectos que le gustan</LabelTag>
+      <Paper
+        flat
+        className='min-h-24 space-y-1 px-3 py-2'
+      >
         {list.map((g, i) => (
-          <div key={i}>{g}</div>
+          <div
+            key={i}
+            className={VALUE_TEXT}
+          >
+            {g}
+          </div>
         ))}
-      </div>
+      </Paper>
     </div>
   )
 }
@@ -605,14 +605,10 @@ function ActivityInbox({ role, receivedProposalsCount, eventsCount, receivedConn
         <a
           key={item.label}
           href={item.href}
-          className='font-pt-mono flex items-center gap-2 text-base font-bold tracking-wider text-red-700 uppercase transition-opacity hover:opacity-70'
+          className='font-pt-mono flex items-center gap-2 text-base font-bold tracking-wider text-admin-red uppercase transition-opacity hover:opacity-70'
         >
           {item.label}
-          {item.count > 0 && (
-            <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white'>
-              {item.count}
-            </span>
-          )}
+          {item.count > 0 && <LabelTag>{item.count}</LabelTag>}
         </a>
       ))}
     </div>
@@ -646,19 +642,25 @@ function DataFields({ displayName, location, role, bio }: DataFieldsProps) {
           key={f.label}
           className='space-y-1'
         >
-          <p className='font-pt-mono text-sm tracking-wider text-red-700 uppercase'>{f.label}</p>
-          <div className='font-pt-mono border-2 border-red-700 bg-transparent px-3 py-1.5 text-sm tracking-wider text-black uppercase'>
-            {f.value}
-          </div>
+          <p className={FIELD_LABEL}>{f.label}</p>
+          <Paper
+            flat
+            className='px-3 py-1.5'
+          >
+            <p className={VALUE_TEXT}>{f.value}</p>
+          </Paper>
         </div>
       ))}
 
       {bio?.trim() && (
         <div className='space-y-1'>
-          <p className='font-pt-mono text-sm tracking-wider text-red-700 uppercase'>Descripción</p>
-          <div className='font-pt-mono border-2 border-red-700 bg-transparent px-3 py-1.5 text-sm whitespace-pre-wrap text-black'>
-            {bio}
-          </div>
+          <p className={FIELD_LABEL}>Descripción</p>
+          <Paper
+            flat
+            className='px-3 py-1.5'
+          >
+            <p className='font-pt-mono text-sm whitespace-pre-wrap text-admin-ink'>{bio}</p>
+          </Paper>
         </div>
       )}
     </div>
@@ -671,64 +673,36 @@ interface PolaroidCardProps {
 }
 
 /**
- * Clipboard / polaroid card shown in the top-left.
- *
- * Composes three formulario-shared assets stacked vertically with the
- * same approach as `ProfilePhoto`:
- *   - `broche.png`     — the binder clip / clothespin on top
- *   - `marco-foto.png` — the photo frame underneath
- *   - the user's photo cropped inside the frame (fallback to initials)
+ * Photo card shown in the masthead: a hard ink-framed print with a strip of
+ * tape at the top, the Mesa de Control take on the old polaroid. Falls back to
+ * the user's initial when there's no photo.
  */
 function PolaroidCard({ photoUrl, displayName }: PolaroidCardProps) {
   return (
-    <div className='relative w-36 sm:w-44 lg:w-48'>
-      {/* marco (233×291) + photo slot */}
+    <div className='relative w-32 shrink-0 sm:w-36'>
+      {/* Tape strip pinning the print to the desk. */}
+      <span
+        aria-hidden
+        className='absolute -top-2.5 left-1/2 z-10 h-5 w-20 -translate-x-1/2 -rotate-2 border border-admin-ink/20 bg-admin-paper-deep/80'
+      />
       <div
-        className='relative w-full'
+        className='admin-card overflow-hidden p-0'
         style={{ aspectRatio: '233 / 291' }}
       >
-        <Image
-          src='/assets/private-profile/marco.png'
-          alt=''
-          fill
-          className='object-fill'
-          priority
-        />
-        {/* Photo sits inside the white area between the two red stripes.
-        <div className='absolute top-[10%] right-[2%] bottom-[13%] overflow-hidden'>
-            Top stripe ≈ 13%, bottom stripe ≈ 12% of the marco height. */}
-        <div className='absolute top-[10%] right-[2%] bottom-[12%] left-[0%] overflow-hidden'>
-          {photoUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={photoUrl}
-              alt={displayName}
-              className='h-full w-full object-cover'
-            />
-          ) : (
-            <div className='flex h-full w-full items-center justify-center bg-[#e8b4a8]'>
-              <span className='font-baby-doll text-4xl font-bold text-black/40 uppercase'>
-                {displayName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* broche — absolute on the marco, top-left, wire arms floating above.
-            Negative top pushes the arms above the red stripe. */}
-        <div
-          className='absolute left-0 z-10'
-          style={{ top: '35%', width: '53%', left: '-22%' }}
-        >
-          <Image
-            src='/assets/private-profile/broche.png'
-            alt=''
-            width={123}
-            height={93}
-            className='h-auto w-full'
-            priority
+        {photoUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={photoUrl}
+            alt={displayName}
+            className='h-full w-full object-cover'
           />
-        </div>
+        ) : (
+          <div className='flex h-full w-full items-center justify-center bg-admin-surface-2'>
+            <span className='font-baby-doll text-5xl font-bold text-admin-ink/30 uppercase'>
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 'use client'
 
+import { LabelTag, Stamp } from '@/app/admin/_components/kit'
 import { ROLE_LABELS } from '@/lib/types'
 import { useState } from 'react'
 import ConnectionActions from '../ConnectionActions'
@@ -14,11 +15,7 @@ interface ConnectionRowProps {
   isMutual: boolean
 }
 
-const MUTUAL_BADGE = (
-  <span className='font-pt-mono rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase'>
-    Mutua ✓
-  </span>
-)
+const MUTUAL_BADGE = <Stamp tone='olive'>Mutua ✓</Stamp>
 
 /** A single connection summary; clicking it opens the detail modal. */
 export function ConnectionRow({ connection, direction, isMutual }: ConnectionRowProps) {
@@ -40,18 +37,14 @@ export function ConnectionRow({ connection, direction, isMutual }: ConnectionRow
         />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
           <div className='flex flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-            <span className='font-pt-mono font-bold text-black uppercase'>{name}</span>
-            {other.role && (
-              <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
-                {ROLE_LABELS[other.role]}
-              </span>
-            )}
+            <span className='font-pt-mono font-bold text-admin-ink uppercase'>{name}</span>
+            {other.role && <LabelTag>{ROLE_LABELS[other.role]}</LabelTag>}
             {isMutual && MUTUAL_BADGE}
           </div>
           {connection.message && (
-            <span className='font-pt-mono line-clamp-1 text-xs text-black/70'>{connection.message}</span>
+            <span className='font-pt-mono line-clamp-1 text-xs text-admin-ink-soft'>{connection.message}</span>
           )}
-          <span className='font-pt-mono text-[11px] text-black/50'>{date}</span>
+          <span className='font-pt-mono text-[11px] text-admin-ink-faint'>{date}</span>
         </div>
       </button>
 

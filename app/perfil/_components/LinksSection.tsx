@@ -1,5 +1,6 @@
 'use client'
 
+import { Paper } from '@/app/admin/_components/kit'
 import { Input } from '@/app/components/ui/input'
 import { PlatformIcon } from '@/app/components/ui/platform-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
@@ -50,10 +51,10 @@ function sortLinks(socialLinks: Record<string, string>): [string, string][] {
 }
 
 const inputCls =
-  'h-auto w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+  'h-auto w-full rounded-none border-2 border-admin-ink bg-admin-paper px-3 py-1.5 font-pt-mono text-sm text-admin-ink shadow-none placeholder:text-admin-ink-faint focus-visible:border-admin-red focus-visible:ring-0'
 
 const selectTriggerCls =
-  'h-auto w-full rounded-none border-2 border-red-600 bg-transparent px-3 py-1.5 font-pt-mono text-sm text-black shadow-none focus:border-red-800 focus:ring-0'
+  'h-auto w-full rounded-none border-2 border-admin-ink bg-admin-paper px-3 py-1.5 font-pt-mono text-sm text-admin-ink shadow-none focus:border-admin-red focus:ring-0'
 
 export default function LinksSection({
   socialLinks,
@@ -81,38 +82,46 @@ export default function LinksSection({
 
   if (!hasAnyContent) return null
 
-  // Private variant matches the red-folder dashboard (red label + red box);
-  // public keeps the dashed-black card used on the public profile.
+  // Private variant matches the red-folder dashboard (red label + red-edged
+  // Paper); public keeps a flat printed card used on the public profile.
   if (variant === 'private') {
     return (
       <div className='w-full space-y-1'>
-        <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Links</p>
-        <div className='space-y-1 border-2 border-red-700 px-3 py-2'>
+        <p className='font-pt-mono text-admin-red text-sm font-bold tracking-wider uppercase'>Links</p>
+        <Paper
+          tone='red'
+          className='space-y-1 px-3 py-2'
+        >
           {sortedLinks.map(([platform, url]) => (
             <a
               key={platform}
               href={buildLinkHref(platform, url)}
               target='_blank'
               rel='noopener noreferrer'
-              className='font-pt-mono flex items-center gap-2 text-sm text-black transition-colors hover:text-red-700'
+              className='font-pt-mono text-admin-ink hover:text-admin-red flex items-center gap-2 text-sm transition-colors'
             >
               <PlatformIcon
                 platform={platform}
                 className='size-4 shrink-0'
               />
-              <span className='underline decoration-red-700/50 underline-offset-2'>{getPlatformLabel(platform)}</span>
+              <span className='decoration-admin-red/50 underline underline-offset-2'>
+                {getPlatformLabel(platform)}
+              </span>
             </a>
           ))}
 
-          {contact && <p className='font-pt-mono text-sm text-black'>Contacto: {contact}</p>}
-        </div>
+          {contact && <p className='font-pt-mono text-admin-ink text-sm'>Contacto: {contact}</p>}
+        </Paper>
       </div>
     )
   }
 
   return (
-    <div className='border border-dashed border-black/20 p-4'>
-      <h4 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>Links</h4>
+    <Paper
+      flat
+      className='p-4'
+    >
+      <h4 className='font-pt-mono text-admin-ink text-lg font-bold tracking-wider uppercase'>Links</h4>
       <div className='mt-2 space-y-1'>
         {sortedLinks.map(([platform, url]) => (
           <a
@@ -120,7 +129,7 @@ export default function LinksSection({
             href={buildLinkHref(platform, url)}
             target='_blank'
             rel='noopener noreferrer'
-            className='font-pt-mono flex items-center gap-2 text-sm text-black/70 hover:text-black'
+            className='font-pt-mono text-admin-ink-soft hover:text-admin-ink flex items-center gap-2 text-sm'
           >
             <PlatformIcon
               platform={platform}
@@ -130,9 +139,9 @@ export default function LinksSection({
           </a>
         ))}
 
-        {contact && <p className='font-pt-mono text-sm text-black/70'>Contacto: {contact}</p>}
+        {contact && <p className='font-pt-mono text-admin-ink-soft text-sm'>Contacto: {contact}</p>}
       </div>
-    </div>
+    </Paper>
   )
 }
 
@@ -157,26 +166,19 @@ function EditingView({
   const canAdd = available.length > 0
 
   const isPrivate = variant === 'private'
-  // On-brand but desaturated: keep the red look (labels, hints of red) without
-  // the heavy full-red borders everywhere — soft panel with a faint red wash,
-  // thin low-opacity red borders, and a stronger red only on focus.
-  const containerCls = isPrivate ? '' : 'border border-dashed border-black/20 p-4'
+  const containerCls = isPrivate ? '' : 'border-admin-ink/25 border-2 border-dashed p-4'
   const headingCls = isPrivate
-    ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
-    : 'font-pt-mono text-lg font-bold tracking-wider text-black uppercase'
-  const cardCls = isPrivate ? 'bg-red-700/[0.035]' : 'border border-black/10 bg-black/[0.02]'
+    ? 'font-pt-mono text-admin-red text-sm font-bold tracking-wider uppercase'
+    : 'font-pt-mono text-admin-ink text-lg font-bold tracking-wider uppercase'
+  const cardCls = isPrivate
+    ? 'border-admin-red/20 border-2 bg-admin-red/[0.04]'
+    : 'border-admin-ink/15 border-2 bg-admin-ink/[0.03]'
   const labelCls = isPrivate
-    ? 'font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'
-    : 'font-pt-mono text-[11px] font-bold tracking-wider text-black/60 uppercase'
-  const inputClsV = isPrivate
-    ? 'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-2 font-pt-mono text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-700/70 focus-visible:ring-0'
-    : inputCls
-  const selectClsV = isPrivate
-    ? 'h-auto w-full rounded-md border border-red-700/30 bg-transparent px-3 py-2 font-pt-mono text-sm text-black shadow-none focus:border-red-700/70 focus:ring-0'
-    : selectTriggerCls
+    ? 'font-pt-mono text-admin-red text-sm font-bold tracking-wider uppercase'
+    : 'font-pt-mono text-admin-ink-soft text-[11px] font-bold tracking-wider uppercase'
   const removeBtnCls = isPrivate
-    ? 'text-red-600/60 hover:bg-red-600/10 hover:text-red-700'
-    : 'border-2 border-red-600 text-red-700 hover:bg-red-600 hover:text-white'
+    ? 'text-admin-red/60 hover:bg-admin-red/10 hover:text-admin-red'
+    : 'border-admin-ink text-admin-red hover:bg-admin-red hover:text-admin-surface border-2'
 
   function updatePlatform(prevPlatform: string, nextPlatform: string) {
     if (prevPlatform === nextPlatform) return
@@ -211,15 +213,15 @@ function EditingView({
 
       <div className='mt-3 space-y-3'>
         {rows.length === 0 && (
-          <p className='font-pt-mono text-xs text-black/40 italic'>Aún no has agregado ningún enlace.</p>
+          <p className='font-pt-mono text-admin-ink-faint text-xs italic'>Aún no has agregado ningún enlace.</p>
         )}
 
-        {/* Each link is one soft panel: platform + remove on the top row (so the
+        {/* Each link is one panel: platform + remove on the top row (so the
             chevron and the × line up), URL input full-width below. */}
         {rows.map(([platform, url]) => (
           <div
             key={platform}
-            className={`space-y-2 rounded-lg p-3 ${cardCls}`}
+            className={`space-y-2 p-3 ${cardCls}`}
           >
             <div className='flex items-center gap-2'>
               <div className='min-w-0 flex-1'>
@@ -227,7 +229,7 @@ function EditingView({
                   value={platform}
                   onValueChange={v => updatePlatform(platform, v)}
                 >
-                  <SelectTrigger className={selectClsV}>
+                  <SelectTrigger className={selectTriggerCls}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,7 +254,7 @@ function EditingView({
                 type='button'
                 onClick={() => remove(platform)}
                 aria-label='Quitar enlace'
-                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-lg leading-none transition-colors ${removeBtnCls}`}
+                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center text-lg leading-none transition-colors ${removeBtnCls}`}
               >
                 ×
               </button>
@@ -263,7 +265,7 @@ function EditingView({
               value={url}
               onChange={e => updateUrl(platform, e.target.value)}
               placeholder='https://…'
-              className={inputClsV}
+              className={inputCls}
             />
           </div>
         ))}
@@ -273,7 +275,7 @@ function EditingView({
         <button
           type='button'
           onClick={add}
-          className='font-pt-mono mt-3 cursor-pointer text-xs font-bold tracking-wider text-red-700/90 uppercase transition-colors hover:text-red-800'
+          className='font-pt-mono text-admin-red hover:text-admin-red mt-3 cursor-pointer text-xs font-bold tracking-wider uppercase transition-colors'
         >
           + Agregar otra
         </button>
@@ -285,7 +287,7 @@ function EditingView({
           value={contact}
           onChange={e => onContactChange(e.target.value)}
           placeholder='Email, teléfono o handle'
-          className={inputClsV}
+          className={inputCls}
         />
       </div>
     </div>

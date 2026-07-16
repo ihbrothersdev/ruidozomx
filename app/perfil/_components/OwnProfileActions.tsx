@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { AdminButton } from '@/app/admin/_components/kit'
 import type { Role } from '@/lib/types'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
@@ -26,43 +27,50 @@ export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsPro
 
   const canPublishEvents = role !== 'fan'
 
-  const buttonCls =
-    'font-pt-mono block w-68 cursor-pointer bg-black px-3 py-1 text-right text-lg font-bold tracking-wider text-red-700 uppercase transition-opacity hover:opacity-80 active:scale-[0.98] sm:text-lg md:text-xl'
+  const actionCls = 'w-full justify-center'
 
   return (
-    <div className='space-y-1'>
-      <Link
-        href='/comunidad'
-        className={buttonCls}
+    <div className='w-64 space-y-2'>
+      <AdminButton
+        asChild
+        variant='solid'
+        size='lg'
+        className={actionCls}
       >
-        Explorar comunidad
-      </Link>
+        <Link href='/comunidad'>Explorar comunidad</Link>
+      </AdminButton>
 
-      <button
+      <AdminButton
         type='button'
+        variant='solid'
+        size='lg'
+        className={actionCls}
         onClick={() => setProponerRolaOpen(true)}
-        className={buttonCls}
       >
         Proponer rola
-      </button>
+      </AdminButton>
 
       {canPublishEvents && (
-        <button
+        <AdminButton
           type='button'
+          variant='solid'
+          size='lg'
+          className={actionCls}
           onClick={() => setPublicarEventoOpen(true)}
-          className={buttonCls}
         >
           Publicar evento
-        </button>
+        </AdminButton>
       )}
 
-      <button
+      <AdminButton
         type='button'
+        variant='primary'
+        size='lg'
+        className={actionCls}
         onClick={onEdit}
-        className={buttonCls}
       >
         Editar perfil
-      </button>
+      </AdminButton>
 
       {/* Modals */}
       <ProponerRolaBandaModal

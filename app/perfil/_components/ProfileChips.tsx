@@ -49,7 +49,7 @@ export default function ProfileChips({ role, roleProfile, editing = false, onFie
       {chips.map((chip, i) => (
         <span
           key={`${chip}-${i}`}
-          className='font-pt-mono rounded-sm bg-red-600 px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase'
+          className='font-pt-mono border-2 border-admin-ink bg-admin-surface px-2.5 py-1 text-xs font-bold tracking-wider text-admin-ink uppercase'
         >
           {chip}
         </span>
@@ -68,7 +68,7 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
   const fields = ROLE_EDITABLE_FIELDS[role]
   if (!fields || fields.length === 0) {
     return (
-      <p className='font-pt-mono text-xs tracking-wider text-black/40 uppercase italic'>
+      <p className='font-pt-mono text-xs tracking-wider text-admin-ink-faint uppercase italic'>
         Sin opciones configurables para este rol.
       </p>
     )
@@ -82,7 +82,9 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
 
   return (
     <div className='space-y-3'>
-      <p className='font-pt-mono text-[10px] tracking-wider text-black/40 uppercase'>Toca para activar o desactivar</p>
+      <p className='font-pt-mono text-[10px] tracking-wider text-admin-ink-faint uppercase'>
+        Toca para activar o desactivar
+      </p>
       {booleans.length > 0 && (
         <div className='flex flex-wrap gap-2'>
           {booleans.map(field => (
@@ -101,7 +103,7 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
         const current = typeof state[field.key] === 'string' ? (state[field.key] as string) : ''
         return (
           <div key={field.key}>
-            <p className='font-pt-mono mb-1 text-[11px] font-bold tracking-wider text-black/60 uppercase'>
+            <p className='font-pt-mono mb-1 text-[11px] font-bold tracking-wider text-admin-ink-soft uppercase'>
               {field.label}
             </p>
             <div className='flex flex-wrap gap-2'>
@@ -114,10 +116,10 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
                     onClick={() => onChange(field.key, isOn ? '' : option)}
                     aria-pressed={isOn}
                     className={
-                      'font-pt-mono cursor-pointer rounded-sm px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ' +
+                      'font-pt-mono cursor-pointer border-2 border-admin-ink px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ' +
                       (isOn
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'bg-black/10 text-black/40 hover:bg-black/20 hover:text-black/60')
+                        ? 'bg-admin-red text-admin-surface'
+                        : 'bg-admin-surface text-admin-ink-faint hover:text-admin-ink')
                     }
                   >
                     {option}
@@ -134,7 +136,7 @@ function EditableChipsGroup({ role, state, onChange }: EditableChipsGroupProps) 
         const current = Array.isArray(state[field.key]) ? (state[field.key] as string[]) : []
         return (
           <div key={field.key}>
-            <p className='font-pt-mono mb-1 text-[11px] font-bold tracking-wider text-black/60 uppercase'>
+            <p className='font-pt-mono mb-1 text-[11px] font-bold tracking-wider text-admin-ink-soft uppercase'>
               {field.label}
             </p>
             <EditableMultiSelect

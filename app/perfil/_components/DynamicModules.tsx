@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LabelTag, Paper, Stamp, type Tone } from '@/app/admin/_components/kit'
 import type { Role } from '@/lib/types'
 import ConnectionActions from './ConnectionActions'
 import ProposalActions from './ProposalActions'
@@ -99,17 +100,17 @@ function getModuleItems(mod: { dataField?: string }, roleProfile?: Record<string
   return []
 }
 
-const STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; cls: string }> = {
-  pending: { label: 'Pendiente', cls: 'bg-black/10 text-black/70' },
-  accepted: { label: 'Aceptada', cls: 'bg-green-600/15 text-green-700' },
-  rejected: { label: 'No incluida', cls: 'bg-red-600/15 text-red-700' }
+const STATUS_LABEL: Record<SongProposalSummary['status'], { label: string; tone: Tone }> = {
+  pending: { label: 'Pendiente', tone: 'gold' },
+  accepted: { label: 'Aceptada', tone: 'olive' },
+  rejected: { label: 'No incluida', tone: 'ink' }
 }
 
-const PROPOSAL_STATUS_LABEL: Record<UserProposalStatus, { label: string; cls: string }> = {
-  pending: { label: 'Pendiente', cls: 'bg-yellow-400/30 text-yellow-800' },
-  accepted: { label: 'Aceptada', cls: 'bg-green-600 text-white' },
-  rejected: { label: 'Rechazada', cls: 'bg-red-600 text-white' },
-  withdrawn: { label: 'Retirada', cls: 'bg-black/20 text-black/60' }
+const PROPOSAL_STATUS_LABEL: Record<UserProposalStatus, { label: string; tone: Tone }> = {
+  pending: { label: 'Pendiente', tone: 'gold' },
+  accepted: { label: 'Aceptada', tone: 'olive' },
+  rejected: { label: 'Rechazada', tone: 'ink' },
+  withdrawn: { label: 'Retirada', tone: 'ink' }
 }
 
 type VisibleEntry =
@@ -260,26 +261,14 @@ export default function DynamicModules(props: DynamicModulesProps) {
   return (
     <div className='space-y-4'>
       {visible.map(entry => (
-        <div
+        <Paper
           key={entry.mod.key}
-          className='border border-dashed border-black/20 p-4'
+          className='p-4'
         >
           <div className='flex items-baseline justify-between gap-3'>
-            <h4 className='font-pt-mono text-lg font-bold tracking-wider text-black uppercase'>{entry.mod.title}</h4>
-            {entry.kind === 'proposals' && (
-              <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
-                {entry.total}
-              </span>
-            )}
-            {entry.kind === 'connections' && (
-              <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
-                {entry.total}
-              </span>
-            )}
-            {entry.kind === 'user_proposals' && (
-              <span className='font-pt-mono shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white'>
-                {entry.total}
-              </span>
+            <h4 className='font-pt-mono text-lg font-bold tracking-wider text-admin-ink uppercase'>{entry.mod.title}</h4>
+            {(entry.kind === 'proposals' || entry.kind === 'connections' || entry.kind === 'user_proposals') && (
+              <LabelTag tone='red'>{entry.total}</LabelTag>
             )}
           </div>
 
@@ -288,9 +277,9 @@ export default function DynamicModules(props: DynamicModulesProps) {
               {entry.items.map((item, i) => (
                 <li
                   key={i}
-                  className='font-pt-mono flex items-center gap-2 text-sm text-black/80'
+                  className='font-pt-mono flex items-center gap-2 text-sm text-admin-ink-soft'
                 >
-                  <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+                  <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-admin-red' />
                   {item}
                 </li>
               ))}
@@ -298,7 +287,7 @@ export default function DynamicModules(props: DynamicModulesProps) {
           )}
 
           {entry.kind === 'events' && entry.emptyMessage && (
-            <p className='font-pt-mono mt-2 text-sm text-black/60 italic'>{entry.emptyMessage}</p>
+            <p className='font-pt-mono mt-2 text-sm text-admin-ink-faint italic'>{entry.emptyMessage}</p>
           )}
 
           {entry.kind === 'events' && entry.events.length > 0 && (
@@ -336,28 +325,28 @@ export default function DynamicModules(props: DynamicModulesProps) {
                     key={ev.id}
                     className='flex items-start gap-2 text-sm'
                   >
-                    <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+                    <span className='mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-admin-red' />
                     <div className='font-pt-mono flex min-w-0 flex-1 flex-col gap-0.5'>
-                      <span className='font-bold text-black'>{ev.title}</span>
-                      <span className='text-xs text-black/60'>
+                      <span className='font-bold text-admin-ink'>{ev.title}</span>
+                      <span className='text-xs text-admin-ink-faint'>
                         {dateLabel}
                         {place && ` · ${place}`}
                         {ev.event_type && ` · ${ev.event_type}`}
                       </span>
-                      {ev.address && <span className='text-xs text-black/60'>{ev.address}</span>}
-                      {ev.description && <span className='text-xs text-black/70'>{ev.description}</span>}
+                      {ev.address && <span className='text-xs text-admin-ink-faint'>{ev.address}</span>}
+                      {ev.description && <span className='text-xs text-admin-ink-soft'>{ev.description}</span>}
                       {ev.external_link &&
                         (externalHref ? (
                           <a
                             href={externalHref}
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='mt-0.5 inline-block w-fit max-w-full truncate text-xs font-bold tracking-wider text-red-600 uppercase underline underline-offset-2 hover:text-red-700'
+                            className='mt-0.5 inline-block w-fit max-w-full truncate text-xs font-bold tracking-wider text-admin-red uppercase underline underline-offset-2 hover:text-admin-red/70'
                           >
                             Más info ↗{externalHost ? ` · ${externalHost}` : ''}
                           </a>
                         ) : (
-                          <span className='mt-0.5 text-xs text-black/70'>
+                          <span className='mt-0.5 text-xs text-admin-ink-soft'>
                             <span className='font-bold tracking-wider uppercase'>Más info:</span> {ev.external_link}
                           </span>
                         ))}
@@ -377,16 +366,17 @@ export default function DynamicModules(props: DynamicModulesProps) {
                     key={p.id}
                     className='flex items-center gap-2 text-sm'
                   >
-                    <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-red-600' />
+                    <span className='h-1.5 w-1.5 shrink-0 rounded-full bg-admin-red' />
                     <div className='font-pt-mono min-w-0 flex-1 truncate'>
-                      <span className='font-bold text-black'>{p.title}</span>
-                      <span className='text-xs text-black/60'> — {p.artist}</span>
+                      <span className='font-bold text-admin-ink'>{p.title}</span>
+                      <span className='text-xs text-admin-ink-faint'> — {p.artist}</span>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${status.cls}`}
+                    <Stamp
+                      tone={status.tone}
+                      className='shrink-0'
                     >
                       {status.label}
-                    </span>
+                    </Stamp>
                   </li>
                 )
               })}
@@ -410,30 +400,30 @@ export default function DynamicModules(props: DynamicModulesProps) {
                   <img
                     src={other.photo_url}
                     alt={name}
-                    className='h-8 w-8 shrink-0 rounded-full object-cover'
+                    className='h-8 w-8 shrink-0 rounded-full border-2 border-admin-ink object-cover'
                   />
                 ) : (
-                  <span className='font-pt-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-bold text-black/70'>
+                  <span className='font-pt-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-admin-ink bg-admin-surface-2 text-xs font-bold text-admin-ink-soft'>
                     {initial}
                   </span>
                 )
                 const Identity = (
                   <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
                     <div className='flex flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-                      <span className='font-pt-mono font-bold text-black'>{name}</span>
+                      <span className='font-pt-mono font-bold text-admin-ink'>{name}</span>
                       {other.role && (
-                        <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
+                        <span className='font-pt-mono border border-admin-ink bg-admin-surface px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-admin-ink-soft uppercase'>
                           {other.role}
                         </span>
                       )}
                       {isMutual && (
-                        <span className='font-pt-mono rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase'>
+                        <span className='font-pt-mono border border-admin-ink bg-admin-olive px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-admin-surface uppercase'>
                           Mutua ✓
                         </span>
                       )}
                     </div>
-                    {c.message && <span className='font-pt-mono text-xs text-black/70'>{c.message}</span>}
-                    <span className='font-pt-mono text-[11px] text-black/50'>{dateLabel}</span>
+                    {c.message && <span className='font-pt-mono text-xs text-admin-ink-soft'>{c.message}</span>}
+                    <span className='font-pt-mono text-[11px] text-admin-ink-faint'>{dateLabel}</span>
                   </div>
                 )
                 return (
@@ -486,30 +476,26 @@ export default function DynamicModules(props: DynamicModulesProps) {
                   <img
                     src={other.photo_url}
                     alt={name}
-                    className='h-8 w-8 shrink-0 rounded-full object-cover'
+                    className='h-8 w-8 shrink-0 rounded-full border-2 border-admin-ink object-cover'
                   />
                 ) : (
-                  <span className='font-pt-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-bold text-black/70'>
+                  <span className='font-pt-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-admin-ink bg-admin-surface-2 text-xs font-bold text-admin-ink-soft'>
                     {initial}
                   </span>
                 )
                 const Identity = (
                   <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
                     <div className='flex flex-wrap items-baseline gap-x-2 gap-y-0.5'>
-                      <span className='font-pt-mono font-bold text-black'>{name}</span>
+                      <span className='font-pt-mono font-bold text-admin-ink'>{name}</span>
                       {other.role && (
-                        <span className='font-pt-mono rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black/70 uppercase'>
+                        <span className='font-pt-mono border border-admin-ink bg-admin-surface px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-admin-ink-soft uppercase'>
                           {other.role}
                         </span>
                       )}
-                      <span
-                        className={`font-pt-mono rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${statusInfo.cls}`}
-                      >
-                        {statusInfo.label}
-                      </span>
+                      <Stamp tone={statusInfo.tone}>{statusInfo.label}</Stamp>
                     </div>
-                    <p className='font-pt-mono line-clamp-3 text-xs text-black/70'>{p.message}</p>
-                    <span className='font-pt-mono text-[11px] text-black/50'>{dateLabel}</span>
+                    <p className='font-pt-mono line-clamp-3 text-xs text-admin-ink-soft'>{p.message}</p>
+                    <span className='font-pt-mono text-[11px] text-admin-ink-faint'>{dateLabel}</span>
                   </div>
                 )
                 return (
@@ -544,7 +530,7 @@ export default function DynamicModules(props: DynamicModulesProps) {
               })}
             </ul>
           )}
-        </div>
+        </Paper>
       ))}
     </div>
   )
