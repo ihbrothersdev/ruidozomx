@@ -256,11 +256,11 @@ function CassettePanel({
   return (
     <Link
       href='/admin/cassettes'
-      className='block'
+      className='block h-full'
     >
       <Paper
         tone={paperTone}
-        className='admin-press p-5'
+        className='admin-press flex h-full flex-col p-5'
       >
         <div className='flex items-center justify-between'>
           <LabelTag tone={tone === 'active' ? 'red' : 'gold'}>{label}</LabelTag>
@@ -279,33 +279,31 @@ function CassettePanel({
           <Reel spin={tone === 'active' && !empty} />
         </div>
 
-        {empty ? (
-          <p className='font-pt-mono text-admin-ink-faint mt-4 text-xs'>
-            {tone === 'active' ? 'Ninguno activo' : 'Crea uno en Cassettes'}
-          </p>
-        ) : (
-          <div className='mt-4'>
-            <div className='mb-1.5 flex items-center justify-between'>
-              <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.15em] uppercase'>
-                {filled}/{cap} slots
-              </span>
+        {/* Slot meter — always rendered (empty shows a 0/26 bar) so the active
+            and next cards stay structurally identical and equal height. */}
+        <div className='mt-4 flex flex-1 flex-col justify-end'>
+          <div className='mb-1.5 flex items-center justify-between'>
+            <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.15em] uppercase'>
+              {empty ? (tone === 'active' ? 'Ninguno activo' : 'Crea uno en Cassettes') : `${filled}/${cap} slots`}
+            </span>
+            {!empty && (
               <span className='font-pt-mono text-admin-ink-soft text-[10px] tracking-[0.15em] uppercase'>
                 {Math.round((filled / cap) * 100)}%
               </span>
-            </div>
-            <div
-              className='flex gap-[2px]'
-              aria-hidden
-            >
-              {Array.from({ length: segments }).map((_, i) => (
-                <span
-                  key={i}
-                  className={cn('h-2.5 flex-1', i < lit ? meterColor : 'bg-admin-ink/12')}
-                />
-              ))}
-            </div>
+            )}
           </div>
-        )}
+          <div
+            className='flex gap-[2px]'
+            aria-hidden
+          >
+            {Array.from({ length: segments }).map((_, i) => (
+              <span
+                key={i}
+                className={cn('h-2.5 flex-1', i < lit ? meterColor : 'bg-admin-ink/12')}
+              />
+            ))}
+          </div>
+        </div>
       </Paper>
     </Link>
   )
