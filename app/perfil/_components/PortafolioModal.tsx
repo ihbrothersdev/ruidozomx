@@ -136,14 +136,14 @@ export default function PortafolioModal({ open, onOpenChange }: PortafolioModalP
               value={mensaje}
               onChange={e => setMensaje(e.target.value.slice(0, maxMensaje))}
               placeholder='Cuéntanos sobre tu proyecto…'
-              className='font-pt-mono mt-5 min-h-52 max-w-full resize-none rounded-none border-2 border-red-600 bg-transparent px-3 py-2 text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
+              className='font-pt-mono mt-5 min-h-50 max-w-full resize-none rounded-none border-2 border-red-600 bg-transparent px-3 py-2 text-sm text-black shadow-none placeholder:text-black/30 focus-visible:border-red-800 focus-visible:ring-0'
             />
             <span className='font-pt-mono mt-1 self-end text-xs text-black/50'>
               {mensaje.length}/{maxMensaje}
             </span>
 
             {/* Enviar / Cancelar */}
-            <div className='mt-5 flex justify-center gap-3'>
+            <div className='mt-3 flex justify-center gap-3'>
               <button
                 type='submit'
                 disabled={!canSubmit || sending}

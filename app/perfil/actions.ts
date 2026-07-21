@@ -1169,15 +1169,19 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
     return { error: 'No has iniciado sesión.' }
   }
 
-  // Service client, not the RLS-scoped one: `profiles_select_active` only
-  // allows reading rows where active = TRUE, which silently returned null
-  // (not an error) for some accounts and produced "Sin nombre" / bare
-  // SITE_URL emails. This is the user's own row, keyed by their verified id,
-  // so bypassing RLS here doesn't expose anyone else's data.
+  // Service client, not the RLS-scoped one: this is the user's own row, keyed
+  // by their verified id, so bypassing RLS here doesn't expose anyone else's
+  // data — and it removes any dependence on the `active` flag for a read that
+  // has nothing to do with visibility.
   const serviceClient = createServiceClient()
   const { data: profile, error: profileError } = await serviceClient
     .from('profiles')
-    .select('display_name, slug, contact_email')
+    // `profiles` has no `contact_email` column (that name only exists in the
+    // docs) — it's just `contact`, a free-text field also used on the
+    // role-specific tables and not guaranteed to be an email address. Selecting
+    // a nonexistent column makes PostgREST error the *entire* query, which is
+    // why display_name/slug were ALSO coming back empty — not an RLS issue.
+    .select('display_name, slug')
     .eq('id', user.id)
     .single()
 
@@ -1186,7 +1190,9 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
   }
 
   const remitente = profile?.display_name || 'Sin nombre'
-  const remitenteEmail = profile?.contact_email || user.email || 'Sin email'
+  // The authenticated account's email — always present, unlike the free-text
+  // `contact` field — so Reply-To is guaranteed a real address.
+  const remitenteEmail = user.email || 'Sin email'
   const perfil = profile?.slug ? `${SITE_URL}/perfil/${profile.slug}` : SITE_URL
 
   const result = await sendMail({
