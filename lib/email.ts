@@ -43,6 +43,21 @@ export async function sendMail(input: SendMailInput): Promise<{ ok: true } | { o
   const port = Number(process.env.SMTP_PORT ?? 587)
   const fromAddress = process.env.SMTP_FROM || user
 
+  // ─── ⚠️ TEMPORARY DIAGNOSTIC — remove once prod email is fixed ───
+  // Presence/length only; never logs the password itself.
+  console.log('[email][debug] config', {
+    NODE_ENV: process.env.NODE_ENV,
+    hasHost: !!host,
+    hasUser: !!user,
+    hasPass: !!pass,
+    passLength: pass?.length ?? 0,
+    host: host ?? null,
+    port,
+    from: fromAddress ?? null,
+    to: input.to
+  })
+  // ─── end temporary diagnostic ───
+
   if (!host || !user || !pass || !fromAddress) {
     // Name the missing vars (never the values) so a prod misconfig is obvious
     // from the logs instead of surfacing as a generic failure.
@@ -80,8 +95,24 @@ export async function sendMail(input: SendMailInput): Promise<{ ok: true } | { o
       replyTo: input.replyTo
     })
 
+    // ⚠️ TEMPORARY DIAGNOSTIC — remove once prod email is fixed.
+    console.log('[email][debug] sent OK', { to: input.to })
+
     return { ok: true }
   } catch (err) {
+    // ─── ⚠️ TEMPORARY DIAGNOSTIC — remove once prod email is fixed ───
+    // The raw error often serialises to "{}" in hosted logs, so pull the
+    // fields Nodemailer/SMTP actually populate.
+    const e = err as { name?: string; code?: string; responseCode?: number; response?: string; message?: string }
+    console.error('[email][debug] send failed detail', {
+      name: e?.name ?? null,
+      code: e?.code ?? null,
+      responseCode: e?.responseCode ?? null,
+      response: e?.response ?? null,
+      message: e?.message ?? null
+    })
+    // ─── end temporary diagnostic ───
+
     console.error('[email] send failed', err)
     return { ok: false, error: 'send_failed' }
   }
