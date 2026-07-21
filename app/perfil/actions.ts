@@ -1203,7 +1203,7 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
 
   if (!result.ok) {
     console.error('[portfolio-quote] email failed', { userId: user.id, error: result.error })
-    return { error: 'No pudimos enviar tu solicitud. Intenta de nuevo en un momento.' }
+    return { error: 'No pudimos enviar tu solicitud. Intenta directo en hola@ruidozo.mx.' }
   }
 
   return { success: true }
