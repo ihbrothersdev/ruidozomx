@@ -46,7 +46,7 @@ export default function PortafolioModal({ open, onOpenChange }: PortafolioModalP
 
     sileo.success({
       title: '¡Enviado!',
-      description: 'Te contactaremos con una cotización sin compromiso.',
+      description: 'Revisaremos tu solicitud. Te contactaremos pronto.',
       position: 'top-center',
       duration: 4000
     })

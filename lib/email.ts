@@ -44,7 +44,15 @@ export async function sendMail(input: SendMailInput): Promise<{ ok: true } | { o
   const fromAddress = process.env.SMTP_FROM || user
 
   if (!host || !user || !pass || !fromAddress) {
-    console.error('[email] SMTP env vars missing (need SMTP_HOST, SMTP_USER, SMTP_PASS)')
+    // Name the missing vars (never the values) so a prod misconfig is obvious
+    // from the logs instead of surfacing as a generic failure.
+    const missing = [
+      !host && 'SMTP_HOST',
+      !user && 'SMTP_USER',
+      !pass && 'SMTP_PASS',
+      !fromAddress && 'SMTP_FROM'
+    ].filter(Boolean)
+    console.error(`[email] SMTP env vars missing: ${missing.join(', ')}`)
     return { ok: false, error: 'missing_smtp_config' }
   }
 
@@ -54,7 +62,13 @@ export async function sendMail(input: SendMailInput): Promise<{ ok: true } | { o
       port,
       // 465 is implicit TLS; 587 upgrades via STARTTLS.
       secure: port === 465,
-      auth: { user, pass }
+      auth: { user, pass },
+      // Serverless functions have a hard execution limit; without explicit
+      // timeouts a stalled SMTP connection hangs until the platform kills the
+      // function, which surfaces as a generic failure with nothing in the logs.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000
     })
 
     await transporter.sendMail({

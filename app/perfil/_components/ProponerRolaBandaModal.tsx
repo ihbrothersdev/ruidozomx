@@ -235,7 +235,7 @@ export default function ProponerRolaBandaModal({
                     <>
                       Esta rola se va a la fila de curaduría
                       <br />
-                      del casete quincenal
+                      del casete quincenal y, sonará en tu perfil!
                     </>
                   )}
                 </p>
@@ -318,6 +318,9 @@ export default function ProponerRolaBandaModal({
                       <Label className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
                         Archivo MP3 (opcional)
                       </Label>
+                      <p className='font-pt-mono text-[11px] tracking-wider text-black/60'>
+                        Sube un archivo y haz que suene!
+                      </p>
                       <div className='flex flex-wrap items-center gap-3'>
                         <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
                           Elegir archivo
