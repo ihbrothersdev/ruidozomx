@@ -1,9 +1,11 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import type { Role } from '@/lib/types'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
+import PortafolioModal from './PortafolioModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 
 interface OwnProfileActionsProps {
@@ -23,6 +25,7 @@ interface OwnProfileActionsProps {
 export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [publicarEventoOpen, setPublicarEventoOpen] = useState(false)
+  const [portafolioOpen, setPortafolioOpen] = useState(false)
 
   const canPublishEvents = role !== 'fan'
 
@@ -64,7 +67,37 @@ export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsPro
         Editar perfil
       </button>
 
+      {/* Portfolio CTA — "¿Tu proyecto necesita IMAGEN?" (text baked into the asset) */}
+      <div className='flex w-68 flex-col items-center gap-1.5 pt-5'>
+        <Image
+          src='/assets/portafolio/imagen.png'
+          alt='¿Tu proyecto necesita imagen?'
+          width={180}
+          height={95}
+          className='w-36'
+          style={{ height: 'auto' }}
+        />
+        <button
+          type='button'
+          onClick={() => setPortafolioOpen(true)}
+          className='cursor-pointer transition-transform hover:scale-105 active:scale-95'
+        >
+          <Image
+            src='/assets/portafolio/aqui-btn.png'
+            alt='Aquí'
+            width={134}
+            height={42}
+            className='w-24'
+            style={{ height: 'auto' }}
+          />
+        </button>
+      </div>
+
       {/* Modals */}
+      <PortafolioModal
+        open={portafolioOpen}
+        onOpenChange={setPortafolioOpen}
+      />
       <ProponerRolaBandaModal
         open={proponerRolaOpen}
         onOpenChange={setProponerRolaOpen}

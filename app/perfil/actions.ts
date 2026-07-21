@@ -5,6 +5,7 @@ import { audioMetaError, extractStorageKey, proposalStorageKey, SONGS_BUCKET } f
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
+import { sendMail } from '@/lib/email'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { buildLinkHref } from '@/lib/social-links'
 import type { FeaturedSongSource, Role, UserProposalType } from '@/lib/types'
@@ -1131,6 +1132,78 @@ export async function resendConfirmationEmailAsAdmin(targetProfileId: string) {
   if (error) {
     console.error('[resendConfirmationEmailAsAdmin]', error)
     return { error: 'No se pudo reenviar el correo.' }
+  }
+
+  return { success: true }
+}
+
+/** Inbox that receives design-quote requests from the portfolio modal. */
+const PORTFOLIO_INBOX = 'hola@ruidozo.mx'
+
+interface PortfolioQuoteInput {
+  /** Services ticked in the "¿Qué necesitas?" modal. */
+  servicios: string[]
+  message: string
+}
+
+/**
+ * Sends a design-quote request from the "¿Qué necesitas?" modal to
+ * hola@ruidozo.mx over plain SMTP. Requires a session — the modal only exists
+ * on the private profile — so the requester's identity comes from the verified
+ * user, never the client payload.
+ */
+export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
+  const servicios = (input.servicios ?? []).map(s => s.trim()).filter(Boolean)
+  const message = input.message?.trim() ?? ''
+
+  if (servicios.length === 0 && !message) {
+    return { error: 'Selecciona al menos un servicio o cuéntanos sobre tu proyecto.' }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'No has iniciado sesión.' }
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name, slug, contact_email')
+    .eq('id', user.id)
+    .single()
+
+  const remitente = profile?.display_name || 'Sin nombre'
+  const remitenteEmail = profile?.contact_email || user.email || 'Sin email'
+  const perfil = profile?.slug ? `${SITE_URL}/perfil/${profile.slug}` : SITE_URL
+
+  const result = await sendMail({
+    to: PORTFOLIO_INBOX,
+    subject: `Nueva solicitud de cotización — ${remitente}`,
+    // Shows the requester's name in the inbox; the address stays our own
+    // mailbox (providers reject a From you don't own), and Reply-To sends
+    // replies straight to the person who asked.
+    fromName: `${remitente} (vía Ruidozo)`,
+    replyTo: remitenteEmail !== 'Sin email' ? remitenteEmail : undefined,
+    text: [
+      'Nueva solicitud de cotización desde el perfil privado.',
+      '',
+      `Nombre:    ${remitente}`,
+      `Email:     ${remitenteEmail}`,
+      `Perfil:    ${perfil}`,
+      '',
+      `Servicios: ${servicios.length ? servicios.join(', ') : 'No especificado'}`,
+      '',
+      'Mensaje:',
+      message || 'Sin mensaje'
+    ].join('\n')
+  })
+
+  if (!result.ok) {
+    console.error('[portfolio-quote] email failed', { userId: user.id, error: result.error })
+    return { error: 'No pudimos enviar tu solicitud. Intenta de nuevo en un momento.' }
   }
 
   return { success: true }
