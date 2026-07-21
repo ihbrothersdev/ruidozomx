@@ -2,12 +2,14 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { ROLE_LABELS, type FeaturedSongView, type Role } from '@/lib/types'
 import type { EventSummary, InterestSummary, SongProposalSummary, UserProposalSummary } from './DynamicModules'
 import LinksSection from './LinksSection'
 import OwnProfileActions from './OwnProfileActions'
 import OwnProfileEditForm from './OwnProfileEditForm'
+import PortafolioModal from './PortafolioModal'
 import ProfileFeaturedSongs from './ProfileFeaturedSongs'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 import ProposedSongAudioUpload from './ProposedSongAudioUpload'
@@ -86,6 +88,12 @@ export default function OwnProfileView({
   featuredSelected = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
+
+  // Opened via ?portafolio=1 — set by the "Volver" button on /portafolio so
+  // leaving that page lands back here with the quote modal already open,
+  // instead of dropping the user on a bare dashboard.
+  const searchParams = useSearchParams()
+  const [portafolioOpen, setPortafolioOpen] = useState(searchParams.get('portafolio') === '1')
 
   // Inline edit: clicking "Editar perfil" swaps the read-only dashboard for an
   // editable form that keeps the same red-folder design. No route, no URL param.
@@ -188,6 +196,7 @@ export default function OwnProfileView({
               <OwnProfileActions
                 role={role}
                 onEdit={() => setIsEditing(true)}
+                onOpenPortafolio={() => setPortafolioOpen(true)}
               />
             </div>
 
@@ -248,6 +257,7 @@ export default function OwnProfileView({
                   <OwnProfileActions
                     role={role}
                     onEdit={() => setIsEditing(true)}
+                    onOpenPortafolio={() => setPortafolioOpen(true)}
                   />
                 </div>
 
@@ -283,6 +293,13 @@ export default function OwnProfileView({
           </div>
         </div>
       </div>
+
+      {/* Shared across both OwnProfileActions instances (mobile/desktop) so
+          only one dialog ever mounts, and so ?portafolio=1 can reopen it. */}
+      <PortafolioModal
+        open={portafolioOpen}
+        onOpenChange={setPortafolioOpen}
+      />
     </div>
   )
 }

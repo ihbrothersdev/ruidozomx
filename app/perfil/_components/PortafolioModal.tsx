@@ -142,14 +142,23 @@ export default function PortafolioModal({ open, onOpenChange }: PortafolioModalP
               {mensaje.length}/{maxMensaje}
             </span>
 
-            {/* Enviar */}
-            <button
-              type='submit'
-              disabled={!canSubmit || sending}
-              className='font-pt-mono mt-5 cursor-pointer self-center rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              {sending ? 'Enviando...' : 'Enviar'}
-            </button>
+            {/* Enviar / Cancelar */}
+            <div className='mt-5 flex justify-center gap-3'>
+              <button
+                type='submit'
+                disabled={!canSubmit || sending}
+                className='font-pt-mono cursor-pointer rounded-sm bg-black px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-black/80 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+              >
+                {sending ? 'Enviando...' : 'Enviar'}
+              </button>
+              <button
+                type='button'
+                onClick={() => onOpenChange(false)}
+                className='font-pt-mono cursor-pointer rounded-sm bg-red-600 px-6 py-2 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-red-700 active:scale-95'
+              >
+                Cancelar
+              </button>
+            </div>
           </form>
         </div>
       </DialogContent>

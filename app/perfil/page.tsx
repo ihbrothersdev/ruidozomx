@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import OwnProfileView from './_components/OwnProfileView'
 import { markReceivedProposalsAsSeen } from './actions'
 import { ROLE_TABLE } from './_components/profile-constants'
@@ -267,35 +268,37 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   }
 
   return (
-    <OwnProfileView
-      displayName={displayName}
-      role={role}
-      location={location}
-      photoUrl={photoUrl}
-      bio={bio || undefined}
-      contact={contact}
-      socialLinks={socialLinks}
-      roleProfile={roleProfile}
-      songProposals={songProposals}
-      songProposalsCount={songProposalsCount ?? 0}
-      events={eventsData ?? []}
-      receivedConnections={receivedConnections}
-      receivedConnectionsCount={receivedCount ?? 0}
-      sentConnections={sentConnections}
-      sentConnectionsCount={sentCount ?? 0}
-      mutualIds={mutualIds}
-      receivedProposals={receivedProposals}
-      receivedProposalsCount={receivedProposalsCount ?? 0}
-      sentProposals={sentProposals}
-      sentProposalsCount={sentProposalsCount ?? 0}
-      lastActivityAt={lastActivityAt}
-      country={(profile?.country as string | null) ?? null}
-      state={(profile?.state as string | null) ?? null}
-      city={(profile?.city as string | null) ?? null}
-      profileId={resolvedProfileId}
-      featuredSongs={featuredSongs}
-      featuredCandidates={featuredCandidates}
-      featuredSelected={featuredSelected}
-    />
+    <Suspense>
+      <OwnProfileView
+        displayName={displayName}
+        role={role}
+        location={location}
+        photoUrl={photoUrl}
+        bio={bio || undefined}
+        contact={contact}
+        socialLinks={socialLinks}
+        roleProfile={roleProfile}
+        songProposals={songProposals}
+        songProposalsCount={songProposalsCount ?? 0}
+        events={eventsData ?? []}
+        receivedConnections={receivedConnections}
+        receivedConnectionsCount={receivedCount ?? 0}
+        sentConnections={sentConnections}
+        sentConnectionsCount={sentCount ?? 0}
+        mutualIds={mutualIds}
+        receivedProposals={receivedProposals}
+        receivedProposalsCount={receivedProposalsCount ?? 0}
+        sentProposals={sentProposals}
+        sentProposalsCount={sentProposalsCount ?? 0}
+        lastActivityAt={lastActivityAt}
+        country={(profile?.country as string | null) ?? null}
+        state={(profile?.state as string | null) ?? null}
+        city={(profile?.city as string | null) ?? null}
+        profileId={resolvedProfileId}
+        featuredSongs={featuredSongs}
+        featuredCandidates={featuredCandidates}
+        featuredSelected={featuredSelected}
+      />
+    </Suspense>
   )
 }

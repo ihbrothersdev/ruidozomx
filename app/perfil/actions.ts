@@ -1169,11 +1169,21 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
     return { error: 'No has iniciado sesión.' }
   }
 
-  const { data: profile } = await supabase
+  // Service client, not the RLS-scoped one: `profiles_select_active` only
+  // allows reading rows where active = TRUE, which silently returned null
+  // (not an error) for some accounts and produced "Sin nombre" / bare
+  // SITE_URL emails. This is the user's own row, keyed by their verified id,
+  // so bypassing RLS here doesn't expose anyone else's data.
+  const serviceClient = createServiceClient()
+  const { data: profile, error: profileError } = await serviceClient
     .from('profiles')
     .select('display_name, slug, contact_email')
     .eq('id', user.id)
     .single()
+
+  if (profileError) {
+    console.error('[portfolio-quote] profile lookup failed', { userId: user.id, error: profileError })
+  }
 
   const remitente = profile?.display_name || 'Sin nombre'
   const remitenteEmail = profile?.contact_email || user.email || 'Sin email'

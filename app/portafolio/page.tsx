@@ -83,9 +83,10 @@ export default function PortafolioPage() {
           </figure>
         </div>
 
-        {/* Volver */}
+        {/* Volver — back to the profile dashboard with the quote modal already
+            open, since that's the only place this page is reached from. */}
         <div className='mt-10 flex justify-center lg:justify-start'>
-          <BackButton href='/perfil' />
+          <BackButton href='/perfil?portafolio=1' />
         </div>
       </div>
     </main>

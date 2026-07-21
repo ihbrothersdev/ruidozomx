@@ -5,13 +5,16 @@ import Link from 'next/link'
 import { useState } from 'react'
 import type { Role } from '@/lib/types'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
-import PortafolioModal from './PortafolioModal'
 import ProponerRolaBandaModal from './ProponerRolaBandaModal'
 
 interface OwnProfileActionsProps {
   role: Role | null
   /** Switches the dashboard into inline edit mode (ProfileView form). */
   onEdit: () => void
+  /** Opens the shared portfolio-quote modal (owned by OwnProfileView — this
+   *  component renders twice, mobile + desktop, so the modal can't live here
+   *  without risking two mounted at once). */
+  onOpenPortafolio: () => void
 }
 
 /**
@@ -22,10 +25,9 @@ interface OwnProfileActionsProps {
  *
  * Fans can't publish events, so the "Publicar evento" button is hidden for them.
  */
-export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsProps) {
+export default function OwnProfileActions({ role, onEdit, onOpenPortafolio }: OwnProfileActionsProps) {
   const [proponerRolaOpen, setProponerRolaOpen] = useState(false)
   const [publicarEventoOpen, setPublicarEventoOpen] = useState(false)
-  const [portafolioOpen, setPortafolioOpen] = useState(false)
 
   const canPublishEvents = role !== 'fan'
 
@@ -79,7 +81,7 @@ export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsPro
         />
         <button
           type='button'
-          onClick={() => setPortafolioOpen(true)}
+          onClick={onOpenPortafolio}
           className='cursor-pointer transition-transform hover:scale-105 active:scale-95'
         >
           <Image
@@ -94,10 +96,6 @@ export default function OwnProfileActions({ role, onEdit }: OwnProfileActionsPro
       </div>
 
       {/* Modals */}
-      <PortafolioModal
-        open={portafolioOpen}
-        onOpenChange={setPortafolioOpen}
-      />
       <ProponerRolaBandaModal
         open={proponerRolaOpen}
         onOpenChange={setProponerRolaOpen}
