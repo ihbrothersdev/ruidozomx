@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { cn } from '@/lib/utils'
-import { ArrowRight, CalendarDays, Disc3, Inbox, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, CalendarDays, Disc3, Inbox, Palette, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
 import { EmptyState, LabelTag, PageHeader, Paper, SectionHeading, Stamp, StatCard } from './_components/kit'
 
@@ -19,7 +19,9 @@ export default async function AdminDashboardPage() {
     { count: publishedEvents },
     { count: upcomingEvents },
     { count: totalInterests },
-    { count: totalMessages }
+    { count: totalMessages },
+    { count: pendingQuotes },
+    { count: totalQuotes }
   ] = await Promise.all([
     supabase.from('cassettes').select('id, name').eq('active', true).maybeSingle(),
     supabase.from('cassettes').select('id, name').eq('is_next', true).maybeSingle(),
@@ -34,7 +36,9 @@ export default async function AdminDashboardPage() {
       .eq('status', 'published')
       .gte('event_date', todayIso),
     supabase.from('interests').select('*', { count: 'exact', head: true }),
-    supabase.from('user_proposals').select('*', { count: 'exact', head: true })
+    supabase.from('user_proposals').select('*', { count: 'exact', head: true }),
+    supabase.from('portfolio_quotes').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('portfolio_quotes').select('*', { count: 'exact', head: true })
   ])
 
   const totalConnections = (totalInterests ?? 0) + (totalMessages ?? 0)
@@ -96,7 +100,7 @@ export default async function AdminDashboardPage() {
           title='Operación'
           description='Lo que pide tu atención.'
         />
-        <div className='grid gap-5 md:grid-cols-2'>
+        <div className='grid gap-5 md:grid-cols-2 lg:grid-cols-3'>
           <Link
             href='/admin/propuestas'
             className='group block h-full'
@@ -127,6 +131,41 @@ export default async function AdminDashboardPage() {
                 <div
                   className='h-full bg-admin-gold'
                   style={{ width: `${totalProposals ? Math.round(((pendingCount ?? 0) / totalProposals) * 100) : 0}%` }}
+                />
+              </div>
+            </Paper>
+          </Link>
+
+          <Link
+            href='/admin/cotizaciones'
+            className='group block h-full'
+          >
+            <Paper
+              tone='blue'
+              className='admin-press flex h-full flex-col justify-center gap-3.5 p-5'
+            >
+              <div className='flex items-center gap-4'>
+                <span className='border-admin-blue text-admin-blue flex h-14 w-14 shrink-0 items-center justify-center border-2'>
+                  <Palette className='h-7 w-7' />
+                </span>
+                <div className='min-w-0 flex-1'>
+                  <p className='font-pt-mono text-admin-ink-soft text-[10px] font-bold tracking-[0.2em] uppercase'>
+                    Cotizaciones pendientes
+                  </p>
+                  <p className='font-baby-doll text-admin-ink mt-0.5 flex items-baseline gap-2 leading-none'>
+                    <span className='text-5xl font-bold'>{pendingQuotes ?? 0}</span>
+                    <span className='font-pt-mono text-admin-ink-faint text-sm'>/ {totalQuotes ?? 0} totales</span>
+                  </p>
+                </div>
+                <div className='flex shrink-0 flex-col items-end gap-2'>
+                  {(pendingQuotes ?? 0) > 0 && <Stamp tone='blue'>Atender</Stamp>}
+                  <ArrowRight className='text-admin-ink/40 h-5 w-5 transition-transform group-hover:translate-x-1' />
+                </div>
+              </div>
+              <div className='bg-admin-ink/12 h-1.5 w-full overflow-hidden'>
+                <div
+                  className='bg-admin-blue h-full'
+                  style={{ width: `${totalQuotes ? Math.round(((pendingQuotes ?? 0) / totalQuotes) * 100) : 0}%` }}
                 />
               </div>
             </Paper>

@@ -1195,6 +1195,21 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
   const remitenteEmail = user.email || 'Sin email'
   const perfil = profile?.slug ? `${SITE_URL}/perfil/${profile.slug}` : SITE_URL
 
+  // Persist the request — this row is what /admin/cotizaciones reads. The email
+  // below is only the notification; the record is the source of truth.
+  const svc = createServiceClient()
+  const { error: insertError } = await svc.from('portfolio_quotes').insert({
+    profile_id: user.id,
+    requester_name: remitente !== 'Sin nombre' ? remitente : null,
+    requester_email: remitenteEmail !== 'Sin email' ? remitenteEmail : null,
+    servicios,
+    message: message || null,
+    status: 'pending'
+  })
+  if (insertError) {
+    console.error('[portfolio-quote] insert failed', { userId: user.id, error: insertError })
+  }
+
   const result = await sendMail({
     to: PORTFOLIO_INBOX,
     subject: `Nueva solicitud de cotización — ${remitente}`,
@@ -1219,8 +1234,13 @@ export async function sendPortfolioQuote(input: PortfolioQuoteInput) {
 
   if (!result.ok) {
     console.error('[portfolio-quote] email failed', { userId: user.id, error: result.error })
-    return { error: 'No pudimos enviar tu solicitud. Intenta directo en hola@ruidozo.mx.' }
+    // Only fail the user if nothing landed anywhere. If the record saved, the
+    // request is safe in /admin/cotizaciones even though the notice bounced.
+    if (insertError) {
+      return { error: 'No pudimos enviar tu solicitud. Intenta directo en hola@ruidozo.mx.' }
+    }
   }
 
+  revalidatePath('/admin/cotizaciones')
   return { success: true }
 }
