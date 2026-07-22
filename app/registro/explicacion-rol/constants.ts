@@ -19,7 +19,7 @@ export const ROLE_EXPLANATIONS: Record<string, RoleExplanation> = {
     sectionHeader: 'AQUÍ PUEDES:',
     bullets: [
       'Descubrir música nueva cada semana',
-      'Proponer rolas para el cassette semanal',
+      'Proponer rolas para el cassette quincenal',
       'Apoyar proyectos que te gustan',
       'Conectar directamente con artistas',
       'Participar en la construcción de un espacio donde caben todos'
@@ -32,7 +32,7 @@ export const ROLE_EXPLANATIONS: Record<string, RoleExplanation> = {
     subtitle: 'Ru!dozo no va a sonar solo,\nentra y hazlo sonar',
     sectionHeader: 'AQUÍ PUEDES:',
     bullets: [
-      'Postular tus rolas al cassette semanal',
+      'Postular tus rolas al cassette quincenal',
       'Conectar con foros, promotores, público y proveedores.',
       'Generar vínculos.',
       'Activar tu proyecto más allá de las redes y sobre todo de las plataformas',
@@ -46,7 +46,7 @@ export const ROLE_EXPLANATIONS: Record<string, RoleExplanation> = {
     subtitle: 'El talento ya existe,\nlo que falta es quien lo empuje',
     sectionHeader: 'AQUÍ PUEDES:',
     bullets: [
-      'Proponer rolas de tus artistas para el cassette semanal',
+      'Proponer rolas de tus artistas para el cassette quincenal',
       'Detectar proyectos emergentes antes de que exploten',
       'Conectar con bandas activas dentro del movimiento',
       'Proponer fechas, colaboraciones o circuitos',

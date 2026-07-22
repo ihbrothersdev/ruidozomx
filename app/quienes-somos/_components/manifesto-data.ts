@@ -68,8 +68,7 @@ export const MANIFESTO_BLOCKS: BlockData[] = [
 
   { type: 'spacer' },
 
-  // ── El cassette semanal ──
-  { type: 'subhead', text: '> Por eso existe el cassette semanal.', color: 'white' },
+  { type: 'subhead', text: '> Por eso existe el cassette quincenal.', color: 'white' },
   { type: 'subhead', text: '> 90 minutos. No más.', color: 'red' },
 
   {

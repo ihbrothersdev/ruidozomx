@@ -124,7 +124,7 @@ export const useAudioStore = create<AudioStore>((set, get) => {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: `${song.title} - ${song.artist}`,
       artist: 'Ruidozo MX',
-      album: 'Cassette semanal',
+      album: 'Cassette Quincenal',
       artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }]
     })
   }

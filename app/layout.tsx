@@ -10,7 +10,7 @@ import './globals.css'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
 const SITE_NAME = 'Ruidozo MX'
 const SITE_DESCRIPTION =
-  'Cassette semanal de música mexicana independiente. Descubre, propón y comparte rolas de la escena underground.'
+  'Cassette quincenal de música independiente. Descubre, propón y comparte rolas de la escena underground.'
 
 const corose = localFont({
   src: '../public/assets/fonts/Corose.otf',
