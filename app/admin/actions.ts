@@ -223,6 +223,40 @@ export async function reopenProposal(formData: FormData) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Cotizaciones (portfolio quotes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Toggle a portfolio quote between pending and attended. */
+export async function setPortfolioQuoteStatus(formData: FormData) {
+  await requireAdmin()
+  const svc = createServiceClient()
+
+  const id = formData.get('quote_id') as string
+  const next = formData.get('next') as string
+  const filter = (formData.get('f') as string) || ''
+
+  const back = (kind: 'ok' | 'e', code: string): never => {
+    const params = new URLSearchParams()
+    if (filter) params.set('f', filter)
+    params.set(kind, code)
+    redirect(`/admin/cotizaciones?${params.toString()}`)
+  }
+
+  if (!id || (next !== 'attended' && next !== 'pending')) back('e', 'faltan_datos')
+
+  const { error } = await svc
+    .from('portfolio_quotes')
+    .update({ status: next, attended_at: next === 'attended' ? new Date().toISOString() : null })
+    .eq('id', id)
+
+  if (error) back('e', 'generico')
+
+  revalidatePath('/admin/cotizaciones')
+  revalidatePath('/admin')
+  back('ok', next === 'attended' ? 'cotizacion_atendida' : 'cotizacion_reabierta')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Cassettes
 // ─────────────────────────────────────────────────────────────────────────────
 

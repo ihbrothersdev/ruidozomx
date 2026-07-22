@@ -3,7 +3,19 @@
 /* eslint-disable @next/next/no-img-element */
 import { signout } from '@/app/(auth)/actions'
 import { cn } from '@/lib/utils'
-import { BarChart3, CalendarDays, Disc3, HandCoins, Heart, Inbox, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
+import {
+  BarChart3,
+  CalendarDays,
+  Disc3,
+  HandCoins,
+  Heart,
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Palette,
+  X
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -24,7 +36,8 @@ const NAV: NavItem[] = [
   { href: '/admin/cassettes', label: 'Cassettes', icon: Disc3, track: '02' },
   { href: '/admin/eventos', label: 'Eventos', icon: CalendarDays, track: '03' },
   { href: '/admin/conexiones', label: 'Conexiones', icon: Heart, track: '04' },
-  { href: '/admin/metricas', label: 'Métricas', icon: BarChart3, track: '05' }
+  { href: '/admin/metricas', label: 'Métricas', icon: BarChart3, track: '05' },
+  { href: '/admin/cotizaciones', label: 'Cotizaciones', icon: Palette, track: '06' }
 ]
 
 export function AdminShell({ displayName, photoUrl, canViewDonations = false, children }: AdminShellProps) {
@@ -32,7 +45,7 @@ export function AdminShell({ displayName, photoUrl, canViewDonations = false, ch
   const [open, setOpen] = useState(false)
 
   const navItems: NavItem[] = canViewDonations
-    ? [...NAV, { href: '/admin/donaciones', label: 'Donaciones', icon: HandCoins, track: '06' }]
+    ? [...NAV, { href: '/admin/donaciones', label: 'Donaciones', icon: HandCoins, track: '07' }]
     : NAV
 
   // Admin runs as a fixed-height shell where only the content column scrolls,

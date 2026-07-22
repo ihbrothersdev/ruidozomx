@@ -59,7 +59,9 @@ const SUCCESS_MESSAGES: Record<string, { title: string; description?: string }> 
   cassette_publicado: { title: 'Cassette publicado', description: 'Ahora suena en la home.' },
   marcado_siguiente: { title: 'Cassette marcado como siguiente', description: 'Ahí caerán las próximas aceptadas.' },
   cassette_eliminado: { title: 'Cassette eliminado' },
-  cancion_removida: { title: 'Canción removida del cassette' }
+  cancion_removida: { title: 'Canción removida del cassette' },
+  cotizacion_atendida: { title: 'Cotización atendida', description: 'Marcada como resuelta.' },
+  cotizacion_reabierta: { title: 'Cotización reabierta', description: 'De vuelta en pendientes.' }
 }
 
 export function AdminToast() {
