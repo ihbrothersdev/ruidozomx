@@ -287,7 +287,6 @@ export function Manifesto({ onExit }: ManifestoProps) {
           </p>
         </Reveal>
 
-        {/* ── El cassette semanal ── */}
         <div className='h-14 sm:h-20' />
 
         <Reveal>
@@ -296,7 +295,7 @@ export function Manifesto({ onExit }: ManifestoProps) {
             style={{ color: C.white }}
           >
             <GT />
-            Por eso existe el cassette semanal.
+            Por eso existe el cassette quincenal.
           </p>
         </Reveal>
         <Reveal delay={0.15}>

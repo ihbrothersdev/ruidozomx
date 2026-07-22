@@ -58,7 +58,7 @@ export default async function CotizacionesPage({ searchParams }: { searchParams:
         action={<LabelTag tone={pendingCount > 0 ? 'red' : 'ink'}>{pendingCount} pendientes</LabelTag>}
       />
 
-      <div className='grid grid-cols-3 gap-4'>
+      <div className='grid grid-cols-2 gap-4 sm:grid-cols-3'>
         <StatCard
           label='Total'
           value={quotes.length.toLocaleString('es-MX')}

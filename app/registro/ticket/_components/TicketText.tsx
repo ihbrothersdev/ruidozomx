@@ -139,7 +139,7 @@ export default function TicketText({
               Del talento que mueves
             </p>
             <p className='text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
-              para nuestro cassete semanal
+              para nuestro cassete quincenal
             </p>
           </>
         )}
@@ -155,7 +155,7 @@ export default function TicketText({
               Del talento que mueves
             </p>
             <p className='text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
-              para nuestro cassete semanal
+              para nuestro cassete quincenal
             </p>
           </>
         )}
@@ -171,7 +171,7 @@ export default function TicketText({
               De tu banda o artista favorito
             </p>
             <p className='text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
-              para nuestro cassete semanal
+              para nuestro cassete quincenal
             </p>
           </button>
         )}
@@ -184,7 +184,7 @@ export default function TicketText({
               De tu banda o artista favorito
             </p>
             <p className='sm:text-md text-xs leading-tight text-black uppercase group-hover:underline md:text-sm lg:text-xl'>
-              para nuestro cassete semanal
+              para nuestro cassete quincenal
             </p>
           </>
         )}
@@ -197,7 +197,7 @@ export default function TicketText({
               ROLAS
             </p>
             <p className='mt-0.5 text-xs leading-tight text-red-500 uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-xl xl:text-xl'>
-              PARA NUESTRO CASSETE SEMANAL
+              PARA NUESTRO CASSETE QUINCENAL
             </p>
           </button>
         )}
@@ -213,7 +213,7 @@ export default function TicketText({
               De tu banda o artista favorito
             </p>
             <p className='mt-0.5 text-xs leading-tight text-black uppercase group-hover:underline md:text-xs lg:mt-1 lg:text-sm xl:text-lg'>
-              para nuestro cassete semanal
+              para nuestro cassete quincenal
             </p>
           </>
         )}

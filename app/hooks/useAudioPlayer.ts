@@ -373,7 +373,7 @@ export function useAudioPlayer(
     navigator.mediaSession.metadata = new MediaMetadata({
       title: `${currentSong.title} - ${currentSong.artist}`,
       artist: 'Ruidozo MX',
-      album: 'Cassette semanal',
+      album: 'Cassette quincenal',
       artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/png' }]
     })
   }, [currentSong])
