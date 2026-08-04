@@ -10,6 +10,7 @@ export interface CommunityProfile {
   state: string | null
   country: string
   bio: string | null
+  genre: string | null
   activity_highlight: string
 }
 
