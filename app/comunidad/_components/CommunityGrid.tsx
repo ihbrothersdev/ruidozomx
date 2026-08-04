@@ -71,6 +71,7 @@ export function CommunityGrid({ profiles, loading }: CommunityGridProps) {
         p =>
           p.display_name.toLowerCase().includes(q) ||
           p.role.toLowerCase().includes(q) ||
+          p.genre?.toLowerCase().includes(q) ||
           p.city?.toLowerCase().includes(q) ||
           p.state?.toLowerCase().includes(q)
       )

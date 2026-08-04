@@ -56,6 +56,22 @@ export default async function ComunidadPage() {
       if (batch.length < BATCH) break
     }
 
+    // Genres live in band_profiles, so they're fetched separately and joined by id
+    const genreByProfileId = new Map<string, string>()
+    for (let from = 0; ; from += BATCH) {
+      const { data: batch } = await supabase
+        .from('band_profiles')
+        .select('profile_id, genre')
+        .not('genre', 'is', null)
+        .order('profile_id', { ascending: true })
+        .range(from, from + BATCH - 1)
+      if (!batch?.length) break
+      for (const b of batch) {
+        if (b.genre) genreByProfileId.set(b.profile_id as string, b.genre as string)
+      }
+      if (batch.length < BATCH) break
+    }
+
     if (dbProfiles.length) {
       profiles = dbProfiles.map(p => ({
         id: p.id,
@@ -67,6 +83,7 @@ export default async function ComunidadPage() {
         state: p.state,
         country: p.country ?? 'México',
         bio: p.bio,
+        genre: genreByProfileId.get(p.id) ?? null,
         activity_highlight: getActivityHighlight(p.role)
       }))
     }
