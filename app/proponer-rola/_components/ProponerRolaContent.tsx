@@ -5,6 +5,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { uploadAudioToSignedUrl } from '@/lib/audio-upload'
 import type { Role } from '@/lib/types'
+import { Cloud, Headphones, Music2, Upload } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -15,27 +16,20 @@ import { inputCls, labelCls } from '../constants'
 import { FormField } from './FormField'
 import { SubmitButton } from './SubmitButton'
 
+const helperCls = 'font-pt-mono text-[11px] font-bold tracking-wide text-red-600 uppercase'
+
 export function ProponerRolaContent({ role }: { role: Role | null }) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const success = searchParams.get('success') === 'true'
   const limitReached = searchParams.get('limit') === 'true'
   const [accepted, setAccepted] = useState(false)
-  const [audioLink, setAudioLink] = useState('')
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(success)
 
-  // Mirror the rights checkbox to the link state: putting a link in is taken
-  // as implicit confirmation that the user can share the material; clearing
-  // the link removes that confirmation. The user can still toggle the
-  // checkbox manually afterwards.
-  function handleAudioLinkChange(value: string) {
-    setAudioLink(value)
-    setAccepted(value.trim().length > 0)
-  }
-
+  // MP3 — obligatorio para banda, opcional para el resto
   const isBanda = role === 'banda'
   const submitDisabled = (isBanda && !accepted) || limitReached || (isBanda && !audioFile)
 
@@ -138,6 +132,10 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
               style={{ height: 'auto' }}
             />
 
+            <p className='font-pt-mono mb-6 text-sm leading-snug font-bold tracking-wide text-black uppercase'>
+              Para participar en el cassete necesitamos escuchar tu canción y contar con el archivo MP3
+            </p>
+
             {error && (
               <div className='font-pt-mono mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700'>
                 {error}
@@ -156,18 +154,117 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
               <FormField
                 label='Nombre de la rola'
                 name='title'
-              />
-              <FormField
-                label='Link público'
-                name='external_link'
                 required
               />
-              <FormField
-                label='Link de descarga'
-                name='download_link'
-                type='url'
-                placeholder='WeTransfer, Google Drive, Dropbox o link directo (opcional)'
-              />
+
+              {/* Link para escuchar */}
+              <div className='space-y-1'>
+                <div className='flex items-start gap-2'>
+                  <Headphones
+                    className='mt-0.5 h-4 w-4 shrink-0 text-red-600'
+                    strokeWidth={2.5}
+                  />
+                  <div>
+                    <p className={labelCls}>Link para escuchar la canción*</p>
+                    <p className={helperCls}>Spotify, YouTube, Bandcamp o cualquier plataforma pública</p>
+                  </div>
+                </div>
+                <Input
+                  id='external_link'
+                  name='external_link'
+                  type='url'
+                  required
+                  className={inputCls}
+                />
+              </div>
+
+              {/* MP3 — highlighted dropzone panel */}
+              <div className='rounded-md border border-red-600/30 bg-red-600/5 p-4 sm:p-5'>
+                <div className='mb-4 flex items-start gap-2'>
+                  <Music2
+                    className='mt-0.5 h-5 w-5 shrink-0 text-red-600'
+                    strokeWidth={2.5}
+                  />
+                  <div>
+                    <p className={labelCls}>Archivo MP3 para el casete{isBanda ? '*' : ' (opcional)'}</p>
+                    <p className={helperCls}>Sube directamente el archivo MP3 que utilizaremos para el casete</p>
+                  </div>
+                </div>
+
+                <div className='flex flex-col gap-4 sm:flex-row'>
+                  <label className='flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-2 border-red-600 bg-white/50 px-4 py-8 text-center transition-colors hover:bg-white/80'>
+                    <Upload
+                      className='mb-1 h-7 w-7 text-red-600'
+                      strokeWidth={2.5}
+                    />
+                    <span className='font-pt-mono text-sm font-bold tracking-wider text-black uppercase'>
+                      Elegir archivo MP3
+                    </span>
+                    <span className='font-pt-mono max-w-full truncate text-[11px] tracking-wider text-black/60 uppercase'>
+                      {audioFile
+                        ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
+                        : 'Formatos permitidos MP3'}
+                    </span>
+                    <input
+                      type='file'
+                      accept='.mp3,audio/mpeg,audio/mp3'
+                      onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
+                      className='hidden'
+                    />
+                  </label>
+
+                  <div className='sm:w-52 sm:shrink-0'>
+                    <p className='font-pt-mono text-center text-sm font-bold tracking-wider text-red-600 uppercase'>
+                      Importante
+                    </p>
+                    <ul className='mt-2 space-y-2'>
+                      <li className='flex gap-1.5'>
+                        <span
+                          className='mt-1 h-1.5 w-1.5 shrink-0 bg-black'
+                          aria-hidden
+                        />
+                        <span className='font-pt-mono text-[11px] font-bold tracking-wide text-black uppercase'>
+                          Tu archivo está seguro y sólo lo usaremos en caso de ser seleccionado
+                        </span>
+                      </li>
+                      <li className='flex gap-1.5'>
+                        <span
+                          className='mt-1 h-1.5 w-1.5 shrink-0 bg-black'
+                          aria-hidden
+                        />
+                        <span className='font-pt-mono text-[11px] font-bold tracking-wide text-black uppercase'>
+                          ¿Problemas para subir? Utiliza el enlace de descarga como alternativa
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Link de descarga — same icon + stacked title/subtitle pattern as the MP3 panel above */}
+              <div className='space-y-1'>
+                <div className='flex items-start gap-2'>
+                  <Cloud
+                    className='mt-0.5 h-4 w-4 shrink-0 text-red-600'
+                    strokeWidth={2.5}
+                  />
+                  <div>
+                    <p className={labelCls}>Link de descarga opcional</p>
+                    <p className={helperCls}>
+                      Úsalo solo si no puedes subir el MP3 directamente. Asegúrate de que el enlace tenga los permisos
+                      abiertos y que no caduque
+                    </p>
+                  </div>
+                </div>
+                <Input
+                  id='download_link'
+                  name='download_link'
+                  type='url'
+                  placeholder='Google Drive, Dropbox, OneDrive,...'
+                  className={inputCls}
+                />
+              </div>
+
               <FormField
                 label='Correo de contacto'
                 name='contact_email'
@@ -180,50 +277,8 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                 textarea
               />
 
-              {/* MP3 — obligatorio para banda, opcional para el resto */}
-              <div className='space-y-1'>
-                <Label className={labelCls}>{isBanda ? 'Archivo MP3*' : 'Archivo MP3 (opcional)'}</Label>
-                <div className='flex flex-wrap items-center gap-3'>
-                  <label className='font-pt-mono cursor-pointer border-2 border-red-600 bg-transparent px-3 py-1.5 text-xs font-bold tracking-wider text-red-600 uppercase transition-colors hover:bg-red-600 hover:text-white'>
-                    Elegir archivo
-                    <input
-                      type='file'
-                      accept='.mp3,audio/mpeg,audio/mp3'
-                      onChange={e => setAudioFile(e.target.files?.[0] ?? null)}
-                      className='hidden'
-                    />
-                  </label>
-                  <span className='font-pt-mono min-w-0 flex-1 truncate text-[11px] tracking-wider text-black/60'>
-                    {audioFile
-                      ? `${audioFile.name} · ${(audioFile.size / (1024 * 1024)).toFixed(1)} MB`
-                      : 'Sin archivo seleccionado'}
-                  </span>
-                </div>
-              </div>
-
               {isBanda && (
                 <>
-                  {/* Link privado section */}
-                  <div className='space-y-1 pt-2'>
-                    <Label className={labelCls}>Link privado para descargar el material</Label>
-                    <p className='font-pt-mono text-[11px] font-bold tracking-wider text-black uppercase'>
-                      Asegurate de que el enlace tenga permisos abiertos
-                    </p>
-                    <Input
-                      name='audio_file_path'
-                      type='url'
-                      placeholder='Dropbox, Drive, WeTransfer, otro'
-                      value={audioLink}
-                      onChange={e => handleAudioLinkChange(e.target.value)}
-                      // If the user manually opted into the rights confirmation,
-                      // the link becomes obligatory — you can't confirm rights
-                      // for material you haven't actually shared.
-                      required={accepted}
-                      className={inputCls}
-                    />
-                  </div>
-
-                  {/* Rights checkbox */}
                   <div className='flex cursor-pointer items-start gap-2.5 pt-2'>
                     <Checkbox
                       id='accept-rights'

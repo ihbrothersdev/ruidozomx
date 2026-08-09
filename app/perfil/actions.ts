@@ -289,8 +289,10 @@ interface SubmitSongProposalInput {
   artist: string
   externalLink?: string
   downloadLink?: string
-  /** Public URL of the MP3 already uploaded to the `songs` bucket (mandatory). */
+  /** Public URL of the MP3 already uploaded to the `songs` bucket. */
   audioUrl?: string
+  /** true when the proposer confirmed rights over the attached MP3 (own material only). */
+  rightsAccepted?: boolean
   vibes?: string[]
 }
 
@@ -349,6 +351,7 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
     external_link: input.externalLink?.trim() || null,
     download_link: input.downloadLink?.trim() || null,
     audio_url: audioUrl || null,
+    rights_accepted: input.rightsAccepted ? true : null,
     comment: input.vibes?.length ? input.vibes.join(' / ') : null,
     status: 'pending'
   })
@@ -444,9 +447,11 @@ export async function prepareProposalAudioUpload(
  * Persist the `audio_url` after the browser uploaded the MP3 to the `songs`
  * bucket. Verifies ownership in code and writes via the service client — there
  * is no owner-level UPDATE policy on song_proposals (only admins), and this
- * keeps the writable surface to just `audio_url`.
+ * keeps the writable surface to just `audio_url` (+ `rights_accepted` when
+ * the caller passes it — omitted entirely for callers that don't collect it,
+ * e.g. the quick "+ MP3" pill, so it's never overwritten to null there).
  */
-export async function saveProposalAudio(input: { proposalId: string; audioUrl: string }) {
+export async function saveProposalAudio(input: { proposalId: string; audioUrl: string; rightsAccepted?: boolean }) {
   const supabase = await createClient()
   const {
     data: { user }
@@ -467,7 +472,10 @@ export async function saveProposalAudio(input: { proposalId: string; audioUrl: s
   const svc = createServiceClient()
   const { error } = await svc
     .from('song_proposals')
-    .update({ audio_url: audioUrl })
+    .update({
+      audio_url: audioUrl,
+      ...(input.rightsAccepted !== undefined ? { rights_accepted: input.rightsAccepted ? true : null } : {})
+    })
     .eq('id', input.proposalId)
     .eq('user_id', user.id)
 
