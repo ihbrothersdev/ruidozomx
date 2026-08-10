@@ -3,7 +3,7 @@
 import { usePlaybackContextId, usePlayerActions, usePlayerState } from '@/app/hooks/usePlayerStore'
 import { PROPOSAL_SLOTS } from '@/lib/supabase/proposals'
 import type { FeaturedSongView, PlayerSong } from '@/lib/types'
-import { Pause, Play } from 'lucide-react'
+import { Pause, Play, Star } from 'lucide-react'
 import { useMemo } from 'react'
 
 /**
@@ -113,8 +113,13 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
                   <span className='text-xs text-black/60'> — {song.artist}</span>
                 </span>
                 {song.accepted && (
-                  <span className='shrink-0 rounded-full bg-red-600/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase'>
-                    ★ En cassette
+                  <span className='inline-flex shrink-0 items-center gap-1 rounded-full bg-red-600/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase'>
+                    <Star
+                      className='h-2.5 w-2.5 shrink-0'
+                      fill='currentColor'
+                      strokeWidth={0}
+                    />
+                    En cassette
                   </span>
                 )}
                 {!song.isPlayable && song.externalLink && (

@@ -3,7 +3,7 @@
 import { deleteSongProposal } from '@/app/perfil/actions'
 import { PROPOSAL_SLOTS, slotsFullMessage } from '@/lib/supabase/proposals'
 import type { FeaturedSongView } from '@/lib/types'
-import { Trash2 } from 'lucide-react'
+import { Music2, Star, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import ConfirmActionModal from './ConfirmActionModal'
@@ -75,7 +75,7 @@ export default function FeaturedSongsEditor({ songs }: FeaturedSongsEditorProps)
                 <span className='font-bold text-black uppercase'>{song.title}</span>
                 <span className='text-xs text-black/60'>— {song.artist}</span>
                 <span
-                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
+                  className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
                     song.accepted
                       ? 'bg-red-600/15 text-red-700'
                       : song.isPlayable
@@ -83,7 +83,26 @@ export default function FeaturedSongsEditor({ songs }: FeaturedSongsEditorProps)
                         : 'bg-black/10 text-black/60'
                   }`}
                 >
-                  {song.accepted ? '★ En cassette' : song.isPlayable ? '♪ Se escucha' : 'Solo link'}
+                  {song.accepted ? (
+                    <>
+                      <Star
+                        className='h-2.5 w-2.5 shrink-0'
+                        fill='currentColor'
+                        strokeWidth={0}
+                      />
+                      En cassette
+                    </>
+                  ) : song.isPlayable ? (
+                    <>
+                      <Music2
+                        className='h-2.5 w-2.5 shrink-0'
+                        strokeWidth={2.5}
+                      />
+                      Se escucha
+                    </>
+                  ) : (
+                    'Solo link'
+                  )}
                 </span>
               </span>
 
