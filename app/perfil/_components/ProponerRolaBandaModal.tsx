@@ -2,7 +2,7 @@
 
 import { Cloud, Headphones, Music2, Upload } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog'
 import { Input } from '@/app/components/ui/input'
 import { Checkbox } from '@/app/components/ui/checkbox'
@@ -12,6 +12,7 @@ import { sileo } from 'sileo'
 import { prepareProposalAudioUpload } from '@/app/proponer-rola/actions'
 import { audioErrorMessage } from '../audio-errors'
 import {
+  getMyProposalSlots,
   prepareProposalAudioUpload as prepareExistingProposalAudio,
   saveProposalAudio,
   submitSongProposal,
@@ -76,19 +77,44 @@ export default function ProponerRolaBandaModal({
   const [selectedVibes, setSelectedVibes] = useState<string[]>(initialVibes ?? [])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [slotsMessage, setSlotsMessage] = useState<string | null>(null)
+
+  // Ask on open rather than as a prop: this modal is mounted from three
+  // different pages. Editing doesn't consume a slot, so it skips the check.
+  useEffect(() => {
+    if (!open || isEditing) return
+    let cancelled = false
+    getMyProposalSlots().then(slots => {
+      if (!cancelled) setSlotsMessage(slots.full ? slots.message : null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, isEditing])
 
   const isBandPrefilled = bandName.trim().length > 0
   const artist = isBandPrefilled ? bandName : artistName
   // Own material only. In edit mode, hide it once the rola has an MP3 — the
   // backend doesn't allow replacing an existing one.
   const showAudioField = !isBandPrefilled && (!isEditing || !initialHasAudio)
-  // MP3 — obligatorio para banda (material propio), opcional para el resto
-  // (recomendar la rola de otra banda, donde no se tiene el archivo).
-  const canSubmit =
-    songName.trim().length > 0 &&
-    artist.trim().length > 0 &&
-    listenLink.trim().length > 0 &&
-    (!showAudioField || (!!audioFile && accepted))
+  // Why the submit button is off, in the order the fields appear — a disabled
+  // button with no explanation reads as broken. The MP3 branch only applies to
+  // own material: recommending another band's rola doesn't require the file.
+  const blockedReason =
+    slotsMessage ??
+    (!artist.trim()
+      ? 'Falta el nombre de la banda o proyecto.'
+      : !songName.trim()
+        ? 'Falta el nombre de la rola.'
+        : !listenLink.trim()
+          ? 'Falta el link para escuchar la rola.'
+          : showAudioField && !audioFile
+            ? 'Falta subir el MP3 de la rola.'
+            : showAudioField && !accepted
+              ? 'Falta confirmar que tienes los derechos de la rola.'
+              : null)
+
+  const canSubmit = blockedReason === null
 
   const toggleVibe = (vibe: string) => {
     setSelectedVibes(prev => (prev.includes(vibe) ? prev.filter(v => v !== vibe) : [...prev, vibe]))
@@ -464,6 +490,16 @@ export default function ProponerRolaBandaModal({
                     </div>
                   )}
 
+                  {slotsMessage && (
+                    <div className='mt-4 flex items-start gap-2 border-2 border-red-600 bg-red-600/5 px-3 py-2.5'>
+                      <Music2
+                        className='mt-0.5 h-4 w-4 shrink-0 text-red-600'
+                        strokeWidth={2.5}
+                      />
+                      <p className={helperCls}>{slotsMessage}</p>
+                    </div>
+                  )}
+
                   {/* Action buttons */}
                   <div className='mt-5 flex items-center gap-3'>
                     <button
@@ -481,6 +517,8 @@ export default function ProponerRolaBandaModal({
                       Cancelar
                     </button>
                   </div>
+
+                  {blockedReason && !slotsMessage && !sending && <p className={`${helperCls} mt-2`}>{blockedReason}</p>}
                 </form>
               </div>
             </div>

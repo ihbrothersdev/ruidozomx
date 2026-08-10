@@ -296,6 +296,20 @@ interface SubmitSongProposalInput {
   vibes?: string[]
 }
 
+/**
+ * Free slots for the signed-in user. The proposal modal opens from three
+ * different pages, so it asks for this on open instead of every call site
+ * threading it down as a prop.
+ */
+export async function getMyProposalSlots(): Promise<{ used: number; full: boolean; message: string | null }> {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { used: 0, full: false, message: null }
+  return checkProposalSlots(supabase, user.id)
+}
+
 export async function submitSongProposal(input: SubmitSongProposalInput) {
   const supabase = await createClient()
 
