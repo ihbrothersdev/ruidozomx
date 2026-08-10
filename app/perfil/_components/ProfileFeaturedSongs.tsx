@@ -1,16 +1,21 @@
 'use client'
 
 import { usePlaybackContextId, usePlayerActions, usePlayerState } from '@/app/hooks/usePlayerStore'
+import { PROPOSAL_SLOTS } from '@/lib/supabase/proposals'
 import type { FeaturedSongView, PlayerSong } from '@/lib/types'
 import { Pause, Play } from 'lucide-react'
 import { useMemo } from 'react'
 
 /**
- * Public profile block: the band's curated rolas. Playable tracks (real MP3)
- * stream through the GLOBAL player engine — pressing play takes over the
- * persistent bar (pausing the cassette) and keeps playing as the user navigates,
- * giving bands that aren't on the cassette a real stage. Link-only rolas fall
- * back to their external link.
+ * Public profile block: the band's rolas. Playable tracks (real MP3) stream
+ * through the GLOBAL player engine — pressing play takes over the persistent bar
+ * (pausing the cassette) and keeps playing as the user navigates, giving bands
+ * that aren't on the cassette a real stage. Link-only rolas fall back to their
+ * external link.
+ *
+ * Shows at most 3 live proposals plus every cassette rola. Bands grandfathered
+ * above the cap (one sits at 17) would otherwise turn this into a wall — the
+ * editor still lists all of them so they can delete their way down.
  */
 export default function ProfileFeaturedSongs({ songs, profileId }: { songs: FeaturedSongView[]; profileId: string }) {
   const { currentSongId, isPlaying } = usePlayerState()
@@ -18,12 +23,18 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
   const contextId = `profile:${profileId}`
   const isActiveContext = usePlaybackContextId() === contextId
 
+  // `songs` already arrives live-first, so slicing keeps the intended order.
+  const shown = useMemo(
+    () => [...songs.filter(s => !s.accepted).slice(0, PROPOSAL_SLOTS), ...songs.filter(s => s.accepted)],
+    [songs]
+  )
+
   // The playable subset becomes this profile's playlist for the global engine.
   // The featured key (`type:id`) is the song id — it never collides with the
   // cassette's raw uuids, so `currentSongId === key` reliably means "this rola".
   const playlist = useMemo<PlayerSong[]>(
     () =>
-      songs
+      shown
         .filter(s => s.isPlayable && s.audioUrl)
         .map((s, i) => ({
           id: s.key,
@@ -34,10 +45,10 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
           durationSeconds: 0,
           audioSrc: s.audioUrl as string
         })),
-    [songs]
+    [shown]
   )
 
-  if (songs.length === 0) return null
+  if (shown.length === 0) return null
 
   function handlePlay(key: string) {
     if (currentSongId === key) {
@@ -66,7 +77,7 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
       <p className='font-pt-mono text-sm font-bold tracking-wider text-red-700 uppercase'>Dale play</p>
 
       <ul className='space-y-1.5 border-2 border-red-700 px-3 py-2'>
-        {songs.map(song => {
+        {shown.map(song => {
           const isThisPlaying = currentSongId === song.key && isPlaying
           return (
             <li

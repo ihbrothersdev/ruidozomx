@@ -109,6 +109,7 @@ export default function FeaturedSongsEditor({ songs }: FeaturedSongsEditorProps)
         {atLimit
           ? slotsFullMessage(used, true)
           : `Puedes proponer ${PROPOSAL_SLOTS - used} rola${PROPOSAL_SLOTS - used === 1 ? '' : 's'} más.`}{' '}
+        {overLimit && `En tu perfil público solo se ven las primeras ${PROPOSAL_SLOTS}. `}
         Las que salen en un cassette se quedan en tu perfil y no ocupan espacio.
       </p>
 

@@ -35,9 +35,11 @@ function toView(
  *   2. everything that already made it onto a cassette, flagged `accepted`.
  *
  * Accepted rolas hang around on purpose: entering a cassette frees the slot but
- * stays on the profile as the band's badge of honour. Bands grandfathered above
- * 3 live proposals show all of them — hiding a rola with no explanation is worse
- * than a longer list, and it resolves itself as soon as they delete down.
+ * stays on the profile as the band's badge of honour.
+ *
+ * Returns every live proposal, including the extras held by bands grandfathered
+ * above the cap — the profile editor needs the full list to delete from.
+ * ProfileFeaturedSongs is what trims the public block down to 3.
  */
 export async function getProfileFeaturedSongs(client: DbClient, profileId: string): Promise<FeaturedSongView[]> {
   const [{ data: live }, { data: cassetteTracks }, { data: acceptedProposals }] = await Promise.all([
