@@ -18,11 +18,18 @@ import { SubmitButton } from './SubmitButton'
 
 const helperCls = 'font-pt-mono text-[11px] font-bold tracking-wide text-red-600 uppercase'
 
-export function ProponerRolaContent({ role }: { role: Role | null }) {
+export function ProponerRolaContent({
+  role,
+  slotsMessage = null
+}: {
+  role: Role | null
+  /** Set when the band is out of slots — explains how many rolas have to go. */
+  slotsMessage?: string | null
+}) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const success = searchParams.get('success') === 'true'
-  const limitReached = searchParams.get('limit') === 'true'
+  const limitReached = slotsMessage !== null
   const [accepted, setAccepted] = useState(false)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -300,6 +307,18 @@ export function ProponerRolaContent({ role }: { role: Role | null }) {
                     value={accepted ? 'true' : 'false'}
                   />
                 </>
+              )}
+
+              {slotsMessage && (
+                <div className='font-pt-mono rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700'>
+                  {slotsMessage}{' '}
+                  <Link
+                    href='/perfil'
+                    className='font-bold underline underline-offset-2'
+                  >
+                    Ir a mi perfil ↗
+                  </Link>
+                </div>
               )}
 
               {formError && (

@@ -178,7 +178,7 @@ export default function ProponerRolaBandaModal({
     setSending(false)
     if (result.error) {
       const kind = 'kind' in result ? result.kind : undefined
-      const title = kind === 'duplicate' ? 'Ya la propusiste' : kind === 'limit' ? 'Límite semanal' : 'Error'
+      const title = kind === 'duplicate' ? 'Ya la propusiste' : kind === 'limit' ? 'Sin espacios' : 'Error'
       sileo.error({ title, description: result.error, position: 'top-center', duration: 4000 })
     } else {
       setSent(true)

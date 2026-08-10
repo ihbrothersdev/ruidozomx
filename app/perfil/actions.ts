@@ -2,13 +2,13 @@
 
 import { logEvent } from '@/app/analytics/actions'
 import { audioMetaError, extractStorageKey, proposalStorageKey, SONGS_BUCKET } from '@/lib/audio'
+import { checkProposalSlots } from '@/lib/supabase/proposals'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
-import { saveFeaturedSongs, type FeaturedPick } from '@/lib/supabase/featured-songs'
 import { sendMail } from '@/lib/email'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
 import { buildLinkHref } from '@/lib/social-links'
-import type { FeaturedSongSource, Role, UserProposalType } from '@/lib/types'
+import type { Role, UserProposalType } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ruidozo.mx'
@@ -296,16 +296,6 @@ interface SubmitSongProposalInput {
   vibes?: string[]
 }
 
-function getStartOfWeek(): string {
-  const now = new Date()
-  const day = now.getDay()
-  const diff = day === 0 ? 6 : day - 1 // week starts Monday, getDay()=0 is Sunday
-  const start = new Date(now)
-  start.setDate(now.getDate() - diff)
-  start.setHours(0, 0, 0, 0)
-  return start.toISOString()
-}
-
 export async function submitSongProposal(input: SubmitSongProposalInput) {
   const supabase = await createClient()
 
@@ -331,17 +321,9 @@ export async function submitSongProposal(input: SubmitSongProposalInput) {
   let audioUrl = input.audioUrl?.trim() || ''
   if (audioUrl && !extractStorageKey(audioUrl, SONGS_BUCKET)) audioUrl = ''
 
-  const { count } = await supabase
-    .from('song_proposals')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .gte('created_at', getStartOfWeek())
-
-  if (count !== null && count >= 3) {
-    return {
-      error: 'Ya alcanzaste tu límite de 3 propuestas esta semana. Podrás proponer de nuevo el lunes.',
-      kind: 'limit' as const
-    }
+  const slots = await checkProposalSlots(supabase, user.id)
+  if (slots.full) {
+    return { error: slots.message!, kind: 'limit' as const }
   }
 
   const { error } = await supabase.from('song_proposals').insert({
@@ -412,11 +394,11 @@ export async function prepareProposalAudioUpload(
 
   const { data: proposal } = await supabase
     .from('song_proposals')
-    .select('user_id, artist, title, audio_url')
+    .select('user_id, artist, title, audio_url, deleted_at')
     .eq('id', input.proposalId)
     .single()
 
-  if (!proposal || proposal.user_id !== user.id) {
+  if (!proposal || proposal.user_id !== user.id || proposal.deleted_at) {
     return { ok: false, error: 'No encontramos esa propuesta.' }
   }
   if (proposal.audio_url && extractStorageKey(proposal.audio_url, SONGS_BUCKET)) {
@@ -463,9 +445,13 @@ export async function saveProposalAudio(input: { proposalId: string; audioUrl: s
     return { error: 'El MP3 no es válido.' }
   }
 
-  const { data: proposal } = await supabase.from('song_proposals').select('user_id').eq('id', input.proposalId).single()
+  const { data: proposal } = await supabase
+    .from('song_proposals')
+    .select('user_id, deleted_at')
+    .eq('id', input.proposalId)
+    .single()
 
-  if (!proposal || proposal.user_id !== user.id) {
+  if (!proposal || proposal.user_id !== user.id || proposal.deleted_at) {
     return { error: 'No encontramos esa propuesta.' }
   }
 
@@ -531,9 +517,13 @@ export async function updateSongProposal(input: UpdateSongProposalInput) {
   if (!input.title.trim()) return { error: 'El nombre de la rola es obligatorio.' }
   if (!input.artist.trim()) return { error: 'El nombre de la banda/proyecto es obligatorio.' }
 
-  const { data: proposal } = await supabase.from('song_proposals').select('user_id, status').eq('id', input.id).single()
+  const { data: proposal } = await supabase
+    .from('song_proposals')
+    .select('user_id, status, deleted_at')
+    .eq('id', input.id)
+    .single()
 
-  if (!proposal || proposal.user_id !== user.id) {
+  if (!proposal || proposal.user_id !== user.id || proposal.deleted_at) {
     return { error: 'No encontramos esa propuesta.' }
   }
   // Once accepted the rola is on a cassette — its info is frozen.
@@ -569,6 +559,56 @@ export async function updateSongProposal(input: UpdateSongProposalInput) {
       return { error: 'Ya tienes otra rola con ese nombre y banda. Cambia alguno para guardar.' }
     }
     return { error: 'No pudimos actualizar tu propuesta. Intenta de nuevo.' }
+  }
+
+  revalidatePath('/perfil')
+  return { success: true }
+}
+
+/**
+ * Free one of the band's 3 slots by removing a rola from its profile. Soft:
+ * `songs.proposal_id` has no ON DELETE, so a real DELETE on an accepted proposal
+ * fails on the FK — and admin/propuestas plus métricas would lose the history.
+ * Same service-client + ownership-in-code pattern as updateSongProposal.
+ */
+export async function deleteSongProposal(input: { id: string }) {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No has iniciado sesión.' }
+
+  if (!input.id) return { error: 'Propuesta no válida.' }
+
+  const { data: proposal } = await supabase
+    .from('song_proposals')
+    .select('user_id, status, deleted_at')
+    .eq('id', input.id)
+    .single()
+
+  if (!proposal || proposal.user_id !== user.id) {
+    return { error: 'No encontramos esa rola.' }
+  }
+  if (proposal.deleted_at) return { success: true }
+  // Accepted rolas live on the cassette — they already freed their slot, and
+  // pulling one would leave a hole in a published tracklist.
+  if (proposal.status === 'accepted') {
+    return { error: 'Esta rola ya salió en un cassette y no se puede quitar.' }
+  }
+
+  const svc = createServiceClient()
+  // `.neq('status', 'accepted')` re-checks at write time (guards the gap between
+  // the read above and this update, e.g. an admin accepting it meanwhile).
+  const { error } = await svc
+    .from('song_proposals')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', input.id)
+    .eq('user_id', user.id)
+    .neq('status', 'accepted')
+
+  if (error) {
+    console.error('[deleteSongProposal]', error)
+    return { error: 'No pudimos quitar la rola. Intenta de nuevo.' }
   }
 
   revalidatePath('/perfil')
@@ -729,28 +769,6 @@ function getArray(formData: FormData, key: string): string[] {
     .filter(Boolean)
 }
 
-/**
- * Parse the band's featured-songs selection (`featured_songs` = JSON array of
- * `{type, id}`). Returns `null` when the field is absent (don't touch existing
- * selection) vs `[]` when the band cleared all picks (wipe).
- */
-function getFeaturedPicks(formData: FormData): FeaturedPick[] | null {
-  const raw = formData.get('featured_songs')
-  if (typeof raw !== 'string' || !raw) return null
-  try {
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return null
-    return parsed
-      .filter(
-        (p): p is { type: FeaturedSongSource; id: string } =>
-          p && (p.type === 'proposal' || p.type === 'song') && typeof p.id === 'string'
-      )
-      .map(p => ({ type: p.type, id: p.id }))
-  } catch {
-    return null
-  }
-}
-
 function buildSocialLinks(formData: FormData): Record<string, string> {
   const links: Record<string, string> = {}
   for (const [key, value] of formData.entries()) {
@@ -872,11 +890,6 @@ export async function updateOwnProfile(formData: FormData) {
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
-  }
-
-  if (nextRole === 'banda') {
-    const picks = getFeaturedPicks(formData)
-    if (picks) await saveFeaturedSongs(supabase, user.id, picks)
   }
 
   revalidatePath('/perfil')
@@ -1034,11 +1047,6 @@ export async function updateProfileAsAdmin(targetProfileId: string, formData: Fo
         return { error: 'No se pudieron guardar los datos del rol. Intenta de nuevo.' }
       }
     }
-  }
-
-  if (nextRole === 'banda') {
-    const picks = getFeaturedPicks(formData)
-    if (picks) await saveFeaturedSongs(serviceClient, targetProfileId, picks)
   }
 
   if (existing.slug) {

@@ -49,12 +49,8 @@ export interface OwnProfileViewProps {
   nearbyEvents?: EventSummary[]
   /** The profile's own id — needed to scope its featured-songs playlist. */
   profileId?: string
-  /** Band only: rolas the band can feature (proposals + cassette tracks). */
-  featuredCandidates?: FeaturedSongView[]
-  /** Band only: curated rolas shown publicly (preview, with inline playback). */
+  /** Band only: rolas shown publicly in "Dale play" (preview, with inline playback). */
   featuredSongs?: FeaturedSongView[]
-  /** Band only: currently featured `type:id` keys, in order. */
-  featuredSelected?: string[]
 }
 
 export default function OwnProfileView({
@@ -83,9 +79,7 @@ export default function OwnProfileView({
   mutualIds = [],
   nearbyEvents = [],
   profileId,
-  featuredCandidates = [],
-  featuredSongs = [],
-  featuredSelected = []
+  featuredSongs = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
 
@@ -111,8 +105,7 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
-        featuredCandidates={featuredCandidates}
-        featuredSelected={featuredSelected}
+        featuredSongs={featuredSongs}
         events={events}
         onExitEdit={() => setIsEditing(false)}
       />

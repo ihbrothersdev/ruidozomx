@@ -2,17 +2,16 @@
 
 import { audioMetaError, extractStorageKey, proposalStorageKey, SONGS_BUCKET } from '@/lib/audio'
 import { LOOPS_IDS, sendTransactional } from '@/lib/loops'
+import { checkProposalSlots } from '@/lib/supabase/proposals'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 
-const WEEKLY_LIMIT = 3
-
 /**
  * Mint a signed upload URL so the browser can push the proposal's MP3 straight
  * to the `songs` bucket (the file never travels through a Server Action body,
- * which caps at 5mb). Validates session, the weekly limit and the file metadata
- * before handing back a token. Pair with the `audio_url` field of submitProposal.
+ * which caps at 5mb). Validates session, the band's free slots and the file
+ * metadata before handing back a token. Pair with submitProposal's `audio_url`.
  */
 export async function prepareProposalAudioUpload(input: {
   fileName: string
@@ -30,8 +29,9 @@ export async function prepareProposalAudioUpload(input: {
   const metaError = audioMetaError(input.fileName, input.fileType, input.fileSize)
   if (metaError) return { ok: false, error: metaError }
 
-  if (await weeklyLimitReached(supabase, user.id)) {
-    return { ok: false, error: 'Ya alcanzaste tu límite de 3 propuestas esta semana.' }
+  const slots = await checkProposalSlots(supabase, user.id)
+  if (slots.full) {
+    return { ok: false, error: slots.message! }
   }
 
   const svc = createServiceClient()
@@ -65,11 +65,9 @@ export async function submitProposal(formData: FormData) {
     redirect('/iniciar-sesion')
   }
 
-  if (await weeklyLimitReached(supabase, user.id)) {
-    redirect(
-      '/proponer-rola?error=' +
-        encodeURIComponent('Ya alcanzaste tu límite de 3 propuestas esta semana. Podrás proponer de nuevo el lunes.')
-    )
+  const slots = await checkProposalSlots(supabase, user.id)
+  if (slots.full) {
+    redirect('/proponer-rola?error=' + encodeURIComponent(slots.message!))
   }
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -118,26 +116,4 @@ export async function submitProposal(formData: FormData) {
   }
 
   redirect('/proponer-rola?success=true')
-}
-
-async function weeklyLimitReached(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string
-): Promise<boolean> {
-  const { count } = await supabase
-    .from('song_proposals')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gte('created_at', getStartOfWeek())
-  return count !== null && count >= WEEKLY_LIMIT
-}
-
-function getStartOfWeek(): string {
-  const now = new Date()
-  const day = now.getDay()
-  const diff = day === 0 ? 6 : day - 1 // Monday = start of week
-  const start = new Date(now)
-  start.setDate(now.getDate() - diff)
-  start.setHours(0, 0, 0, 0)
-  return start.toISOString()
 }

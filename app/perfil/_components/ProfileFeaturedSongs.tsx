@@ -101,6 +101,11 @@ export default function ProfileFeaturedSongs({ songs, profileId }: { songs: Feat
                   <span className='font-bold text-black uppercase'>{song.title}</span>
                   <span className='text-xs text-black/60'> — {song.artist}</span>
                 </span>
+                {song.accepted && (
+                  <span className='shrink-0 rounded-full bg-red-600/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase'>
+                    ★ En cassette
+                  </span>
+                )}
                 {!song.isPlayable && song.externalLink && (
                   <a
                     href={song.externalLink}

@@ -65,22 +65,8 @@ export interface ProfileViewProps {
   /** Has the profile owner confirmed their email? Drives the admin
    *  "Confirmar cuenta" affordance — visible only when false. */
   isUserConfirmed?: boolean
-  /** Band only: curated rolas shown publicly (with inline playback). */
+  /** Band only: rolas shown publicly (with inline playback). */
   featuredSongs?: FeaturedSongView[]
-  /** Band only (admin edit): pool of rolas to pick from. */
-  featuredCandidates?: FeaturedSongView[]
-  /** Band only (admin edit): currently featured `type:id` keys, in order. */
-  featuredSelected?: string[]
-}
-
-/** Serialize the editor's ordered keys (`type:id`) into the form payload. */
-function serializeFeatured(keys: string[]): string {
-  return JSON.stringify(
-    keys.map(key => {
-      const idx = key.indexOf(':')
-      return { type: key.slice(0, idx), id: key.slice(idx + 1) }
-    })
-  )
 }
 
 const INDUSTRY_ROLES: Role[] = ['manager', 'promotor', 'agente']
@@ -102,7 +88,6 @@ export default function ProfileView(props: ProfileViewProps) {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(() => ({ ...(props.socialLinks ?? {}) }))
   const [roleState, setRoleState] = useState<Record<string, unknown>>(() => ({ ...(props.roleProfile ?? {}) }))
   const [activeRole, setActiveRole] = useState<Role | null>(props.role)
-  const [featured, setFeatured] = useState<string[]>(props.featuredSelected ?? [])
 
   function resetState() {
     setDisplayName(props.displayName)
@@ -116,7 +101,6 @@ export default function ProfileView(props: ProfileViewProps) {
     setSocialLinks({ ...(props.socialLinks ?? {}) })
     setRoleState({ ...(props.roleProfile ?? {}) })
     setActiveRole(props.role)
-    setFeatured(props.featuredSelected ?? [])
     setError(null)
   }
 
@@ -161,10 +145,6 @@ export default function ProfileView(props: ProfileViewProps) {
 
     if (props.role && INDUSTRY_ROLES.includes(props.role) && activeRole) {
       fd.set('role_type', activeRole)
-    }
-
-    if (props.role === 'banda') {
-      fd.set('featured_songs', serializeFeatured(featured))
     }
 
     for (const [key, value] of Object.entries(roleState)) {
@@ -308,13 +288,7 @@ export default function ProfileView(props: ProfileViewProps) {
               onContactChange={setContact}
             />
 
-            {props.role === 'banda' && (
-              <FeaturedSongsEditor
-                candidates={props.featuredCandidates ?? []}
-                selected={featured}
-                onChange={setFeatured}
-              />
-            )}
+            {props.role === 'banda' && <FeaturedSongsEditor songs={props.featuredSongs ?? []} />}
           </>
         }
         bottomSection={

@@ -14,16 +14,6 @@ import { resizeAndEncodePhoto } from './photo-utils'
 import ProfilePhoto from './ProfilePhoto'
 import ReviewSection from './ReviewSection'
 
-/** Serialize the editor's ordered keys (`type:id`) into the form payload. */
-function serializeFeatured(keys: string[]): string {
-  return JSON.stringify(
-    keys.map(key => {
-      const idx = key.indexOf(':')
-      return { type: key.slice(0, idx), id: key.slice(idx + 1) }
-    })
-  )
-}
-
 interface OwnProfileEditFormProps {
   displayName: string
   role: Role | null
@@ -36,10 +26,8 @@ interface OwnProfileEditFormProps {
   country?: string
   state?: string
   city?: string
-  /** Band only: rolas the band can feature (proposals + cassette tracks). */
-  featuredCandidates?: FeaturedSongView[]
-  /** Band only: currently featured `type:id` keys, in order. */
-  featuredSelected?: string[]
+  /** Band only: the rolas shown in "Dale play" — live proposals + cassette tracks. */
+  featuredSongs?: FeaturedSongView[]
   /** Published events — bands can edit each one inline from here. */
   events?: EventSummary[]
   /** Called after a successful save or cancel — host swaps back to the dashboard. */
@@ -72,7 +60,6 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(() => ({ ...(props.socialLinks ?? {}) }))
   const [roleState, setRoleState] = useState<Record<string, unknown>>(() => ({ ...(props.roleProfile ?? {}) }))
   const [activeRole, setActiveRole] = useState<Role | null>(props.role)
-  const [featured, setFeatured] = useState<string[]>(props.featuredSelected ?? [])
   const [editingEvent, setEditingEvent] = useState<EventSummary | null>(null)
 
   const events = props.events ?? []
@@ -109,10 +96,6 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
 
     if (props.role && INDUSTRY_ROLES.includes(props.role) && activeRole) {
       fd.set('role_type', activeRole)
-    }
-
-    if (props.role === 'banda') {
-      fd.set('featured_songs', serializeFeatured(featured))
     }
 
     for (const [key, value] of Object.entries(roleState)) {
@@ -235,13 +218,7 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                 onContactChange={setContact}
               />
 
-              {props.role === 'banda' && (
-                <FeaturedSongsEditor
-                  candidates={props.featuredCandidates ?? []}
-                  selected={featured}
-                  onChange={setFeatured}
-                />
-              )}
+              {props.role === 'banda' && <FeaturedSongsEditor songs={props.featuredSongs ?? []} />}
 
               {canEditEvents && (
                 <div className='space-y-2'>
