@@ -316,6 +316,12 @@ export interface FeaturedSongView {
   isPlayable: boolean
   /** Already on a cassette: shown with a badge, frees its slot, can't be deleted. */
   accepted: boolean
+  /** Review state — `null` for cassette tracks, which are accepted by definition. */
+  status: ProposalStatus | null
+  /** Whether an MP3 already lives in our bucket. Drives the "+ MP3" affordance. */
+  hasAudio: boolean
+  /** Owner-only: carried into the edit modal. */
+  downloadLink: string | null
 }
 
 // === Interests ===

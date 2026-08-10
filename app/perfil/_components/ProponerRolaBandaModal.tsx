@@ -334,9 +334,9 @@ export default function ProponerRolaBandaModal({
                         />
                         <div>
                           <p className={labelCls}>
-                            Archivo MP3 para el casete<span className='text-red-600'>*</span>
+                            Archivo MP3 para el cassete<span className='text-red-600'>*</span>
                           </p>
-                          <p className={helperCls}>Sube directamente el archivo MP3 que utilizaremos para el casete</p>
+                          <p className={helperCls}>Sube directamente el archivo MP3 que utilizaremos para el cassete</p>
                         </div>
                       </div>
 

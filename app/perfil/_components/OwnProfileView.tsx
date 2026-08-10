@@ -105,7 +105,6 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
-        featuredSongs={featuredSongs}
         events={events}
         onExitEdit={() => setIsEditing(false)}
       />
@@ -220,11 +219,15 @@ export default function OwnProfileView({
                   roleProfile={roleProfile ?? null}
                 />
 
-                <ProposedSongs
-                  role={role}
-                  songs={songProposals}
-                  total={songProposalsCount}
-                />
+                {/* Bandas manage their rolas from the Dale play block instead —
+                    same rows, so two lists would be the same thing twice. */}
+                {role !== 'banda' && (
+                  <ProposedSongs
+                    role={role}
+                    songs={songProposals}
+                    total={songProposalsCount}
+                  />
+                )}
               </div>
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
@@ -234,6 +237,7 @@ export default function OwnProfileView({
                     <ProfileFeaturedSongs
                       songs={featuredSongs}
                       profileId={profileId}
+                      manageable
                     />
                   </div>
                 )}

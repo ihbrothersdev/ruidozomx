@@ -34,12 +34,9 @@ const PROPOSAL_MODULES = [
 ] as const
 
 export const ROLE_DYNAMIC_MODULES: Record<Role, { title: string; key: string; dataField?: string }[]> = {
-  banda: [
-    ...PROPOSAL_MODULES,
-    ...CONNECTION_MODULES,
-    { title: 'Fechas y convocatorias', key: 'events' },
-    { title: 'Rolas propuestas al cassete', key: 'proposals' }
-  ],
+  // No 'proposals' module: a banda's rolas are the "Dale play" block, which
+  // shows the same rows with playback, status and (for the owner) its actions.
+  banda: [...PROPOSAL_MODULES, ...CONNECTION_MODULES, { title: 'Fechas y convocatorias', key: 'events' }],
   fan: [...PROPOSAL_MODULES, ...CONNECTION_MODULES, { title: 'Rolas propuestas al cassete', key: 'proposals' }],
   manager: [
     ...PROPOSAL_MODULES,

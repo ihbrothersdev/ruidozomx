@@ -259,7 +259,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
 
   // "Dale play" is derived, not curated: the band's live proposals plus whatever
   // already made it onto a cassette.
-  const featuredSongs = role === 'banda' ? await getProfileFeaturedSongs(dataClient, resolvedProfileId) : []
+  const featuredSongs = role === 'banda' ? await getProfileFeaturedSongs(dataClient, resolvedProfileId, true) : []
 
   return (
     <Suspense>

@@ -19,7 +19,6 @@ import DynamicModules, {
   type SongProposalSummary,
   type UserProposalSummary
 } from './DynamicModules'
-import FeaturedSongsEditor from './FeaturedSongsEditor'
 import IdentityBlock from './IdentityBlock'
 import ProfileFeaturedSongs from './ProfileFeaturedSongs'
 import LinksSection from './LinksSection'
@@ -287,8 +286,6 @@ export default function ProfileView(props: ProfileViewProps) {
               onSocialLinksChange={setSocialLinks}
               onContactChange={setContact}
             />
-
-            {props.role === 'banda' && <FeaturedSongsEditor songs={props.featuredSongs ?? []} />}
           </>
         }
         bottomSection={

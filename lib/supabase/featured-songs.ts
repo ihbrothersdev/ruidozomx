@@ -1,29 +1,39 @@
-import { isPlayableAudio } from '@/lib/audio'
+import { extractStorageKey, isPlayableAudio, SONGS_BUCKET } from '@/lib/audio'
 import { LIVE_PROPOSAL_STATUSES } from '@/lib/supabase/proposals'
-import type { FeaturedSongSource, FeaturedSongView } from '@/lib/types'
+import type { FeaturedSongSource, FeaturedSongView, ProposalStatus } from '@/lib/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type DbClient = SupabaseClient
 
-function toView(
-  type: FeaturedSongSource,
-  id: string,
-  title: string,
-  artist: string,
-  audioUrl: string | null,
-  externalLink: string | null,
+interface ViewInput {
+  type: FeaturedSongSource
+  id: string
+  title: string
+  artist: string
+  audioUrl: string | null
+  externalLink?: string | null
+  downloadLink?: string | null
   accepted: boolean
-): FeaturedSongView {
+  status: ProposalStatus | null
+}
+
+function toView(input: ViewInput): FeaturedSongView {
+  const audioUrl = input.audioUrl ?? null
   return {
-    key: `${type}:${id}`,
-    type,
-    id,
-    title,
-    artist,
-    audioUrl: audioUrl ?? null,
-    externalLink: externalLink ?? null,
+    key: `${input.type}:${input.id}`,
+    type: input.type,
+    id: input.id,
+    title: input.title,
+    artist: input.artist,
+    audioUrl,
+    externalLink: input.externalLink ?? null,
+    downloadLink: input.downloadLink ?? null,
     isPlayable: isPlayableAudio(audioUrl),
-    accepted
+    accepted: input.accepted,
+    status: input.status,
+    // "Has an MP3 of ours", which is narrower than isPlayable: an external
+    // playable link doesn't count, since the "+ MP3" flow uploads to our bucket.
+    hasAudio: !!audioUrl && extractStorageKey(audioUrl, SONGS_BUCKET) !== null
   }
 }
 
@@ -38,14 +48,22 @@ function toView(
  * stays on the profile as the band's badge of honour.
  *
  * Returns every live proposal, including the extras held by bands grandfathered
- * above the cap — the profile editor needs the full list to delete from.
+ * above the cap — the owner's view needs the full list to manage from.
  * ProfileFeaturedSongs is what trims the public block down to 3.
  */
-export async function getProfileFeaturedSongs(client: DbClient, profileId: string): Promise<FeaturedSongView[]> {
+export async function getProfileFeaturedSongs(
+  client: DbClient,
+  profileId: string,
+  /**
+   * Owner view. Gates `downloadLink`, which only the edit modal needs — it would
+   * otherwise ride the RSC payload out to every anonymous visitor.
+   */
+  forOwner = false
+): Promise<FeaturedSongView[]> {
   const [{ data: live }, { data: cassetteTracks }, { data: acceptedProposals }] = await Promise.all([
     client
       .from('song_proposals')
-      .select('id, title, artist, audio_url, external_link')
+      .select('id, title, artist, audio_url, external_link, download_link, status')
       .eq('user_id', profileId)
       .is('deleted_at', null)
       .in('status', LIVE_PROPOSAL_STATUSES)
@@ -58,7 +76,7 @@ export async function getProfileFeaturedSongs(client: DbClient, profileId: strin
       .order('created_at', { ascending: false }),
     client
       .from('song_proposals')
-      .select('id, title, artist, audio_url, external_link, created_at')
+      .select('id, title, artist, audio_url, external_link, download_link, created_at')
       .eq('user_id', profileId)
       .is('deleted_at', null)
       .eq('status', 'accepted')
@@ -68,12 +86,34 @@ export async function getProfileFeaturedSongs(client: DbClient, profileId: strin
   const out: FeaturedSongView[] = []
 
   for (const p of live ?? []) {
-    out.push(toView('proposal', p.id, p.title, p.artist, p.audio_url, p.external_link, false))
+    out.push({
+      ...toView({
+        type: 'proposal',
+        id: p.id,
+        title: p.title,
+        artist: p.artist,
+        audioUrl: p.audio_url,
+        externalLink: p.external_link,
+        downloadLink: forOwner ? p.download_link : null,
+        accepted: false,
+        status: p.status as ProposalStatus
+      })
+    })
   }
 
   const tracks = cassetteTracks ?? []
   for (const s of tracks) {
-    out.push(toView('song', s.id, s.title, s.artist, s.audio_url, null, true))
+    out.push(
+      toView({
+        type: 'song',
+        id: s.id,
+        title: s.title,
+        artist: s.artist,
+        audioUrl: s.audio_url,
+        accepted: true,
+        status: null
+      })
+    )
   }
 
   // An accepted proposal normally has a `songs` row (richer — real cassette
@@ -81,7 +121,19 @@ export async function getProfileFeaturedSongs(client: DbClient, profileId: strin
   const claimed = new Set(tracks.map(s => s.proposal_id).filter(Boolean) as string[])
   for (const p of acceptedProposals ?? []) {
     if (claimed.has(p.id)) continue
-    out.push(toView('proposal', p.id, p.title, p.artist, p.audio_url, p.external_link, true))
+    out.push(
+      toView({
+        type: 'proposal',
+        id: p.id,
+        title: p.title,
+        artist: p.artist,
+        audioUrl: p.audio_url,
+        externalLink: p.external_link,
+        downloadLink: forOwner ? p.download_link : null,
+        accepted: true,
+        status: 'accepted'
+      })
+    )
   }
 
   return out

@@ -193,7 +193,7 @@ export function ProponerRolaContent({
                     strokeWidth={2.5}
                   />
                   <div>
-                    <p className={labelCls}>Archivo MP3 para el casete{isBanda ? '*' : ' (opcional)'}</p>
+                    <p className={labelCls}>Archivo MP3 para el cassete{isBanda ? '*' : ' (opcional)'}</p>
                     <p className={helperCls}>Sube directamente el archivo MP3 que utilizaremos para el casete</p>
                   </div>
                 </div>

@@ -3,9 +3,8 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import type { FeaturedSongView, Role } from '@/lib/types'
+import type { Role } from '@/lib/types'
 import { updateOwnProfile } from '../actions'
-import FeaturedSongsEditor from './FeaturedSongsEditor'
 import ComparteTuEventoModal from './ComparteTuEventoModal'
 import type { EventSummary } from './DynamicModules'
 import IdentityBlock from './IdentityBlock'
@@ -26,8 +25,6 @@ interface OwnProfileEditFormProps {
   country?: string
   state?: string
   city?: string
-  /** Band only: the rolas shown in "Dale play" — live proposals + cassette tracks. */
-  featuredSongs?: FeaturedSongView[]
   /** Published events — bands can edit each one inline from here. */
   events?: EventSummary[]
   /** Called after a successful save or cancel — host swaps back to the dashboard. */
@@ -217,8 +214,6 @@ export default function OwnProfileEditForm(props: OwnProfileEditFormProps) {
                 onSocialLinksChange={setSocialLinks}
                 onContactChange={setContact}
               />
-
-              {props.role === 'banda' && <FeaturedSongsEditor songs={props.featuredSongs ?? []} />}
 
               {canEditEvents && (
                 <div className='space-y-2'>
