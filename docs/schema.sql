@@ -193,12 +193,15 @@ CREATE TABLE song_proposals (
   artist          VARCHAR(200)    NOT NULL,
   genre           VARCHAR(100),
   external_link   TEXT,
+  download_link   TEXT,                              -- optional "bájala aquí" link
   audio_file_path TEXT,                              -- legacy: private download link
   audio_url       TEXT,                              -- uploaded MP3 (public URL in `songs` bucket), playable
   comment         TEXT,
   rights_accepted BOOLEAN,
   status          proposal_status NOT NULL DEFAULT 'pending',
   cassette_id     UUID            REFERENCES cassettes(id),
+  featured_order  SMALLINT,                          -- position in the band's "Dale play"; NULL = by created_at
+  deleted_at      TIMESTAMPTZ,                       -- soft delete: frees a slot, hides it everywhere
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   reviewed_at     TIMESTAMPTZ,
   reviewed_by     UUID            REFERENCES profiles(id)
@@ -206,6 +209,11 @@ CREATE TABLE song_proposals (
 
 CREATE INDEX idx_proposals_user   ON song_proposals(user_id, created_at DESC);
 CREATE INDEX idx_proposals_status ON song_proposals(status);
+
+-- A band holds at most 3 LIVE proposals (pending/in_review, not deleted). Accepted
+-- ones graduate to the cassette and free the slot. This index backs that gate.
+CREATE INDEX idx_proposals_live   ON song_proposals(user_id)
+  WHERE deleted_at IS NULL AND status IN ('pending', 'in_review');
 
 -- ============================================================
 -- SONGS (tracks on a cassette)

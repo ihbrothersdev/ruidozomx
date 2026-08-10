@@ -49,12 +49,8 @@ export interface OwnProfileViewProps {
   nearbyEvents?: EventSummary[]
   /** The profile's own id — needed to scope its featured-songs playlist. */
   profileId?: string
-  /** Band only: rolas the band can feature (proposals + cassette tracks). */
-  featuredCandidates?: FeaturedSongView[]
-  /** Band only: curated rolas shown publicly (preview, with inline playback). */
+  /** Band only: rolas shown publicly in "Dale play" (preview, with inline playback). */
   featuredSongs?: FeaturedSongView[]
-  /** Band only: currently featured `type:id` keys, in order. */
-  featuredSelected?: string[]
 }
 
 export default function OwnProfileView({
@@ -83,9 +79,7 @@ export default function OwnProfileView({
   mutualIds = [],
   nearbyEvents = [],
   profileId,
-  featuredCandidates = [],
-  featuredSongs = [],
-  featuredSelected = []
+  featuredSongs = []
 }: OwnProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
 
@@ -111,8 +105,6 @@ export default function OwnProfileView({
         country={country ?? ''}
         state={state ?? ''}
         city={city ?? ''}
-        featuredCandidates={featuredCandidates}
-        featuredSelected={featuredSelected}
         events={events}
         onExitEdit={() => setIsEditing(false)}
       />
@@ -227,11 +219,15 @@ export default function OwnProfileView({
                   roleProfile={roleProfile ?? null}
                 />
 
-                <ProposedSongs
-                  role={role}
-                  songs={songProposals}
-                  total={songProposalsCount}
-                />
+                {/* Bandas manage their rolas from the Dale play block instead —
+                    same rows, so two lists would be the same thing twice. */}
+                {role !== 'banda' && (
+                  <ProposedSongs
+                    role={role}
+                    songs={songProposals}
+                    total={songProposalsCount}
+                  />
+                )}
               </div>
 
               {/* Right column — centered on mobile, right-aligned on lg+ */}
@@ -241,6 +237,7 @@ export default function OwnProfileView({
                     <ProfileFeaturedSongs
                       songs={featuredSongs}
                       profileId={profileId}
+                      manageable
                     />
                   </div>
                 )}

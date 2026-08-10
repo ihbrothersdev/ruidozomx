@@ -1,5 +1,5 @@
 import { extractStorageKey, SONGS_BUCKET } from '@/lib/audio'
-import { getFeaturedCandidates, getProfileFeaturedSongs } from '@/lib/supabase/featured-songs'
+import { getProfileFeaturedSongs } from '@/lib/supabase/featured-songs'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { Role } from '@/lib/types'
@@ -117,9 +117,14 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
       .from('song_proposals')
       .select('id, title, artist, status, created_at, audio_url, external_link, download_link')
       .eq('user_id', resolvedProfileId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(50),
-    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('user_id', resolvedProfileId),
+    supabase
+      .from('song_proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', resolvedProfileId)
+      .is('deleted_at', null),
     supabase
       .from('events')
       .select('id, title, event_date, event_type, venue_name, city, address, description, external_link, status')
@@ -252,20 +257,9 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
     download_link: p.download_link
   }))
 
-  // Bands curate up to 3 rolas to feature on their public profile. Load the
-  // candidate pool (own proposals + linked cassette tracks) and the current pick.
-  let featuredCandidates: Awaited<ReturnType<typeof getFeaturedCandidates>> = []
-  let featuredSongs: Awaited<ReturnType<typeof getProfileFeaturedSongs>> = []
-  let featuredSelected: string[] = []
-  if (role === 'banda') {
-    const [candidates, current] = await Promise.all([
-      getFeaturedCandidates(dataClient, resolvedProfileId),
-      getProfileFeaturedSongs(dataClient, resolvedProfileId)
-    ])
-    featuredCandidates = candidates
-    featuredSongs = current
-    featuredSelected = current.map(s => s.key)
-  }
+  // "Dale play" is derived, not curated: the band's live proposals plus whatever
+  // already made it onto a cassette.
+  const featuredSongs = role === 'banda' ? await getProfileFeaturedSongs(dataClient, resolvedProfileId, true) : []
 
   return (
     <Suspense>
@@ -296,8 +290,6 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
         city={(profile?.city as string | null) ?? null}
         profileId={resolvedProfileId}
         featuredSongs={featuredSongs}
-        featuredCandidates={featuredCandidates}
-        featuredSelected={featuredSelected}
       />
     </Suspense>
   )

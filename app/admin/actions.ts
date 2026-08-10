@@ -123,6 +123,10 @@ export async function acceptProposal(formData: FormData) {
   if (!proposal) {
     backToProposals(listing, 'e', 'generico', 'Propuesta no encontrada.')
   }
+  // The band may have freed the slot from a stale admin tab's point of view.
+  if (proposal!.deleted_at) {
+    backToProposals(listing, 'e', 'generico', 'La banda quitó esta rola de su perfil.')
+  }
   if (proposal!.status !== 'pending') {
     backToProposals(listing, 'e', 'ya_revisada')
   }

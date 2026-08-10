@@ -25,8 +25,12 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     supabase.from('cassettes').select('id, name').eq('active', true).maybeSingle(),
     supabase.from('cassettes').select('id, name').eq('is_next', true).maybeSingle(),
-    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('song_proposals').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('song_proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .is('deleted_at', null),
+    supabase.from('song_proposals').select('*', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).neq('role', 'admin'),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'banda'),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'published'),

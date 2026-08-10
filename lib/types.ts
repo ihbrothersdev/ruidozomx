@@ -298,19 +298,9 @@ export interface SongProposal {
 
 export type FeaturedSongSource = 'proposal' | 'song'
 
-export interface ProfileFeaturedSong {
-  id: string
-  profile_id: string
-  source_type: FeaturedSongSource
-  proposal_id: string | null
-  song_id: string | null
-  position: number
-  created_at: string
-}
-
 /**
- * A band's rola as shown in the edit picker and the public profile. Unifies the
- * two sources (a proposal or a published cassette track) into one shape.
+ * A band's rola as shown in the profile editor and the public profile. Unifies
+ * the two sources (a proposal or a published cassette track) into one shape.
  */
 export interface FeaturedSongView {
   /** `${type}:${id}` — stable key across both sources. */
@@ -324,6 +314,14 @@ export interface FeaturedSongView {
   externalLink: string | null
   /** True when `audioUrl` is a directly streamable file (see isPlayableAudio). */
   isPlayable: boolean
+  /** Already on a cassette: shown with a badge, frees its slot, can't be deleted. */
+  accepted: boolean
+  /** Review state — `null` for cassette tracks, which are accepted by definition. */
+  status: ProposalStatus | null
+  /** Whether an MP3 already lives in our bucket. Drives the "+ MP3" affordance. */
+  hasAudio: boolean
+  /** Owner-only: carried into the edit modal. */
+  downloadLink: string | null
 }
 
 // === Interests ===

@@ -73,22 +73,39 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
     artist: s.artist
   }))
 
-  const { data: countsRows } = await supabase.from('song_proposals').select('status')
-  const counts: Record<Filter, number> = { pending: 0, accepted: 0, rejected: 0, all: countsRows?.length ?? 0 }
-  for (const r of countsRows ?? []) {
-    const s = r.status as ProposalStatus
-    if (s === 'pending' || s === 'accepted' || s === 'rejected') counts[s]++
+  const escapedSearch = search ? search.replace(/[%_,]/g, m => `\\${m}`) : ''
+
+  // Head counts, not fetched rows: PostgREST caps a plain select at 1000 rows, which froze
+  // the tab totals at 1000 once the table outgrew it. Scoped to search/date so they match the pager.
+  function scopedCount(status?: Exclude<Filter, 'all'>) {
+    let q = supabase.from('song_proposals').select('*', { count: 'exact', head: true }).is('deleted_at', null)
+    if (status) q = q.eq('status', status)
+    if (escapedSearch) q = q.or(`artist.ilike.%${escapedSearch}%,title.ilike.%${escapedSearch}%`)
+    if (from) q = q.gte('created_at', `${from}T00:00:00`)
+    if (to) q = q.lte('created_at', `${to}T23:59:59`)
+    return q
+  }
+
+  const [pendingRes, acceptedRes, rejectedRes, allRes] = await Promise.all([
+    scopedCount('pending'),
+    scopedCount('accepted'),
+    scopedCount('rejected'),
+    scopedCount()
+  ])
+  const counts: Record<Filter, number> = {
+    pending: pendingRes.count ?? 0,
+    accepted: acceptedRes.count ?? 0,
+    rejected: rejectedRes.count ?? 0,
+    all: allRes.count ?? 0
   }
 
   let query = supabase
     .from('song_proposals')
     .select('*, profiles!song_proposals_user_id_fkey(display_name, slug, photo_url)', { count: 'exact' })
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
   if (filter !== 'all') query = query.eq('status', filter)
-  if (search) {
-    const escaped = search.replace(/[%_,]/g, m => `\\${m}`)
-    query = query.or(`artist.ilike.%${escaped}%,title.ilike.%${escaped}%`)
-  }
+  if (escapedSearch) query = query.or(`artist.ilike.%${escapedSearch}%,title.ilike.%${escapedSearch}%`)
   if (from) query = query.gte('created_at', `${from}T00:00:00`)
   if (to) query = query.lte('created_at', `${to}T23:59:59`)
   const fromIdx = (pageNum - 1) * PAGE_SIZE
