@@ -160,7 +160,7 @@ export default function ProponerRolaBandaModal({
         setSending(false)
         sileo.error({
           title: 'Error',
-          description: 'No se pudo subir el MP3. Intenta de nuevo.',
+          description: audioErrorMessage(upload.error),
           position: 'top-center',
           duration: 4000
         })
