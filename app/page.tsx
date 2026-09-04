@@ -56,7 +56,7 @@ export default async function Home({ searchParams }: HomeProps) {
         initialSongId: requested.initialSongId,
         autoPlay: true,
         cassetteActive: requested.cassetteActive,
-        concatAudioUrl: null as string | null
+        concatAudioUrl: requested.concatAudioUrl
       }
     : await (async () => {
         const active = await getActiveCassetteSongs()
