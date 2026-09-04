@@ -17,6 +17,26 @@ const FALLBACK_SONGS: PlayerSong[] = [
 ]
 
 /**
+ * Resolve a cassette's concatenated-audio URL plus its song -> offset lookup.
+ * Only honours the URL when offsets cover every song: a partial or stale
+ * offsets table would corrupt navigation, so we fall back to legacy per-file
+ * mode in that case.
+ */
+function resolveConcat(
+  cassette: { concat_audio_url: unknown; song_offsets: unknown },
+  rows: { id: string }[]
+): { offsetBySongId: Map<string, SongOffset>; concatAudioUrl: string | null } {
+  const rawOffsets = (cassette.song_offsets as SongOffset[] | null) ?? null
+  const offsetBySongId = new Map<string, SongOffset>()
+  for (const o of rawOffsets ?? []) offsetBySongId.set(o.song_id, o)
+  const coversAllSongs = rawOffsets !== null && rows.every(r => offsetBySongId.has(r.id))
+  return {
+    offsetBySongId,
+    concatAudioUrl: cassette.concat_audio_url && coversAllSongs ? (cassette.concat_audio_url as string) : null
+  }
+}
+
+/**
  * Fetch songs from the active cassette.
  * Maps DB `songs` rows → `PlayerSong` for the audio player.
  * Always returns a non-empty `songs` array and a `cassetteName` so callers
@@ -88,17 +108,7 @@ export async function getActiveCassetteSongs(): Promise<{
     for (const p of profs ?? []) if (p.slug) slugByProfileId.set(p.id, p.slug)
   }
 
-  // Only honour the concatenated URL when offsets cover every song — a partial
-  // or stale offsets table would corrupt navigation, so fall back to legacy
-  // per-file mode in that case.
-  const rawOffsets = (cassette.song_offsets as SongOffset[] | null) ?? null
-  const offsetBySongId = new Map<string, SongOffset>()
-  if (rawOffsets) {
-    for (const o of rawOffsets) offsetBySongId.set(o.song_id, o)
-  }
-  const offsetsCoverAllSongs = rawOffsets !== null && rows.every(r => offsetBySongId.has(r.id))
-  const concatAudioUrl =
-    cassette.concat_audio_url && offsetsCoverAllSongs ? (cassette.concat_audio_url as string) : null
+  const { offsetBySongId, concatAudioUrl } = resolveConcat(cassette, rows)
 
   const songs: PlayerSong[] = rows.map(row => {
     const off = concatAudioUrl ? offsetBySongId.get(row.id) : undefined
@@ -132,6 +142,7 @@ export interface CassetteContext {
   cassetteStartDate: string | null
   cassetteActive: boolean
   initialSongId: string
+  concatAudioUrl: string | null
 }
 
 /**
@@ -145,7 +156,11 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
   const supabase = await createClient()
 
   const [{ data: cassette }, { data: rows }] = await Promise.all([
-    supabase.from('cassettes').select('id, name, start_date, active').eq('id', cassetteId).single(),
+    supabase
+      .from('cassettes')
+      .select('id, name, start_date, active, concat_audio_url, song_offsets')
+      .eq('id', cassetteId)
+      .single(),
     supabase
       .from('songs')
       .select('id, title, artist, duration_seconds, side, position, audio_url, artist_profile_id')
@@ -165,16 +180,23 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
     for (const p of profs ?? []) if (p.slug) slugByProfileId.set(p.id, p.slug)
   }
 
-  const songs: PlayerSong[] = rows.map(row => ({
-    id: row.id,
-    title: row.title,
-    artist: row.artist,
-    artistSlug: row.artist_profile_id ? slugByProfileId.get(row.artist_profile_id) : undefined,
-    side: row.side as 'A' | 'B',
-    position: row.position,
-    durationSeconds: row.duration_seconds ?? 0,
-    audioSrc: row.audio_url ?? ''
-  }))
+  const { offsetBySongId, concatAudioUrl } = resolveConcat(cassette, rows)
+
+  const songs: PlayerSong[] = rows.map(row => {
+    const off = concatAudioUrl ? offsetBySongId.get(row.id) : undefined
+    return {
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      artistSlug: row.artist_profile_id ? slugByProfileId.get(row.artist_profile_id) : undefined,
+      side: row.side as 'A' | 'B',
+      position: row.position,
+      durationSeconds: row.duration_seconds ?? (off ? Math.round(off.end - off.start) : 0),
+      audioSrc: row.audio_url ?? '',
+      startSeconds: off?.start,
+      endSeconds: off?.end
+    }
+  })
 
   return {
     songs,
@@ -182,7 +204,8 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
     cassetteId: cassette.id,
     cassetteStartDate: cassette.start_date ?? null,
     cassetteActive: cassette.active === true,
-    initialSongId: songs[0].id
+    initialSongId: songs[0].id,
+    concatAudioUrl
   }
 }
 
