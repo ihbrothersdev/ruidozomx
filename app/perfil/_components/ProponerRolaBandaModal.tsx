@@ -98,8 +98,8 @@ export default function ProponerRolaBandaModal({
   // backend doesn't allow replacing an existing one.
   const showAudioField = !isBandPrefilled && (!isEditing || !initialHasAudio)
   // Why the submit button is off, in the order the fields appear — a disabled
-  // button with no explanation reads as broken. The MP3 branch only applies to
-  // own material: recommending another band's rola doesn't require the file.
+  // button with no explanation reads as broken. Own material must carry either
+  // the MP3 or a download link; recommending another band's rola needs neither.
   const blockedReason =
     slotsMessage ??
     (!artist.trim()
@@ -108,8 +108,8 @@ export default function ProponerRolaBandaModal({
         ? 'Falta el nombre de la rola.'
         : !listenLink.trim()
           ? 'Falta el link para escuchar la rola.'
-          : showAudioField && !audioFile
-            ? 'Falta subir el MP3 de la rola.'
+          : showAudioField && !audioFile && !downloadLink.trim()
+            ? 'Falta subir el MP3 de la rola o poner un link de descarga.'
             : showAudioField && !accepted
               ? 'Falta confirmar que tienes los derechos de la rola.'
               : null)
@@ -417,7 +417,7 @@ export default function ProponerRolaBandaModal({
                     </div>
                   )}
 
-                  {/* Link de descarga opcional — mismo patrón de ícono + título/subtítulo que Archivo MP3 */}
+                  {/* Link de descarga — mismo patrón de ícono + título/subtítulo que Archivo MP3 */}
                   <div className='space-y-1'>
                     <div className='flex items-start gap-2'>
                       <Cloud
@@ -425,7 +425,7 @@ export default function ProponerRolaBandaModal({
                         strokeWidth={2.5}
                       />
                       <div>
-                        <p className={labelCls}>Link de descarga opcional</p>
+                        <p className={labelCls}>{showAudioField ? 'Link de descarga' : 'Link de descarga opcional'}</p>
                         <p className={helperCls}>
                           Úsalo solo si no puedes subir el MP3 directamente. Asegúrate de que el enlace tenga los
                           permisos abiertos y que no caduque
