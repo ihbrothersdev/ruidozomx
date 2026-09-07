@@ -147,13 +147,19 @@ export function PersistentPlayerBar() {
             apply(pct)
           }
         }
-        const up = () => {
+        // `pointercancel` matters as much as `pointerup`: on touch the browser
+        // cancels the gesture instead of ending it, and a missed commit leaves
+        // the store's `scrubbing` flag stuck — which silently disables
+        // auto-advance at the end of every song for the rest of the session.
+        const end = (ev: PointerEvent) => {
           document.removeEventListener('pointermove', move)
-          document.removeEventListener('pointerup', up)
-          opts?.onCommit?.(last)
+          document.removeEventListener('pointerup', end)
+          document.removeEventListener('pointercancel', end)
+          opts?.onCommit?.(ev.type === 'pointercancel' ? null : last)
         }
         document.addEventListener('pointermove', move)
-        document.addEventListener('pointerup', up)
+        document.addEventListener('pointerup', end)
+        document.addEventListener('pointercancel', end)
       }
     }),
     []
@@ -287,7 +293,7 @@ export function PersistentPlayerBar() {
             {formatTime(elapsedSeconds)}
           </span>
           <div
-            className='relative flex h-3 flex-1 cursor-pointer items-center'
+            className='relative flex h-3 flex-1 cursor-pointer touch-none items-center'
             onClick={progressScrub.onClick}
           >
             <div
@@ -429,7 +435,7 @@ export function PersistentPlayerBar() {
               {formatTime(elapsedSeconds)}
             </span>
             <div
-              className='relative flex h-3 flex-1 cursor-pointer items-center'
+              className='relative flex h-3 flex-1 cursor-pointer touch-none items-center'
               onClick={progressScrub.onClick}
             >
               <div
