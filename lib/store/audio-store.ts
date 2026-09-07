@@ -510,6 +510,21 @@ export const useAudioStore = create<AudioStore>((set, get) => {
       scrubbing = true
       const audio = getAudio()
       resumeAfterScrub = audio ? !audio.paused : false
+      // A scrub whose owner never commits (cancelled gesture, unmounted bar)
+      // would leave `scrubbing` true forever, and the 'ended' handler above
+      // would then pause instead of advancing at the end of every song for the
+      // rest of the session. Release it on the next pointer release, deferred
+      // so a real endScrub() still wins.
+      if (typeof document === 'undefined') return
+      const release = () => {
+        document.removeEventListener('pointerup', release)
+        document.removeEventListener('pointercancel', release)
+        setTimeout(() => {
+          if (scrubbing) get().endScrub(null)
+        }, 0)
+      }
+      document.addEventListener('pointerup', release)
+      document.addEventListener('pointercancel', release)
     },
 
     endScrub: pct => {
