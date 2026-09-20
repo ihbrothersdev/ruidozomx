@@ -150,7 +150,10 @@ export interface CassetteContext {
  * clicks a cassette in the search dropdown — loads every track so the player
  * runs the full mixtape, opening on the first song.
  *
- * Returns null when the cassette is unknown or has no rows.
+ * Returns null when the cassette is unknown, has no rows, or isn't published
+ * (neither active nor archived): the id is guessable from search results and
+ * proposal pages, and a null here sends the home back to the active cassette
+ * instead of streaming the "siguiente" one early.
  */
 export async function getCassetteContextById(cassetteId: string): Promise<CassetteContext | null> {
   const supabase = await createClient()
@@ -158,7 +161,7 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
   const [{ data: cassette }, { data: rows }] = await Promise.all([
     supabase
       .from('cassettes')
-      .select('id, name, start_date, active, concat_audio_url, song_offsets')
+      .select('id, name, start_date, active, archived, concat_audio_url, song_offsets')
       .eq('id', cassetteId)
       .single(),
     supabase
@@ -170,6 +173,7 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
   ])
 
   if (!cassette || !rows || rows.length === 0) return null
+  if (!cassette.active && !cassette.archived) return null
 
   // Resolve band-profile slugs so the player can link each artist to their
   // profile (/perfil/[slug]). Only artists with an artist_profile_id get one.
@@ -213,7 +217,8 @@ export async function getCassetteContextById(cassetteId: string): Promise<Casset
  * Same as getCassetteContextById but the player opens on a specific song
  * instead of the first. Used when a user clicks a song in the search dropdown.
  *
- * Returns null when the songId is unknown or the cassette has no rows.
+ * Returns null when the songId is unknown or its cassette isn't playable
+ * (see getCassetteContextById).
  */
 export async function getCassetteContextForSong(songId: string): Promise<CassetteContext | null> {
   const supabase = await createClient()

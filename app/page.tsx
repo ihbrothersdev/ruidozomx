@@ -41,8 +41,9 @@ export default async function Home({ searchParams }: HomeProps) {
   // If the URL points at a specific song or cassette (search dropdown), load
   // *that* cassette so prev/next stays coherent — a song opens on its track, a
   // cassette opens on its first. Falls back to the active cassette when the id
-  // is unknown. Searched/archived cassettes play in legacy per-song mode (no
-  // concat URL); only the active cassette streams the concatenated file.
+  // is unknown or the cassette isn't published yet (next/drafts). Searched/
+  // archived cassettes play in legacy per-song mode (no concat URL); only the
+  // active cassette streams the concatenated file.
   const requested = requestedSongId
     ? await getCassetteContextForSong(requestedSongId)
     : requestedCassetteId

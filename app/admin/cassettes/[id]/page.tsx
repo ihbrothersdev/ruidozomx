@@ -2,6 +2,7 @@ import { Progress } from '@/app/components/ui/progress'
 import { extractStorageKey, isPlayableAudio } from '@/lib/audio'
 import { isCassetteConcatReady, type SongOffset } from '@/lib/cassette'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { formatShortDateMX } from '@/lib/utils'
 import { AlertCircle, ArrowLeft, Music2, Sparkles, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
@@ -36,17 +37,14 @@ export default async function CassetteDetailPage({ params }: { params: Promise<{
     .order('position', { ascending: true })
 
   // `songs.plays` is a stale column that nobody updates anymore; the source of
-  // truth for plays lives in `song_events` (same table the analytics page reads).
-  // We aggregate `play_start` events per song so the cassette detail matches
-  // what /admin/metricas shows.
-  const songIds = (songs ?? []).map(s => s.id)
-  const { data: playEvents } = songIds.length
-    ? await supabase.from('song_events').select('song_id').eq('type', 'play_start').in('song_id', songIds)
-    : { data: [] as { song_id: string | null }[] }
+  // truth for plays lives in `song_events`. Read it through the same SQL
+  // aggregate /admin/metricas uses so both views agree: it drops admin plays
+  // and sidesteps PostgREST's 1000-row cap on raw song_events.
+  const svc = createServiceClient()
+  const { data: songMetrics } = await svc.rpc('song_metrics', { p_since: null, p_cassette_id: id })
   const playsBySongId = new Map<string, number>()
-  for (const ev of playEvents ?? []) {
-    if (!ev.song_id) continue
-    playsBySongId.set(ev.song_id, (playsBySongId.get(ev.song_id) ?? 0) + 1)
+  for (const m of (songMetrics ?? []) as { song_id: string; plays_total: number }[]) {
+    playsBySongId.set(m.song_id, Number(m.plays_total))
   }
 
   const total = (songs ?? []).length

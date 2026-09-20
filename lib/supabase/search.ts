@@ -132,9 +132,13 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       .ilike('genre', term)
       .limit(RANK_FETCH_LIMIT),
 
+    // Only rolas from published cassettes (active or archived). Without the
+    // inner join, tracks from the "siguiente" cassette and drafts surfaced here
+    // and could be played weeks before the cassette went live.
     supabase
       .from('songs')
-      .select('id, title, artist, genre, cassette_id, side, position')
+      .select('id, title, artist, genre, cassette_id, side, position, cassettes!inner(id)')
+      .or('active.eq.true,archived.eq.true', { referencedTable: 'cassettes' })
       .or(`title.ilike.${term},artist.ilike.${term},genre.ilike.${term}`)
       .limit(RANK_FETCH_LIMIT),
 
@@ -172,7 +176,10 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
     0,
     PER_CATEGORY_LIMIT
   )
-  const rawSongs = (songsRes.data ?? []) as SearchSongResult[]
+  // Drop the `cassettes` embed: it only exists to filter by publication state.
+  const rawSongs = ((songsRes.data ?? []) as (SearchSongResult & { cassettes: unknown })[]).map(
+    ({ cassettes: _cassettes, ...s }) => s as SearchSongResult
+  )
   // supabase-js can't infer the disambiguated FK embed, so type the row by hand.
   type EventRow = Omit<SearchEventResult, 'proposer_slug'> & {
     proposer: { slug: string | null } | { slug: string | null }[] | null
