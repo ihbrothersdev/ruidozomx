@@ -95,7 +95,7 @@ export default async function ComunidadPage() {
     <main className='relative min-h-screen'>
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
-        style={{ backgroundImage: "url('/assets/textura/background-textura.jpg')" }}
+        style={{ backgroundImage: "url('/assets/textura/background-textura.webp')" }}
       />
 
       <div className='relative z-10'>

@@ -216,7 +216,7 @@ export default function QuienesSomosPage() {
               onClick={handleTap}
               className='absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-center gap-6'
               style={{
-                backgroundImage: "url('/assets/textura/background-textura.jpg')",
+                backgroundImage: "url('/assets/textura/background-textura.webp')",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}

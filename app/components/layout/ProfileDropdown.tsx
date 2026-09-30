@@ -64,7 +64,7 @@ export function ProfileDropdown({ photoUrl, displayName, role }: ProfileDropdown
         <div className='absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded border-2 border-black/15 bg-[#f5f0e8] shadow-lg'>
           <div className='absolute inset-0 z-0 opacity-30'>
             <Image
-              src='/assets/registro/explicacion-rol/shared/fondo.png'
+              src='/assets/registro/explicacion-rol/shared/fondo.webp'
               alt=''
               fill
               className='object-cover'

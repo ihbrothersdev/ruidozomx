@@ -256,7 +256,7 @@ export function PersistentPlayerBar() {
         admin
           ? { boxShadow: '0 -6px 18px rgba(23,19,13,0.07)' }
           : {
-              backgroundImage: "url('/assets/player-bar/background.png')",
+              backgroundImage: "url('/assets/player-bar/background.webp')",
               backgroundRepeat: 'repeat-x',
               backgroundSize: 'auto 100%',
               boxShadow: '0 -10px 30px rgba(0,0,0,0.6)'
