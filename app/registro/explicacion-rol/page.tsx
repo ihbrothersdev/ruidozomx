@@ -39,7 +39,7 @@ function ExplicacionRolContent() {
     <div className='relative min-h-screen w-screen overflow-x-hidden lg:h-screen lg:overflow-hidden'>
       <div className='fixed inset-0 z-0 lg:absolute'>
         <Image
-          src={`${S}/fondo.png`}
+          src={`${S}/fondo.webp`}
           alt=''
           fill
           className='object-cover'

@@ -7,7 +7,7 @@ export default function NotFound() {
       <div
         className='absolute inset-0 z-0 opacity-40'
         style={{
-          backgroundImage: "url('/assets/textura/background-textura.jpg')",
+          backgroundImage: "url('/assets/textura/background-textura.webp')",
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}

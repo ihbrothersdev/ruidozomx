@@ -67,7 +67,7 @@ export function Caseteca() {
           <div className='relative overflow-hidden rounded-md border-2 border-black/20 bg-[#f5f0e8] shadow-[6px_6px_0_rgba(0,0,0,0.25)]'>
             <div className='pointer-events-none absolute inset-0 z-0 opacity-25'>
               <Image
-                src='/assets/registro/explicacion-rol/shared/fondo.png'
+                src='/assets/registro/explicacion-rol/shared/fondo.webp'
                 alt=''
                 fill
                 className='object-cover'

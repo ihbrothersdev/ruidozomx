@@ -16,7 +16,7 @@ export default async function SignupPage({ searchParams }: { searchParams: AuthS
   const { error, message } = await searchParams
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a] bg-[url("/assets/textura/background-textura.jpg")] bg-cover bg-center px-4'>
+    <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a] bg-[url("/assets/textura/background-textura.webp")] bg-cover bg-center px-4'>
       <div className='w-full max-w-sm space-y-6'>
         <div className='text-center'>
           <h1 className='font-baby-doll text-3xl text-white'>Crear Cuenta</h1>

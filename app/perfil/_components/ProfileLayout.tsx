@@ -25,7 +25,7 @@ export default function ProfileLayout({
     <div className='relative min-h-screen'>
       <div
         className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
-        style={{ backgroundImage: "url('/assets/registro/explicacion-rol/shared/fondo.png')" }}
+        style={{ backgroundImage: "url('/assets/registro/explicacion-rol/shared/fondo.webp')" }}
       />
 
       <div className='relative z-10 mx-auto max-w-5xl px-4 py-8'>
