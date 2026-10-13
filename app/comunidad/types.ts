@@ -12,7 +12,12 @@ export interface CommunityProfile {
   bio: string | null
   genre: string | null
   activity_highlight: string
+  /** Only ever set for admin viewers. */
+  unconfirmedWithoutSongs?: boolean
 }
+
+/** sessionStorage key holding the last grid URL (filters + page), for returning to it. */
+export const COMMUNITY_LISTING_KEY = 'comunidad:listing'
 
 export type RoleFilter = 'banda' | 'fan' | 'venue' | 'promotor' | 'manager' | 'agente' | 'proveedor'
 
