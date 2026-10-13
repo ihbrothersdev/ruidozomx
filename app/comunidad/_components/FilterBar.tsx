@@ -8,6 +8,8 @@ interface FilterBarProps {
   onFilterChange: (filter: RoleFilter | null) => void
   searchQuery: string
   onSearchChange: (query: string) => void
+  /** Rendered to the right of the search bar (wraps below it on narrow screens). */
+  trailing?: React.ReactNode
 }
 
 const FILTERS: RoleFilter[] = ['banda', 'venue', 'promotor', 'manager', 'agente', 'proveedor', 'fan']
@@ -22,7 +24,7 @@ const FILTER_IMAGE: Record<RoleFilter, string> = {
   fan: '/assets/community/fans.png'
 }
 
-export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchChange }: FilterBarProps) {
+export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchChange, trailing }: FilterBarProps) {
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
@@ -53,8 +55,8 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
         })}
       </div>
 
-      <div className='mx-auto flex w-full max-w-lg items-center'>
-        <div className='relative flex-1'>
+      <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-4'>
+        <div className='relative max-w-lg min-w-0 flex-1 basis-80'>
           <Image
             src='/assets/community/buscador-long.png'
             alt=''
@@ -70,6 +72,7 @@ export function FilterBar({ activeFilter, onFilterChange, searchQuery, onSearchC
             className='font-pt-mono absolute inset-0 w-full bg-transparent pr-4 pl-12 text-xs text-black placeholder:text-black/40 focus:outline-none sm:pl-16 sm:text-sm md:pl-18 md:text-lg'
           />
         </div>
+        {trailing}
       </div>
     </div>
   )

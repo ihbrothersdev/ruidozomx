@@ -1,3 +1,4 @@
+import { pageWindow } from '@/lib/pagination'
 import { createClient } from '@/lib/supabase/server'
 import type { ProposalStatus } from '@/lib/types'
 import { cn, formatLongDateMX, formatShortDateMX } from '@/lib/utils'
@@ -359,7 +360,7 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
             >
               <ChevronLeft className='h-4 w-4' />
             </PagerLink>
-            {pageWindow(pageNum, totalPages).map((p, i) =>
+            {pageWindow(pageNum, totalPages, 4).map((p, i) =>
               p === 'gap' ? (
                 <PageJump
                   key={`gap-${i}`}
@@ -387,19 +388,6 @@ export default async function AdminProposalsPage({ searchParams }: { searchParam
       )}
     </div>
   )
-}
-
-/** Page numbers to render, with `'gap'` markers where pages are collapsed into an ellipsis. */
-function pageWindow(current: number, total: number): Array<number | 'gap'> {
-  const delta = 4
-  const left = Math.max(2, current - delta)
-  const right = Math.min(total - 1, current + delta)
-  const out: Array<number | 'gap'> = [1]
-  if (left > 2) out.push('gap')
-  for (let p = left; p <= right; p++) out.push(p)
-  if (right < total - 1) out.push('gap')
-  out.push(total)
-  return out
 }
 
 function PagerLink({

@@ -1,5 +1,6 @@
 'use client'
 
+import { COMMUNITY_LISTING_KEY } from '@/app/comunidad/types'
 import BackHomeNav from '@/app/components/layout/BackHomeNav'
 import type { FeaturedSongView, Role } from '@/lib/types'
 import { useRouter } from 'next/navigation'
@@ -184,7 +185,11 @@ export default function ProfileView(props: ProfileViewProps) {
         setAdminModal(null)
       } else {
         setAdminModal(null)
-        router.push('/comunidad')
+        let listing: string | null = null
+        try {
+          listing = sessionStorage.getItem(COMMUNITY_LISTING_KEY)
+        } catch {}
+        router.push(listing ?? '/comunidad')
       }
     })
   }
