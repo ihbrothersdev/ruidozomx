@@ -12,8 +12,13 @@ export interface CommunityProfile {
   bio: string | null
   genre: string | null
   activity_highlight: string
-  /** Only ever set for admin viewers. */
-  unconfirmedWithoutSongs?: boolean
+  /** Only ever set for admin viewers, and only when the account is missing something. */
+  pending?: PendingFlags
+}
+
+export interface PendingFlags {
+  unconfirmed: boolean
+  noSongs: boolean
 }
 
 /** sessionStorage key holding the last grid URL (filters + page), for returning to it. */

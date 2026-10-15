@@ -2,7 +2,7 @@ import { Header } from '@/app/components/layout/Header'
 import type { Role } from '@/lib/types'
 import type { Metadata } from 'next'
 import { CommunityGrid } from './_components/CommunityGrid'
-import type { CommunityProfile } from './types'
+import type { CommunityProfile, PendingFlags } from './types'
 
 type ProfileRow = {
   id: string
@@ -26,7 +26,7 @@ export default async function ComunidadPage() {
   let photoUrl: string | null = null
   let role: string | null = null
   let profiles: CommunityProfile[] = []
-  let flagged: Set<string> | null = null
+  let accountStatus: AccountStatus | null = null
 
   try {
     const { createClient } = await import('@/lib/supabase/server')
@@ -43,7 +43,7 @@ export default async function ComunidadPage() {
     }
 
     // Started now so it overlaps the profile fetch below; a failure only hides the admin filter.
-    const flaggedPromise = role === 'admin' ? getUnconfirmedWithoutSongs().catch(() => null) : null
+    const accountStatusPromise = role === 'admin' ? getAccountStatus().catch(() => null) : null
 
     // Fetch all active community profiles, paginating past PostgREST's 1000-row cap
     const dbProfiles: ProfileRow[] = []
@@ -75,7 +75,7 @@ export default async function ComunidadPage() {
       if (batch.length < BATCH) break
     }
 
-    flagged = await flaggedPromise
+    accountStatus = await accountStatusPromise
 
     if (dbProfiles.length) {
       profiles = dbProfiles.map(p => ({
@@ -90,7 +90,7 @@ export default async function ComunidadPage() {
         bio: p.bio,
         genre: genreByProfileId.get(p.id) ?? null,
         activity_highlight: getActivityHighlight(p.role),
-        ...(flagged?.has(p.id) && { unconfirmedWithoutSongs: true })
+        ...(accountStatus && { pending: getPending(p.id, accountStatus) })
       }))
     }
   } catch {
@@ -114,7 +114,7 @@ export default async function ComunidadPage() {
         <div className='mx-auto max-w-7xl px-4 pt-4 pb-12 md:px-8'>
           <CommunityGrid
             profiles={profiles}
-            showAdminFilter={flagged !== null}
+            showAdminFilter={accountStatus !== null}
           />
         </div>
       </div>
@@ -124,35 +124,62 @@ export default async function ComunidadPage() {
 
 const BATCH = 1000
 
+type AccountStatus = { unconfirmed: Set<string>; withSongs: Set<string> }
+
 /**
- * Accounts that never confirmed their email nor proposed a single rola, for the
- * admin-only cleanup filter. Soft-deleted proposals count: they did upload once.
+ * Data for the admin-only cleanup filter: who never confirmed their email and who
+ * has proposed or been credited with a rola. Soft-deleted proposals count: they
+ * did upload once.
  */
-async function getUnconfirmedWithoutSongs(): Promise<Set<string>> {
+async function getAccountStatus(): Promise<AccountStatus> {
   const { createServiceClient } = await import('@/lib/supabase/service')
   const svc = createServiceClient()
 
-  const unconfirmed: string[] = []
-  for (let page = 1; ; page++) {
-    const { data, error } = await svc.auth.admin.listUsers({ page, perPage: BATCH })
-    if (error) throw error
-    for (const u of data.users) if (!u.email_confirmed_at) unconfirmed.push(u.id)
-    if (data.users.length < BATCH) break
+  async function getUnconfirmed() {
+    const ids = new Set<string>()
+    for (let page = 1; ; page++) {
+      const { data, error } = await svc.auth.admin.listUsers({ page, perPage: BATCH })
+      if (error) throw error
+      for (const u of data.users) if (!u.email_confirmed_at) ids.add(u.id)
+      if (data.users.length < BATCH) break
+    }
+    return ids
   }
 
-  // Chunked so the `in` filter stays well under URL length limits.
-  const withSongs = new Set<string>()
-  for (let i = 0; i < unconfirmed.length; i += 100) {
-    const ids = unconfirmed.slice(i, i + 100)
-    const [{ data: proposals }, { data: songs }] = await Promise.all([
-      svc.from('song_proposals').select('user_id').in('user_id', ids),
-      svc.from('songs').select('artist_profile_id').in('artist_profile_id', ids)
-    ])
-    for (const p of proposals ?? []) withSongs.add(p.user_id as string)
-    for (const s of songs ?? []) withSongs.add(s.artist_profile_id as string)
+  async function getWithSongs() {
+    const ids = new Set<string>()
+    for (let from = 0; ; from += BATCH) {
+      const { data, error } = await svc
+        .from('song_proposals')
+        .select('user_id')
+        .order('id')
+        .range(from, from + BATCH - 1)
+      if (error) throw error
+      for (const p of data) ids.add(p.user_id as string)
+      if (data.length < BATCH) break
+    }
+    for (let from = 0; ; from += BATCH) {
+      const { data, error } = await svc
+        .from('songs')
+        .select('artist_profile_id')
+        .not('artist_profile_id', 'is', null)
+        .order('id')
+        .range(from, from + BATCH - 1)
+      if (error) throw error
+      for (const s of data) ids.add(s.artist_profile_id as string)
+      if (data.length < BATCH) break
+    }
+    return ids
   }
 
-  return new Set(unconfirmed.filter(id => !withSongs.has(id)))
+  const [unconfirmed, withSongs] = await Promise.all([getUnconfirmed(), getWithSongs()])
+  return { unconfirmed, withSongs }
+}
+
+function getPending(id: string, status: AccountStatus): PendingFlags | undefined {
+  const unconfirmed = status.unconfirmed.has(id)
+  const noSongs = !status.withSongs.has(id)
+  return unconfirmed || noSongs ? { unconfirmed, noSongs } : undefined
 }
 
 function getActivityHighlight(role: string): string {
