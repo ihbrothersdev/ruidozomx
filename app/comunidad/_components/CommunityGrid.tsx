@@ -13,7 +13,7 @@ import { ProfileCardSkeleton } from './ProfileCardSkeleton'
 interface CommunityGridProps {
   profiles: CommunityProfile[]
   loading?: boolean
-  /** Admin-only toggle for accounts that never confirmed their email nor uploaded a rola. */
+  /** Admin-only toggle for accounts missing a confirmed email, a rola, or both. */
   showAdminFilter?: boolean
 }
 
@@ -38,21 +38,18 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
   const [activeFilter, setActiveFilter] = useState<RoleFilter | null>(() => parseRoleFilter(searchParams.get('role')))
   // Not `q`: the header Buscador owns that param on every page.
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('buscar') ?? '')
-  const [onlyUnconfirmed, setOnlyUnconfirmed] = useState(
+  const [onlyPending, setOnlyPending] = useState(
     () => Boolean(showAdminFilter) && searchParams.get('pendientes') === '1'
   )
   const [page, setPage] = useState(() => parsePageParam(searchParams.get('page')))
 
-  const unconfirmedCount = useMemo(
-    () => profiles.filter(p => p.unconfirmedWithoutSongs && p.role !== 'admin').length,
-    [profiles]
-  )
+  const pendingCount = useMemo(() => profiles.filter(p => p.pending && p.role !== 'admin').length, [profiles])
 
   const filtered = useMemo(() => {
     // Hide admin accounts from the public community grid.
     let result = profiles.filter(p => p.role !== 'admin')
-    if (onlyUnconfirmed) {
-      result = result.filter(p => p.unconfirmedWithoutSongs)
+    if (onlyPending) {
+      result = result.filter(p => p.pending)
     }
     if (activeFilter) {
       result = result.filter(p => p.role === activeFilter)
@@ -69,7 +66,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
       )
     }
     return result
-  }, [profiles, onlyUnconfirmed, activeFilter, searchQuery])
+  }, [profiles, onlyPending, activeFilter, searchQuery])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
@@ -84,7 +81,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     const set = (key: string, value: string | null) => (value ? params.set(key, value) : params.delete(key))
     set('role', activeFilter)
     set('buscar', searchQuery.trim() || null)
-    set('pendientes', onlyUnconfirmed ? '1' : null)
+    set('pendientes', onlyPending ? '1' : null)
     set('page', safePage > 0 ? String(safePage + 1) : null)
     const query = params.toString()
     const url = query ? `${pathname}?${query}` : pathname
@@ -92,7 +89,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     try {
       sessionStorage.setItem(COMMUNITY_LISTING_KEY, url)
     } catch {}
-  }, [pathname, activeFilter, searchQuery, onlyUnconfirmed, safePage])
+  }, [pathname, activeFilter, searchQuery, onlyPending, safePage])
 
   function handleFilterChange(next: RoleFilter | null) {
     setActiveFilter(next)
@@ -104,8 +101,8 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     setPage(0)
   }
 
-  function toggleUnconfirmed() {
-    setOnlyUnconfirmed(v => !v)
+  function togglePending() {
+    setOnlyPending(v => !v)
     setPage(0)
   }
 
@@ -118,10 +115,10 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
         onSearchChange={handleSearchChange}
         trailing={
           showAdminFilter && (
-            <AdminUnconfirmedToggle
-              on={onlyUnconfirmed}
-              count={unconfirmedCount}
-              onToggle={toggleUnconfirmed}
+            <AdminPendingToggle
+              on={onlyPending}
+              count={pendingCount}
+              onToggle={togglePending}
             />
           )
         }
@@ -199,14 +196,14 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
 }
 
 /** A rubber stamp: a faint dashed outline when off, "inked" in red when on. */
-function AdminUnconfirmedToggle({ on, count, onToggle }: { on: boolean; count: number; onToggle: () => void }) {
+function AdminPendingToggle({ on, count, onToggle }: { on: boolean; count: number; onToggle: () => void }) {
   return (
     <button
       type='button'
       role='switch'
       aria-checked={on}
       onClick={onToggle}
-      title='Cuentas que no han confirmado su correo ni han subido rolas'
+      title='Cuentas que no han confirmado su correo, no han subido rolas, o ambas'
       className={`relative shrink-0 -rotate-3 cursor-pointer transition-all duration-150 active:scale-90 ${on ? 'scale-105' : 'hover:scale-105'}`}
       style={on ? { filter: 'url(#admin-stamp-ink)' } : undefined}
     >
@@ -246,8 +243,8 @@ function AdminUnconfirmedToggle({ on, count, onToggle }: { on: boolean; count: n
         }`}
       >
         <span className='flex flex-col items-start leading-none'>
-          <span className='font-baby-doll text-xl leading-none uppercase'>Sin confirmar</span>
-          <span className='font-pt-mono mt-0.5 text-[10px] font-bold tracking-[0.35em] uppercase'>ni rolas</span>
+          <span className='font-baby-doll text-xl leading-none uppercase'>Pendientes</span>
+          <span className='font-pt-mono mt-0.5 text-[10px] font-bold tracking-[0.35em] uppercase'>correo o rolas</span>
         </span>
         <span className='font-baby-doll flex h-9 min-w-9 items-center justify-center rounded-full border-2 border-current px-1 text-lg leading-none'>
           {count}

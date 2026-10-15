@@ -79,6 +79,17 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         className='object-cover'
       />
 
+      {/* ── Admin only: what the account is missing ── */}
+      {profile.pending && (
+        <div
+          className='absolute inset-x-0 flex -rotate-3 flex-col items-center gap-1'
+          style={{ bottom: '49%' }}
+        >
+          {profile.pending.unconfirmed && <PendingStamp>Sin confirmar</PendingStamp>}
+          {profile.pending.noSongs && <PendingStamp>Sin rolas</PendingStamp>}
+        </div>
+      )}
+
       {/* ── Layer 4: Text (above pinza overlay) ── */}
       <div
         className='absolute inset-x-0 flex flex-col items-center gap-0.5 px-[8%] text-center'
@@ -123,5 +134,13 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         />
       </div>
     </TrackedProfileLink>
+  )
+}
+
+function PendingStamp({ children }: { children: React.ReactNode }) {
+  return (
+    <span className='font-pt-mono rounded-[3px] border-2 border-[#ff0048] bg-white/85 px-1.5 py-0.5 [font-size:2.2vw] leading-none font-bold tracking-widest text-[#ff0048] uppercase sm:[font-size:1.3vw] lg:[font-size:0.85vw]'>
+      {children}
+    </span>
   )
 }
