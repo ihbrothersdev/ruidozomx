@@ -1,6 +1,6 @@
 'use client'
 
-import { format } from 'date-fns'
+import { format, startOfToday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CalendarIcon } from 'lucide-react'
 import Image from 'next/image'
@@ -53,6 +53,11 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
   const [sending, setSending] = useState(false)
 
   const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && !!fecha
+
+  // Without explicit bounds, the dropdown layout spans from 100 years ago to the end of the current year.
+  // An older event being edited keeps its month reachable so its saved date stays visible.
+  const today = startOfToday()
+  const firstMonth = fecha && fecha < today ? fecha : today
 
   function resetForm() {
     setTipo('')
@@ -239,8 +244,9 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
                         locale={es}
                         captionLayout='dropdown'
                         defaultMonth={fecha ?? new Date()}
-                        // Without endMonth, the dropdown layout caps navigation at the end of the current year.
-                        endMonth={new Date(new Date().getFullYear() + 3, 11)}
+                        startMonth={firstMonth}
+                        endMonth={new Date(today.getFullYear() + 3, 11)}
+                        disabled={{ before: today }}
                       />
                     </PopoverContent>
                   </Popover>
