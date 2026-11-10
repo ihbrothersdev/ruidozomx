@@ -239,6 +239,8 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
                         locale={es}
                         captionLayout='dropdown'
                         defaultMonth={fecha ?? new Date()}
+                        // Without endMonth, the dropdown layout caps navigation at the end of the current year.
+                        endMonth={new Date(new Date().getFullYear() + 3, 11)}
                       />
                     </PopoverContent>
                   </Popover>
