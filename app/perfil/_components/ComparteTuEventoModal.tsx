@@ -54,6 +54,11 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
 
   const canSubmit = tipo.trim().length > 0 && nombre.trim().length > 0 && !!fecha
 
+  // Without explicit bounds, the dropdown layout spans from 100 years ago to the end of the current year.
+  // An older event being edited keeps its year reachable.
+  const currentYear = new Date().getFullYear()
+  const firstYear = Math.min(currentYear, fecha?.getFullYear() ?? currentYear)
+
   function resetForm() {
     setTipo('')
     setNombre('')
@@ -239,8 +244,8 @@ export default function ComparteTuEventoModal({ open, onOpenChange, event = null
                         locale={es}
                         captionLayout='dropdown'
                         defaultMonth={fecha ?? new Date()}
-                        // Without endMonth, the dropdown layout caps navigation at the end of the current year.
-                        endMonth={new Date(new Date().getFullYear() + 3, 11)}
+                        startMonth={new Date(firstYear, 0)}
+                        endMonth={new Date(currentYear + 3, 11)}
                       />
                     </PopoverContent>
                   </Popover>
