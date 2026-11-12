@@ -7,7 +7,7 @@ import { ROLE_FILTER_LABELS, type RoleFilter } from '../types'
 interface FilterBarProps {
   activeFilter: RoleFilter | null
   onFilterChange: (filter: RoleFilter | null) => void
-  countries: { country: string; count: number; flag: string }[]
+  countries: { country: string; flag: string }[]
   activeCountry: string | null
   onCountryChange: (country: string | null) => void
   searchQuery: string
@@ -38,6 +38,8 @@ export function FilterBar({
   onSearchChange,
   trailing
 }: FilterBarProps) {
+  const activeFlag = countries.find(c => c.country === activeCountry)?.flag ?? '🌎'
+
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
@@ -86,29 +88,40 @@ export function FilterBar({
           />
         </div>
         {countries.length > 1 && (
-          <label className='relative shrink-0'>
+          // The native select is invisible and stretched over a flag-only face: closed it shows just the
+          // flag, opened it lists every country by name (and keeps the OS picker on mobile).
+          <label
+            className={`relative flex h-11 w-16 shrink-0 cursor-pointer items-center justify-center gap-1 rounded border bg-black/40 transition-colors focus-within:border-[#ff0048] ${
+              activeCountry ? 'border-[#ff0048]' : 'border-white/15 hover:border-white/40'
+            }`}
+            title={activeCountry ?? 'Filtrar por país'}
+          >
             <span className='sr-only'>Filtrar por país</span>
+            <span
+              aria-hidden
+              className='text-xl leading-none'
+            >
+              {activeFlag}
+            </span>
+            <ChevronDown
+              aria-hidden
+              className='h-3.5 w-3.5 text-white/50'
+            />
             <select
               value={activeCountry ?? ''}
               onChange={e => onCountryChange(e.target.value || null)}
-              className={`font-pt-mono h-11 cursor-pointer appearance-none rounded border bg-black/40 py-0 pr-9 pl-3 text-xs tracking-wider uppercase transition-colors focus:border-[#ff0048] focus:outline-none sm:text-sm ${
-                activeCountry ? 'border-[#ff0048] text-white' : 'border-white/15 text-white/60 hover:text-white'
-              }`}
+              className='absolute inset-0 h-full w-full cursor-pointer opacity-0'
             >
-              <option value=''>🌎 Todos los países</option>
-              {countries.map(({ country, count, flag }) => (
+              <option value=''>Todos los países</option>
+              {countries.map(({ country }) => (
                 <option
                   key={country}
                   value={country}
                 >
-                  {flag} {country} ({count})
+                  {country}
                 </option>
               ))}
             </select>
-            <ChevronDown
-              aria-hidden
-              className='pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-white/50'
-            />
           </label>
         )}
         {trailing}

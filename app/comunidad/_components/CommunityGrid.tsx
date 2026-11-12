@@ -50,7 +50,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     }
     return [...counts]
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
-      .map(([country, count]) => ({ country, count, flag: COUNTRY_FLAGS[country] ?? '🌍' }))
+      .map(([country]) => ({ country, flag: COUNTRY_FLAGS[country] ?? '🌍' }))
   }, [profiles])
   const [activeCountry, setActiveCountry] = useState<string | null>(() => {
     const value = searchParams.get('pais')
