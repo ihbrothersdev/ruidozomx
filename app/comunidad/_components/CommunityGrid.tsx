@@ -1,5 +1,6 @@
 'use client'
 
+import { COUNTRY_FLAGS } from '@/lib/mexico-locations'
 import { pageWindow } from '@/lib/pagination'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePathname, useSearchParams } from 'next/navigation'
@@ -41,6 +42,20 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
   const [onlyPending, setOnlyPending] = useState(
     () => Boolean(showAdminFilter) && searchParams.get('pendientes') === '1'
   )
+  // Only countries that actually have profiles are offered, so an unknown `pais` in the URL is ignored.
+  const countryOptions = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const p of profiles) {
+      if (p.role !== 'admin') counts.set(p.country, (counts.get(p.country) ?? 0) + 1)
+    }
+    return [...counts]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
+      .map(([country]) => ({ country, flag: COUNTRY_FLAGS[country] ?? '🌍' }))
+  }, [profiles])
+  const [activeCountry, setActiveCountry] = useState<string | null>(() => {
+    const value = searchParams.get('pais')
+    return value && countryOptions.some(o => o.country === value) ? value : null
+  })
   const [page, setPage] = useState(() => parsePageParam(searchParams.get('page')))
 
   const pendingCount = useMemo(() => profiles.filter(p => p.pending && p.role !== 'admin').length, [profiles])
@@ -54,6 +69,9 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     if (activeFilter) {
       result = result.filter(p => p.role === activeFilter)
     }
+    if (activeCountry) {
+      result = result.filter(p => p.country === activeCountry)
+    }
     const q = searchQuery.toLowerCase()
     if (q) {
       result = result.filter(
@@ -66,7 +84,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
       )
     }
     return result
-  }, [profiles, onlyPending, activeFilter, searchQuery])
+  }, [profiles, onlyPending, activeFilter, activeCountry, searchQuery])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
@@ -80,6 +98,7 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     const params = new URLSearchParams(window.location.search)
     const set = (key: string, value: string | null) => (value ? params.set(key, value) : params.delete(key))
     set('role', activeFilter)
+    set('pais', activeCountry)
     set('buscar', searchQuery.trim() || null)
     set('pendientes', onlyPending ? '1' : null)
     set('page', safePage > 0 ? String(safePage + 1) : null)
@@ -89,10 +108,15 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
     try {
       sessionStorage.setItem(COMMUNITY_LISTING_KEY, url)
     } catch {}
-  }, [pathname, activeFilter, searchQuery, onlyPending, safePage])
+  }, [pathname, activeFilter, activeCountry, searchQuery, onlyPending, safePage])
 
   function handleFilterChange(next: RoleFilter | null) {
     setActiveFilter(next)
+    setPage(0)
+  }
+
+  function handleCountryChange(next: string | null) {
+    setActiveCountry(next)
     setPage(0)
   }
 
@@ -111,6 +135,9 @@ export function CommunityGrid({ profiles, loading, showAdminFilter }: CommunityG
       <FilterBar
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
+        countries={countryOptions}
+        activeCountry={activeCountry}
+        onCountryChange={handleCountryChange}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         trailing={
